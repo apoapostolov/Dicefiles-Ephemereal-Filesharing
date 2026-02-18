@@ -8,6 +8,11 @@
 
 Dicefiles is a self-hosted, open-source file sharing platform for hobby communities, forked from Volafile and Kregfile, and extended with new automation features, quick downloading for archival purposes, and an improved in-room request flow. It is ideal for sharing roleplaying books, digital maps, board games, STL models, fiction, and more.
 
+<p align="center">
+  <img src="images/dicefiles_01.png" width="32%" />
+  <img src="images/dicefiles_02.png" width="32%" />
+</p>
+
 > **Note:** This is a self-hosted application. You must host it yourself - there is no public service provided.
 
 ## Features
@@ -284,12 +289,37 @@ Configuration files are loaded in this order (last value wins):
 | `roomCreation`          | `true`         | Allow room creation                                             |
 | `TTL`                   | `48`           | Hours before finished downloads expire                          |
 | `downloadMaxConcurrent` | `3`            | Max concurrent downloads for room toolbar batch downloads (1-4) |
-| `automationApiKeys`     | `[]`           | Bearer keys for agent/tool automation API (empty = disabled)    |
+| `automationApiKeys`     | `[]`           | API keys for automation API (supports scoped key objects)        |
+| `automationApiRateLimit` | `{windowMs,max}` | Default automation API rate limit (fixed window)               |
+| `automationApiRateLimitByScope` | `{}`  | Per-scope rate limit overrides for automation API                |
+| `automationAuditLog`    | `"automation.log"` | JSONL audit log file for automation API calls                 |
+| `observabilityLog`      | `"ops.log"`    | JSONL lifecycle log for uploads/downloads/requests/previews      |
+| `webhooks`              | `[]`           | Outbound webhook targets/events for upload/request lifecycle     |
+| `webhookRetry`          | `{...}`        | Webhook retry policy defaults (retries/backoff)                  |
+| `webhookDeadLetterLog`  | `"webhook-dead-letter.log"` | JSONL sink for failed webhook deliveries            |
 | `jail`                  | `true` (Linux) | Use firejail for preview commands (always false on Windows)     |
 
-## Automation API (Experimental)
+## Automation API
 
-The complete automation API reference now lives in [`API.md`](API.md), structured for agentic tools and skill generation.
+The stable automation API prefix is `/api/v1` (legacy `/api/automation` is kept as a compatibility alias).
+The complete reference lives in [`API.md`](API.md), structured for agentic tools and skill generation.
+
+## Health Endpoint
+
+Dicefiles exposes a lightweight health endpoint:
+
+- `GET /healthz`
+
+It returns:
+
+- Redis check status/latency
+- Upload storage writeability check status/latency
+- In-memory ops counters (`uploadsCreated`, `uploadsDeleted`, `downloadsServed`, `downloadsBytes`, `requestsCreated`, `requestsFulfilled`, `previewFailures`)
+
+HTTP status is:
+
+- `200` when checks pass
+- `503` when a dependency check fails
 
 `TTL` and `downloadMaxConcurrent` are administrator-only settings configured in source/config files (`defaults.js` or your `.config.json` override), not from the room UI.
 
