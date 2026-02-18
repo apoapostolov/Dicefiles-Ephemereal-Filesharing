@@ -1,60 +1,120 @@
-# Dicefiles Automation API (Experimental)
+# Dicefiles API Reference (`/api/v1`)
 
-This document is intentionally structured for agentic automation clients and skill generators (for example OpenClaw, skills.sh-style wrappers, or MCP adapters).
+This spec is written for automation clients (agentic tools, skill builders, MCP wrappers).
 
-## 1. Purpose
+## 1. Base URLs and Compatibility
 
-Dicefiles exposes a machine-focused API for automating:
-- user/mod authentication
-- room creation
-- request creation
-- resumable uploads
-- file listing and download planning
-- deletion with existing permission rules
+- Primary automation prefix: `/api/v1`
+- Compatibility alias (same behavior): `/api/automation`
+- Base host: `http://<host>:<port>`
 
-## 2. Enablement
+Example:
 
-Set at least one API key in `.config.json`:
+- `POST /api/v1/auth/login`
+- `POST /api/automation/auth/login` (alias)
+
+## 2. Authentication Model
+
+### 2.1 API Key (required for automation endpoints)
+
+Use one of:
+
+- `Authorization: Bearer <api-key>`
+- `X-Dicefiles-API-Key: <api-key>`
+
+### 2.2 Session (required for user-bound actions)
+
+Use:
+
+- `X-Dicefiles-Session: <session-token>`
+
+Fallbacks supported by server:
+
+- `session` in JSON body
+- `session` query parameter
+
+## 3. API Key Configuration and Scopes
+
+Configure in `.config.json` via `automationApiKeys`.
+
+### 3.1 Legacy key (full access)
 
 ```json
 {
-  "automationApiKeys": ["replace-with-a-long-random-secret"]
+  "automationApiKeys": ["legacy-full-access-key"]
 }
 ```
 
-If `automationApiKeys` is empty, all automation endpoints return `404` with:
+### 3.2 Scoped key objects
 
 ```json
-{"err":"Automation API is disabled"}
+{
+  "automationApiKeys": [
+    {"id": "readonly", "key": "replace-read-key", "scopes": ["files:read"]},
+    {
+      "id": "uploader",
+      "key": "replace-upload-key",
+      "scopes": ["files:read", "rooms:write", "uploads:write", "requests:write"]
+    },
+    {"id": "moderator", "key": "replace-mod-key", "scopes": ["files:delete", "mod:*"]}
+  ]
+}
 ```
 
-## 3. Transport + Auth Model
+### 3.3 Scope matching
 
-- Base URL: `http://<host>:<port>`
-- Content type: `application/json` for JSON routes
-- API key header (required for all automation routes):
-  - `Authorization: Bearer <api-key>`
-  - or `X-Dicefiles-API-Key: <api-key>`
-- Session header (required for user actions):
-  - `X-Dicefiles-Session: <session-token>`
-  - alternatively `session` in body/query on most routes
+- Exact scopes are supported (example: `files:read`)
+- Prefix wildcard scopes are supported (example: `mod:*`)
+- Global wildcard is supported (legacy/full keys): `*`
 
-## 4. Session Lifecycle
+## 4. Rate Limits and Audit Logging
 
-1. `POST /api/automation/auth/login` with username/password
-2. Store returned `session`
-3. Send `X-Dicefiles-Session` on subsequent calls
-4. `POST /api/automation/auth/logout` when done
+Automation endpoints are rate-limited per key + scope (fixed window).
 
-## 5. Endpoint Reference
+Config:
 
-All responses are JSON.
+```json
+{
+  "automationApiRateLimit": {"windowMs": 60000, "max": 180},
+  "automationApiRateLimitByScope": {
+    "files:read": {"windowMs": 60000, "max": 600},
+    "uploads:write": {"windowMs": 60000, "max": 120}
+  },
+  "automationAuditLog": "automation.log"
+}
+```
 
-### 5.1 Login
+Response headers:
 
-- Method: `POST`
-- Path: `/api/automation/auth/login`
-- Auth: API key
+- `X-Dicefiles-RateLimit-Limit`
+- `X-Dicefiles-RateLimit-Remaining`
+- `X-Dicefiles-RateLimit-Reset` (unix seconds)
+- `Retry-After` (only on `429`)
+
+Audit logs are appended as JSON lines to `automationAuditLog`.
+
+## 5. Endpoint Matrix
+
+| Method | Path | Scope | Session Required |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/auth/login` | `auth:login` | No |
+| `POST` | `/api/v1/auth/logout` | `auth:logout` | Yes |
+| `POST` | `/api/v1/rooms` | `rooms:write` | Yes |
+| `POST` | `/api/v1/requests` | `requests:write` | Yes |
+| `POST` | `/api/v1/uploads/key` | `uploads:write` | Yes |
+| `GET` | `/api/v1/uploads/:key/offset` | `uploads:write` | Yes |
+| `PUT` | `/api/v1/uploads/:key` | `uploads:write` | Yes |
+| `GET` | `/api/v1/files` | `files:read` | Optional |
+| `GET` | `/api/v1/downloads` | `files:read` | Optional |
+| `POST` | `/api/v1/files/delete` | `files:delete` | Yes |
+
+## 6. Endpoint Details
+
+All automation responses are JSON.
+
+### 6.1 Login
+
+- `POST /api/v1/auth/login`
 - Body:
 
 ```json
@@ -76,23 +136,19 @@ All responses are JSON.
 }
 ```
 
-### 5.2 Logout
+### 6.2 Logout
 
-- Method: `POST`
-- Path: `/api/automation/auth/logout`
-- Auth: API key + session
+- `POST /api/v1/auth/logout`
 - Success:
 
 ```json
-{"ok":true}
+{"ok": true}
 ```
 
-### 5.3 Create Room
+### 6.3 Create Room
 
-- Method: `POST`
-- Path: `/api/automation/rooms`
-- Auth: API key + session
-- Body: empty object allowed
+- `POST /api/v1/rooms`
+- Body: `{}` (empty body is fine)
 - Success:
 
 ```json
@@ -103,11 +159,9 @@ All responses are JSON.
 }
 ```
 
-### 5.4 Create Request
+### 6.4 Create Request
 
-- Method: `POST`
-- Path: `/api/automation/requests`
-- Auth: API key + session
+- `POST /api/v1/requests`
 - Body:
 
 ```json
@@ -119,20 +173,29 @@ All responses are JSON.
 }
 ```
 
-- Validation rules:
-  - `text`: required, max 200 chars
-  - `url`: optional, max 500 chars, must be `http` or `https`
-  - `requestImage`: optional data URL, max ~2.5MB
+Validation:
 
-### 5.5 Reserve Upload Key
+- `roomid`: required
+- `text`: required, max 200 chars
+- `url`: optional, max 500 chars, must be `http` or `https`
+- `requestImage`: optional data URL, max ~2.5MB
 
-- Method: `POST`
-- Path: `/api/automation/uploads/key`
-- Auth: API key + session
+- Success:
+
+```json
+{
+  "ok": true,
+  "request": {}
+}
+```
+
+### 6.5 Reserve Upload Key
+
+- `POST /api/v1/uploads/key`
 - Body:
 
 ```json
-{"roomid":"AbCdEf1234"}
+{"roomid": "AbCdEf1234"}
 ```
 
 - Success:
@@ -145,11 +208,9 @@ All responses are JSON.
 }
 ```
 
-### 5.6 Query Upload Offset
+### 6.6 Query Upload Offset
 
-- Method: `GET`
-- Path: `/api/automation/uploads/:key/offset`
-- Auth: API key + session
+- `GET /api/v1/uploads/:key/offset`
 - Success:
 
 ```json
@@ -160,25 +221,26 @@ All responses are JSON.
 }
 ```
 
-### 5.7 Upload Bytes (resumable)
+### 6.7 Upload Bytes (resumable)
 
-- Method: `PUT`
-- Path: `/api/automation/uploads/:key?name=<filename>&offset=<n>`
-- Auth: API key + session
-- Body: raw binary bytes (`application/octet-stream`)
+- `PUT /api/v1/uploads/:key?name=<filename>&offset=<n>`
+- Body: raw binary bytes (typically `application/octet-stream`)
 - Behavior:
   - send bytes starting from `offset`
-  - use queried offset before each retry/resume
+  - on failure, re-query offset and resume
+- Success:
 
-### 5.8 List Files/Requests
+```json
+{"key": "fileKey"}
+```
 
-- Method: `GET`
-- Path: `/api/automation/files`
-- Auth: API key (+ session recommended)
+### 6.8 List Files/Requests
+
+- `GET /api/v1/files`
 - Query:
-  - `roomid` (required)
+  - `roomid` required
   - `type` = `all` | `uploads` | `requests` | `new`
-  - `since` (required for `type=new`, unix ms)
+  - `since` required when `type=new` (unix ms)
 - Success:
 
 ```json
@@ -186,30 +248,33 @@ All responses are JSON.
   "ok": true,
   "roomid": "AbCdEf1234",
   "count": 2,
-  "files": []
+  "files": [
+    {
+      "key": "abc123",
+      "name": "file.pdf",
+      "size": 1234567,
+      "uploaded": 1739870000000,
+      "href": "/g/abc123",
+      "isNew": true
+    }
+  ]
 }
 ```
 
-Each item may include `isNew` if `since` was provided.
+### 6.9 Download Planning
 
-### 5.9 Download Planning (not file bytes)
-
-- Method: `GET`
-- Path: `/api/automation/downloads`
-- Auth: API key (+ session recommended)
+- `GET /api/v1/downloads`
 - Query:
-  - `roomid` (required)
+  - `roomid` required
   - `scope` = `all` | `new`
-  - `since` (required for `scope=new`)
-- Response contains download-ready items:
-  - excludes requests
-  - each item includes `href` (typically `/g/<key>`)
+  - `since` required when `scope=new`
+- Notes:
+  - request pseudo-files are excluded
+  - returns `href` suitable for file retrieval
 
-### 5.10 Delete Files/Requests
+### 6.10 Delete Files/Requests
 
-- Method: `POST`
-- Path: `/api/automation/files/delete`
-- Auth: API key + session
+- `POST /api/v1/files/delete`
 - Body:
 
 ```json
@@ -219,64 +284,170 @@ Each item may include `isNew` if `since` was provided.
 }
 ```
 
-- Permissions:
-  - moderators and room owners: can delete any listed entries
-  - regular users: can delete only their own uploads/requests
+Permission behavior:
 
-## 6. Error Contract
+- moderators and room owners can delete any listed entries
+- regular users can delete only their own uploads/requests
 
-Common error shape:
+- Success:
 
 ```json
-{"err":"Human-readable message"}
+{
+  "ok": true,
+  "requested": 2,
+  "removed": 2
+}
+```
+
+## 7. Health and Ops Endpoint
+
+### 7.1 Health check
+
+- `GET /healthz`
+- No automation API key required
+
+Response:
+
+```json
+{
+  "ok": true,
+  "now": "2026-02-18T17:00:00.000Z",
+  "checks": {
+    "redis": {"ok": true, "latencyMs": 2, "detail": "PONG"},
+    "storage": {"ok": true, "latencyMs": 1, "path": "uploads"}
+  },
+  "metrics": {
+    "uploadsCreated": 10,
+    "uploadsDeleted": 3,
+    "downloadsServed": 55,
+    "downloadsBytes": 123456789,
+    "requestsCreated": 7,
+    "requestsFulfilled": 4,
+    "previewFailures": 1,
+    "uptimeSec": 3600
+  }
+}
+```
+
+Status codes:
+
+- `200` healthy
+- `503` one or more dependency checks failed
+
+## 8. Webhooks
+
+Configure in `.config.json`:
+
+```json
+{
+  "webhooks": [
+    {
+      "id": "my-bot",
+      "url": "https://example.org/hooks/dicefiles",
+      "secret": "replace-with-random-secret",
+      "events": ["file_uploaded", "request_created", "request_fulfilled", "file_deleted"],
+      "retries": 3,
+      "timeoutMs": 7000
+    }
+  ],
+  "webhookRetry": {"retries": 3, "baseDelayMs": 1500, "maxDelayMs": 30000},
+  "webhookDeadLetterLog": "webhook-dead-letter.log"
+}
+```
+
+### 8.1 Delivery payload
+
+```json
+{
+  "id": "event-id",
+  "event": "file_uploaded",
+  "timestamp": "2026-02-18T16:00:00.000Z",
+  "payload": {},
+  "attempt": 1
+}
+```
+
+### 8.2 Delivery headers
+
+- `X-Dicefiles-Event`
+- `X-Dicefiles-Webhook-Id`
+- `X-Dicefiles-Timestamp`
+- `X-Dicefiles-Signature` (when webhook has `secret`)
+
+Signature format:
+
+- HMAC-SHA256 over: `timestamp + "." + rawBody`
+- hex digest
+
+### 8.3 Event semantics
+
+- `file_uploaded`: upload registration completed
+- `request_created`: request pseudo-file created
+- `request_fulfilled`: request deleted before expiry (non-expired deletion path)
+- `file_deleted`: upload deleted/expired path
+
+Retries use exponential backoff. Permanent failures are written as JSON lines to `webhookDeadLetterLog`.
+
+## 9. Error Contract
+
+Error shape:
+
+```json
+{"err": "Human-readable message"}
 ```
 
 Typical status codes:
+
+- `400` validation/domain errors
 - `401` invalid API key or invalid automation session
-- `404` automation API disabled
-- `400` validation and domain errors (invalid room, payload, permissions)
+- `403` missing required API scope
+- `404` automation API disabled (no keys configured)
+- `429` automation API rate limit exceeded
 
-## 7. Agent Workflow Recipes
+## 10. Agent Workflow Recipes
 
-### 7.1 Recipe: Create Room + Request
+### 10.1 Create room + request
 
-1. Login
-2. Create room
-3. Create request in that room
-4. Optionally list files with `type=requests`
+1. `POST /api/v1/auth/login`
+2. `POST /api/v1/rooms`
+3. `POST /api/v1/requests`
+4. Optional: `GET /api/v1/files?type=requests`
 
-### 7.2 Recipe: Resumable Upload
+### 10.2 Resumable upload
 
-1. Login
-2. Reserve upload key
-3. Query offset
-4. `PUT` remaining bytes from offset
-5. If interrupted: repeat from step 3
+1. `POST /api/v1/auth/login`
+2. `POST /api/v1/uploads/key`
+3. `GET /api/v1/uploads/:key/offset`
+4. `PUT /api/v1/uploads/:key?name=<n>&offset=<offset>`
+5. On interruption, repeat from step 3
 
-### 7.3 Recipe: Batch Download New Uploads
+### 10.3 Batch download new uploads
 
-1. Keep `lastSeenMs` in your agent state
-2. Call `/api/automation/downloads?scope=new&since=<lastSeenMs>`
+1. Persist `lastSeenMs` in agent state
+2. `GET /api/v1/downloads?scope=new&since=<lastSeenMs>`
 3. Download each returned `href`
-4. Update `lastSeenMs` after successful batch
+4. Update `lastSeenMs`
 
-## 8. Skill-Generator Mapping (skills.sh/OpenClaw friendly)
+## 11. Skill-Builder Mapping
 
-Suggested tool definitions:
+Suggested tool contracts:
+
 - `dicefiles_login(username,password,twofactor?) -> {session,user,role}`
+- `dicefiles_logout(session) -> {ok}`
 - `dicefiles_create_room(session) -> {roomid,href}`
 - `dicefiles_create_request(session,roomid,text,url?,requestImage?) -> {request}`
 - `dicefiles_upload_key(session,roomid) -> {key,ttlHours}`
 - `dicefiles_upload_offset(session,key) -> {offset}`
-- `dicefiles_upload_put(session,key,name,offset,binary)`
-- `dicefiles_list_files(session,roomid,type,since?) -> {files}`
-- `dicefiles_plan_downloads(session,roomid,scope,since?) -> {files}`
+- `dicefiles_upload_put(session,key,name,offset,binary) -> {key}`
+- `dicefiles_list_files(session?,roomid,type,since?) -> {files}`
+- `dicefiles_plan_downloads(session?,roomid,scope,since?) -> {files}`
 - `dicefiles_delete(session,roomid,keys[]) -> {removed}`
+- `dicefiles_health() -> {ok,checks,metrics}`
 
-State to persist in a skill:
+Persisted state:
+
 - `apiKey`
 - `session`
 - `roomid`
 - `lastSeenMs`
 - per-upload `key` + `offset`
-

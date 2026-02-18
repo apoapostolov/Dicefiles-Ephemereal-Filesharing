@@ -278,26 +278,26 @@ Configuration files are loaded in this order (last value wins):
 
 **Key options:**
 
-| Option                  | Default        | Description                                                     |
-| ----------------------- | -------------- | --------------------------------------------------------------- |
-| `port`                  | `8080`         | HTTP listen port                                                |
-| `workers`               | `CPU + 1`      | Number of web workers                                           |
-| `secret`                | `"Dicefiles"`  | Secret for crypto (change in production)                        |
-| `uploads`               | `"uploads"`    | Upload directory path                                           |
-| `maxFileSize`           | `10GB`         | Max file size in bytes (0 = unlimited)                          |
-| `requireAccounts`       | `false`        | Require accounts to chat/upload                                 |
-| `roomCreation`          | `true`         | Allow room creation                                             |
-| `TTL`                   | `48`           | Hours before finished downloads expire                          |
-| `downloadMaxConcurrent` | `3`            | Max concurrent downloads for room toolbar batch downloads (1-4) |
-| `automationApiKeys`     | `[]`           | API keys for automation API (supports scoped key objects)        |
-| `automationApiRateLimit` | `{windowMs,max}` | Default automation API rate limit (fixed window)               |
-| `automationApiRateLimitByScope` | `{}`  | Per-scope rate limit overrides for automation API                |
-| `automationAuditLog`    | `"automation.log"` | JSONL audit log file for automation API calls                 |
-| `observabilityLog`      | `"ops.log"`    | JSONL lifecycle log for uploads/downloads/requests/previews      |
-| `webhooks`              | `[]`           | Outbound webhook targets/events for upload/request lifecycle     |
-| `webhookRetry`          | `{...}`        | Webhook retry policy defaults (retries/backoff)                  |
-| `webhookDeadLetterLog`  | `"webhook-dead-letter.log"` | JSONL sink for failed webhook deliveries            |
-| `jail`                  | `true` (Linux) | Use firejail for preview commands (always false on Windows)     |
+| Option                          | Default                     | Description                                                     |
+| ------------------------------- | --------------------------- | --------------------------------------------------------------- |
+| `port`                          | `8080`                      | HTTP listen port                                                |
+| `workers`                       | `CPU + 1`                   | Number of web workers                                           |
+| `secret`                        | `"Dicefiles"`               | Secret for crypto (change in production)                        |
+| `uploads`                       | `"uploads"`                 | Upload directory path                                           |
+| `maxFileSize`                   | `10GB`                      | Max file size in bytes (0 = unlimited)                          |
+| `requireAccounts`               | `false`                     | Require accounts to chat/upload                                 |
+| `roomCreation`                  | `true`                      | Allow room creation                                             |
+| `TTL`                           | `48`                        | Hours before finished downloads expire                          |
+| `downloadMaxConcurrent`         | `3`                         | Max concurrent downloads for room toolbar batch downloads (1-4) |
+| `automationApiKeys`             | `[]`                        | API keys for automation API (supports scoped key objects)       |
+| `automationApiRateLimit`        | `{windowMs,max}`            | Default automation API rate limit (fixed window)                |
+| `automationApiRateLimitByScope` | `{}`                        | Per-scope rate limit overrides for automation API               |
+| `automationAuditLog`            | `"automation.log"`          | JSONL audit log file for automation API calls                   |
+| `observabilityLog`              | `"ops.log"`                 | JSONL lifecycle log for uploads/downloads/requests/previews     |
+| `webhooks`                      | `[]`                        | Outbound webhook targets/events for upload/request lifecycle    |
+| `webhookRetry`                  | `{...}`                     | Webhook retry policy defaults (retries/backoff)                 |
+| `webhookDeadLetterLog`          | `"webhook-dead-letter.log"` | JSONL sink for failed webhook deliveries                        |
+| `jail`                          | `true` (Linux)              | Use firejail for preview commands (always false on Windows)     |
 
 ## Automation API
 

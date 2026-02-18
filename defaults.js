@@ -42,8 +42,58 @@ module.exports = {
   // Optional bearer keys for automation API clients (agents/tools).
   // Keep empty to disable automation API routes.
   // Example:
-  // automationApiKeys: ["replace-with-long-random-secret"]
+  // automationApiKeys: [
+  //   "legacy-full-access-key",
+  //   { id: "readonly", key: "replace-read-key", scopes: ["files:read"] },
+  //   {
+  //     id: "uploader",
+  //     key: "replace-upload-key",
+  //     scopes: ["files:read", "rooms:write", "uploads:write", "requests:write"],
+  //   },
+  //   { id: "moderator", key: "replace-mod-key", scopes: ["mod:*"] },
+  // ]
   automationApiKeys: [],
+
+  // Default fixed-window API rate limiting for automation routes
+  // (`/api/automation/*` and `/api/v1/*`).
+  automationApiRateLimit: {
+    windowMs: 60000,
+    max: 180,
+  },
+
+  // Optional per-scope rate-limit overrides.
+  // Keys are scope names (for example: "files:read", "uploads:write", "mod:*")
+  // and values are {windowMs, max}.
+  automationApiRateLimitByScope: {},
+
+  // Path to append structured automation API audit logs (JSON lines).
+  automationAuditLog: "automation.log",
+
+  // Path to append structured lifecycle observability logs (JSON lines):
+  // upload/create-delete, request/create-fulfill, download served, preview failures.
+  observabilityLog: "ops.log",
+
+  // Outbound webhook integrations.
+  // Example:
+  // webhooks: [{
+  //   id: "ops-bot",
+  //   url: "https://example.org/dicefiles-webhook",
+  //   secret: "replace-with-long-random-secret",
+  //   events: ["file_uploaded", "request_created", "request_fulfilled", "file_deleted"],
+  //   retries: 3,
+  //   timeoutMs: 7000,
+  // }]
+  webhooks: [],
+
+  // Retry policy defaults for webhooks.
+  webhookRetry: {
+    retries: 3,
+    baseDelayMs: 1500,
+    maxDelayMs: 30000,
+  },
+
+  // JSON-lines dead-letter sink for permanently failed webhook deliveries.
+  webhookDeadLetterLog: "webhook-dead-letter.log",
 
   // Allow X-Forwarded-For to set client IP if found
   considerProxyForwardedForHeaders: false,

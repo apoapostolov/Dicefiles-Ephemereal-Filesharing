@@ -1,5 +1,60 @@
 # Dicefiles Development Log
 
+## 2026-02-18 - Changelog Release Consolidation (1.0.0)
+
+- Folded all previously pending `Unreleased` feature notes into the current `1.0.0` changelog entry.
+- Simplified release notes to user-facing capabilities plus a concise API/integrations section.
+- Removed incremental unreleased deltas so changelog reflects a single coherent baseline release view.
+
+## 2026-02-18 - API.md Full Sync Pass
+
+- Reworked `API.md` into a complete, code-aligned API spec for current Dicefiles behavior.
+- Documented stable `/api/v1` namespace and `/api/automation` compatibility alias.
+- Added full scope model details, key configuration patterns, and scope matching rules.
+- Added complete endpoint matrix and per-endpoint examples (auth, rooms, requests, uploads, files, downloads, delete).
+- Added automation rate-limit/audit headers and status behavior.
+- Added `GET /healthz` contract with dependency checks and metrics payload.
+- Expanded webhook section with signing details, event semantics, retries, and dead-letter behavior.
+- Added agent workflow recipes and explicit skill-builder mapping for automation tooling.
+
+## 2026-02-18 - TODO 13: Observability and Ops Baseline
+
+- Added new shared observability module (`lib/observability.js`) for lifecycle logs, counters, and health checks.
+- Added structured JSONL lifecycle logging for:
+  - upload created / deleted
+  - request created / fulfilled
+  - download served
+  - preview generation failures
+- Added in-memory metrics counters:
+  - `uploadsCreated`, `uploadsDeleted`
+  - `downloadsServed`, `downloadsBytes`
+  - `requestsCreated`, `requestsFulfilled`
+  - `previewFailures`
+- Added lightweight `GET /healthz` endpoint with:
+  - Redis ping + latency check
+  - upload storage writeability probe + latency
+  - current metrics snapshot
+- Added new default config key:
+  - `observabilityLog` (default `ops.log`)
+- Updated roadmap/docs to mark TODO-13 completed and document health/observability settings.
+
+## 2026-02-18 - TODO 8/9: Automation API Hardening + Webhooks
+
+- Added a stable versioned automation API namespace: `/api/v1/*` with compatibility alias `/api/automation/*`.
+- Added scoped automation API key support:
+  - legacy string keys still map to full access
+  - object keys support scoped permissions (`files:read`, `uploads:write`, `requests:write`, `files:delete`, etc.)
+- Added per-scope fixed-window rate limiting for automation routes with standard response headers and `429` handling.
+- Added structured automation audit logging (JSON lines) to configurable `automationAuditLog`.
+- Implemented outbound webhook dispatcher with event coverage:
+  - `file_uploaded`
+  - `request_created`
+  - `request_fulfilled` (on non-expiry request removal)
+  - `file_deleted`
+- Added signed webhook delivery (`X-Dicefiles-Signature`, HMAC-SHA256), retry/backoff policy, and dead-letter JSONL logging.
+- Updated API and README documentation to reflect new config and integration flow for agentic tooling.
+- Marked roadmap TODO items 8 and 9 as done in `TODO.md`.
+
 ## 2026-02-18 - Unreleased squashed into 1.0.0
 
 - Squashed player/API-facing Unreleased items into `CHANGELOG.md` under `1.0.0` (emoji picker, GIF search/post flow, batch-download features, file view-mode persistence, preview quality, file metadata and CSP/API fixes).
