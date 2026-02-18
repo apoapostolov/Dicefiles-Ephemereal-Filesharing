@@ -9,8 +9,8 @@
 Dicefiles is a self-hosted, open-source file sharing platform for hobby communities, forked from Volafile and Kregfile, and extended with new automation features, quick downloading for archival purposes, and an improved in-room request flow. It is ideal for sharing roleplaying books, digital maps, board games, STL models, fiction, and more.
 
 <p align="center">
-  <img src="images/dicefiles_01.png" width="32%" />
-  <img src="images/dicefiles_02.png" width="32%" />
+  <img src="images/dicefiles_01.png" width="47.5%" />
+  <img src="images/dicefiles_02.png" width="47.5%" />
 </p>
 
 > **Note:** This is a self-hosted application. You must host it yourself - there is no public service provided.
