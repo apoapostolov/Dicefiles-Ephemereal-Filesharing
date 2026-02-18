@@ -1,0 +1,22 @@
+[Unit]
+Description=Dicefiles
+After=network.target
+Requires=redis.service network.target
+
+[Service]
+Type=simple
+Environment=NODE_ENV=production
+Environment=ENV=production
+Environment=env=production
+ExecStartPre=/usr/bin/git pull
+ExecStartPre=/usr/bin/yarn
+ExecStart=/usr/bin/yarn start
+WorkingDirectory=/root/dicefiles
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=dicefiles
+
+[Install]
+WantedBy=multi-user.target
+Alias=dicefiles.service

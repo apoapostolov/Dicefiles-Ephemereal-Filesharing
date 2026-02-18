@@ -1,0 +1,15 @@
+{
+  "giphy": {
+    "apiKey": "",
+    "limit": 20,
+    "rating": "r",
+    "ratingNote": "Allowed values: g, pg, pg-13, r (default r for mature results)"
+  },
+  "tenor": {
+    "apiKey": "",
+    "clientKey": "dicefiles",
+    "limit": 20,
+    "mediaFilter": "tinygif,gif",
+    "contentFilter": "medium"
+  }
+}

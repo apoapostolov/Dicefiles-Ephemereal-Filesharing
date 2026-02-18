@@ -1,0 +1,736 @@
+.modal-holder {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+  z-index: 3000;
+}
+
+.modal {
+  background: var(--main-bg);
+  max-width: 80%;
+  max-height: 90%;
+  border-left: 4px solid var(--lite-bg);
+  border-right: 4px solid var(--lite-bg);
+  display: grid;
+  grid-template-columns: auto;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+  box-shadow: 4px 4px 20px rgba(200,200,200,0.1);
+}
+
+.modal input[type="text"],
+.modal input[type="url"],
+.modal input[type="password"],
+.modal input[type="email"],
+.modal input[type="number"],
+.modal select,
+.modal textarea {
+  background: var(--dark-bg);
+  color: var(--text-fg);
+  border: 0;
+  padding: 2px 10px;
+}
+
+.modal input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.04em;
+  height: 1.04em;
+  margin: 0;
+  border: 1px solid rgba(236, 236, 236, 0.34);
+  border-radius: 4px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.24));
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  display: inline-grid;
+  place-content: center;
+  transition: background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.modal input[type="checkbox"]::before {
+  content: "";
+  width: 0.62em;
+  height: 0.62em;
+  clip-path: polygon(14% 52%, 0 67%, 40% 100%, 100% 24%, 84% 10%, 38% 70%);
+  transform: scale(0);
+  transform-origin: center;
+  background: rgba(240, 245, 241, 0.96);
+  transition: transform 0.12s ease;
+}
+
+.modal input[type="checkbox"]:hover {
+  border-color: rgba(245, 245, 245, 0.5);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(0, 0, 0, 0.21));
+}
+
+.modal input[type="checkbox"]:focus-visible {
+  outline: none;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 255, 255, 0.22);
+}
+
+.modal input[type="checkbox"]:checked {
+  border-color: rgba(199, 222, 204, 0.72);
+  background: linear-gradient(180deg, rgba(168, 199, 176, 0.48), rgba(86, 108, 94, 0.56));
+}
+
+.modal input[type="checkbox"]:checked::before {
+  transform: scale(1);
+}
+
+.modal .icon {
+  width: 64px;
+  font-size: 64px;
+  margin-right: 20px;
+  grid-area: icon;
+}
+
+.modal .wide {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  align-content: center;
+  grid-column-end: span 2;
+}
+
+.modal-head {
+  padding: 0.5ex 1em;
+  margin-bottom: 1ex;
+  background: var(--lite-bg);
+  font-size: 110%;
+  font-weight: bold;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.modal-body {
+  font-size: 95%;
+  text-overflow: ellipsis;
+  padding: 0.5ex 1em;
+  overflow-y: auto;
+}
+
+.modal-body button {
+  margin-right: 1em;
+  font-size: small;
+}
+
+.modal-buttons {
+  display: flex;
+  user-select: none;
+  padding: 0.9ex 1em;
+  margin-top: 1ex;
+  background: var(--lite-bg);
+  justify-self: stretch;
+  justify-content: flex-end;
+  gap: 0.7em;
+}
+
+.modal-button {
+  margin-left: 0;
+  min-width: 5.5em;
+  padding: 0.42em 0.9em;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-fg);
+  font-size: 0.94rem;
+  font-weight: 600;
+  line-height: 1.15;
+  opacity: 0.96;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+}
+
+.modal-button:hover,
+.modal-button:focus {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.36);
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+
+.modal-button-default {
+  background: rgba(192, 232, 205, 0.2);
+  border-color: rgba(192, 232, 205, 0.45);
+  color: #f2fff5;
+  opacity: 1;
+}
+
+.modal-button-default:hover,
+.modal-button-default:focus {
+  background: rgba(192, 232, 205, 0.28);
+  border-color: rgba(192, 232, 205, 0.62);
+}
+
+.modal-button-cancel {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: rgba(235, 235, 235, 0.92);
+  opacity: 0.9;
+}
+
+.modal-messagebox .modal-body {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-column-gap: 1em;
+}
+
+
+.modal-messagebox-icon {
+  font-size: 64px;
+}
+
+.modal-helpdlg .modal-body,
+.modal-report .modal-body,
+.modal-changepw .modal-body,
+.modal-login .modal-body,
+.modal-optsdlg .modal-body,
+.modal-bandlg .modal-body,
+.modal-unbandlg .modal-body,
+.modal-bldlg .modal-body {
+  display: grid;
+  grid-template-columns: auto 1fr 2fr;
+  min-width: 60ex;
+  grid-column-gap: 1ex;
+}
+
+.modal-helpdlg .modal-body {
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "icon ."
+    "icon ."
+    "icon ."
+    "icon .";
+}
+
+.modal-report .modal-body {
+  max-width: 50em;
+  grid-row-gap: 1.3ex;
+  grid-template-columns: auto 1fr 4fr;
+  grid-template-areas:
+    "icon rules rules"
+    "icon . ."
+    "icon . ."
+    "agreement agreement agreement";
+}
+
+#report-rules {
+  grid-area: rules;
+}
+#report-agreement {
+  margin-top: 1ex;
+  grid-area: agreement;
+}
+
+.modal-login .modal-body {
+  grid-template-areas:
+    "icon . ."
+    "icon . ."
+    "icon . .";
+  grid-row-gap: 1.3ex;
+}
+
+.modal-changepw .modal-body {
+  grid-template-areas:
+    "icon . ."
+    "icon . ."
+    "icon . ."
+    "icon . ."
+    "icon . .";
+  grid-row-gap: 1.3ex;
+}
+
+.modal-optsdlg .modal-body {
+  grid-template-areas:
+    "icon . ."
+    "icon . ."
+    "icon . ."
+    "icon . ."
+    "icon . ."
+    "icon . ."
+    "icon . .";
+  grid-row-gap: 1.3ex;
+}
+
+.modal-bandlg .modal-body {
+  grid-template-areas:
+    "icon . ."
+    "icon . ."
+    "icon . ."
+    "icon . ."
+    "icon . ."
+    "icon . ."
+    "icon . ."
+    "icon . .";
+  grid-row-gap: 0.4em;
+  grid-column-gap: 1em;
+}
+
+.modal-unbandlg .modal-body {
+  grid-template-areas:
+    "icon . ."
+    "icon . ."
+    "icon . ."
+    "icon . ."
+    "icon . .";
+  grid-row-gap: 0.4em;
+  grid-column-gap: 1em;
+}
+
+.modal-bldlg .modal-body {
+  grid-template-areas:
+    "icon . ."
+    "icon . ."
+    "icon . ."
+    "icon . ."
+    "icon . ."
+    "icon . .";
+  grid-row-gap: 0.4em;
+  grid-column-gap: 1em;
+}
+
+.modal .userlist {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--dark-bg);
+  height: 10em;
+  overflow-x: none;
+  overflow-y: scroll;
+  padding: 0.2ex 1ex;
+}
+
+.modal .userlistitem {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: space-between;
+  align-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 0.3ex 0;
+  box-sizing: border-box;
+}
+
+.modal .userlistitem button {
+  font-size: xx-small;
+  margin: 0;
+}
+
+.modal .usersdesc {
+  max-width: 70ex;
+}
+
+.modal-downloadbatch .modal-body {
+  min-width: 40em;
+  max-width: 40em;
+  overflow-x: hidden;
+}
+
+.modal-downloadbatch .download-status {
+  margin-bottom: 0.8rem;
+  font-size: 95%;
+}
+
+.modal-downloadbatch .download-current {
+  margin-bottom: 0.8rem;
+  color: var(--dark-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-downloadbatch .download-progress-wrap {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.modal-downloadbatch .download-progress-bar {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(160, 220, 170, 0.85), rgba(205, 245, 213, 0.85));
+  transition: width 0.2s ease;
+}
+
+.modal-downloadbatch .download-options {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.8em;
+  margin: 0.5em 0 0.8em;
+  color: rgba(234, 234, 234, 0.95);
+}
+
+.modal-downloadbatch .download-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 0.92em;
+}
+
+.modal-downloadbatch .download-option-controls {
+  display: inline-flex;
+  align-items: center;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  gap: 0.9em;
+  margin-left: auto;
+  margin-right: 0;
+  text-align: right;
+}
+
+.modal-downloadbatch .download-option-retry,
+.modal-downloadbatch .download-option-concurrent {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.modal-downloadbatch .download-retry-input {
+  width: 1.65em;
+  -moz-appearance: textfield;
+  text-align: center;
+  padding: 0.15em 0.35em;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(240, 240, 240, 0.96);
+}
+
+.modal-downloadbatch .download-retry-input::-webkit-outer-spin-button,
+.modal-downloadbatch .download-retry-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.modal-downloadbatch .download-report-summary {
+  margin: 0.75em 0 0.45em;
+  color: rgba(230, 230, 230, 0.92);
+  font-size: 0.92em;
+}
+
+.modal-downloadbatch .download-report-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.4em 0.6em;
+  max-height: 11em;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.modal-downloadbatch .download-report-empty {
+  padding: 0.3em 0.1em;
+  color: rgba(190, 190, 190, 0.86);
+  font-style: italic;
+}
+
+.modal-downloadbatch .download-report-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1em;
+  padding: 0.23em 0;
+  max-width: 100%;
+  overflow: hidden;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.modal-downloadbatch .download-report-item:last-child {
+  border-bottom: 0;
+}
+
+.modal-downloadbatch .download-report-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: rgba(238, 238, 238, 0.96);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-downloadbatch .download-report-state {
+  flex: 0 0 auto;
+  font-size: 0.85em;
+  color: rgba(206, 206, 206, 0.92);
+}
+
+.modal-downloadbatch .download-report-item.is-success .download-report-state {
+  color: rgba(177, 226, 189, 0.95);
+}
+
+.modal-downloadbatch .download-report-item.is-failed .download-report-state {
+  color: rgba(248, 161, 161, 0.95);
+}
+
+.modal-downloadbatch .download-report-item.is-skipped .download-report-state {
+  color: rgba(229, 229, 182, 0.95);
+}
+
+.modal-downloadbatch .download-report-item.is-retrying .download-report-state,
+.modal-downloadbatch .download-report-item.is-running .download-report-state {
+  color: rgba(199, 219, 248, 0.95);
+}
+
+.modal-requestcreate .modal-body {
+  display: grid;
+  grid-template-columns: 12.8em minmax(20em, 1fr);
+  min-width: 42em;
+  grid-row-gap: 0.8ex;
+  grid-column-gap: 1em;
+  align-items: start;
+}
+
+.modal-requestcreate input[type="text"],
+.modal-requestcreate textarea,
+.modal-requestcreate input[type="url"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-requestcreate input[type="url"] {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-requestcreate .request-fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr auto auto;
+  grid-row-gap: 0.55ex;
+  height: 12.8em;
+  min-height: 12.8em;
+}
+
+.modal-requestcreate textarea {
+  resize: none;
+  min-height: 0;
+  line-height: 1.25;
+}
+
+.modal-requestcreate input[type="url"] {
+  min-height: 2.25em;
+}
+
+.modal-requestcreate .request-image-drop {
+  width: 12.8em;
+  height: 12.8em;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(16, 16, 16, 0.95),
+      rgba(20, 20, 20, 0.9)
+    );
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+}
+
+.modal-requestcreate .request-image-drop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.modal-requestcreate .request-image-drop.has-image::before {
+  background: rgba(0, 0, 0, 0.32);
+}
+
+.modal-requestcreate .request-image-drop.dragging {
+  border-color: rgba(208, 236, 214, 0.88);
+  box-shadow: 0 0 0 2px rgba(208, 236, 214, 0.25) inset;
+}
+
+.modal-requestcreate .request-image-drop-text {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: rgba(223, 223, 223, 0.9);
+  font-size: 1.28rem;
+  font-weight: 700;
+  padding: 0 0.6em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+
+.modal-notifydlg {
+  max-width: 36rem;
+}
+
+.modal-notifydlg .modal-body {
+  display: block;
+  min-width: 0;
+  width: fit-content;
+}
+
+
+.modal-notifydlg .notify-panel {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.45em;
+  width: 100%;
+}
+
+.modal-notifydlg .notify-row {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 1.9em;
+  padding: 0.2em 0.3em;
+  border-radius: 4px;
+}
+
+.modal-notifydlg .notify-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.modal-notifydlg .notify-text {
+  display: block;
+  color: rgba(240, 240, 240, 0.96);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.modal-notifydlg .notify-toggle {
+  width: 1rem;
+  height: 1rem;
+  margin: 0 0 0 0.6em;
+}
+
+.modal-notifydlg .notify-permission-status {
+  margin: 0.25em 0 0;
+  color: rgba(224, 224, 224, 0.88);
+  font-size: 0.92em;
+}
+
+
+
+/* Surgical polish: Room Options + Room Owners/Invitees dialogs */
+.modal-optsdlg .modal-body {
+  min-width: 60ex;
+  align-items: start;
+  grid-column-gap: 1.1em;
+}
+
+.modal-optsdlg .modal-body label {
+  color: rgba(236, 236, 236, 0.95);
+  font-weight: 600;
+}
+
+.modal-optsdlg .modal-body input[type="text"],
+.modal-optsdlg .modal-body input[type="number"],
+.modal-optsdlg .modal-body textarea {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  padding: 0.32em 0.6em;
+}
+
+.modal-optsdlg .modal-body textarea {
+  min-height: 5.6em;
+  resize: vertical;
+}
+
+.modal-optsdlg .modal-body .wide {
+  gap: 0.55em;
+}
+
+.modal-optsdlg .modal-body .wide > button {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-fg);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 0.36em 0.85em;
+  font-size: 0.84rem;
+}
+
+.modal-optsdlg .modal-body .wide > button:hover,
+.modal-optsdlg .modal-body .wide > button:focus {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12);
+}
+
+.modal-optsdlg .modal-body input[type="checkbox"] {
+  margin-right: 0.45em;
+}
+
+.modal-optsdlg .usersdesc {
+  max-width: 66ex;
+  line-height: 1.4;
+  color: rgba(220, 220, 220, 0.92);
+}
+
+.modal-optsdlg .userlist {
+  height: 11.5em;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 0.3em 0.45em;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.modal-optsdlg .userlistitem {
+  padding: 0.26em 0.4em;
+  border-radius: 6px;
+}
+
+.modal-optsdlg .userlistitem:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.modal-optsdlg .userlistitem button {
+  background: transparent;
+  color: rgba(244, 244, 244, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  padding: 0.14em 0.45em;
+}
+
+.modal-optsdlg .userlistitem button:hover,
+.modal-optsdlg .userlistitem button:focus {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+.modal-optsdlg .roomopts-primary-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55em;
+}
+
+.modal-optsdlg .roomopts-primary-row > label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32em;
+  font-weight: 600;
+  color: rgba(236, 236, 236, 0.95);
+  white-space: nowrap;
+}
+
+.modal-optsdlg .roomopts-primary-row > button {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  padding-top: 0.26em;
+  padding-bottom: 0.26em;
+}

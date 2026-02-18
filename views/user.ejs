@@ -1,0 +1,102 @@
+<!doctype html>
+<%- include("head"); %>
+<body id="page">
+  <nav>
+    <h1 id="name"><%=user.name%> Profile</h1>
+  </nav>
+  <article id="userprofile">
+    <section class="profile-header">
+      <% if (user.gravatar) { %>
+      <a href="https://gravatar.com" target="_blank" rel="noopener noreferrer"
+         title="Go to gravatar.com to register and upload your avatar">
+        <img id="avatar" src="<%=user.gravatar%>" alt="<%=user.name%> avatar">
+      </a>
+      <% } else { %>
+      <span id="avatar" class="i-white" aria-hidden="true"
+        title="Go to gravatar.com to register and upload your avatar"></span>
+      <% } %>
+      <div class="profile-meta">
+        <h2><%=user.name%></h2>
+        <% if (user.role === "mod") { %>
+        <p class="role-chip">Moderator</p>
+        <% } %>
+        <% if (info.email) { %>
+        <p class="muted">
+          Reachable at
+          <a href="mailto:<%=user.email%>"><%=user.email%></a>
+        </p>
+        <% } %>
+      </div>
+    </section>
+
+    <section class="profile-stats">
+      <div class="stat-card">
+        <h3>Total Uploaded</h3>
+        <p><%=info.uploaded || "0 B"%></p>
+        <% if (info.uploadedRank) { %>
+        <small><a href="/top/uploaded"><%=info.uploadedRank%></a> globally</small>
+        <% } %>
+      </div>
+      <div class="stat-card">
+        <h3>Total Downloaded</h3>
+        <p><%=info.downloaded || "0 B"%></p>
+        <% if (info.downloadedRank) { %>
+        <small><%=info.downloadedRank%> globally</small>
+        <% } %>
+      </div>
+      <div class="stat-card">
+        <h3>Files Uploaded</h3>
+        <p><%=info.files || "0"%></p>
+        <% if (info.filesRank) { %>
+        <small><a href="/top/files"><%=info.filesRank%></a> globally</small>
+        <% } %>
+      </div>
+      <div class="stat-card">
+        <h3>Achievements</h3>
+        <p><%=info.achievements.unlocked%> / <%=info.achievements.total%></p>
+        <small>Unlocked milestones</small>
+      </div>
+    </section>
+
+    <section class="profile-message">
+      <h3>Profile Message</h3>
+      <% if (info.canEditMessage) { %>
+      <form id="profile-message-form" action="javascript:">
+        <input type="hidden" id="profile-token" value="<%=token%>">
+        <textarea
+          id="profile-message-input"
+          name="message"
+          maxlength="2000"
+          placeholder="Write a message for visitors. Markdown and links are supported."><%=user.message || ""%></textarea>
+        <div class="form-actions">
+          <span id="profile-message-status" class="muted"></span>
+          <button id="profile-message-save" type="submit">Save Message</button>
+        </div>
+      </form>
+      <% } %>
+      <div class="profile-message-rendered" id="profile-message-rendered">
+        <% if (info.messageHtml) { %>
+        <%-info.messageHtml%>
+        <% } %>
+      </div>
+    </section>
+
+    <section class="profile-achievements">
+      <h3>Achievements</h3>
+      <div class="achievement-grid">
+        <% for (const a of info.achievements.all) { %>
+        <article class="achievement <%=a.unlocked ? "unlocked" : "locked"%> rarity-<%=a.rarity%>" title="<%=a.description%>">
+          <span class="achievement-icon <%=a.icon%>" aria-hidden="true"></span>
+          <h4><%=a.title%></h4>
+          <p><%=a.description%></p>
+          <small><%=a.unlocked ? "Unlocked" : "Locked"%></small>
+        </article>
+        <% } %>
+      </div>
+    </section>
+  </article>
+  <% if (info.canEditMessage) { %>
+  <script src="/user.js?v=<%=v%>"></script>
+  <% } %>
+  <%- include("footer"); %>
+</body>

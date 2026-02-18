@@ -1,0 +1,10 @@
+<head>
+  <% if (typeof pagename !== "undefined") { %>
+  <title><%=pagename%> - <%=NAME%></title>
+  <% } else { %>
+  <title><%=NAME%></title>
+  <% } %>
+  <link rel="stylesheet" href="/style.css?v=<%=v%>">
+  <link rel="shortcut icon" href="/favicon.png?v=<%=v%>">
+  <link rel="icon" href="/favicon.png?v=<%=v%>">
+</head>
