@@ -1,5 +1,180 @@
 # Dicefiles Development Log
 
+## 2026-02-21 - Streaming PDF / ePub In-Page Reader
+
+### Summary
+
+Implemented an in-page reader for PDF and ePub files. Clicking a document file in gallery mode shows the cover image in the gallery lightbox. A **"Read Now"** button (transparent-black, grey-bordered) appears on the cover overlay for PDF and ePub files. Clicking it opens a full-screen reader that fills the file-list area, streaming the content lazily as the user scrolls.
+
+### Architecture
+
+- **PDF engine**: Mozilla PDF.js (`pdfjs-dist@3.11.174`, Apache-2.0). Streams pages via HTTP Range requests (server already had `acceptRanges: true`). Pages are rendered lazily via `IntersectionObserver` — only pages near the viewport are decoded, everything else is a lightweight placeholder. Zoom in/out re-renders at new scale.
+- **ePub engine**: epub.js (`epubjs@0.3.93`, BSD-2). Fetches and parses the epub ZIP client-side. Renders chapters in a sandboxed iframe with dark-theme defaults. Prev/next chapter navigation.
+- **Worker**: `pdf.worker.entry.js` added as a webpack entry point, producing `/pdf.worker.js`. Referenced directly at `GlobalWorkerOptions.workerSrc`; no CDN dependency.
+
+### Changes
+
+- `package.json`: added `pdfjs-dist@^3.11.174` and `epubjs@^0.3.93` to dependencies.
+- `webpack.config.js`: added `pdf.worker` entry pointing at `pdfjs-dist/build/pdf.worker.entry.js`; produces `static/pdf.worker.js`.
+- `client/files/reader.js` (new): `PDFReader`, `EpubReader`, and `Reader` classes. Dynamic imports (`import()`) so the ~1 MB PDF.js and epub.js bundles are only fetched when a user actually opens a document — zero cost for normal usage.
+- `entries/css/reader.css` (new): reader toolbar bar, scrollable content area, page canvas styling, ePub iframe sizing, and `.gallery-read-now` button.
+- `entries/css/style.css`: imports `reader.css`.
+- `client/file.js`: added `getReadableType()` returning `"pdf"`, `"epub"`, or `null`.
+- `client/files/gallery.js`: imported `Reader`; added `readNowEl` and `reader` to constructor; added `onreadnow()` handler; shows/hides the Read Now button per file readability.
+- `views/room.ejs`: added `<button id="gallery_read_now" ...>` inside `#gallery`; added `#reader` overlay with toolbar and `#reader-content` scroll area.
+
+## 2026-02-21 - Filter Field Alignment + Links Archive Header Row
+
+### Changes
+
+- `entries/css/room.css`:
+  - Added `line-height: 1` to `#filter` rule — fixes 1-2px upward browser-default offset that `<input>` elements exhibit inside flex containers despite `align-self: center`.
+- `entries/css/files.css`:
+  - Added `background: var(--dark-bg); color: var(--text-fg)` to `#links` for explicit visibility guarantee (previously relied on inheritance).
+  - Added `#links::before { content: ''; display: block; height: 28px; }` spacer to push rows below the fixed header.
+  - Added `#links-header` sticky header bar (position: absolute, top: 0, 28px height) with three column label spans: `.lh-name` (Title/URL), `.lh-tags` (Shared by), `.lh-detail` (URL & Age). Widths mirror the `.name`/`.tags`/`.detail` column layout of link rows.
+- `views/room.ejs`:
+  - Added `<div id="links-header">` inside `<section id="links">` with column labels.
+- `client/links.js`:
+  - Changed `onlinks()` clear path from `this.el.innerHTML = ""` to `Array.from(this.el.querySelectorAll(".file")).forEach(el => el.remove())` so that the `#links-header` element is preserved when the list is replaced.
+
+---
+
+## 2026-02-21 - Button Height Normalization + Filter Input Anchor
+
+### Root Cause
+
+`.btn` had no explicit `height`, so button height was driven by line-height and padding — meaning buttons with different inner content (icon vs icon+count-pill vs SVG) came out different heights. `.btn-download` overrode `font-size: 10pt`, making its icons smaller than all other toolbar icons. `#filter` had only padding-based sizing, so it grew taller than buttons and didn't align to them visually.
+
+### Changes
+
+- `entries/css/room.css`:
+  - Added `height: 34px` to `#tools .btn` and `#tools label.btn` base rule — all buttons now exactly square.
+  - Added `height: 34px` to `.filterbtn` rule — filter type buttons match icon buttons.
+  - Added `height: 34px` to `#tools .btn.btn-download` and removed `font-size: 10pt` override — download button icons now render at 12pt matching all other toolbar icons.
+  - Changed `#tools .btn.btn-download` padding to `0 0.55rem` — vertical padding no longer needed, height is explicit.
+  - Added `height: 32px; box-sizing: border-box; align-self: center; padding: 0 0.65rem` to `#filter` — input is 2px shorter than buttons, aligned vertically in the toolbar flex row.
+- `views/room.ejs`:
+  - Changed links-toggle SVG `width`/`height` from `14` → `18` — SVG icon now visually matches font-based icons.
+
+---
+
+## 2026-02-21 - Filter + Download Button Pills + Pill Margin Fix
+
+### Root Cause
+
+The direct-child combinator was missing from `#tools .btn:last-child` — this rule matched any `.btn` that was `:last-child` of any ancestor inside `#tools`, including `#trash` inside `.selection-pill` and `#nailon` inside `.viewmode-pill`, causing `margin-left: 0.85rem` to be applied to the last button inside each pill wrapper. This produced a gap before the last button in every pill, breaking the joined appearance.
+
+### Changes
+
+- `entries/css/room.css`:
+  - Changed `#tools .btn:last-child` → `#tools > .btn:last-child` (direct-child combinator) so the Upload label margin rule no longer leaks into pill wrappers.
+  - Changed `#tools .btn:last-child span` → `#tools > .btn:last-child span` correspondingly.
+  - Added `margin-left: 0` to `#tools .btn-pill .btn:last-child` as belt-and-suspenders against any future inheritance.
+  - Added `#tools .btn-pill .filterbtn` pill flatten rules (border-radius, border-right) to support `.filterbtn` native `<button>` elements inside a `.btn-pill` wrapper.
+  - Added `#tools .btn-pill .filterbtn:first-child` and `:last-child` radius rules.
+- `views/room.ejs`:
+  - Wrapped 7 filter type buttons (`#filter-image` through `#filter-request`) in `<div class="btn-pill filter-pill">`.
+  - Wrapped `#downloadnew` and `#downloadall` in `<div class="btn-pill download-pill">`.
+
+---
+
+## 2026-02-21 - Segmented Pill Specificity Fix
+
+### Root Cause
+
+`.btn-pill .btn` has CSS specificity 20. `#tools .btn` has specificity 110. The base `border-radius: 6px` from the `#tools .btn` rule always defeated the pill's `border-radius: 0` override, so every button inside a pill still had four rounded corners.
+
+### Changes
+
+- `entries/css/room.css`:
+  - Rescoped all `.btn-pill .btn` rules to `#tools .btn-pill .btn` (specificity 120) to beat the base `#tools .btn` rule at 110.
+  - Affected rules: base flatten (`border-radius: 0; border-right: 0`), `:first-child` radius, `:last-child` radius + border-right, `:hover` z-index.
+
+---
+
+## 2026-02-21 - Segmented Pill System + Toolbar Padding
+
+### Changes
+
+- `entries/css/room.css`:
+  - Added 3px top/bottom padding to `#room > #tools` (was `0 0.35rem`, now `3px 0.35rem`) for breathing room in the toolbar.
+  - Added `.btn-pill` system: `display: inline-flex; align-items: center; align-self: center` wrapper style.
+  - Added `.selection-pill` visibility rules: `display: none` default, `display: inline-flex` for `.mod` and `.owner` body classes.
+  - Added `.viewmode-pill { margin-left: 0.85rem }` to visually separate view mode controls.
+  - Added `#banfiles.btn { margin-left: 0.85rem }` to visually separate mod controls.
+  - Removed old standalone `#clearselection.btn { margin-right: 1em }`, `#nailoff.btn { margin-left: 0.85rem }`, `#nailon.btn { margin-left: 0 }` rules.
+  - Removed old `#selectall/#clearselection/#trash` merged border-radius/border group overrides.
+- `views/room.ejs`:
+  - Wrapped `#selectall`, `#clearselection`, `#trash` in `<div class="btn-pill selection-pill">`.
+  - Wrapped `#nailoff`, `#nailon` in `<div class="btn-pill viewmode-pill">`.
+
+---
+
+## 2026-02-21 - Filter Button Style Regression Fix
+
+### Root Cause
+
+`.filterbtn` elements are native `<button>` HTML elements. Browsers apply default agent styles (`appearance: auto`, UA padding, default font metrics) to `<button>` that are not applied to `<div>`. Without explicit resets, filter buttons rendered with browser-default button appearance — different shape, size, and alignment from `.btn` divs.
+
+### Changes
+
+- `entries/css/room.css`:
+  - Added `display: inline-flex; align-items: center; justify-content: center; align-self: center; -webkit-appearance: none; appearance: none; padding: 0.5ex; box-sizing: border-box; cursor: pointer; font-size: 12pt` to `.filterbtn` rule.
+  - These properties strip browser-default button rendering and make `.filterbtn` visually consistent with `.btn` divs.
+
+---
+
+## 2026-02-21 - UI_STYLE.md Creation (Chapters 1–6)
+
+### Changes
+
+- Created new top-level `UI_STYLE.md` file documenting the complete Dicefiles CSS design system:
+  - **Chapter 1**: Button system — `.btn`, `.filterbtn`, `.btn-pill`, icon usage; toolbar padding rule; CSS specificity note (why pill selectors use `#tools .btn-pill .btn`).
+  - **Chapter 2**: `.btn-download` with `.count-pill` badge anatomy.
+  - **Chapter 3**: Full CSS variable palette table, typography variables, color usage rules.
+  - **Chapter 4**: `title` attribute rules, rich `.tooltip` grid spec.
+  - **Chapter 5**: Complete `.modal` markup structure, button variant table, checkbox styling, icon areas.
+  - **Chapter 6**: File row anatomy (`.name`/`.tags`/`.detail`), all state classes table, gallery mode rules, Links Archive structure mirrors.
+
+---
+
+## 2026-02-21 - Links Archive Feature
+
+### Changes
+
+- `entries/css/files.css`:
+  - Changed `#files.listmode` → `#files.listmode:not(.hidden)` to fix a specificity conflict where `display: block !important` on the ID rule overrode `.hidden`'s `display: none !important`.
+  - Added full `#links` archive section CSS: base element, `.file` row, `.name`, `.tags`, `.detail`, `.file-new-pill`, sharer pill, `.url-display`, `.ttl`.
+  - Added `#filelist { position: relative }` for absolute overlay positioning context.
+- `client/links.js`:
+  - Created new Links Archive frontend controller. Lazy Scroller init, `body.links-mode` toggle, `createLinkElement` using correct CSS class names (`.name > .name-text`, `.file-new-pill`, `.tags > .tag.tag-user`, `.detail > .url-display`, `.detail > .ttl`).
+  - 5 hardcoded test links in `init()` marked `// REMOVEME`.
+- `views/room.ejs`:
+  - Added `#links-toggle` button with inline SVG chain icon (positioned before `#createrequest`).
+  - Added `<section id="links" class="listmode hidden">` alongside `#files` in `#filelist`.
+- `entries/css/room.css`:
+  - Added `#links-toggle.btn { margin-right: 0.55rem }`.
+  - Added `#links-toggle.btn.active` to active state rule.
+  - Added `#status { position: relative }`.
+  - Changed `.gif-menu` width from fixed `32rem` to `calc(100% - 0.3rem)` with `left: 0.15rem`.
+- `client/chatbox.js`:
+  - Moved `gifMenu` DOM append from `overlayAnchor` to `this.status`.
+  - Updated `ondocclick` to check `this.gifMenu.contains(e.target)` preventing auto-dismiss on panel interaction.
+
+## 2026-02-21 - Links Archive + GIF Width Fixes
+
+### Root Cause Analysis
+
+- The Links Archive toggle button appeared to do nothing because CSS rule `#files.listmode { display: block !important; }` has higher specificity than `.hidden { display: none !important; }`. When `hidden` class was toggled onto `#files.listmode`, the `display: block !important` won due to id+class specificity vs class-only.
+
+### Changes
+
+- `entries/css/files.css`: Changed `#files.listmode` to `#files.listmode:not(.hidden)` to resolve the specificity conflict. Added full `#links` section CSS (base element, row, name, tags, detail, NEW pill, sharer pill, URL display, age).
+- `client/links.js`: Rewrote `createLinkElement` to use proper CSS class names consistent with the file row CSS (`.name > .name-text`, `.file-new-pill`, `.tags > .tag.tag-user`, `.detail > .url-display`, `.detail > .ttl`) instead of the non-matching `.file_name`, `.file_size`, `.file_tag` classes from the partial implementation.
+- `entries/css/room.css`: Added `position: relative` to `#status` so it acts as positioning context. Changed `.gif-menu` width from fixed `32rem` to `calc(100% - 0.3rem)` with `left: 0.15rem` so the GIF popup fills the full chat column width.
+- `client/chatbox.js`: Moved `this.gifMenu` DOM append from `this.overlayAnchor` to `this.status` so it inherits the full-width positioning context. Updated `ondocclick` to also check `this.gifMenu.contains(e.target)` to prevent auto-dismiss when clicking inside the GIF panel.
+
 ## 2026-02-18 - Changelog Release Consolidation (1.0.0)
 
 - Folded all previously pending `Unreleased` feature notes into the current `1.0.0` changelog entry.
@@ -58,6 +233,7 @@
 ## 2026-02-18 - Unreleased squashed into 1.0.0
 
 - Squashed player/API-facing Unreleased items into `CHANGELOG.md` under `1.0.0` (emoji picker, GIF search/post flow, batch-download features, file view-mode persistence, preview quality, file metadata and CSP/API fixes).
+- Added Links Archive functionality to collect and display links posted in chat.
 - Dropped non-essential visual polish and micro-alignment changes per request.
 
 ## 2026-02-18 - Restart script & runbook update
@@ -511,7 +687,7 @@ Dicefiles is a self-hosted, open-source file sharing platform originally forked 
 #### Repository Metadata Updates
 
 - Updated repository description via GitHub CLI
-- Set homepage URL to http://127.0.0.1:9090
+- Set homepage URL to <http://127.0.0.1:9090>
 - Description: "Dicefiles - Ephemereal filesharing platform for hobby communities. Share RPG books, maps, board games, STL models, fiction, and more."
 
 ### Phase 6: Testing and Verification (Feb 17, 2026)
@@ -539,7 +715,7 @@ Dicefiles is a self-hosted, open-source file sharing platform originally forked 
 
 ### Active Services
 
-- **Dicefiles Server**: Running on http://127.0.0.1:9090
+- **Dicefiles Server**: Running on <http://127.0.0.1:9090>
 - **Redis**: Running on localhost:6379
 - **Node.js**: v18.20.8 (via nvm)
 

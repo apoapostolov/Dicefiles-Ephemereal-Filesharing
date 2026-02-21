@@ -4,6 +4,7 @@
   background: var(--dark-bg);
   overflow: hidden;
   user-select: none;
+  position: relative;
 }
 
 #filelist-scroller {
@@ -17,7 +18,7 @@
   box-sizing: border-box;
 }
 
-#files.listmode {
+#files.listmode:not(.hidden) {
   display: block !important;
   gap: 0 !important;
 }
@@ -72,7 +73,9 @@
   padding: 0.42rem 0.9rem;
   border: 1px solid rgba(255, 255, 255, 0.03);
   border-left: 2px solid transparent;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 #files > .file:nth-child(even) {
@@ -241,7 +244,9 @@
   max-width: 25ex;
   overflow-x: hidden;
   text-overflow: ellipsis;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 #files > .file > .tags > .tag:hover {
@@ -329,7 +334,9 @@
 
 #files.gallerymode > .file.selected:not(.upload) {
   border: 1px solid rgba(231, 239, 231, 0.9) !important;
-  box-shadow: 0 0 0 1px rgba(203, 232, 205, 0.55), 0 8px 20px rgba(0, 0, 0, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(203, 232, 205, 0.55),
+    0 8px 20px rgba(0, 0, 0, 0.45);
 }
 
 #files.gallerymode > .file:not(.upload) > * {
@@ -438,7 +445,10 @@
   flex: 0 0 auto;
 }
 
-#files.gallerymode > .file:not(.upload) > .detail > .galleryonly:not(.type-pill) {
+#files.gallerymode
+  > .file:not(.upload)
+  > .detail
+  > .galleryonly:not(.type-pill) {
   display: none;
 }
 
@@ -485,12 +495,20 @@
   color: rgba(62, 62, 62, 0.96);
 }
 
-#files.gallerymode > .file:not(.upload) > .detail > .ttl > .file-copy-meta-detail {
+#files.gallerymode
+  > .file:not(.upload)
+  > .detail
+  > .ttl
+  > .file-copy-meta-detail {
   color: rgba(18, 18, 18, 0.9);
   opacity: 0.88;
 }
 
-#files.gallerymode > .file:not(.upload) > .detail > .ttl > .file-copy-meta-detail:hover {
+#files.gallerymode
+  > .file:not(.upload)
+  > .detail
+  > .ttl
+  > .file-copy-meta-detail:hover {
   opacity: 1;
   color: rgba(0, 0, 0, 1);
 }
@@ -507,7 +525,10 @@
   color: rgba(18, 18, 18, 0.94);
 }
 
-#files.gallerymode > .file:not(.upload) .tags > .tag:not(.tag-user):not(.tag-usernick) {
+#files.gallerymode
+  > .file:not(.upload)
+  .tags
+  > .tag:not(.tag-user):not(.tag-usernick) {
   display: none;
 }
 
@@ -576,4 +597,209 @@
   50% {
     transform: scale(0.9);
   }
+}
+
+/* ─── Links Archive ─────────────────────────────────────────────────────── */
+
+#links {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  box-sizing: border-box;
+  background: var(--dark-bg);
+  color: var(--text-fg);
+  /* hide native scrollbar — custom scroller track is used instead */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* ─── Links Archive header row ─────────────────────────────────────────── */
+#links::before {
+  content: "";
+  display: block;
+  height: 28px;
+}
+
+#links-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  padding: 0 0.9rem;
+  background: var(--hi-bg);
+  border-bottom: 1px solid var(--hairline);
+  font-size: 8.5pt;
+  font-weight: 600;
+  color: var(--dark-fg);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  z-index: 2;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+#links-header .lh-name {
+  flex: 1;
+  min-width: 0;
+}
+
+#links-header .lh-tags {
+  display: flex;
+  flex: 0 0 auto;
+  padding: 0 0.5em;
+  width: 90px;
+  justify-content: flex-end;
+}
+
+#links-header .lh-detail {
+  width: 260px;
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+#links::-webkit-scrollbar {
+  display: none;
+}
+
+#links.listmode:not(.hidden) {
+  display: block !important;
+}
+
+/* hide the drop-zone overlay when in links-mode */
+body.links-mode #dropminder {
+  display: none !important;
+}
+
+#links > .file {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  align-content: center;
+  width: 100%;
+  padding: 0.42rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-left: 2px solid transparent;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+#links > .file:nth-child(even) {
+  background: var(--odd-bg);
+}
+
+#links > .file:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.22);
+}
+
+#links > .file > .name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  font-weight: 500;
+  color: #efefef;
+}
+
+#links > .file.is-new > .name {
+  color: #ddf2e3;
+}
+
+#links > .file > .name > .name-text {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#links > .file > .name > .file-new-pill {
+  display: none;
+  flex: 0 0 auto;
+  font-size: 9px;
+  background: rgba(214, 247, 222, 0.22);
+  border: 1px solid rgba(214, 247, 222, 0.52);
+  color: #e9fceb;
+  border-radius: 999px;
+  padding: 2px 0.62ex;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+#links > .file.is-new > .name > .file-new-pill {
+  display: inline-block;
+}
+
+#links > .file > .tags {
+  display: flex;
+  align-items: center;
+  align-content: center;
+  justify-content: flex-end;
+  padding: 0 0.5em;
+  flex: 0 0 auto;
+  overflow-x: hidden;
+}
+
+#links > .file > .tags > .tag {
+  font-size: 10px;
+  background: var(--surface-2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 2px 0.7ex;
+  margin-left: 0.7ex;
+  max-width: 20ex;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+#links > .file > .tags > .tag-user {
+  background: rgba(90, 160, 90, 0.4) !important;
+}
+
+#links > .file > .detail {
+  display: flex;
+  width: 260px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  justify-content: flex-end;
+  gap: 0.15rem;
+  font-size: var(--detail-size);
+}
+
+#links > .file > .detail > span {
+  display: inline-block;
+  border-left: 1px solid rgba(255, 255, 255, 0.24);
+  padding-left: 0.65ex;
+  flex: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.01em;
+}
+
+#links > .file > .detail > .url-display {
+  flex: 5;
+  color: var(--dark-fg);
+}
+
+#links > .file > .detail > .ttl {
+  flex: 2;
+  color: #dbdbdb;
+  font-weight: 600;
 }

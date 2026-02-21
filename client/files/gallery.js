@@ -1,7 +1,8 @@
 "use strict";
 
-import {APOOL} from "../animationpool";
-import {nukeEvent} from "../util";
+import { APOOL } from "../animationpool";
+import { nukeEvent } from "../util";
+import Reader from "./reader";
 
 export default class Gallery {
   constructor(owner) {
@@ -13,7 +14,10 @@ export default class Gallery {
     this.infoEl = document.querySelector("#gallery_info");
     this.prevEl = document.querySelector("#gallery_prev");
     this.nextEl = document.querySelector("#gallery_next");
+    this.readNowEl = document.querySelector("#gallery_read_now");
     this.file = null;
+
+    this.reader = new Reader();
 
     this.auxTimer = 0;
     this.startHideAux = this.startHideAux.bind(this);
@@ -24,6 +28,7 @@ export default class Gallery {
     this.ontitleclick = this.ontitleclick.bind(this);
     this.onpress = this.onpress.bind(this);
     this.onwheel = this.onwheel.bind(this);
+    this.onreadnow = this.onreadnow.bind(this);
 
     Object.seal(this);
 
@@ -34,6 +39,10 @@ export default class Gallery {
 
     this.prevEl.addEventListener("click", this.prev.bind(this), true);
     this.nextEl.addEventListener("click", this.next.bind(this), true);
+
+    if (this.readNowEl) {
+      this.readNowEl.addEventListener("click", this.onreadnow);
+    }
 
     this.owner.on("replaced", () => {
       if (document.location.hash) {
@@ -52,6 +61,13 @@ export default class Gallery {
     e.stopPropagation();
   }
 
+  onreadnow(e) {
+    nukeEvent(e);
+    const file = this.file;
+    this.close();
+    this.reader.open(file);
+  }
+
   ontitleclick(e) {
     this.file.download(new e.constructor(e.type, e));
     e.preventDefault();
@@ -59,7 +75,10 @@ export default class Gallery {
   }
 
   onpress(e) {
-    const {key, target: {localName}} = e;
+    const {
+      key,
+      target: { localName },
+    } = e;
     if (key === "Escape") {
       this.close();
       return nukeEvent(e);
@@ -84,8 +103,7 @@ export default class Gallery {
 
     if (e.deltaY > 0) {
       this.next();
-    }
-    else {
+    } else {
       this.prev();
     }
   }
@@ -186,7 +204,7 @@ export default class Gallery {
     }, 60);
 
     if (info.img) {
-    // Set up new image (and swap on load)
+      // Set up new image (and swap on load)
       const img = new Image();
       img.id = this.imgEl.id;
       img.onload = () => {
@@ -203,8 +221,7 @@ export default class Gallery {
         img.setAttribute("sizes", info.sizes);
       }
       img.src = info.img;
-    }
-    else if (info.video) {
+    } else if (info.video) {
       const video = document.createElement("video");
       video.id = this.imgEl.id;
       video.src = info.video;
@@ -227,14 +244,18 @@ export default class Gallery {
     this.infoEl.textContent = info.infos.join(" — ");
     this.showAux();
 
+    // Show "Read Now" button only for PDF/EPUB files
+    if (this.readNowEl) {
+      const readable = file.getReadableType && file.getReadableType();
+      this.readNowEl.classList.toggle("hidden", !readable);
+    }
 
     // Push gallery link (hash) into history
     const u = new URL(document.location);
     u.hash = `#${file.key}`;
     if (document.location.hash) {
       history.replaceState(null, "", u.href);
-    }
-    else {
+    } else {
       history.pushState(null, "", u.href);
     }
 

@@ -46,7 +46,9 @@ body#room {
   border-radius: 0;
   color: var(--text-fg);
   box-shadow: none;
-  transition: color 0.2s ease, transform 0.15s ease;
+  transition:
+    color 0.2s ease,
+    transform 0.15s ease;
 }
 
 #menu:hover,
@@ -59,7 +61,7 @@ body#room {
 
 #room > #tools {
   margin: 0;
-  padding: 0 0.35rem;
+  padding: 3px 0.35rem;
   height: 100%;
   grid-area: tools;
   display: flex;
@@ -74,12 +76,24 @@ body#room {
   overflow: hidden;
   background: var(--surface-2);
   border: 1px solid var(--hairline);
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
   color: var(--text-fg);
-  font-size: var(--base-size);
+  font-size: 12pt;
   width: 34px;
-  text-align: center;
+  height: 34px;
+  box-sizing: border-box;
   border-radius: 6px;
+  padding: 0.5ex;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .filterbtn:hover {
@@ -99,11 +113,17 @@ body#room {
   background: rgba(0, 0, 0, 0.55);
   border: 1px solid var(--hairline);
   border-radius: 6px;
-  padding: 0.38rem 0.65rem;
+  padding: 0 0.65rem;
+  height: 32px;
+  line-height: 1;
+  box-sizing: border-box;
+  align-self: center;
   user-select: none;
   outline: 0;
   min-width: 11rem;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
 #filter:focus {
@@ -146,7 +166,7 @@ body#room {
 
 #filter-status.i-filter:before {
   /* stylelint-disable */
-  font-family: 'symbols';
+  font-family: "symbols";
   /* stylelint-enable */
   display: inline-block;
   margin-right: 1ex;
@@ -164,6 +184,7 @@ body#room {
 #tools label.btn {
   font-size: 12pt;
   width: 34px;
+  height: 34px;
   text-align: center;
   background: var(--surface-2);
   border: 1px solid var(--hairline);
@@ -174,7 +195,10 @@ body#room {
   box-sizing: border-box;
   border-radius: 6px;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
   align-self: center;
   display: inline-flex;
   justify-content: center;
@@ -183,10 +207,10 @@ body#room {
 
 #tools .btn.btn-download {
   width: auto;
+  height: 34px;
   min-width: 44px;
   gap: 0.4rem;
-  padding: 0.45ex 0.55rem;
-  font-size: 10pt;
+  padding: 0 0.55rem;
 }
 
 #tools .btn.btn-download .count-pill {
@@ -220,24 +244,18 @@ body#room {
   transform: translateY(-1px);
 }
 
-#clearselection.btn {
-  margin-right: 1em;
-}
-
-#nailoff.btn {
-  margin-left: 0.85rem;
-}
-#nailon.btn {
-  margin-left: 0;
+#links-toggle.btn {
+  margin-right: 0.55rem;
 }
 #nailoff.btn.active,
-#nailon.btn.active {
-  background: rgba(255,255,255,0.5);
+#nailon.btn.active,
+#links-toggle.btn.active {
+  background: rgba(255, 255, 255, 0.5);
   box-shadow: rgb(0 0 0 / 75%) 0px 0px 6px 0px inset;
 }
 
-#tools .btn:last-child,
-#tools label.btn:last-child {
+#tools > .btn:last-child,
+#tools > label.btn:last-child {
   display: flex;
   justify-items: center;
   justify-content: center;
@@ -247,8 +265,8 @@ body#room {
   margin-left: 0.85rem;
 }
 
-#tools .btn:last-child span,
-#tools label.btn:last-child span {
+#tools > .btn:last-child span,
+#tools > label.btn:last-child span {
   color: var(--text-fg);
   font-size: 16pt;
   display: inline-block;
@@ -256,43 +274,66 @@ body#room {
   padding-right: 0.3ex;
 }
 
-#trash,
-#selectall,
-#clearselection {
-  display: none;
+/* ─── Segmented pill groups ─────────────────────────────────────── */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
 }
 
-.mod #trash,
-.mod #selectall,
-.mod #clearselection,
-.owner #trash,
-.owner #selectall,
-.owner #clearselection {
-  display: block;
+/* Use #tools prefix to beat the #tools .btn specificity (110) */
+#tools .btn-pill .btn {
+  border-radius: 0;
+  border-right: 0;
+  transform: none !important;
 }
 
-/* Selection action group */
-#selectall.btn,
-#clearselection.btn,
-#trash.btn {
+#tools .btn-pill .btn:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+#tools .btn-pill .btn:last-child {
+  border-radius: 0 6px 6px 0;
+  border-right: 1px solid var(--hairline);
   margin-left: 0;
 }
 
-#selectall.btn {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
+#tools .btn-pill .btn:hover {
+  z-index: 1;
 }
 
-#clearselection.btn {
+/* Pill support for .filterbtn (native <button> elements) */
+#tools .btn-pill .filterbtn {
   border-radius: 0;
-  border-left: 0;
   border-right: 0;
-  margin-right: 0;
 }
 
-#trash.btn {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
+#tools .btn-pill .filterbtn:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+#tools .btn-pill .filterbtn:last-child {
+  border-radius: 0 6px 6px 0;
+  border-right: 1px solid var(--hairline);
+}
+
+#tools .btn-pill .filterbtn:hover {
+  z-index: 1;
+}
+
+/* Selection pill — hidden for regular users */
+.selection-pill {
+  display: none;
+}
+
+.mod .selection-pill,
+.owner .selection-pill {
+  display: inline-flex;
+}
+
+/* View mode pill separator from preceding buttons */
+.viewmode-pill {
+  margin-left: 0.85rem;
 }
 
 /* Toolbar group spacing for clearer hierarchy */
@@ -311,7 +352,6 @@ body:not(.newroom) #ctx-newroom {
 body.noreports #ctx-report {
   display: none !important;
 }
-
 
 #chat {
   grid-area: chat;
@@ -419,8 +459,8 @@ body.noreports #ctx-report {
 }
 
 .chatfile {
-  border-radius: .2em;
-  border-radius: .2em/2px;
+  border-radius: 0.2em;
+  border-radius: 0.2em/2px;
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -431,7 +471,7 @@ body.noreports #ctx-report {
   text-decoration: none;
   background-color: var(--main-bg);
   border: 1px solid var(--odd-bg);
-  margin-bottom: 2px
+  margin-bottom: 2px;
 }
 
 .chatfile .icon {
@@ -504,7 +544,7 @@ body.noreports #ctx-report {
 
 a.r::before {
   display: inline-block;
-  content: '#';
+  content: "#";
   font-weight: bold;
   color: rgba(255, 255, 255, 0.4);
   padding-right: 0.3ex;
@@ -544,6 +584,7 @@ a.r::before {
   grid-area: status;
   font-size: x-small;
   text-align: right;
+  position: relative;
 }
 
 #status > * {
@@ -745,10 +786,10 @@ a.r::before {
 
 .gif-menu {
   position: absolute;
-  left: 0;
+  left: 0.15rem;
   bottom: calc(100% + 0.4rem);
   z-index: 46;
-  width: 32rem;
+  width: calc(100% - 0.3rem);
   max-height: 4.2rem;
   overflow: hidden;
   display: flex;

@@ -1,16 +1,16 @@
 "use strict";
 
-import Tooltip from "./tooltip";
-import Removable from "./removable";
 import registry from "./registry";
+import Removable from "./removable";
+import Tooltip from "./tooltip";
 import {
-  dom,
-  toPrettyDuration,
-  toPrettyInt,
-  toPrettySize,
-  sort,
-  Rect,
-  toType,
+    dom,
+    Rect,
+    sort,
+    toPrettyDuration,
+    toPrettyInt,
+    toPrettySize,
+    toType,
 } from "./util";
 
 const BASE_FILE = {
@@ -33,7 +33,7 @@ class FileTooltip extends Tooltip {
     this.addPreview(file);
 
     const a = this.addTag.bind(this);
-    const {meta = {}, resolution} = file;
+    const { meta = {}, resolution } = file;
     if (resolution) {
       a(resolution, "resolution");
     }
@@ -76,74 +76,82 @@ class FileTooltip extends Tooltip {
     }
     const url = file.href + preview.ext;
     switch (preview.type) {
-    case "video": {
-      const video = dom("video", {
-        attrs: {
-          loop: "true",
-        },
-        classes: ["tooltip-preview"],
-      });
-      const playVideo = () => {
-        video.removeEventListener("canplay", playVideo);
-        video.play().catch(console.error);
-      };
-      video.addEventListener("canplay", playVideo);
-      video.appendChild(dom("source", {
-        attrs: {
-          type: preview.mime,
-          src: url
-        }
-      }));
-      this.el.appendChild(video);
-      this.video = video;
-      return;
-    }
+      case "video": {
+        const video = dom("video", {
+          attrs: {
+            loop: "true",
+          },
+          classes: ["tooltip-preview"],
+        });
+        const playVideo = () => {
+          video.removeEventListener("canplay", playVideo);
+          video.play().catch(console.error);
+        };
+        video.addEventListener("canplay", playVideo);
+        video.appendChild(
+          dom("source", {
+            attrs: {
+              type: preview.mime,
+              src: url,
+            },
+          }),
+        );
+        this.el.appendChild(video);
+        this.video = video;
+        return;
+      }
 
-    case "image": {
-      const img = new Image();
-      img.src = "/loader.png";
-      img.style.width = preview.width;
-      img.style.height = preview.height;
-      img.setAttribute("alt", `Preview for ${file.name}`);
-      img.classList.add("tooltip-preview");
-      const loaded = img.cloneNode();
-      loaded.onload = () => {
-        if (!img.parentElement) {
-          // Might have been removed already
-          return;
-        }
-        img.parentElement.replaceChild(loaded, img);
-      };
-      loaded.src = url;
-      this.el.appendChild(img);
-      this.img = img;
-      return;
-    }
+      case "image": {
+        const img = new Image();
+        img.src = "/loader.png";
+        img.style.width = preview.width;
+        img.style.height = preview.height;
+        img.setAttribute("alt", `Preview for ${file.name}`);
+        img.classList.add("tooltip-preview");
+        const loaded = img.cloneNode();
+        loaded.onload = () => {
+          if (!img.parentElement) {
+            // Might have been removed already
+            return;
+          }
+          img.parentElement.replaceChild(loaded, img);
+        };
+        loaded.src = url;
+        this.el.appendChild(img);
+        this.img = img;
+        return;
+      }
 
-    default:
-      console.log("No suitable preview available");
-      return;
+      default:
+        console.log("No suitable preview available");
+        return;
     }
   }
 
   addTag(value, tag) {
     const tagText = this.getTagLabel(tag);
     const strongPrefixes = new Set([
-      "title", "description", "artist", "bookauthor", "author"
+      "title",
+      "description",
+      "artist",
+      "bookauthor",
+      "author",
     ]);
     const isMetaPrefix = strongPrefixes.has(tag.toLowerCase());
-    this.el.appendChild(dom("span", {
-      classes: [
-        "tooltip-tag",
-        "tooltip-tag-tag",
-        `tooltip-tag-${tag}`,
-        ...(isMetaPrefix ? ["tooltip-prefix-strong"] : []),
-      ],
-      text: isMetaPrefix ? `${tagText}:` : tagText,
-    }));
+    this.el.appendChild(
+      dom("span", {
+        classes: [
+          "tooltip-tag",
+          "tooltip-tag-tag",
+          `tooltip-tag-${tag}`,
+          ...(isMetaPrefix ? ["tooltip-prefix-strong"] : []),
+        ],
+        text: isMetaPrefix ? `${tagText}:` : tagText,
+      }),
+    );
     const el = dom("span", {
       classes: ["tooltip-tag", "tooltip-tag-value", `tooltip-tag-${tag}`],
-      text: value.toString().trim()
+      text: value.toString().trim(),
     });
     if (tag === "user") {
       el.classList.add("u", this.file.meta.role || "white");
@@ -152,7 +160,7 @@ class FileTooltip extends Tooltip {
   }
 
   isBookLike() {
-    const {file} = this;
+    const { file } = this;
     if (!file || file.type !== "document") {
       return false;
     }
@@ -171,25 +179,23 @@ class FileTooltip extends Tooltip {
     if (tag === "artist") {
       return this.isBookLike() ? "Author" : "Artist";
     }
-    return tag.replace(/\b\w/g, l => l.toUpperCase());
+    return tag.replace(/\b\w/g, (l) => l.toUpperCase());
   }
 
   position(x, y) {
-    const {width, height} = this.el.getBoundingClientRect();
-    const {innerWidth, innerHeight} = window;
+    const { width, height } = this.el.getBoundingClientRect();
+    const { innerWidth, innerHeight } = window;
     const client = new Rect(x, y, 0, 0, width, height);
     const available = new Rect(0, 0, innerWidth, innerHeight);
     const offset = 16;
     if (client.bottom + offset > available.bottom) {
-      client.offset(0, -(client.height) - offset);
-    }
-    else {
+      client.offset(0, -client.height - offset);
+    } else {
       client.offset(0, offset);
     }
     if (client.right + offset > available.right) {
-      client.offset(-(client.width) - offset, 0);
-    }
-    else {
+      client.offset(-client.width - offset, 0);
+    } else {
       client.offset(offset, 0);
     }
     if (client.top - offset < available.top) {
@@ -241,7 +247,7 @@ export default class File extends Removable {
   }
 
   get resolution() {
-    const {meta = {}} = this;
+    const { meta = {} } = this;
     if (!meta.width && !meta.height) {
       return "";
     }
@@ -249,7 +255,7 @@ export default class File extends Removable {
   }
 
   get duration() {
-    const {meta = {}} = this;
+    const { meta = {} } = this;
     return meta.duration || "";
   }
 
@@ -261,9 +267,9 @@ export default class File extends Removable {
     }
 
     const tagEntries = Array.from(Object.entries(this.tags));
-    tagEntries.forEach(e => e[1] = e[1].toString());
+    tagEntries.forEach((e) => (e[1] = e[1].toString()));
     this.tagsMap = new Map(tagEntries);
-    tagEntries.forEach(e => e[1] = e[1].toUpperCase());
+    tagEntries.forEach((e) => (e[1] = e[1].toUpperCase()));
     this.tagsMapCase = new Map(tagEntries);
     this.tagValues = Array.from(this.tagsMap.values());
     this.tagValuesCase = Array.from(this.tagsMapCase.values());
@@ -273,6 +279,24 @@ export default class File extends Removable {
     const url = new URL(this.href, document.location);
     url.pathname += `/${this.name}`;
     this.url = url.href;
+  }
+
+  /**
+   * Returns "pdf", "epub", or null if this file can be read in the built-in reader.
+   */
+  getReadableType() {
+    if (this.type !== "document") {
+      return null;
+    }
+    const t = ((this.meta && this.meta.type) || "").toUpperCase();
+    const n = (this.name || "").toLowerCase();
+    if (t === "PDF" || /\.pdf$/i.test(n)) {
+      return "pdf";
+    }
+    if (t === "EPUB" || /\.epub$/i.test(n)) {
+      return "epub";
+    }
+    return null;
   }
 
   generateTooltip() {
@@ -291,7 +315,7 @@ export default class File extends Removable {
     if (!this.assets || !this.assets.size) {
       return null;
     }
-    const assets = sort(Array.from(this.assets.values()), f => {
+    const assets = sort(Array.from(this.assets.values()), (f) => {
       // Smallest video, then image, then other
       return [f.type, -(f.width * f.height)];
     });

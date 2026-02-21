@@ -2,24 +2,23 @@
 
 import EventEmitter from "events";
 import emojiCatalog from "../core/emoji-list.json";
-import {
-  dom,
-  nukeEvent,
-  parseCommand,
-  roleToStatus,
-  validateUsername,
-} from "./util";
-import registry from "./registry";
-import History from "./chatbox/history";
 import Autocomplete from "./chatbox/autocomplete";
-import {convertMessage, WHITE} from "./chatbox/parse";
+import History from "./chatbox/history";
+import { convertMessage, WHITE } from "./chatbox/parse";
+import registry from "./registry";
+import {
+    dom,
+    nukeEvent,
+    parseCommand,
+    roleToStatus,
+    validateUsername,
+} from "./util";
 
 /* global __GIF_PROVIDERS__ */
-const gifProviders = typeof __GIF_PROVIDERS__ !== "undefined" ?
-  __GIF_PROVIDERS__ :
-  {};
+const gifProviders =
+  typeof __GIF_PROVIDERS__ !== "undefined" ? __GIF_PROVIDERS__ : {};
 
-export default new class ChatBox extends EventEmitter {
+export default new (class ChatBox extends EventEmitter {
   constructor() {
     super();
     this.currentNick = "";
@@ -62,36 +61,36 @@ export default new class ChatBox extends EventEmitter {
     this.history = new History(this.text);
     this.installEmojiPicker();
 
-    registry.messages.on("message", m => {
+    registry.messages.on("message", (m) => {
       this.autocomplete.add(m);
     });
 
-    registry.socket.on("role", m => {
+    registry.socket.on("role", (m) => {
       this.role = m;
       this.icon.className = "";
       this.icon.classList.add(m);
       switch (m) {
-      case "user":
-        this.icon.classList.add("i-green");
-        break;
+        case "user":
+          this.icon.classList.add("i-green");
+          break;
 
-      case "mod":
-        this.icon.classList.add("i-purple");
-        break;
+        case "mod":
+          this.icon.classList.add("i-purple");
+          break;
 
-      default:
-        this.icon.classList.add("i-white");
-        break;
+        default:
+          this.icon.classList.add("i-white");
+          break;
       }
       this.icon.setAttribute("title", roleToStatus(m));
       this.updateDisabledState();
     });
 
-    registry.socket.on("nick", m => {
+    registry.socket.on("nick", (m) => {
       this.setNick(m);
     });
 
-    registry.socket.on("authed", async authed => {
+    registry.socket.on("authed", async (authed) => {
       this.authed = authed;
       if (this.authed) {
         await this.ensureNick(true);
@@ -109,7 +108,7 @@ export default new class ChatBox extends EventEmitter {
     }
     this.emojiUniverse = this.buildEmojiUniverse();
 
-    const anchor = dom("div", {classes: ["emoji-anchor"]});
+    const anchor = dom("div", { classes: ["emoji-anchor"] });
     this.overlayAnchor = anchor;
     this.emojiToggle = dom("button", {
       attrs: {
@@ -120,14 +119,14 @@ export default new class ChatBox extends EventEmitter {
       classes: ["emoji-toggle"],
       text: "🙂",
     });
-    this.emojiToggle.addEventListener("click", e => {
+    this.emojiToggle.addEventListener("click", (e) => {
       nukeEvent(e);
       this.toggleEmojiMenu();
     });
 
     this.emojiMenu = dom("div", {
       classes: ["emoji-menu", "hidden"],
-      attrs: {"aria-hidden": "true"},
+      attrs: { "aria-hidden": "true" },
     });
     this.emojiSearchEl = dom("input", {
       classes: ["emoji-search"],
@@ -136,10 +135,10 @@ export default new class ChatBox extends EventEmitter {
         placeholder: "Search emoji...",
         autocomplete: "off",
         spellcheck: "false",
-      }
+      },
     });
     this.emojiSearchEl.addEventListener("input", () => this.renderEmojiGrid());
-    this.emojiGridEl = dom("div", {classes: ["emoji-grid"]});
+    this.emojiGridEl = dom("div", { classes: ["emoji-grid"] });
     this.emojiEmptyEl = dom("div", {
       classes: ["emoji-empty", "hidden"],
       text: "No emoji found",
@@ -153,7 +152,7 @@ export default new class ChatBox extends EventEmitter {
     anchor.appendChild(this.emojiMenu);
     this.installGifMenu();
     this.status.insertBefore(anchor, this.status.firstChild);
-    document.addEventListener("click", this.ondocclick, {passive: true});
+    document.addEventListener("click", this.ondocclick, { passive: true });
   }
 
   buildEmojiUniverse() {
@@ -170,24 +169,26 @@ export default new class ChatBox extends EventEmitter {
       }
       const search = `${item.search || ""}`.trim().toLowerCase();
       seen.add(emoji);
-      out.push({emoji, search});
+      out.push({ emoji, search });
     }
     if (out.length) {
       return out;
     }
-    return [{emoji: "🙂", search: "smile"}];
+    return [{ emoji: "🙂", search: "smile" }];
   }
 
   renderEmojiGrid() {
     if (!this.emojiGridEl) {
       return;
     }
-    const q = (this.emojiSearchEl && this.emojiSearchEl.value || "").
-      trim().
-      toLowerCase();
-    const list = q ?
-      this.emojiUniverse.filter(e => e.search.includes(q) || e.emoji.includes(q)) :
-      this.emojiUniverse;
+    const q = ((this.emojiSearchEl && this.emojiSearchEl.value) || "")
+      .trim()
+      .toLowerCase();
+    const list = q
+      ? this.emojiUniverse.filter(
+          (e) => e.search.includes(q) || e.emoji.includes(q),
+        )
+      : this.emojiUniverse;
     this.emojiGridEl.textContent = "";
     const frag = document.createDocumentFragment();
     for (const item of list) {
@@ -200,7 +201,7 @@ export default new class ChatBox extends EventEmitter {
         classes: ["emoji-item"],
         text: item.emoji,
       });
-      b.addEventListener("click", e => {
+      b.addEventListener("click", (e) => {
         nukeEvent(e);
         this.injectFromEvent(item.emoji);
         this.hideEmojiMenu();
@@ -217,6 +218,10 @@ export default new class ChatBox extends EventEmitter {
       return;
     }
     if (this.overlayAnchor.contains(e.target)) {
+      return;
+    }
+    // gif-menu is appended to #status (outside overlayAnchor) – check it too
+    if (this.gifMenu && this.gifMenu.contains(e.target)) {
       return;
     }
     this.hideEmojiMenu();
@@ -252,10 +257,10 @@ export default new class ChatBox extends EventEmitter {
     if (!this.overlayAnchor || this.gifProviderPill) {
       return;
     }
-    this.gifProviderPill = dom("div", {classes: ["gif-provider-pill"]});
+    this.gifProviderPill = dom("div", { classes: ["gif-provider-pill"] });
     const providers = [
-      {id: "giphy", name: "Giphy", icon: "https://giphy.com/favicon.ico"},
-      {id: "tenor", name: "Tenor", icon: "https://tenor.com/favicon.ico"},
+      { id: "giphy", name: "Giphy", icon: "https://giphy.com/favicon.ico" },
+      { id: "tenor", name: "Tenor", icon: "https://tenor.com/favicon.ico" },
     ];
     for (const p of providers) {
       const btn = dom("button", {
@@ -265,7 +270,10 @@ export default new class ChatBox extends EventEmitter {
           "aria-label": `Search ${p.name} GIFs`,
           "data-provider": p.id,
         },
-        classes: ["gif-provider-btn", ...(p.id === this.activeGifProvider ? ["active"] : [])],
+        classes: [
+          "gif-provider-btn",
+          ...(p.id === this.activeGifProvider ? ["active"] : []),
+        ],
       });
       const img = dom("img", {
         classes: ["gif-provider-icon"],
@@ -277,7 +285,7 @@ export default new class ChatBox extends EventEmitter {
         },
       });
       btn.appendChild(img);
-      btn.addEventListener("click", e => {
+      btn.addEventListener("click", (e) => {
         nukeEvent(e);
         this.toggleGifMenu(p.id);
       });
@@ -287,7 +295,7 @@ export default new class ChatBox extends EventEmitter {
 
     this.gifMenu = dom("div", {
       classes: ["gif-menu", "hidden"],
-      attrs: {"aria-hidden": "true"},
+      attrs: { "aria-hidden": "true" },
     });
     this.gifSearchEl = dom("input", {
       classes: ["gif-search"],
@@ -303,11 +311,12 @@ export default new class ChatBox extends EventEmitter {
       classes: ["gif-status"],
       text: "Start typing to search GIFs",
     });
-    this.gifGridEl = dom("div", {classes: ["gif-grid"]});
+    this.gifGridEl = dom("div", { classes: ["gif-grid"] });
     this.gifMenu.appendChild(this.gifSearchEl);
     this.gifMenu.appendChild(this.gifStatusEl);
     this.gifMenu.appendChild(this.gifGridEl);
-    this.overlayAnchor.appendChild(this.gifMenu);
+    // Append to #status so the menu can span the full chat column width
+    this.status.appendChild(this.gifMenu);
   }
 
   toggleGifMenu(provider) {
@@ -345,7 +354,9 @@ export default new class ChatBox extends EventEmitter {
     if (!this.gifProviderPill) {
       return;
     }
-    for (const btn of this.gifProviderPill.querySelectorAll(".gif-provider-btn")) {
+    for (const btn of this.gifProviderPill.querySelectorAll(
+      ".gif-provider-btn",
+    )) {
       const active = btn.dataset.provider === this.activeGifProvider;
       btn.classList[active ? "add" : "remove"]("active");
     }
@@ -376,11 +387,11 @@ export default new class ChatBox extends EventEmitter {
     const nonce = ++this.gifSearchNonce;
     let results = [];
     try {
-      results = provider === "tenor" ?
-        await this.searchTenor(query) :
-        await this.searchGiphy(query);
-    }
-    catch (ex) {
+      results =
+        provider === "tenor"
+          ? await this.searchTenor(query)
+          : await this.searchGiphy(query);
+    } catch (ex) {
       if (nonce !== this.gifSearchNonce) {
         return;
       }
@@ -407,10 +418,20 @@ export default new class ChatBox extends EventEmitter {
     const res = await fetch(u);
     const body = await res.json();
     const data = Array.isArray(body && body.data) ? body.data : [];
-    return data.map(item => ({
-      preview: item && item.images && item.images.fixed_width && item.images.fixed_width.url,
-      url: item && item.images && item.images.original && item.images.original.url,
-    })).filter(r => r.preview && r.url);
+    return data
+      .map((item) => ({
+        preview:
+          item &&
+          item.images &&
+          item.images.fixed_width &&
+          item.images.fixed_width.url,
+        url:
+          item &&
+          item.images &&
+          item.images.original &&
+          item.images.original.url,
+      }))
+      .filter((r) => r.preview && r.url);
   }
 
   async searchTenor(query) {
@@ -429,29 +450,37 @@ export default new class ChatBox extends EventEmitter {
       const res = await fetch(u);
       const body = await res.json();
       if (!res.ok) {
-        const reason = body && body.error && body.error.details &&
-          body.error.details.find(e => e.reason) &&
-          body.error.details.find(e => e.reason).reason;
+        const reason =
+          body &&
+          body.error &&
+          body.error.details &&
+          body.error.details.find((e) => e.reason) &&
+          body.error.details.find((e) => e.reason).reason;
         if (reason === "API_KEY_INVALID") {
           return await this.searchTenorLegacy(query, key, limit);
         }
         throw new Error(
-          body && body.error && body.error.message || "Tenor search failed");
+          (body && body.error && body.error.message) || "Tenor search failed",
+        );
       }
       data = Array.isArray(body && body.results) ? body.results : [];
-    }
-    catch (ex) {
+    } catch (ex) {
       return await this.searchTenorLegacy(query, key, limit);
     }
 
-    const out = data.map(item => {
-      const fm = item && item.media_formats || {};
-      const tiny = fm.tinygif && (fm.tinygif.preview || fm.tinygif.url);
-      const gif = fm.gif && (fm.gif.preview || fm.gif.url);
-      const tinyGifUrl = fm.tinygif && fm.tinygif.url;
-      const gifUrl = fm.gif && fm.gif.url;
-      return {preview: tiny || gif || tinyGifUrl || gifUrl, url: gifUrl || tinyGifUrl};
-    }).filter(r => r.preview && r.url);
+    const out = data
+      .map((item) => {
+        const fm = (item && item.media_formats) || {};
+        const tiny = fm.tinygif && (fm.tinygif.preview || fm.tinygif.url);
+        const gif = fm.gif && (fm.gif.preview || fm.gif.url);
+        const tinyGifUrl = fm.tinygif && fm.tinygif.url;
+        const gifUrl = fm.gif && fm.gif.url;
+        return {
+          preview: tiny || gif || tinyGifUrl || gifUrl,
+          url: gifUrl || tinyGifUrl,
+        };
+      })
+      .filter((r) => r.preview && r.url);
     if (out.length) {
       return out;
     }
@@ -464,17 +493,21 @@ export default new class ChatBox extends EventEmitter {
     const body = await res.json();
     if (!res.ok) {
       throw new Error(
-        body && body.error && body.error.message || "Tenor search failed");
+        (body && body.error && body.error.message) || "Tenor search failed",
+      );
     }
     const data = Array.isArray(body && body.results) ? body.results : [];
-    return data.map(item => {
-      const media = Array.isArray(item && item.media) ? item.media[0] : {};
-      const tiny = media && media.tinygif || {};
-      const gif = media && (media.gif || media.mediumgif || media.nanogif) || {};
-      const preview = tiny.preview || gif.preview || tiny.url || gif.url;
-      const url = gif.url || tiny.url;
-      return {preview, url};
-    }).filter(r => r.preview && r.url);
+    return data
+      .map((item) => {
+        const media = Array.isArray(item && item.media) ? item.media[0] : {};
+        const tiny = (media && media.tinygif) || {};
+        const gif =
+          (media && (media.gif || media.mediumgif || media.nanogif)) || {};
+        const preview = tiny.preview || gif.preview || tiny.url || gif.url;
+        const url = gif.url || tiny.url;
+        return { preview, url };
+      })
+      .filter((r) => r.preview && r.url);
   }
 
   renderGifGrid(results, provider, query) {
@@ -501,13 +534,13 @@ export default new class ChatBox extends EventEmitter {
           loading: "lazy",
           decoding: "async",
           referrerpolicy: "no-referrer",
-        }
+        },
       });
       b.appendChild(img);
-      b.addEventListener("click", e => {
+      b.addEventListener("click", (e) => {
         nukeEvent(e);
         const url = this.normalizeGifChatUrl(item.url);
-        this.sendMessage(url).catch(ex => {
+        this.sendMessage(url).catch((ex) => {
           this.emit("error", `Could not send GIF: ${ex.message || ex}`);
         });
         this.hideGifMenu();
@@ -532,28 +565,26 @@ export default new class ChatBox extends EventEmitter {
         }
       }
       return u.href;
-    }
-    catch (ex) {
+    } catch (ex) {
       return rawUrl;
     }
   }
 
   async send(value) {
     const cmd = parseCommand(value);
-    if (cmd && await this.doCommand(cmd)) {
+    if (cmd && (await this.doCommand(cmd))) {
       // done
-    }
-    else {
+    } else {
       this.sendMessage(value);
     }
   }
 
   onpress(e) {
-    const {key, shiftKey} = e;
+    const { key, shiftKey } = e;
     if (key === "Enter" && !shiftKey) {
-      const {target} = e;
+      const { target } = e;
       if (target.value) {
-        let {value} = target;
+        let { value } = target;
         value = value.trim();
         this.send(value).catch(console.error);
         target.value = "";
@@ -571,7 +602,7 @@ export default new class ChatBox extends EventEmitter {
   }
 
   reparse(additional) {
-    const {selectionStart: start, selectionEnd: end, value} = this.text;
+    const { selectionStart: start, selectionEnd: end, value } = this.text;
     const pre = value.slice(0, start);
     const post = value.slice(end);
     const cpre = convertMessage(pre);
@@ -579,7 +610,9 @@ export default new class ChatBox extends EventEmitter {
     const nm = cpre + additional + cpost;
     this.text.value = nm.slice(0, 300);
     this.text.selectionEnd = this.text.selectionStart = Math.min(
-      cpre.length + 1, this.text.value.length);
+      cpre.length + 1,
+      this.text.value.length,
+    );
   }
 
   injectFromEvent(data) {
@@ -587,10 +620,11 @@ export default new class ChatBox extends EventEmitter {
     if (!data) {
       return;
     }
-    const {selectionStart: start, selectionEnd: end, value} = this.text;
+    const { selectionStart: start, selectionEnd: end, value } = this.text;
     const pre = value.slice(0, start);
     const post = value.slice(end);
-    data = (pre && !WHITE.test(pre.slice(-1)) ? " " : "") +
+    data =
+      (pre && !WHITE.test(pre.slice(-1)) ? " " : "") +
       data +
       (!post || !WHITE.test(post[0]) ? " " : "");
     const nm = pre + data + post;
@@ -658,12 +692,12 @@ export default new class ChatBox extends EventEmitter {
   }
 
   cmd_p(value) {
-    registry.privmsg.command(value).catch(ex => {
+    registry.privmsg.command(value).catch((ex) => {
       registry.messages.add({
         volatile: true,
         user: "Error",
         role: "system",
-        msg: `Could not send privmsg: ${ex}`
+        msg: `Could not send privmsg: ${ex}`,
       });
     });
     return true;
@@ -684,15 +718,14 @@ export default new class ChatBox extends EventEmitter {
         return true;
       }
       return false;
-    }
-    finally {
+    } finally {
       this.text.focus();
     }
   }
 
   async ensureNick(silent) {
     try {
-      let {value: onick} = this.nick;
+      let { value: onick } = this.nick;
       if (!onick) {
         onick = localStorage.getItem("nick");
       }
@@ -700,18 +733,17 @@ export default new class ChatBox extends EventEmitter {
       if (this.authed) {
         if (onick.toLowerCase() === this.authed) {
           nick = onick;
-        }
-        else {
+        } else {
           nick = this.authed;
           this.emit(
             "warn",
             "Chat name must match your account name, " +
-            "except for capitalization! " +
-            "It was reset to your account name.");
+              "except for capitalization! " +
+              "It was reset to your account name.",
+          );
           silent = true;
         }
-      }
-      else {
+      } else {
         nick = await validateUsername(onick);
       }
       const oldnick = localStorage.getItem("nick");
@@ -719,19 +751,16 @@ export default new class ChatBox extends EventEmitter {
       if (onick !== nick && !silent) {
         this.emit(
           "warn",
-          "Chat name contained invalid stuff, which was removed");
+          "Chat name contained invalid stuff, which was removed",
+        );
       }
       if (oldnick === nick) {
         return;
       }
       registry.socket.emit("nick", nick);
-    }
-    catch (ex) {
-      this.emit(
-        "error",
-        `User name invalid: ${ex.message || ex}`);
-    }
-    finally {
+    } catch (ex) {
+      this.emit("error", `User name invalid: ${ex.message || ex}`);
+    } finally {
       this.currentNick = this.nick.value = localStorage.getItem("nick");
     }
   }
@@ -756,23 +785,27 @@ export default new class ChatBox extends EventEmitter {
   }
 
   updateDisabledState() {
-    const disabled = registry.config.get("requireAccounts") &&
-      this.role === "white";
+    const disabled =
+      registry.config.get("requireAccounts") && this.role === "white";
     if (!registry.roomie.connected) {
       this.text.setAttribute("disabled", "disabled");
       this.text.setAttribute(
-        "placeholder", this.text.dataset.placeholderDisconnected);
-    }
-    else if (disabled) {
+        "placeholder",
+        this.text.dataset.placeholderDisconnected,
+      );
+    } else if (disabled) {
       this.text.setAttribute("disabled", "disabled");
       this.text.setAttribute(
-        "placeholder", this.text.dataset.placeholderDisabled);
-    }
-    else {
+        "placeholder",
+        this.text.dataset.placeholderDisabled,
+      );
+    } else {
       this.text.removeAttribute("disabled");
       this.text.setAttribute(
-        "placeholder", this.text.dataset.placeholderEnabled);
+        "placeholder",
+        this.text.dataset.placeholderEnabled,
+      );
       this.text.focus();
     }
   }
-}();
+})();

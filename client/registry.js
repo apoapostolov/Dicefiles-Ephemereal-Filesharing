@@ -1,23 +1,24 @@
 "use strict";
 
-import config from "./config";
-import socket from "./socket";
-import messages from "./messages";
-import roomie from "./roomie";
 import chatbox from "./chatbox";
+import config from "./config";
 import files from "./files";
-import reload from "./reload";
-import splitter from "./splitter";
+import links from "./links";
+import messages from "./messages";
 import privmsg from "./privmsg";
+import reload from "./reload";
+import roomie from "./roomie";
+import socket from "./socket";
+import splitter from "./splitter";
 import "./templates";
 
-export default new class Registry {
+export default new (class Registry {
   constructor() {
     this._initPromise = null;
     this._inited = false;
     Object.defineProperty(this, "roomid", {
       value: document.location.pathname.replace(/^\/r\//, ""),
-      enumerable: true
+      enumerable: true,
     });
   }
 
@@ -35,6 +36,7 @@ export default new class Registry {
       roomie,
       chatbox,
       files,
+      links,
       reload,
       splitter,
       privmsg,
@@ -68,7 +70,7 @@ export default new class Registry {
       }
       this._inited = true;
       return this;
-    })().catch(ex => {
+    })().catch((ex) => {
       this._inited = false;
       this._initPromise = null;
       throw ex;
@@ -76,4 +78,4 @@ export default new class Registry {
 
     return this._initPromise;
   }
-}();
+})();

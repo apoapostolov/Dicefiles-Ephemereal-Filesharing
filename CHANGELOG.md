@@ -1,5 +1,26 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- **Streaming PDF / ePub Reader**: PDF and ePub files now have a "Read Now" button in the gallery lightbox. Clicking it opens an in-page reader filling the file-list area. PDFs stream lazily via HTTP Range requests (only pages near the viewport are decoded). ePub chapters render in a dark-themed iframe with prev/next navigation. Zoom in/out supported for PDFs. Press Escape or click ✕ to close.
+
+- Links Archive functionality to collect and display links posted in chat.
+  - All URLs posted in chat (including by non-logged-in users) are captured and stored with a 1-year TTL.
+  - Dedicated toggle button (link icon) in the toolbar, to the left of the Requests button.
+  - Clicking the toggle switches the file list view to the Links Archive and back.
+  - Links displayed in table form: resolved title, truncated URL, NEW pill, sharer nick, age.
+
+### Changed
+
+- GIF popup selector now stretches to fill the full chat column width (99% with small side margins).
+
+### Fixed
+
+- Links Archive toggle button was non-functional due to a CSS specificity conflict: `#files.listmode { display: block !important }` overrode `.hidden { display: none !important }`. Fixed by scoping the rule to `:not(.hidden)`.
+- Link rows in the archive were unstyled; the element class names now match the existing file row CSS (`.name`, `.name-text`, `.file-new-pill`, `.tags`, `.tag`, `.detail`).
+
 ## [1.0.0] - 2026-02-17
 
 Overview

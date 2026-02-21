@@ -1,0 +1,228 @@
+/* ─── Reader overlay ─────────────────────────────────────────────────────── */
+
+#reader {
+  grid-area: files;
+  display: none;
+  flex-direction: column;
+  z-index: 1500;
+  background: #111;
+  overflow: hidden;
+}
+
+.reading #reader {
+  display: flex;
+}
+
+/* Blur the filelist behind the reader (same as gallery does) */
+.reading #filelist {
+  filter: blur(5px);
+}
+
+/* ── top bar ─────────────────────────────────────────────────────────────── */
+
+#reader-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  background: #1c1c1c;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex: 0 0 auto;
+  user-select: none;
+  min-height: 2.6rem;
+}
+
+#reader-close {
+  flex: 0 0 auto;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: rgba(210, 210, 210, 0.82);
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+  transition:
+    background 0.15s,
+    color 0.15s;
+  line-height: 1;
+}
+
+#reader-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+#reader-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #e0e0e0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+#reader-info {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  color: rgba(200, 200, 200, 0.7);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+/* zoom buttons (PDF only) */
+#reader-zoom-in,
+#reader-zoom-out {
+  flex: 0 0 auto;
+  cursor: pointer;
+  font-size: 1rem;
+  color: rgba(210, 210, 210, 0.78);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  line-height: 1;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+#reader-zoom-in:hover,
+#reader-zoom-out:hover {
+  background: rgba(255, 255, 255, 0.11);
+  color: #fff;
+}
+
+/* prev/next buttons (epub only) */
+#reader-prev,
+#reader-next {
+  flex: 0 0 auto;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: rgba(210, 210, 210, 0.8);
+  padding: 0.25rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+#reader-prev:hover,
+#reader-next:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+/* ── scrollable content area ─────────────────────────────────────────────── */
+
+#reader-content {
+  flex: 1 1 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.2rem 0.6rem;
+  background: #161616;
+  scrollbar-color: rgba(180, 180, 180, 0.3) transparent;
+  scrollbar-width: thin;
+}
+
+#reader-content::-webkit-scrollbar {
+  width: 7px;
+}
+
+#reader-content::-webkit-scrollbar-thumb {
+  background: rgba(180, 180, 180, 0.25);
+  border-radius: 999px;
+}
+
+/* ── PDF page rendering ───────────────────────────────────────────────────── */
+
+.reader-page-wrap {
+  display: block;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.65);
+  border-radius: 3px;
+  overflow: hidden;
+  background: #fff;
+  max-width: 100%;
+}
+
+.reader-page-placeholder {
+  background: #1e1e1e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 600px;
+  max-width: 100%;
+}
+
+.reader-page-canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── ePub rendering ──────────────────────────────────────────────────────── */
+
+.reader-epub-wrap {
+  width: 100%;
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* epub.js injects an iframe — make it fill available space */
+.reader-epub-wrap iframe {
+  flex: 1 1 0;
+  border: none;
+  background: #1a1a1a;
+}
+
+/* ── "Read Now" overlay button in gallery ────────────────────────────────── */
+
+.gallery-read-now {
+  position: absolute;
+  bottom: 4.8rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2100;
+  cursor: pointer;
+  padding: 0.55rem 1.4rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(230, 230, 230, 0.92);
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(160, 160, 160, 0.6);
+  border-radius: 8px;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    background 0.18s ease;
+}
+
+.aux .gallery-read-now {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gallery-read-now:hover {
+  background: rgba(0, 0, 0, 0.78);
+  border-color: rgba(200, 200, 200, 0.85);
+  color: #fff;
+}
