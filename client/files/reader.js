@@ -91,9 +91,12 @@ class PDFReader {
     this._pageHeight = 0;
     this._currentPageNum = 1;
     this._destroyed = false;
+    this._fileKey = null;
+    this.onPageChange = null; // callback(page) — set by Reader
   }
 
-  async open(url) {
+  async open(url, fileKey) {
+    this._fileKey = fileKey || null;
     dbg("PDFReader.open() url =", url);
     dbgShow(this.container, `Opening PDF: ${url}`);
 
@@ -200,8 +203,15 @@ class PDFReader {
       );
     }
 
-    this._updateInfo(0, this.totalPages);
-    this._buildPagePlaceholders();
+    // Load saved position BEFORE calling _updateInfo — otherwise _updateInfo
+    // would immediately fire onPageChange(0) and overwrite the stored progress.
+    const saved = loadProgress(this._fileKey);
+    const startPage =
+      saved && saved.page >= 1 && saved.page <= this.totalPages
+        ? saved.page
+        : 1;
+    this._updateInfo(startPage, this.totalPages);
+    this._buildPagePlaceholders(startPage);
     this._setupObserver();
   }
 
@@ -209,11 +219,14 @@ class PDFReader {
     if (this.infoEl) {
       this.infoEl.textContent = total ? `Page ${current} / ${total}` : "";
     }
+    saveProgress(this._fileKey, { page: current });
+    if (this.onPageChange) this.onPageChange(current);
   }
 
-  _buildPagePlaceholders() {
+  _buildPagePlaceholders(startPage = 0) {
     this.container.textContent = "";
     this.canvases = [];
+    this._startPage = startPage;
 
     for (let i = 1; i <= this.totalPages; i++) {
       const wrapper = dom("div", { classes: ["reader-page-wrap"] });
@@ -271,14 +284,17 @@ class PDFReader {
     }
     dbg("_setupObserver: observing", this.canvases.length, "wrappers");
 
-    // Immediately render first 2 pages
-    if (this.canvases[0]) {
-      dbg("_setupObserver: force-rendering page 1");
-      this._renderPage(1, this.canvases[0]);
+    // Immediately render the start page and one page ahead
+    const sp = this._startPage || 1;
+    const startIdx = sp - 1;
+    if (this.canvases[startIdx]) {
+      dbg("_setupObserver: force-rendering start page", sp);
+      this._renderPage(sp, this.canvases[startIdx]);
+      requestAnimationFrame(() => this.scrollToPage(sp, "instant"));
     }
-    if (this.canvases[1]) {
-      dbg("_setupObserver: force-rendering page 2");
-      this._renderPage(2, this.canvases[1]);
+    if (this.canvases[startIdx + 1]) {
+      dbg("_setupObserver: force-rendering page", sp + 1);
+      this._renderPage(sp + 1, this.canvases[startIdx + 1]);
     }
   }
 
@@ -632,6 +648,8 @@ class BookReader {
     this._iframe = null;
     this._loaded = false; // true once current chapter iframe fires 'load'
     this._destroyed = false;
+    this._fileKey = null;
+    this.onPageChange = null; // callback(chapterIdx) — set by Reader
   }
 
   /** Compute A5-proportioned page size constrained by the container. */
@@ -656,8 +674,9 @@ class BookReader {
     dbg("_computePageSize:", this._pageWidth, "×", this._pageHeight);
   }
 
-  async open(url, type) {
+  async open(url, type, fileKey) {
     this._type = type;
+    this._fileKey = fileKey || null;
     dbg("BookReader.open() url =", url, "type =", type);
     this.container.textContent = "";
     this._computePageSize();
@@ -666,7 +685,14 @@ class BookReader {
     } else {
       await this._openEpub(url);
     }
-    await this._renderChapter(0);
+    // Restore saved chapter + page
+    const saved = loadProgress(this._fileKey);
+    const startChapter =
+      saved && saved.chapter >= 0 && saved.chapter < this._total
+        ? saved.chapter
+        : 0;
+    const startPage = saved && saved.page >= 0 ? saved.page : 0;
+    await this._renderChapter(startChapter, startPage);
   }
 
   async _openMobi(url) {
@@ -818,6 +844,8 @@ class BookReader {
     if (this.infoEl) {
       this.infoEl.textContent = `Chapter ${this._currentIdx + 1} / ${this._total}  ·  Page ${this._pageInChapter + 1} / ${this._totalPagesInChapter}`;
     }
+    saveProgress(this._fileKey, { chapter: this._currentIdx, page: this._pageInChapter });
+    if (this.onPageChange) this.onPageChange(this._currentIdx);
   }
 
   destroy() {
@@ -853,11 +881,13 @@ class ComicReader {
     this.container = container;
     this.infoEl = infoEl;
     this._key = null;
+    this._fileKey = null;
     this._totalPages = 0;
     this._currentPage = 0; // 0-indexed
     this._mangaMode = false;
     this._imgEl = null;
     this._destroyed = false;
+    this.onPageChange = null; // callback(page) — set by Reader
   }
 
   /** Extract the upload key from a file href like "/g/<key>" or "/g/<key>/<name>". */
@@ -870,6 +900,7 @@ class ComicReader {
 
   async open(file) {
     this._key = ComicReader._keyFromFile(file);
+    this._fileKey = file.key || this._key;
     dbg("ComicReader.open() key =", this._key);
     if (!this._key) {
       throw new Error("Cannot determine upload key from file href");
@@ -894,7 +925,11 @@ class ComicReader {
     this._imgEl.alt = "";
     this.container.appendChild(this._imgEl);
 
-    await this._showPage(0);
+    // Restore saved position
+    const saved = loadProgress(this._fileKey);
+    const startPage =
+      saved && saved.page >= 0 && saved.page < pages ? saved.page : 0;
+    await this._showPage(startPage);
   }
 
   async _showPage(n) {
@@ -902,6 +937,8 @@ class ComicReader {
     const clamped = Math.max(0, Math.min(n, this._totalPages - 1));
     this._currentPage = clamped;
     this._updateInfo();
+    saveProgress(this._fileKey, { page: clamped });
+    if (this.onPageChange) this.onPageChange(clamped);
 
     if (this._imgEl) {
       this._imgEl.src = `/api/v1/comic/${this._key}/page/${clamped}`;
@@ -954,6 +991,234 @@ class ComicReader {
   }
 }
 
+// ── Reading progress helpers ─────────────────────────────────────────────────
+
+const PROGRESS_PREFIX = "dicefiles:readprogress:";
+
+/**
+ * Persist the reading position for `fileKey`.
+ * `state` shape: { page: number, chapter?: number }
+ */
+function saveProgress(fileKey, state) {
+  if (!fileKey) return;
+  try {
+    localStorage.setItem(PROGRESS_PREFIX + fileKey, JSON.stringify(state));
+  } catch (_) {
+    // quota / private browsing — ignore
+  }
+}
+
+/** Retrieve previously saved progress. Returns null if none. */
+function loadProgress(fileKey) {
+  if (!fileKey) return null;
+  try {
+    const raw = localStorage.getItem(PROGRESS_PREFIX + fileKey);
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+/**
+ * Remove progress entries whose file key is not in `liveKeys` (a Set<string>).
+ * Called once per full file-list replacement.
+ */
+export function flushStaleProgress(liveKeys) {
+  try {
+    const toRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(PROGRESS_PREFIX)) {
+        const fileKey = k.slice(PROGRESS_PREFIX.length);
+        if (!liveKeys.has(fileKey)) {
+          toRemove.push(k);
+        }
+      }
+    }
+    for (const k of toRemove) localStorage.removeItem(k);
+  } catch (_) {
+    // ignore
+  }
+}
+
+// ── Webtoon reader ───────────────────────────────────────────────────────────
+
+/**
+ * Webtoon mode: all pages rendered as a continuous vertical strip.
+ * Up / down keys and the Prev/Next buttons scroll by 25% of a page's
+ * natural rendered height instead of jumping to the next discrete page.
+ */
+class WebtoonReader {
+  constructor(container, infoEl) {
+    this.container = container;
+    this.infoEl = infoEl;
+    this._key = null;
+    this._totalPages = 0;
+    this._pageHeight = 0; // natural rendered height of a single page (px)
+    this._destroyed = false;
+    this._stripEl = null;
+    this._imgEls = [];
+    this._observer = null;
+    this._visiblePage = 0; // 0-indexed page currently most visible
+    this._fileKey = null;
+    this.onPageChange = null; // callback(page) — set by Reader
+  }
+
+  /** Same key extraction logic as ComicReader. */
+  static _keyFromFile(file) {
+    const parts = ((file && file.href) || "").split("/").filter(Boolean);
+    const gi = parts.indexOf("g");
+    return gi >= 0 ? parts[gi + 1] || null : parts[parts.length - 1] || null;
+  }
+
+  async open(file) {
+    this._key = WebtoonReader._keyFromFile(file);
+    this._fileKey = file.key || this._key;
+    dbg("WebtoonReader.open() key =", this._key);
+    if (!this._key)
+      throw new Error("Cannot determine upload key from file href");
+
+    dbgShow(this.container, `Loading webtoon: ${file.name}`);
+
+    const resp = await fetch(`/api/v1/comic/${this._key}/index`);
+    if (!resp.ok)
+      throw new Error(`Comic index fetch failed: HTTP ${resp.status}`);
+    const { pages } = await resp.json();
+    this._totalPages = pages;
+    dbg("WebtoonReader: pages =", pages);
+    if (pages === 0) throw new Error("Comic archive has no readable pages");
+
+    this.container.textContent = "";
+    this._stripEl = dom("div", { classes: ["reader-webtoon-strip"] });
+    this.container.appendChild(this._stripEl);
+    this._imgEls = [];
+
+    for (let i = 0; i < pages; i++) {
+      const img = dom("img", { classes: ["reader-webtoon-page"] });
+      img.alt = "";
+      img.dataset.page = String(i);
+      this._stripEl.appendChild(img);
+      this._imgEls.push(img);
+    }
+
+    // Load first page eagerly to measure natural height, then lazy-load rest.
+    await new Promise((resolve) => {
+      const first = this._imgEls[0];
+      first.onload = () => {
+        this._pageHeight = first.naturalHeight || first.offsetHeight || 1400;
+        resolve();
+      };
+      first.onerror = () => resolve();
+      first.src = `/api/v1/comic/${this._key}/page/0`;
+      first.setAttribute("data-loaded", "1");
+    });
+
+    // Estimate natural page height from outerWidth if onload height is 0
+    if (!this._pageHeight) {
+      this._pageHeight = Math.round(
+        (this._imgEls[0].offsetWidth || this.container.clientWidth || 800) *
+          1.4,
+      );
+    }
+
+    // Lazy-load remaining pages via IntersectionObserver.
+    // When a page enters the viewport, also eagerly load the next 10 pages so
+    // reading feels continuous (streaming effect).
+    const loadPage = (n) => {
+      if (n < 0 || n >= this._imgEls.length) return;
+      const img = this._imgEls[n];
+      if (!img.getAttribute("data-loaded")) {
+        img.setAttribute("data-loaded", "1");
+        img.src = `/api/v1/comic/${this._key}/page/${n}`;
+      }
+    };
+
+    this._observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const n = parseInt(entry.target.dataset.page, 10);
+          loadPage(n);
+          // Stream-ahead: preload the next 10 pages
+          for (let ahead = 1; ahead <= 10; ahead++) loadPage(n + ahead);
+        }
+      },
+      { root: this.container, rootMargin: "600px 0px 600px 0px", threshold: 0 },
+    );
+
+    for (let i = 1; i < this._imgEls.length; i++) {
+      this._observer.observe(this._imgEls[i]);
+    }
+
+    // Separate visibility tracker: update page counter + persist progress
+    const visTracker = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            this._visiblePage = parseInt(entry.target.dataset.page, 10);
+            this._updateInfo();
+            saveProgress(this._fileKey, { page: this._visiblePage });
+            if (this.onPageChange) this.onPageChange(this._visiblePage);
+          }
+        }
+      },
+      { root: this.container, rootMargin: "0px", threshold: 0.4 },
+    );
+    for (const img of this._imgEls) visTracker.observe(img);
+
+    // Restore saved position
+    const saved = loadProgress(this._fileKey);
+    if (saved && saved.page > 0 && saved.page < this._totalPages) {
+      // Scroll to saved page after layout settles
+      requestAnimationFrame(() => {
+        const img = this._imgEls[saved.page];
+        if (img) {
+          // Ensure the saved page and up-front neighbours are loaded
+          for (
+            let i = Math.max(0, saved.page - 2);
+            i <= Math.min(this._totalPages - 1, saved.page + 10);
+            i++
+          ) {
+            loadPage(i);
+          }
+          img.scrollIntoView({ behavior: "instant", block: "start" });
+        }
+      });
+    }
+
+    this._updateInfo();
+  }
+
+  /** Scroll the container down by 25% of one natural page height. */
+  nextPage() {
+    const step = Math.round(this._pageHeight * 0.25);
+    this.container.scrollBy({ top: step, behavior: "smooth" });
+  }
+
+  /** Scroll the container up by 25% of one natural page height. */
+  prevPage() {
+    const step = Math.round(this._pageHeight * 0.25);
+    this.container.scrollBy({ top: -step, behavior: "smooth" });
+  }
+
+  _updateInfo() {
+    if (this.infoEl) {
+      this.infoEl.textContent = `Page ${this._visiblePage + 1} / ${this._totalPages} [Webtoon]`;
+    }
+  }
+
+  destroy() {
+    this._destroyed = true;
+    if (this._observer) {
+      this._observer.disconnect();
+      this._observer = null;
+    }
+    this._imgEls = [];
+    this._stripEl = null;
+    this.container.textContent = "";
+  }
+}
+
 // ── Reader UI ─────────────────────────────────────────────────────────────────
 
 export default class Reader {
@@ -994,6 +1259,10 @@ export default class Reader {
       typeof localStorage !== "undefined" &&
       localStorage.getItem("reader_manga") === "1"
     );
+    this._webtoonMode = !!(
+      typeof localStorage !== "undefined" &&
+      localStorage.getItem("reader_webtoon") === "1"
+    );
 
     this._onKey = this._onKey.bind(this);
 
@@ -1018,14 +1287,36 @@ export default class Reader {
     if (this.mangaEl) {
       this.mangaEl.addEventListener("click", () => {
         this._mangaMode = !this._mangaMode;
+        this._webtoonMode = false;
         try {
           localStorage.setItem("reader_manga", this._mangaMode ? "1" : "0");
+          localStorage.setItem("reader_webtoon", "0");
         } catch (_) {
           // ignore private-browsing quota errors
         }
         this.mangaEl.classList.toggle("active", this._mangaMode);
-        if (this._renderer instanceof ComicReader) {
-          this._renderer.setMangaMode(this._mangaMode);
+        if (this.webtoonEl) this.webtoonEl.classList.remove("active");
+        // Re-open the current comic in the new mode
+        if (this.file && this._readerType === "comic") {
+          this._openComicRenderer();
+        }
+      });
+    }
+    if (this.webtoonEl) {
+      this.webtoonEl.addEventListener("click", () => {
+        this._webtoonMode = !this._webtoonMode;
+        if (this._webtoonMode) this._mangaMode = false;
+        try {
+          localStorage.setItem("reader_webtoon", this._webtoonMode ? "1" : "0");
+          localStorage.setItem("reader_manga", "0");
+        } catch (_) {
+          // ignore private-browsing quota errors
+        }
+        this.webtoonEl.classList.toggle("active", this._webtoonMode);
+        if (this.mangaEl) this.mangaEl.classList.remove("active");
+        // Re-open the current comic in the new mode
+        if (this.file && this._readerType === "comic") {
+          this._openComicRenderer();
         }
       });
     }
@@ -1103,12 +1394,18 @@ export default class Reader {
     if (this.nextEl) {
       this.nextEl.classList.toggle("hidden", !(isBook || isComic));
     }
-    // Show/hide the manga+webtoon pill as a unit; initialise manga active state.
+    // Show/hide the manga+webtoon pill as a unit; initialise mode active states.
     if (this.viewPillEl) {
       this.viewPillEl.classList.toggle("hidden", !isComic);
     }
     if (this.mangaEl) {
-      this.mangaEl.classList.toggle("active", isComic && this._mangaMode);
+      this.mangaEl.classList.toggle(
+        "active",
+        isComic && this._mangaMode && !this._webtoonMode,
+      );
+    }
+    if (this.webtoonEl) {
+      this.webtoonEl.classList.toggle("active", isComic && this._webtoonMode);
     }
 
     dbg(
@@ -1125,14 +1422,12 @@ export default class Reader {
     try {
       if (isPdf) {
         this._renderer = new PDFReader(this.contentEl, this.infoEl);
-        await this._renderer.open(file.url);
+        await this._renderer.open(file.url, file.key);
       } else if (isComic) {
-        this._renderer = new ComicReader(this.contentEl, this.infoEl);
-        this._renderer.setMangaMode(this._mangaMode);
-        await this._renderer.open(file);
+        await this._openComicRenderer();
       } else {
         this._renderer = new BookReader(this.contentEl, this.infoEl);
-        await this._renderer.open(file.url, rtype);
+        await this._renderer.open(file.url, rtype, file.key);
       }
     } catch (ex) {
       dbgErr("Reader open error", ex);
@@ -1150,6 +1445,23 @@ export default class Reader {
     return true;
   }
 
+  /** (Re)build the comic renderer for the current file + mode. */
+  async _openComicRenderer() {
+    if (this._renderer) {
+      this._renderer.destroy();
+      this._renderer = null;
+    }
+    if (!this.file) return;
+    if (this._webtoonMode) {
+      this._renderer = new WebtoonReader(this.contentEl, this.infoEl);
+      await this._renderer.open(this.file);
+    } else {
+      this._renderer = new ComicReader(this.contentEl, this.infoEl);
+      this._renderer.setMangaMode(this._mangaMode);
+      await this._renderer.open(this.file);
+    }
+  }
+
   close() {
     if (this._renderer) {
       this._renderer.destroy();
@@ -1165,7 +1477,10 @@ export default class Reader {
   _paginatePage(dir) {
     if (this._renderer instanceof BookReader) {
       this._bookPage(dir);
-    } else if (this._renderer instanceof ComicReader) {
+    } else if (
+      this._renderer instanceof ComicReader ||
+      this._renderer instanceof WebtoonReader
+    ) {
       this._comicPage(dir);
     }
   }
@@ -1184,9 +1499,12 @@ export default class Reader {
     }
   }
 
-  /** Navigate comics by one page. */
+  /** Navigate comics by one page (or scroll 25% in webtoon mode). */
   _comicPage(dir) {
-    if (this._renderer instanceof ComicReader) {
+    if (
+      this._renderer instanceof ComicReader ||
+      this._renderer instanceof WebtoonReader
+    ) {
       if (dir === "prev") this._renderer.prevPage();
       else this._renderer.nextPage();
     }
@@ -1230,10 +1548,16 @@ export default class Reader {
       if (this._readerType === "pdf") {
         this._pdf("prev");
         nukeEvent(e);
+      } else if (this._readerType === "comic" && this._webtoonMode) {
+        this._comicPage("prev");
+        nukeEvent(e);
       }
     } else if (e.key === "ArrowDown") {
       if (this._readerType === "pdf") {
         this._pdf("next");
+        nukeEvent(e);
+      } else if (this._readerType === "comic" && this._webtoonMode) {
+        this._comicPage("next");
         nukeEvent(e);
       }
     } else if (e.key === "PageUp") {

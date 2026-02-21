@@ -158,6 +158,9 @@ export default class File extends BaseFile {
         });
         this.nameEl.appendChild(this.requestUrlEl);
       }
+      this.sizeEl = dom("span", { classes: ["size", "size-placeholder"] });
+      this.detailEl.appendChild(this.sizeEl);
+
       this.ttlEl = dom("span", {
         classes: ["ttl"],
       });

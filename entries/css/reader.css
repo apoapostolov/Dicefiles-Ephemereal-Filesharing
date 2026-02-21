@@ -308,6 +308,23 @@
   color: #fff;
 }
 
+/* Suppress browser-default focus background — keep only the outline */
+.reader-view-btn:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.reader-view-btn:focus-visible {
+  outline: 2px solid rgba(99, 179, 237, 0.6);
+  outline-offset: -2px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.reader-view-btn.active:focus,
+.reader-view-btn.active:focus-visible {
+  background: rgba(99, 179, 237, 0.18);
+}
+
 .reader-view-btn.active {
   background: rgba(99, 179, 237, 0.18);
   color: #90cdf4;
@@ -321,7 +338,33 @@
   opacity: 0.38;
   cursor: not-allowed;
 }
+/* ── Webtoon (continuous vertical strip) rendering ────────────────────────── */
 
+.reader-webtoon-strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 0;
+}
+
+.reader-webtoon-page {
+  display: block;
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+}
+
+/* Webtoon content area: scrollable, no extra padding, pages flush */
+#reader-content:has(.reader-webtoon-strip) {
+  overflow-y: auto;
+  padding: 0;
+  gap: 0;
+  align-items: center;
+  justify-content: flex-start;
+}
 /* ── "Read Now" overlay button in gallery ────────────────────────────────── */
 
 /* Positioned within #gallery (which now has position:relative).

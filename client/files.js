@@ -6,6 +6,7 @@ import DownloadBatchModal from "./files/downloadmodal";
 import File from "./files/file";
 import * as filesfilter from "./files/filter";
 import Gallery from "./files/gallery";
+import { flushStaleProgress } from "./files/reader";
 import RequestModal from "./files/requestmodal";
 import ScrollState from "./files/scrollstate";
 import { REMOVALS } from "./files/tracker";
@@ -1150,6 +1151,8 @@ export default new (class Files extends EventEmitter {
         await this.addFileElements(files);
       }
       if (replace) {
+        // Flush localStorage reading-progress entries for files no longer in the room
+        flushStaleProgress(new Set(this.filemap.keys()));
         this.emit("replaced");
       }
     }

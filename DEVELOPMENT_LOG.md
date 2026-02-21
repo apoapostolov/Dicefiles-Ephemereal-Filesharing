@@ -1,5 +1,96 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - Fix: Comic/Webtoon Reading Progress Not Persisting Across Refreshes
+
+**Root cause**: Progress was saved via an `onPageChange` callback wired in `_openComicRenderer()` using `const fileKey = this.file.key` (a closure over `Reader.this.file.key`). If `file.key` was falsy or differed from the href-derived key used by `ComicReader._fileKey`, `saveProgress(undefined, …)` silently returned without writing to localStorage. Meanwhile `loadProgress(this._fileKey)` used the href-derived fallback and found nothing — so comics always opened at page 0 after F5.
+
+The same class of bug existed latently for the webtoon and book renderers.
+
+**Fix**: Removed all `onPageChange`-based save callbacks from `Reader.open()` and `_openComicRenderer()`. Each renderer now calls `saveProgress(this._fileKey, …)` **directly** at the point of page change, using the very same `this._fileKey` that `loadProgress` reads from. This eliminates all possible key mismatches caused by external closures.
+
+- `client/files/reader.js`:
+  - `PDFReader._updateInfo()` — calls `saveProgress(this._fileKey, {page: current})` directly instead of forwarding to `onPageChange`
+  - `BookReader._updateInfo()` — calls `saveProgress(this._fileKey, {chapter, page})` directly
+  - `ComicReader._showPage()` — calls `saveProgress(this._fileKey, {page: clamped})` directly
+  - `WebtoonReader` visibility tracker — calls `saveProgress(this._fileKey, {page: this._visiblePage})` directly
+  - `Reader.open()` — removed `this._renderer.onPageChange = …` assignments (now redundant)
+  - `Reader._openComicRenderer()` — removed `fileKey` local variable and `onPageChange` assignments
+
+---
+
+
+
+**Root cause**: Browser UA stylesheet applies `background-color: ButtonFace` (typically white) to `<button>` elements on `:focus`. After clicking a toggled-off mode button the focus ring activates with the UA background, overriding the dark translucent `.reader-view-btn` background — making it appear white.
+
+- `entries/css/reader.css` — Added explicit `:focus` rule that resets `background` to the same `rgba(255,255,255,0.04)` used in the base state, suppressing the UA background. Added `:focus-visible` with a blue outline for keyboard navigation. Added `.active:focus`/`.active:focus-visible` overrides to keep the active highlight when focus lands on an active button.
+
+---
+
+**Root cause**: In `PDFReader.open()`, `_updateInfo(0, this.totalPages)` was called _before_ `loadProgress()`. Because `Reader.open()` wires `onPageChange` onto the renderer _before_ calling `renderer.open()`, the `_updateInfo(0, …)` call immediately invoked `onPageChange(0)` → `saveProgress(key, {page:0})`, writing page 0 back to localStorage and wiping any previously saved position. Then `loadProgress()` returned `{page:0}`, causing the restore check (`saved.page >= 1`) to always fall back to page 1. This also caused persistence loss across F5 reloads for PDFs.
+
+- `client/files/reader.js` — Moved `loadProgress()` and `startPage` calculation to _before_ `_updateInfo()` in `PDFReader.open()`; changed `_updateInfo(0, total)` → `_updateInfo(startPage, total)` so the UI immediately shows the restored page number instead of "Page 0 / total".
+
+---
+
+## 2026-02-22 - Feature: Reading Progress Persistence + Webtoon Stream-ahead
+
+### Summary
+
+Two improvements across all reader formats:
+
+1. **Reading progress** — The reader now saves the last-read position (page number, and chapter index for EPUB/MOBI) to `localStorage` under `dicefiles:readprogress:<fileKey>` whenever the visible page changes. When the same file is re-opened the reader restores directly to that position instead of starting at page 1. On each full file-list refresh (`replace` event) any stored keys not present in the live file map are purged.
+
+2. **Webtoon stream-ahead** — The `WebtoonReader` lazy-loader now preloads the next **10** pages whenever an image enters the viewport (previously each page was fetched individually only when it intersected the viewport). The `rootMargin` was also widened to 600 px so browser decode can happen before the user scrolls to that image.
+
+### Changed Files
+
+- **`client/files/reader.js`**
+  - Added `PROGRESS_PREFIX` constant, `saveProgress(fileKey, state)`, `loadProgress(fileKey)`, and `flushStaleProgress(liveKeys)` helpers (the last is exported for `files.js`).
+  - `PDFReader`: added `_fileKey` / `onPageChange` fields; `open()` now accepts `fileKey` second arg; `_updateInfo()` calls `onPageChange`; `_setupObserver()` starts from the saved page and scrolls to it on first render.
+  - `BookReader`: added `_fileKey` / `onPageChange` fields; `open()` now accepts `fileKey` third arg and restores saved chapter + page; `_updateInfo()` calls `onPageChange`.
+  - `ComicReader`: added `_fileKey` / `onPageChange` fields; `open()` restores saved page via `_showPage(startPage)`; `_showPage()` calls `onPageChange`.
+  - `WebtoonReader`: added `_fileKey` / `onPageChange` fields; `open()` restores saved scroll position; lazy-loader now preloads next 10 pages on each IntersectionObserver entry; rootMargin widened to 600 px; visibility tracker calls `onPageChange`.
+  - `Reader.open()`: wires `onPageChange` → `saveProgress` on all renderer types.
+  - `Reader._openComicRenderer()`: wires `onPageChange` on both `ComicReader` and `WebtoonReader`.
+  - `Reader._paginatePage()`: now dispatches to `_comicPage()` for both `ComicReader` and `WebtoonReader`.
+
+- **`client/files.js`**
+  - Imports `flushStaleProgress` from `./files/reader`.
+  - After each `replace` event, calls `flushStaleProgress(new Set(filemap.keys()))` to remove stale progress entries.
+
+---
+
+## 2026-02-22 - Feature: Webtoon Mode for Comic Reader
+
+### Summary
+
+Implemented Webtoon mode in the comic reader. Clicking "Webtoon" in the reader pill switches from the paged single-image view to a continuous vertical strip of all pages loaded lazily as the user scrolls. Up/Down buttons (and ↑/↓ arrow keys) scroll by 25% of a single page's natural height per press instead of jumping to a discrete page.
+
+### Changed Files
+
+- **`client/files/reader.js`** — Added `WebtoonReader` class: fetches page count from `/api/v1/comic/:key/index`, renders all pages as `<img>` elements in a vertical strip loaded via `IntersectionObserver`, tracks visible page for the info bar, implements `prevPage()`/`nextPage()` as `scrollBy(±25% of pageHeight)`. Wired `_webtoonMode` state into `Reader` constructor (persisted to `localStorage`). Added `_openComicRenderer()` helper that spawns either `ComicReader` or `WebtoonReader` based on mode; Webtoon button click toggles mode and hot-switches renderer without closing the overlay. Arrow keys ↑/↓ now scroll 25% in webtoon mode. Manga and Webtoon modes are mutually exclusive.
+- **`views/room.ejs`** — Removed `disabled` attribute and updated tooltip text on the Webtoon button.
+- **`entries/css/reader.css`** — Added `.reader-webtoon-strip` (vertical flex, centered) and `.reader-webtoon-page` (full-width, max 900px, `height: auto`) styles. Added `#reader-content:has(.reader-webtoon-strip)` context rule to make the content area scrollable with no padding when in webtoon mode.
+
+---
+
+## 2026-02-22 - Fix: File List TTL/Size Column Alignment for Request Files
+
+### Summary
+
+Request file rows were missing a `.size` element in the `.detail` flex container, causing the `.ttl` span to start at the left edge of the detail area instead of aligning with the TTL column of normal file rows.
+
+### Root Cause
+
+The `.detail` container is a fixed-width (212px) flex box. Normal files render `[.size(flex:2)] [.ttl(flex:3)]`; request files only rendered `[.ttl(flex:3)]`, making TTL occupy the full 212px width instead of the rightmost 3/5 of it.
+
+### Changed Files
+
+- **`client/files/file.js`** — In the `isRequest` branch, insert an empty `<span class="size size-placeholder">` before the TTL element so layout matches normal rows.
+- **`entries/css/files.css`** — Added `#files > .file > .detail > .size.size-placeholder { visibility: hidden; }` so the placeholder takes up space without rendering visible content or a separator border.
+
+---
+
 ## 2026-02-22 - Fix: CBZ Phase 2 — RAR Support, On-demand Index, ComicInfo.xml, Manga/Webtoon Pill
 
 ### Summary
@@ -20,8 +111,6 @@ Fixed three bugs in the comic reader and added Phase 2 RAR support:
 - **`views/room.ejs`** — Replaced standalone `#reader-manga` / `#reader-webtoon` buttons (after Prev/Next) with `<div id="reader-view-pill">` pill wrapper placed BEFORE `#reader-download`. Buttons inside the pill use `reader-view-btn` class.
 - **`entries/css/reader.css`** — Replaced `.reader-mode-btn` styles with `.reader-view-pill` (flex container, single border-radius, shared border) and `.reader-view-btn` (pill segment, border-right divider, no individual border-radius). Active state removes the per-button border-color override.
 - **`client/files/reader.js`** — Added `this.viewPillEl = document.querySelector("#reader-view-pill")`. In `Reader.open()`: hides/shows `viewPillEl` as a unit instead of toggling individual button hidden classes. `mangaEl` click handler unchanged; `active` class still toggled on `#reader-manga`.
-
-
 
 ### Summary
 

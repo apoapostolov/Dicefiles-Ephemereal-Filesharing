@@ -314,6 +314,10 @@ body.links-mode #filelist-scroller {
   color: #f1f1f1;
 }
 
+#files > .file > .detail > .size.size-placeholder {
+  visibility: hidden;
+}
+
 #files.gallerymode {
   display: flex;
   flex-wrap: wrap;
