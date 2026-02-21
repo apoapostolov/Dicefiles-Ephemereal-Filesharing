@@ -30,6 +30,7 @@
 - Asset/preview generation gracefully degrades when helper binaries (GraphicsMagick, ffmpeg, etc.) are missing. Missing tooling simply causes no previews or covers; there is no crash.
 - Links Archive toggle button was non-functional due to a CSS specificity conflict: `#files.listmode { display: block !important }` overrode `.hidden { display: none !important }`. Fixed by scoping the rule to `:not(.hidden)`.
 - Link rows in the archive were unstyled; the element class names now match the existing file row CSS (`.name`, `.name-text`, `.file-new-pill`, `.tags`, `.tag`, `.detail`).
+- PDF (and all file) serving returned HTTP 403 Forbidden after a workspace cleanup wiped the uploads directory. Stale deduplication entries in Redis caused the server to discard a freshly-uploaded file and attempt to stream the deleted one. Fix: verify the physical file exists before reusing a dedup entry; re-upload and regenerate metadata/thumbnails when stale. Additionally, ENOENT stream errors in the serve handler now yield 404 Not Found instead of 403.
 
 ## [1.0.0] - 2026-02-17
 
