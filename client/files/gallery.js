@@ -242,9 +242,13 @@ export default class Gallery {
       };
     } else {
       // No cover image (e.g. EPUB/MOBI without embedded cover) —
-      // cancel the loader.png placeholder so we get a clean dark backdrop.
+      // cancel the loader.png placeholder and replace imgEl with a
+      // clean empty element so the previous file's cover does not persist.
       clearTimeout(to);
-      this.imgEl.src = "";
+      const blank = new Image();
+      blank.id = this.imgEl.id;
+      this.imgEl.parentElement.replaceChild(blank, this.imgEl);
+      this.imgEl = blank;
     }
 
     // Set up additional info elements straight away

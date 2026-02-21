@@ -4,13 +4,13 @@
 
 ### Added
 
-- **Streaming PDF / ePub / MOBI Reader**: PDF, ePub, and MOBI files now have a "Read Now" button in the gallery lightbox. Clicking it opens an in-page reader filling the file-list area. PDFs stream lazily via HTTP Range requests (only pages near the viewport are decoded). ePub and MOBI files render in a dark-themed iframe with prev/next navigation. Zoom in/out supported for PDFs. Press Escape or click ✕ to close. EPUB/MOBI cover images are extracted server-side from embedded cover art; files without an embedded cover open the gallery with the title and Read Now button on a dark backdrop.
+- **Streaming PDF / ePub / MOBI Reader**: PDF, ePub, and MOBI files now have a "Read Now" button in the gallery lightbox. Clicking it opens an in-page reader filling the file-list area. PDFs stream lazily via HTTP Range requests (only pages near the viewport are decoded). ePub and MOBI files are rendered client-side in a dark-themed iframe. Zoom in/out supported for PDFs. Press Escape or click ✕ to close.
 
-- Links Archive functionality to collect and display links posted in chat.
-  - All URLs posted in chat (including by non-logged-in users) are captured and stored with a 1-year TTL.
-  - Dedicated toggle button (link icon) in the toolbar, to the left of the Requests button.
-  - Clicking the toggle switches the file list view to the Links Archive and back.
-  - Links displayed in table form: resolved title, truncated URL, NEW pill, sharer nick, age.
+- **A5 paginated book layout**: ePub and MOBI chapters are laid out as A5 pages. ← / → arrow keys (or Prev/Next buttons) scroll pages within a chapter. PageUp / PageDown jump between chapters. A chapter+page counter is shown in the reader toolbar.
+
+- **EPUB/MOBI cover thumbnails**: Cover images are extracted server-side at upload time and shown in the gallery. EPUB covers are parsed from the OPF manifest (`jszip`). MOBI/AZW covers are extracted via `exiftool -CoverImage`. Files without an embedded cover open the gallery with the title and Read Now button on a dark backdrop.
+
+- **Links Archive**: All URLs posted in chat are automatically captured and stored with a 1-year TTL. Browse them via the link-icon toggle in the room toolbar. Links are displayed in table form: resolved title, truncated URL, NEW pill, sharer nick, age.
 
 ### Changed
 
@@ -18,6 +18,7 @@
 
 ### Fixed
 
+- Gallery overlay retained the previous file's cover image when navigating to a file that has no cover. The image element is now replaced wholesale with a fresh `<img>` to clear all cached source state.
 - Links Archive toggle button was non-functional due to a CSS specificity conflict: `#files.listmode { display: block !important }` overrode `.hidden { display: none !important }`. Fixed by scoping the rule to `:not(.hidden)`.
 - Link rows in the archive were unstyled; the element class names now match the existing file row CSS (`.name`, `.name-text`, `.file-new-pill`, `.tags`, `.tag`, `.detail`).
 

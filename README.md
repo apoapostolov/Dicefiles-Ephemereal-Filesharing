@@ -20,7 +20,7 @@ Dicefiles is a self-hosted, open-source file sharing platform for hobby communit
 - Real-time chat rooms with file sharing
 - User accounts and moderation
 - File previews (images, videos, audio, PDFs)
-- **In-page streaming PDF, ePub, and MOBI reader** — click "Read Now" on any PDF/ePub/MOBI cover in gallery view to open a reader without leaving the room. EPUB and MOBI are parsed entirely client-side; no server-side extraction or conversion is needed
+- **In-page streaming PDF, ePub, and MOBI reader** — click "Read Now" on any PDF/ePub/MOBI cover in gallery view to open a reader without leaving the room. EPUB and MOBI files are rendered entirely client-side; cover thumbnails are extracted server-side from the embedded cover art on upload
 - **Links Archive** — all URLs posted in chat are automatically captured and stored; browse them via the link-icon toggle in the room toolbar
 - Configurable limits and flood control
 - TLS/HTTPS support
@@ -93,7 +93,7 @@ Press **Escape** or click the **✕** button in the toolbar to close the reader 
 
 The PDF.js web worker is built as a separate webpack entry (`pdf.worker.js`) and served at `/pdf.worker.js`. It is only fetched the first time a user opens a PDF — ordinary room usage incurs no overhead.
 
-> **Important distinction:** the reader packages handle **in-browser reading only**. Server-side **cover thumbnail generation** for PDFs (the small preview image shown in the file list) still relies on GraphicsMagick + Ghostscript as documented in the [Install Preview Tooling](#15-install-preview-tooling-recommended) section.
+> **Important distinction:** the reader packages handle **in-browser reading only**. Server-side **cover thumbnail generation** for PDFs uses GraphicsMagick + Ghostscript; for EPUB it uses `jszip` (already bundled); for MOBI/AZW it uses `exiftool`. See the [Install Preview Tooling](#15-install-preview-tooling-recommended) section.
 
 ## User Profiles
 
