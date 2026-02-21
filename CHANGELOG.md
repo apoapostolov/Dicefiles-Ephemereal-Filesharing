@@ -4,7 +4,7 @@
 
 ### Added
 
-- **Streaming PDF / ePub Reader**: PDF and ePub files now have a "Read Now" button in the gallery lightbox. Clicking it opens an in-page reader filling the file-list area. PDFs stream lazily via HTTP Range requests (only pages near the viewport are decoded). ePub chapters render in a dark-themed iframe with prev/next navigation. Zoom in/out supported for PDFs. Press Escape or click ✕ to close.
+- **Streaming PDF / ePub / MOBI Reader**: PDF, ePub, and MOBI files now have a "Read Now" button in the gallery lightbox. Clicking it opens an in-page reader filling the file-list area. PDFs stream lazily via HTTP Range requests (only pages near the viewport are decoded). ePub and MOBI files render in a dark-themed iframe with prev/next navigation. Zoom in/out supported for PDFs. Press Escape or click ✕ to close. EPUB/MOBI cover images are extracted server-side from embedded cover art; files without an embedded cover open the gallery with the title and Read Now button on a dark backdrop.
 
 - Links Archive functionality to collect and display links posted in chat.
   - All URLs posted in chat (including by non-logged-in users) are captured and stored with a 1-year TTL.

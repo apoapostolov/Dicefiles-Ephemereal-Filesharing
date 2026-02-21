@@ -7,11 +7,11 @@ import History from "./chatbox/history";
 import { convertMessage, WHITE } from "./chatbox/parse";
 import registry from "./registry";
 import {
-    dom,
-    nukeEvent,
-    parseCommand,
-    roleToStatus,
-    validateUsername,
+  dom,
+  nukeEvent,
+  parseCommand,
+  roleToStatus,
+  validateUsername,
 } from "./util";
 
 /* global __GIF_PROVIDERS__ */
@@ -23,6 +23,7 @@ export default new (class ChatBox extends EventEmitter {
     super();
     this.currentNick = "";
     this.chatbox = document.querySelector("#chatbox");
+    this.chat = document.querySelector("#chat");
     this.status = document.querySelector("#status");
     this.text = document.querySelector("#text");
     this.nick = document.querySelector("#nick");
@@ -48,6 +49,10 @@ export default new (class ChatBox extends EventEmitter {
     this.activeGifProvider = "giphy";
     this.gifSearchTimer = null;
     this.gifSearchNonce = 0;
+    this.gifPagQuery = "";
+    this.gifPagProvider = "";
+    this.gifPagNext = null;
+    this.gifPagLoading = false;
     this.ondocclick = this.ondocclick.bind(this);
     this.text.addEventListener("keypress", this.onpress.bind(this));
     this.text.addEventListener("paste", this.onpaste.bind(this));
@@ -312,11 +317,17 @@ export default new (class ChatBox extends EventEmitter {
       text: "Start typing to search GIFs",
     });
     this.gifGridEl = dom("div", { classes: ["gif-grid"] });
+    this.gifGridEl.addEventListener("scroll", () => {
+      const el = this.gifGridEl;
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 60) {
+        this.loadMoreGifs();
+      }
+    });
     this.gifMenu.appendChild(this.gifSearchEl);
     this.gifMenu.appendChild(this.gifStatusEl);
     this.gifMenu.appendChild(this.gifGridEl);
-    // Append to #status so the menu can span the full chat column width
-    this.status.appendChild(this.gifMenu);
+    // Append to #chat so the overlay fills the chat column vertically
+    this.chat.appendChild(this.gifMenu);
   }
 
   toggleGifMenu(provider) {
@@ -385,12 +396,17 @@ export default new (class ChatBox extends EventEmitter {
 
   async searchGifRealtime(query, provider) {
     const nonce = ++this.gifSearchNonce;
+    this.gifPagQuery = query;
+    this.gifPagProvider = provider;
+    this.gifPagNext = null;
+    this.gifPagLoading = false;
     let results = [];
+    let next = null;
     try {
-      results =
+      ({ results, next } =
         provider === "tenor"
           ? await this.searchTenor(query)
-          : await this.searchGiphy(query);
+          : await this.searchGiphy(query));
     } catch (ex) {
       if (nonce !== this.gifSearchNonce) {
         return;
@@ -403,10 +419,37 @@ export default new (class ChatBox extends EventEmitter {
     if (nonce !== this.gifSearchNonce) {
       return;
     }
+    this.gifPagNext = next;
     this.renderGifGrid(results, provider, query);
   }
 
-  async searchGiphy(query) {
+  async loadMoreGifs() {
+    if (this.gifPagLoading || this.gifPagNext === null || !this.gifPagQuery) {
+      return;
+    }
+    this.gifPagLoading = true;
+    try {
+      const { results, next } =
+        this.gifPagProvider === "tenor"
+          ? await this.searchTenor(this.gifPagQuery, this.gifPagNext)
+          : await this.searchGiphy(this.gifPagQuery, this.gifPagNext);
+      this.gifPagNext = next;
+      if (results.length) {
+        this.renderGifGrid(
+          results,
+          this.gifPagProvider,
+          this.gifPagQuery,
+          true,
+        );
+      }
+    } catch (ex) {
+      // silently skip failed pagination
+    } finally {
+      this.gifPagLoading = false;
+    }
+  }
+
+  async searchGiphy(query, offset = 0) {
     const cfg = (gifProviders && gifProviders.giphy) || {};
     const key = (cfg.apiKey || "").trim();
     if (!key) {
@@ -414,11 +457,11 @@ export default new (class ChatBox extends EventEmitter {
     }
     const limit = Math.max(1, Math.min(40, Number(cfg.limit) || 20));
     const rating = encodeURIComponent(cfg.rating || "pg-13");
-    const u = `https://api.giphy.com/v1/gifs/search?api_key=${encodeURIComponent(key)}&q=${encodeURIComponent(query)}&limit=${limit}&rating=${rating}`;
+    const u = `https://api.giphy.com/v1/gifs/search?api_key=${encodeURIComponent(key)}&q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}&rating=${rating}`;
     const res = await fetch(u);
     const body = await res.json();
     const data = Array.isArray(body && body.data) ? body.data : [];
-    return data
+    const results = data
       .map((item) => ({
         preview:
           item &&
@@ -432,9 +475,10 @@ export default new (class ChatBox extends EventEmitter {
           item.images.original.url,
       }))
       .filter((r) => r.preview && r.url);
+    return { results, next: results.length ? offset + results.length : null };
   }
 
-  async searchTenor(query) {
+  async searchTenor(query, pos = "") {
     const cfg = (gifProviders && gifProviders.tenor) || {};
     const key = (cfg.apiKey || "").trim();
     if (!key) {
@@ -444,8 +488,9 @@ export default new (class ChatBox extends EventEmitter {
     const clientKey = encodeURIComponent(cfg.clientKey || "dicefiles");
     const mediaFilter = encodeURIComponent(cfg.mediaFilter || "tinygif,gif");
     const contentFilter = encodeURIComponent(cfg.contentFilter || "medium");
-    const u = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(query)}&key=${encodeURIComponent(key)}&client_key=${clientKey}&limit=${limit}&media_filter=${mediaFilter}&contentfilter=${contentFilter}`;
+    const u = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(query)}&key=${encodeURIComponent(key)}&client_key=${clientKey}&limit=${limit}${pos ? `&pos=${encodeURIComponent(pos)}` : ""}&media_filter=${mediaFilter}&contentfilter=${contentFilter}`;
     let data = [];
+    let bodyNext = null;
     try {
       const res = await fetch(u);
       const body = await res.json();
@@ -457,15 +502,16 @@ export default new (class ChatBox extends EventEmitter {
           body.error.details.find((e) => e.reason) &&
           body.error.details.find((e) => e.reason).reason;
         if (reason === "API_KEY_INVALID") {
-          return await this.searchTenorLegacy(query, key, limit);
+          return await this.searchTenorLegacy(query, key, limit, pos);
         }
         throw new Error(
           (body && body.error && body.error.message) || "Tenor search failed",
         );
       }
       data = Array.isArray(body && body.results) ? body.results : [];
+      bodyNext = body.next || null;
     } catch (ex) {
-      return await this.searchTenorLegacy(query, key, limit);
+      return await this.searchTenorLegacy(query, key, limit, pos);
     }
 
     const out = data
@@ -482,13 +528,13 @@ export default new (class ChatBox extends EventEmitter {
       })
       .filter((r) => r.preview && r.url);
     if (out.length) {
-      return out;
+      return { results: out, next: bodyNext };
     }
-    return await this.searchTenorLegacy(query, key, limit);
+    return await this.searchTenorLegacy(query, key, limit, pos);
   }
 
-  async searchTenorLegacy(query, key, limit) {
-    const u = `https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=${encodeURIComponent(key)}&limit=${limit}`;
+  async searchTenorLegacy(query, key, limit, pos = "") {
+    const u = `https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=${encodeURIComponent(key)}&limit=${limit}${pos ? `&next=${encodeURIComponent(pos)}` : ""}`;
     const res = await fetch(u);
     const body = await res.json();
     if (!res.ok) {
@@ -497,7 +543,7 @@ export default new (class ChatBox extends EventEmitter {
       );
     }
     const data = Array.isArray(body && body.results) ? body.results : [];
-    return data
+    const results = data
       .map((item) => {
         const media = Array.isArray(item && item.media) ? item.media[0] : {};
         const tiny = (media && media.tinygif) || {};
@@ -508,11 +554,14 @@ export default new (class ChatBox extends EventEmitter {
         return { preview, url };
       })
       .filter((r) => r.preview && r.url);
+    return { results, next: body.next || null };
   }
 
-  renderGifGrid(results, provider, query) {
-    this.gifGridEl.textContent = "";
-    if (!results.length) {
+  renderGifGrid(results, provider, query, append = false) {
+    if (!append) {
+      this.gifGridEl.textContent = "";
+    }
+    if (!append && !results.length) {
       this.gifStatusEl.textContent = `No ${provider} GIFs for "${query}"`;
       this.gifMenu.classList.remove("has-results");
       return;
@@ -548,8 +597,10 @@ export default new (class ChatBox extends EventEmitter {
       frag.appendChild(b);
     }
     this.gifGridEl.appendChild(frag);
-    this.gifStatusEl.textContent = `${results.length} results from ${provider}`;
-    this.gifMenu.classList.add("has-results");
+    if (!append) {
+      this.gifStatusEl.textContent = `${results.length} results from ${provider}`;
+      this.gifMenu.classList.add("has-results");
+    }
   }
 
   normalizeGifChatUrl(rawUrl) {

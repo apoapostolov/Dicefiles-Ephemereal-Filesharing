@@ -57,6 +57,9 @@ function getReadableType(file) {
   if (t === "EPUB" || /\.epub$/i.test(n)) {
     return "epub";
   }
+  if (t === "MOBI" || /\.(mobi|azw|azw3)$/i.test(n)) {
+    return "epub"; // best-effort: attempt to render with epub.js
+  }
   return null;
 }
 
@@ -72,6 +75,8 @@ class PDFReader {
     this.observer = null;
     this.canvases = [];
     this.scale = 1.4;
+    this._pageHeight = 0;
+    this._currentPageNum = 1;
     this._destroyed = false;
   }
 
@@ -148,21 +153,30 @@ class PDFReader {
     if (containerWidth > 0) {
       const firstPage = await this.pdfDoc.getPage(1);
       const naturalViewport = firstPage.getViewport({ scale: 1 });
-      // Leave 32px breathing room for scrollbar / padding
-      this.scale = Math.min((containerWidth - 32) / naturalViewport.width, 2.5);
+      // A5 aspect ratio (148 × 210 mm, w:h = 148/210).
+      // Compute the page display width constrained by BOTH container width AND height
+      // (so one full page fits in the viewport without scrolling = book-like view).
+      const A5_W_TO_H = 148 / 210;
+      const containerHeight = this.container.clientHeight;
+      const maxByWidth = containerWidth - 32;
+      const maxByHeight = Math.floor((containerHeight - 24) * A5_W_TO_H);
+      const pageDisplayW = Math.max(200, Math.min(maxByWidth, maxByHeight));
+      this.scale = pageDisplayW / naturalViewport.width;
       // Pre-compute placeholder height so IntersectionObserver thresholds are accurate
       this._pageHeight = Math.ceil(naturalViewport.height * this.scale);
       dbg(
-        "auto scale =",
+        "auto scale (A5) =",
         this.scale,
         "natural page width =",
         naturalViewport.width,
+        "pageDisplayW =",
+        pageDisplayW,
         "pageHeight =",
         this._pageHeight,
       );
       dbgShow(
         this.container,
-        `Scale: ${this.scale.toFixed(3)} (page natural w=${naturalViewport.width.toFixed(0)}, h=${this._pageHeight}px)`,
+        `Scale (A5): ${this.scale.toFixed(3)} (displayW=${pageDisplayW}px, h=${this._pageHeight}px)`,
       );
     } else {
       dbg("WARN: container has zero width, using fallback scale", this.scale);
@@ -305,6 +319,7 @@ class PDFReader {
     const vis = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
+          this._currentPageNum = pageNum;
           this._updateInfo(pageNum, this.totalPages);
         }
       },
@@ -318,6 +333,7 @@ class PDFReader {
   }
 
   setZoom(delta) {
+    const savedPage = this._currentPageNum;
     this.scale = Math.max(0.6, Math.min(3.0, this.scale + delta));
     // Re-render visible pages at new scale
     this.renderedPages.clear();
@@ -326,6 +342,33 @@ class PDFReader {
       this.observer.disconnect();
     }
     this._setupObserver();
+    // Restore scroll position after placeholders are rebuilt
+    requestAnimationFrame(() => this.scrollToPage(savedPage, "instant"));
+  }
+
+  /** Scroll the reader to a specific 1-based page number. */
+  scrollToPage(pageNum, behavior = "smooth") {
+    const clamped = Math.max(1, Math.min(pageNum, this.totalPages));
+    const wrapper = this.canvases[clamped - 1];
+    if (!wrapper) {
+      return;
+    }
+    // Scroll the scrollable container to the top of that wrapper
+    this.container.scrollTo({ top: wrapper.offsetTop - 8, behavior });
+    this._currentPageNum = clamped;
+    this._updateInfo(clamped, this.totalPages);
+    // Trigger render if not yet rendered
+    if (!this.renderedPages.has(clamped)) {
+      this._renderPage(clamped, wrapper);
+    }
+  }
+
+  prevPage() {
+    this.scrollToPage(this._currentPageNum - 1);
+  }
+
+  nextPage() {
+    this.scrollToPage(this._currentPageNum + 1);
   }
 
   destroy() {
@@ -384,6 +427,15 @@ class EpubReader {
       height: "100%",
       spread: "none",
       flow: "paginated",
+      allowScriptedContent: true,
+    });
+    // After epubjs creates the iframe, remove the sandbox attribute entirely.
+    // Without it there's no "allow-scripts + allow-same-origin" browser warning,
+    // and the same-origin epub content still runs correctly.
+    this.rendition.on("rendered", (_section, view) => {
+      if (view && view.iframe) {
+        view.iframe.removeAttribute("sandbox");
+      }
     });
     dbg("rendition created");
 
@@ -605,7 +657,9 @@ export default class Reader {
         await this._renderer.open(file.url);
       } else {
         this._renderer = new EpubReader(this.contentEl, this.infoEl);
-        await this._renderer.open(file.url);
+        // Use the pre-converted EPUB asset URL for MOBI files; fall back to
+        // the raw file URL for native EPUB files.
+        await this._renderer.open(file.readableUrl || file.url);
       }
     } catch (ex) {
       dbgErr("Reader open error", ex);
@@ -646,14 +700,34 @@ export default class Reader {
     }
   }
 
+  _pdf(dir) {
+    if (this._renderer instanceof PDFReader) {
+      if (dir === "prev") {
+        this._renderer.prevPage();
+      } else {
+        this._renderer.nextPage();
+      }
+    }
+  }
+
   _onKey(e) {
     if (e.key === "Escape") {
       this.close();
       nukeEvent(e);
     } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-      this._epub("prev");
+      if (this._readerType === "pdf") {
+        this._pdf("prev");
+        nukeEvent(e);
+      } else {
+        this._epub("prev");
+      }
     } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-      this._epub("next");
+      if (this._readerType === "pdf") {
+        this._pdf("next");
+        nukeEvent(e);
+      } else {
+        this._epub("next");
+      }
     }
   }
 }

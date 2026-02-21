@@ -353,6 +353,7 @@ body.noreports #ctx-report {
 #chat {
   grid-area: chat;
   overflow: hidden;
+  position: relative;
   background: var(--dark-bg);
   min-width: 380px;
 }
@@ -783,10 +784,10 @@ a.r::before {
 
 .gif-menu {
   position: absolute;
-  left: 0.15rem;
-  bottom: calc(100% + 0.4rem);
+  left: calc(2.5% - 5px);
+  bottom: 0;
   z-index: 46;
-  width: calc(100% - 0.3rem);
+  width: 95%;
   max-height: 4.2rem;
   overflow: hidden;
   display: flex;

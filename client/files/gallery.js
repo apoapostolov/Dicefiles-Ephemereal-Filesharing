@@ -240,6 +240,11 @@ export default class Gallery {
         this.imgEl.addEventListener("click", this.onimgclick);
         video.play();
       };
+    } else {
+      // No cover image (e.g. EPUB/MOBI without embedded cover) —
+      // cancel the loader.png placeholder so we get a clean dark backdrop.
+      clearTimeout(to);
+      this.imgEl.src = "";
     }
 
     // Set up additional info elements straight away

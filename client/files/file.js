@@ -1,16 +1,10 @@
 "use strict";
 
-import {
-  dom,
-  toPrettyDuration,
-  toPrettySize,
-  sort,
-  nukeEvent,
-} from "../util";
-import {APOOL} from "../animationpool";
+import { APOOL } from "../animationpool";
 import BaseFile from "../file";
-import {REMOVALS, TTL} from "./tracker";
 import registry from "../registry";
+import { dom, nukeEvent, sort, toPrettyDuration, toPrettySize } from "../util";
+import { REMOVALS, TTL } from "./tracker";
 
 const META = Object.freeze(["duration", "codec", "bitrate", "type"]);
 
@@ -20,7 +14,7 @@ export default class File extends BaseFile {
     this.owner = owner;
     this.isRequest = !!(this.meta && this.meta.request);
 
-    this.el = dom("div", {classes: ["file"]});
+    this.el = dom("div", { classes: ["file"] });
     if (this.isRequest) {
       this.el.classList.add("request-file");
     }
@@ -29,7 +23,7 @@ export default class File extends BaseFile {
       attrs: {
         download: this.name,
         rel: "nofollow,noindex",
-        href: this.url
+        href: this.url,
       },
       classes: ["icon", `i-${this.type}`],
     });
@@ -40,7 +34,7 @@ export default class File extends BaseFile {
       attrs: {
         download: this.name,
         rel: "nofollow,noindex",
-        href: this.url
+        href: this.url,
       },
       classes: ["hidden"],
     });
@@ -50,24 +44,26 @@ export default class File extends BaseFile {
       attrs: {
         target: "_blank",
         rel: "nofollow,noindex",
-        href: this.url
+        href: this.url,
       },
-      classes: ["name"]}
-    );
+      classes: ["name"],
+    });
     this.nameTextEl = dom("span", {
       classes: ["name-text"],
-      text: this.name
+      text: this.name,
     });
     this.nameEl.appendChild(this.nameTextEl);
-    this.nameEl.appendChild(dom("span", {
-      classes: ["file-new-pill"],
-      text: "NEW!"
-    }));
+    this.nameEl.appendChild(
+      dom("span", {
+        classes: ["file-new-pill"],
+        text: "NEW!",
+      }),
+    );
     this.requestUrlEl = null;
     this.copyMetaEl = null;
     this.ttlValueEl = null;
     this.nameEl.addEventListener("mouseenter", this.onenter.bind(this), {
-      passive: true
+      passive: true,
     });
     this.nameEl.addEventListener("click", this.onclick.bind(this));
     this.el.appendChild(this.nameEl);
@@ -76,7 +72,7 @@ export default class File extends BaseFile {
       attrs: {
         target: "_blank",
         rel: "nofollow,noindex",
-        href: this.url
+        href: this.url,
       },
       classes: ["hidden"],
     });
@@ -86,7 +82,7 @@ export default class File extends BaseFile {
       attrs: {
         target: "_blank",
         rel: "nofollow,noindex",
-        href: this.url
+        href: this.url,
       },
       classes: ["preview", "galleryonly"],
     });
@@ -94,21 +90,21 @@ export default class File extends BaseFile {
     this.previewEl = dom("img", {
       classes: ["loading"],
       attrs: {
-        src: "/loader.png"
-      }
+        src: "/loader.png",
+      },
     });
     this.previewContEl.appendChild(this.previewEl);
     this.el.appendChild(this.previewContEl);
 
-    this.tagsEl = dom("span", {classes: ["tags"]});
+    this.tagsEl = dom("span", { classes: ["tags"] });
     this.el.appendChild(this.tagsEl);
     this.setupTags();
 
-    this.detailEl = dom("span", {classes: ["detail"]});
+    this.detailEl = dom("span", { classes: ["detail"] });
     this.detailEl.addEventListener("click", this.ondetailclick.bind(this));
     this.el.appendChild(this.detailEl);
     this.el.addEventListener("mouseenter", this.onenter.bind(this), {
-      passive: true
+      passive: true,
     });
     this.typeEl = dom("span", {
       classes: ["galleryonly", "type-pill", `type-${this.type}`],
@@ -116,21 +112,25 @@ export default class File extends BaseFile {
     });
     this.detailEl.appendChild(this.typeEl);
 
-    const {meta = {}, resolution} = this;
+    const { meta = {}, resolution } = this;
     if (resolution) {
-      this.detailEl.appendChild(dom("span", {
-        classes: ["galleryonly"],
-        text: resolution
-      }));
+      this.detailEl.appendChild(
+        dom("span", {
+          classes: ["galleryonly"],
+          text: resolution,
+        }),
+      );
     }
     for (const k of META) {
       if (!meta[k]) {
         continue;
       }
-      this.detailEl.appendChild(dom("span", {
-        classes: ["galleryonly"],
-        text: meta[k]
-      }));
+      this.detailEl.appendChild(
+        dom("span", {
+          classes: ["galleryonly"],
+          text: meta[k],
+        }),
+      );
     }
 
     if (this.isRequest) {
@@ -153,7 +153,7 @@ export default class File extends BaseFile {
           },
           classes: ["request-url", "i-info"],
         });
-        this.requestUrlEl.addEventListener("click", e => {
+        this.requestUrlEl.addEventListener("click", (e) => {
           e.stopPropagation();
         });
         this.nameEl.appendChild(this.requestUrlEl);
@@ -167,11 +167,10 @@ export default class File extends BaseFile {
       });
       this._updateTTL();
       TTL.add(this);
-      this.ttlEl.appendChild(dom("span", {classes: ["i-clock"]}));
+      this.ttlEl.appendChild(dom("span", { classes: ["i-clock"] }));
       this.ttlEl.appendChild(this.ttlValueEl);
       this.detailEl.appendChild(this.ttlEl);
-    }
-    else {
+    } else {
       this.copyMetaEl = dom("a", {
         attrs: {
           href: "#",
@@ -183,7 +182,7 @@ export default class File extends BaseFile {
 
       this.sizeEl = dom("span", {
         classes: ["size"],
-        text: toPrettySize(file.size)
+        text: toPrettySize(file.size),
       });
       this.detailEl.appendChild(this.sizeEl);
 
@@ -197,7 +196,7 @@ export default class File extends BaseFile {
       this._updateTTL();
       TTL.add(this);
 
-      this.ttlEl.appendChild(dom("span", {classes: ["i-clock"]}));
+      this.ttlEl.appendChild(dom("span", { classes: ["i-clock"] }));
       this.ttlEl.appendChild(this.ttlValueEl);
       this.ttlEl.appendChild(this.copyMetaEl);
       this.detailEl.appendChild(this.ttlEl);
@@ -211,58 +210,68 @@ export default class File extends BaseFile {
       return;
     }
     this.previewEl.classList.remove("loading");
-    const preview = this.findPreview() || {type: "none"};
+    const preview = this.findPreview() || { type: "none" };
     const url = this.href + preview.ext;
     switch (preview.type) {
-    case "video": {
-      const video = dom("video", {
-        attrs: {
-          loop: "true",
-          preload: "auto",
-        },
-      });
-      video.appendChild(dom("source", {
-        attrs: {
-          type: preview.mime,
-          src: url
-        }
-      }));
-      this.previewContEl.replaceChild(video, this.previewEl);
-      this.previewEl = video;
-      this.previewContEl.addEventListener("mouseenter", () => {
-        video.currentTime = 0;
-        video.play();
-      }, {passive: true});
-      this.previewContEl.addEventListener("mouseleave", () => {
-        video.pause();
-        video.currentTime = 0;
-      }, {passive: true});
-      return;
-    }
+      case "video": {
+        const video = dom("video", {
+          attrs: {
+            loop: "true",
+            preload: "auto",
+          },
+        });
+        video.appendChild(
+          dom("source", {
+            attrs: {
+              type: preview.mime,
+              src: url,
+            },
+          }),
+        );
+        this.previewContEl.replaceChild(video, this.previewEl);
+        this.previewEl = video;
+        this.previewContEl.addEventListener(
+          "mouseenter",
+          () => {
+            video.currentTime = 0;
+            video.play();
+          },
+          { passive: true },
+        );
+        this.previewContEl.addEventListener(
+          "mouseleave",
+          () => {
+            video.pause();
+            video.currentTime = 0;
+          },
+          { passive: true },
+        );
+        return;
+      }
 
-    case "image": {
-      const loaded = new Image();
-      loaded.onload = () => {
-        this.previewContEl.replaceChild(loaded, this.previewEl);
-        this.previewEl = loaded;
-      };
-      loaded.src = url;
-      return;
-    }
+      case "image": {
+        const loaded = new Image();
+        loaded.onload = () => {
+          this.previewContEl.replaceChild(loaded, this.previewEl);
+          this.previewEl = loaded;
+        };
+        loaded.src = url;
+        return;
+      }
 
-    default: {
-      const faticon = dom("span", {
-        classes: ["faticon", "icon", `i-${this.type}`],
-      });
-      this.previewContEl.replaceChild(faticon, this.previewEl);
-      this.previewEl = faticon;
-      return;
-    }
+      default: {
+        const faticon = dom("span", {
+          classes: ["faticon", "icon", `i-${this.type}`],
+        });
+        this.previewContEl.replaceChild(faticon, this.previewEl);
+        this.previewEl = faticon;
+        return;
+      }
     }
   }
 
   update(file) {
-    const {isNew} = file;
+    const { isNew } = file;
     super.update(file);
     if (!this.el) {
       return;
@@ -283,9 +292,12 @@ export default class File extends BaseFile {
 
   setupTags() {
     const order = {
-      bookauthor: 0, artist: 0,
-      title: 1, description: 2,
-      user: 3, usernick: 3,
+      bookauthor: 0,
+      artist: 0,
+      title: 1,
+      description: 2,
+      user: 3,
+      usernick: 3,
       pages: 4,
     };
     const tags = sort(Array.from(this.tagsMap.entries()), ([tag]) => {
@@ -314,14 +326,15 @@ export default class File extends BaseFile {
       const tag = dom("span", {
         attrs: {
           "aria-label": `${label}: ${tv}`,
-          title: `${label}: ${tv}`
+          title: `${label}: ${tv}`,
         },
         classes: ["tag", `tag-${tn}`],
-        text: tv === "true" || tv === "false" ?
-          tn :
-          (tn === "pages" ?
-            `${tv} ${(Number(tv) === 1 ? "page" : "pages")}` :
-            tv)
+        text:
+          tv === "true" || tv === "false"
+            ? tn
+            : tn === "pages"
+              ? `${tv} ${Number(tv) === 1 ? "page" : "pages"}`
+              : tv,
       });
       tag.dataset.tag = tn;
       tag.dataset.tagValue = tv;
@@ -366,7 +379,7 @@ export default class File extends BaseFile {
     if (tag === "user" || tag === "usernick") {
       return "Uploader";
     }
-    return tag.replace(/\b\w/g, l => l.toUpperCase());
+    return tag.replace(/\b\w/g, (l) => l.toUpperCase());
   }
 
   onenter(e) {
@@ -389,8 +402,7 @@ export default class File extends BaseFile {
         this.owner.openGallery(this);
         return nukeEvent(e);
       }
-    }
-    catch (ex) {
+    } catch (ex) {
       console.error(ex);
     }
     return true;
@@ -408,7 +420,7 @@ export default class File extends BaseFile {
   }
 
   oniconclick(e) {
-    const {classList} = document.body;
+    const { classList } = document.body;
     if (!classList.contains("mod") && !classList.contains("owner")) {
       return;
     }
@@ -426,8 +438,9 @@ export default class File extends BaseFile {
       "Unknown";
     const description = this.tagsMap.get("description") || "";
     const pages = this.tagsMap.get("pages") || "";
-    const suggestedTags = Array.isArray(this.meta && this.meta.suggestedTags) ?
-      this.meta.suggestedTags.join(", ") : "";
+    const suggestedTags = Array.isArray(this.meta && this.meta.suggestedTags)
+      ? this.meta.suggestedTags.join(", ")
+      : "";
     const link = new URL(this.url, document.location.origin).href;
     return [
       `Title: ${title}`,
@@ -436,7 +449,9 @@ export default class File extends BaseFile {
       description ? `Description: ${description}` : "",
       suggestedTags ? `Suggested tags: ${suggestedTags}` : "",
       `Link: ${link}`,
-    ].filter(Boolean).join("\n");
+    ]
+      .filter(Boolean)
+      .join("\n");
   }
 
   async copyText(text) {
@@ -445,7 +460,7 @@ export default class File extends BaseFile {
       return true;
     }
     const ta = dom("textarea", {
-      attrs: {style: "position:fixed;left:-99999px;top:0;opacity:0"},
+      attrs: { style: "position:fixed;left:-99999px;top:0;opacity:0" },
       text,
     });
     document.body.appendChild(ta);
@@ -453,8 +468,7 @@ export default class File extends BaseFile {
     let ok = false;
     try {
       ok = document.execCommand("copy");
-    }
-    catch (ex) {
+    } catch (ex) {
       ok = false;
     }
     document.body.removeChild(ta);
@@ -469,10 +483,13 @@ export default class File extends BaseFile {
       if (!copied) {
         throw new Error("copy command failed");
       }
-      registry.messages.addSystemMessage(`Copied metadata snippet for ${this.name}`);
-    }
-    catch (ex) {
-      registry.messages.addSystemMessage(`Failed to copy metadata snippet for ${this.name}`);
+      registry.messages.addSystemMessage(
+        `Copied metadata snippet for ${this.name}`,
+      );
+    } catch (ex) {
+      registry.messages.addSystemMessage(
+        `Failed to copy metadata snippet for ${this.name}`,
+      );
       console.error("copy metadata failed", ex);
     }
   }
@@ -497,15 +514,33 @@ export default class File extends BaseFile {
     if (this.isRequest) {
       return null;
     }
-    if (this.type === "audio" || !this.assets.size) {
+    if (this.type === "audio") {
       return null;
+    }
+
+    // Allow readable documents (PDF/EPUB/MOBI) into the gallery even when no
+    // preview asset was generated (e.g. EPUB without embedded cover image).
+    // The gallery will show title + "Read Now" button with no cover image.
+    if (!this.assets.size) {
+      const rtype = this.getReadableType ? this.getReadableType() : null;
+      if (!rtype) {
+        return null;
+      }
+      const infos = [
+        toPrettySize(this.size),
+        this.tags.user || this.tags.usernick,
+      ].filter(Boolean);
+      if (this.meta && this.meta.pages) {
+        infos.unshift(`${this.meta.pages} pages`);
+      }
+      return { infos, noCover: true };
     }
 
     const infos = [
       toPrettySize(this.size),
-      this.tags.user || this.tags.usernick
+      this.tags.user || this.tags.usernick,
     ];
-    const {resolution, duration} = this;
+    const { resolution, duration } = this;
     if (duration) {
       infos.unshift(duration);
     }
@@ -517,7 +552,7 @@ export default class File extends BaseFile {
     if (this.meta.type === "GIF") {
       return {
         img: this.url,
-        infos
+        infos,
       };
     }
 
@@ -526,29 +561,30 @@ export default class File extends BaseFile {
         // Play webms inline
         return {
           video: this.url,
-          infos
+          infos,
         };
       }
       if (this.meta.type === "MP4" && this.meta.codec === "avc1") {
         // Play mp4+h264 inline
         return {
           video: this.url,
-          infos
+          infos,
         };
       }
     }
 
     // Prepare assets
-    const {innerWidth, innerHeight} = window;
-    const assets = Array.from(this.assets.values()).
-      filter(e => e.type === "image");
+    const { innerWidth, innerHeight } = window;
+    const assets = Array.from(this.assets.values()).filter(
+      (e) => e.type === "image",
+    );
     if (!assets.length) {
       return null;
     }
-    sort(assets, e => e.width * e.height);
+    sort(assets, (e) => e.width * e.height);
 
     // Pick the best asset according to current display size
-    const bestAssets = assets.filter(e => {
+    const bestAssets = assets.filter((e) => {
       if (e.width > innerWidth * 1.4) {
         return false;
       }
@@ -557,25 +593,29 @@ export default class File extends BaseFile {
       }
       return true;
     });
-    const sorter = e => {
+    const sorter = (e) => {
       return [
-        !(Math.abs(e.width - innerWidth) < 100 &&
-        Math.abs(e.height - innerHeight) < 100),
-        e.width * e.height
+        !(
+          Math.abs(e.width - innerWidth) < 100 &&
+          Math.abs(e.height - innerHeight) < 100
+        ),
+        e.width * e.height,
       ];
     };
     sort(bestAssets, sorter);
 
     // Bring it all together
     const img = this.href + bestAssets.pop().ext;
-    const srcset = assets.map(e => `${this.href}${e.ext} ${e.width}w`).join(", ");
+    const srcset = assets
+      .map((e) => `${this.href}${e.ext} ${e.width}w`)
+      .join(", ");
     const largest = assets.pop();
-    const sizes = `${assets.map(e => `(max-width: ${e.width}px) ${e.width}px`).join(", ")}, ${largest.width}px`;
+    const sizes = `${assets.map((e) => `(max-width: ${e.width}px) ${e.width}px`).join(", ")}, ${largest.width}px`;
     return {
       img,
       srcset,
       sizes,
-      infos
+      infos,
     };
   }
 

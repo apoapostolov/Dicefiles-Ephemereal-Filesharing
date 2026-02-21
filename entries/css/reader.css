@@ -205,6 +205,7 @@
   background: #fff;
   max-width: 100%;
   flex-shrink: 0; /* prevent flexbox from collapsing pages to fit container height */
+  align-self: center; /* A5-sized pages are narrower than the container — keep them centered */
 }
 
 .reader-page-placeholder {
