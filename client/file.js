@@ -280,15 +280,6 @@ export default class File extends Removable {
     const url = new URL(this.href, document.location);
     url.pathname += `/${this.name}`;
     this.url = url.href;
-    // For MOBI files the server provides a pre-converted EPUB asset that
-    // epubjs can actually parse.  Use it as the reading URL when available.
-    const isMobi =
-      ((this.meta && this.meta.type) || "").toUpperCase() === "MOBI" ||
-      /\.(mobi|azw|azw3)$/i.test(this.name || "");
-    this.readableUrl =
-      isMobi && this.assets.has(".converted.epub")
-        ? this.href + ".converted.epub"
-        : this.url;
   }
 
   /**
@@ -307,7 +298,7 @@ export default class File extends Removable {
       return "epub";
     }
     if (t === "MOBI" || /\.(mobi|azw|azw3)$/i.test(n)) {
-      return "epub"; // best-effort: attempt to render with epub.js
+      return "mobi";
     }
     return null;
   }

@@ -3,15 +3,17 @@
 import { dom, nukeEvent } from "../util";
 
 /**
- * Streaming PDF / ePub in-page reader.
+ * Streaming PDF / EPUB / MOBI in-page reader.
  *
  * PDF rendering: Mozilla PDF.js (Apache-2.0 / FOSS)
- *   - Streams pages via HTTP Range requests (server already supports these)
+ *   - Streams pages via HTTP Range requests
  *   - Renders pages lazily via IntersectionObserver as user scrolls
  *
- * ePub rendering: epub.js (BSD-2)
- *   - Fetches and parses the epub ZIP client-side
- *   - Renders chapters in an iframe, with prev/next navigation
+ * EPUB rendering: native — fetches the EPUB ZIP, parses with JSZip, renders
+ *   chapters in a sandboxless iframe with blob: image/CSS URLs.
+ *
+ * MOBI rendering: native — @lingo-reader/mobi-parser (browser build),
+ *   returns chapter HTML with blob: image URLs, rendered in a sandboxless iframe.
  */
 
 // Append the client build version so the browser fetches a fresh copy
@@ -58,7 +60,7 @@ function getReadableType(file) {
     return "epub";
   }
   if (t === "MOBI" || /\.(mobi|azw|azw3)$/i.test(n)) {
-    return "epub"; // best-effort: attempt to render with epub.js
+    return "mobi";
   }
   return null;
 }
@@ -387,128 +389,437 @@ class PDFReader {
   }
 }
 
-// ── ePub renderer ─────────────────────────────────────────────────────────────
+// ── Book renderer (EPUB + MOBI, native client-side parsing) ─────────────────
 
-class EpubReader {
+/**
+ * Resolve a relative path against a base directory using the URL API.
+ * Handles ".." traversal correctly.
+ */
+function epubResolve(basePath, relative) {
+  const rel = (relative || "").split(/[?#]/)[0];
+  if (!rel || /^(data:|blob:|https?:|\/\/)/i.test(rel)) return relative;
+  try {
+    return new URL(rel, "epub://x/" + basePath).pathname.slice(1);
+  } catch {
+    return basePath + rel;
+  }
+}
+
+function zipFile(zip, p) {
+  return zip.file(p) || zip.file(decodeURIComponent(p));
+}
+
+async function zipToBlob(zip, p, mime) {
+  const f = zipFile(zip, p);
+  if (!f) return null;
+  const data = await f.async("arraybuffer");
+  return URL.createObjectURL(
+    new Blob([data], { type: mime || "application/octet-stream" }),
+  );
+}
+
+const EXT_MIME = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  gif: "image/gif",
+  svg: "image/svg+xml",
+  webp: "image/webp",
+  ttf: "font/ttf",
+  otf: "font/otf",
+  woff: "font/woff",
+  woff2: "font/woff2",
+};
+function extMime(p) {
+  return (
+    EXT_MIME[(p || "").split(".").pop().toLowerCase()] ||
+    "application/octet-stream"
+  );
+}
+
+async function parseEpubChapters(zip) {
+  const blobUrls = [];
+  const track = (u) => {
+    if (u) blobUrls.push(u);
+    return u;
+  };
+
+  // container.xml → OPF path
+  const cf = zipFile(zip, "META-INF/container.xml");
+  if (!cf) throw new Error("Not a valid EPUB: missing META-INF/container.xml");
+  const containerXml = await cf.async("string");
+  const opfPathM = containerXml.match(/full-path="([^"]+)"/i);
+  if (!opfPathM) throw new Error("EPUB container.xml missing full-path");
+  const opfPath = decodeURIComponent(opfPathM[1]);
+  const opfBase = opfPath.includes("/")
+    ? opfPath.slice(0, opfPath.lastIndexOf("/") + 1)
+    : "";
+
+  // Parse OPF
+  const opfXml = await (zipFile(zip, opfPath) || { async: () => "" }).async(
+    "string",
+  );
+
+  const manifest = {};
+  for (const m of opfXml.matchAll(/<item\s[^>]+>/gi)) {
+    const tag = m[0];
+    const idM = tag.match(/\bid="([^"]+)"/i);
+    const hrefM = tag.match(/\bhref="([^"]+)"/i);
+    const mediaM = tag.match(/\bmedia-type="([^"]+)"/i);
+    if (idM && hrefM) {
+      manifest[idM[1]] = {
+        href: epubResolve(opfBase, decodeURIComponent(hrefM[1])),
+        type: mediaM ? mediaM[1] : "",
+      };
+    }
+  }
+
+  const spineIds = [];
+  for (const m of opfXml.matchAll(/<itemref\s[^>]+>/gi)) {
+    const idrefM = m[0].match(/\bidref="([^"]+)"/i);
+    if (idrefM) spineIds.push(idrefM[1]);
+  }
+
+  const chapters = [];
+  for (const id of spineIds) {
+    const item = manifest[id];
+    if (!item) continue;
+    const htmlFile = zipFile(zip, item.href);
+    if (!htmlFile) continue;
+    const htmlStr = await htmlFile.async("string");
+    const chapterBase = item.href.includes("/")
+      ? item.href.slice(0, item.href.lastIndexOf("/") + 1)
+      : "";
+
+    // Collect + blob-ify CSS links
+    const cssUrls = [];
+    for (const lm of htmlStr.matchAll(/<link([^>]+)>/gi)) {
+      const tag = lm[1];
+      if (!/rel=["']?stylesheet["']?/i.test(tag)) continue;
+      const hrefM =
+        tag.match(/href="([^"]+)"/i) || tag.match(/href='([^']+)'/i);
+      if (!hrefM) continue;
+      const cssPath = epubResolve(
+        chapterBase,
+        decodeURIComponent(hrefM[1].split(/[?#]/)[0]),
+      );
+      const cssFile = zipFile(zip, cssPath);
+      if (!cssFile) continue;
+      let cssText = await cssFile.async("string");
+      const cssBase = cssPath.includes("/")
+        ? cssPath.slice(0, cssPath.lastIndexOf("/") + 1)
+        : "";
+      // Replace url() references in CSS
+      const urlRefs = [
+        ...cssText.matchAll(/url\(\s*["']?([^)"'\s]+)["']?\s*\)/g),
+      ].reverse();
+      for (const um of urlRefs) {
+        const ref = um[1];
+        if (/^(data:|blob:|https?:)/i.test(ref)) continue;
+        const resPath = epubResolve(
+          cssBase,
+          decodeURIComponent(ref.split(/[?#]/)[0]),
+        );
+        const bu = track(await zipToBlob(zip, resPath, extMime(resPath)));
+        if (bu)
+          cssText =
+            cssText.slice(0, um.index) +
+            `url("${bu}")` +
+            cssText.slice(um.index + um[0].length);
+      }
+      const cssUrl = URL.createObjectURL(
+        new Blob([cssText], { type: "text/css" }),
+      );
+      blobUrls.push(cssUrl);
+      cssUrls.push(cssUrl);
+    }
+
+    // Extract body HTML and replace image src with blob: URLs
+    const bodyM = htmlStr.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    let body = bodyM ? bodyM[1] : htmlStr;
+    const srcMatches = [...body.matchAll(/\bsrc="([^"]+)"/g)].reverse();
+    for (const sm of srcMatches) {
+      const ref = sm[1];
+      if (/^(data:|blob:|https?:)/i.test(ref)) continue;
+      const imgPath = epubResolve(
+        chapterBase,
+        decodeURIComponent(ref.split(/[?#]/)[0]),
+      );
+      const bu = track(await zipToBlob(zip, imgPath, extMime(imgPath)));
+      if (bu)
+        body =
+          body.slice(0, sm.index) +
+          `src="${bu}"` +
+          body.slice(sm.index + sm[0].length);
+    }
+
+    chapters.push({ html: body, css: cssUrls });
+  }
+
+  return { chapters, blobUrls };
+}
+
+/**
+ * Build an iframe srcdoc for book pagination.
+ *
+ * Approach: render content at natural height inside #scroller.
+ * The iframe is A5-sized (overflow: hidden) and we reveal each page by
+ * applying translateY(-pageIdx * pageHeight) to #scroller.
+ * Total pages = ceil(scroller.offsetHeight / pageHeight) measured after load.
+ */
+function buildSrcdoc(html, cssUrls, pageWidth, pageHeight) {
+  const HP = 40; // horizontal padding (px)
+  const VP = 28; // top padding (px)
+  const linkTags = cssUrls
+    .map((h) => `<link rel="stylesheet" href="${h}">`)
+    .join("\n");
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+${linkTags}
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    width: ${pageWidth}px;
+    height: ${pageHeight}px;
+    overflow: hidden;
+    background: #1a1a1a;
+  }
+  #scroller {
+    padding: ${VP}px ${HP}px ${VP}px;
+    box-sizing: border-box;
+    width: ${pageWidth}px;
+    color: #e8e8e8;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.05em;
+    line-height: 1.75;
+    will-change: transform;
+  }
+  img, svg, video { max-width: 100%; height: auto; }
+  a { color: #7ec8e3; }
+  p { margin: 0 0 1em; text-align: justify; }
+  h1,h2,h3,h4,h5,h6 { color: #f0f0f0; margin-top: 0; }
+  * { box-sizing: border-box; }
+</style>
+</head><body><div id="scroller">${html}</div></body></html>`;
+}
+
+class BookReader {
   constructor(container, infoEl) {
     this.container = container;
     this.infoEl = infoEl;
-    this.book = null;
-    this.rendition = null;
+    this._type = null; // "epub" | "mobi"
+    this._parser = null; // mobi-parser instance
+    this._mobiSpine = []; // mobi spine items
+    this._chapters = []; // epub chapters [{html, css}]
+    this._blobUrls = []; // blob: URLs to revoke on destroy
+    this._currentIdx = 0;
+    this._total = 0;
+    this._pageWidth = 0;
+    this._pageHeight = 0;
+    this._pageInChapter = 0;
+    this._totalPagesInChapter = 1;
+    this._iframe = null;
+    this._loaded = false; // true once current chapter iframe fires 'load'
     this._destroyed = false;
   }
 
-  async open(url) {
-    dbg("EpubReader.open() url =", url);
-
-    let Epub;
-    try {
-      Epub = (await import("epubjs")).default;
-      dbg("epubjs imported, Epub =", typeof Epub);
-    } catch (ex) {
-      dbgErr("epubjs import failed", ex);
-      dbgShow(
-        this.container,
-        `FATAL: epubjs import failed: ${ex.message}`,
-        true,
-      );
-      throw ex;
+  /** Compute A5-proportioned page size constrained by the container. */
+  _computePageSize() {
+    const cW = this.container.clientWidth;
+    const cH = this.container.clientHeight;
+    const A5 = 148 / 210; // width-to-height ratio
+    if (cH > 0 && cW > 0) {
+      if (cW / cH > A5) {
+        // Container wider than A5 → height is the constraint
+        this._pageHeight = cH;
+        this._pageWidth = Math.floor(cH * A5);
+      } else {
+        // Container taller than A5 → width is the constraint
+        this._pageWidth = cW;
+        this._pageHeight = Math.floor(cW / A5);
+      }
+    } else {
+      this._pageWidth = 420;
+      this._pageHeight = 595;
     }
+    dbg("_computePageSize:", this._pageWidth, "×", this._pageHeight);
+  }
 
-    this.book = new Epub(url, { openAs: "epub" });
-    dbg("Epub book created");
-
-    const iframeWrap = dom("div", { classes: ["reader-epub-wrap"] });
+  async open(url, type) {
+    this._type = type;
+    dbg("BookReader.open() url =", url, "type =", type);
     this.container.textContent = "";
-    this.container.appendChild(iframeWrap);
+    this._computePageSize();
+    if (type === "mobi") {
+      await this._openMobi(url);
+    } else {
+      await this._openEpub(url);
+    }
+    await this._renderChapter(0);
+  }
 
-    this.rendition = this.book.renderTo(iframeWrap, {
-      width: "100%",
-      height: "100%",
-      spread: "none",
-      flow: "paginated",
-      allowScriptedContent: true,
-    });
-    // After epubjs creates the iframe, remove the sandbox attribute entirely.
-    // Without it there's no "allow-scripts + allow-same-origin" browser warning,
-    // and the same-origin epub content still runs correctly.
-    this.rendition.on("rendered", (_section, view) => {
-      if (view && view.iframe) {
-        view.iframe.removeAttribute("sandbox");
+  async _openMobi(url) {
+    const { initMobiFile } = await import("@lingo-reader/mobi-parser");
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status} fetching MOBI`);
+    this._parser = await initMobiFile(response, "");
+    this._mobiSpine = this._parser.getSpine();
+    this._total = this._mobiSpine.length;
+    dbg("MOBI loaded, chapters =", this._total);
+  }
+
+  async _openEpub(url) {
+    const JSZip = (await import("jszip")).default;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status} fetching EPUB`);
+    const buffer = await response.arrayBuffer();
+    const zip = await JSZip.loadAsync(buffer);
+    const { chapters, blobUrls } = await parseEpubChapters(zip);
+    this._chapters = chapters;
+    this._blobUrls = blobUrls;
+    this._total = chapters.length;
+    dbg("EPUB loaded, chapters =", this._total);
+  }
+
+  async _getChapter(idx) {
+    if (this._type === "mobi") {
+      const ch = await this._parser.loadChapter(this._mobiSpine[idx].id);
+      if (!ch) return { html: "<p>(chapter unavailable)</p>", css: [] };
+      return { html: ch.html, css: (ch.css || []).map((c) => c.href) };
+    }
+    return (
+      this._chapters[idx] || { html: "<p>(chapter unavailable)</p>", css: [] }
+    );
+  }
+
+  /**
+   * Render chapter `idx`.
+   * @param {number} startAtPage  0 = first page; -1 = last page (going backwards)
+   */
+  async _renderChapter(idx, startAtPage = 0) {
+    if (idx < 0 || idx >= this._total) return;
+    this._currentIdx = idx;
+    this._pageInChapter = 0;
+    this._totalPagesInChapter = 1;
+    this._loaded = false;
+
+    const { html, css } = await this._getChapter(idx);
+    this.container.textContent = "";
+    this._iframe = null;
+
+    const iframe = dom("iframe", { classes: ["reader-book-iframe"] });
+    iframe.style.width = this._pageWidth + "px";
+    iframe.style.height = this._pageHeight + "px";
+    this._iframe = iframe;
+
+    iframe.addEventListener("load", () => {
+      if (this._destroyed || this._iframe !== iframe) return;
+      try {
+        const doc = iframe.contentDocument;
+        if (!doc || !doc.body) return;
+        const scroller = doc.getElementById("scroller");
+        if (!scroller) return;
+        // Total content height — number of A5 "pages" this chapter spans
+        const totalH = scroller.offsetHeight;
+        this._totalPagesInChapter = Math.max(
+          1,
+          Math.ceil(totalH / this._pageHeight),
+        );
+        const target =
+          startAtPage < 0
+            ? this._totalPagesInChapter - 1
+            : Math.min(startAtPage, this._totalPagesInChapter - 1);
+        this._pageInChapter = target;
+        if (target > 0) {
+          scroller.style.transform = `translateY(${-target * this._pageHeight}px)`;
+        }
+        this._loaded = true;
+        this._updateInfo();
+        dbg(
+          `Chapter ${idx + 1}: ${this._totalPagesInChapter} pages (contentH=${totalH}px)`,
+        );
+      } catch (ex) {
+        dbgErr("iframe load handler", ex);
       }
     });
-    dbg("rendition created");
 
-    this.rendition.themes.default({
-      body: {
-        "font-size": "1.05em",
-        "line-height": "1.7",
-        color: "#e8e8e8",
-        background: "#1a1a1a",
-        padding: "1.5em 2em",
-      },
-      a: { color: "#7ec8e3" },
-    });
+    iframe.srcdoc = buildSrcdoc(html, css, this._pageWidth, this._pageHeight);
+    this.container.appendChild(iframe);
+    this._updateInfo();
+  }
 
+  _scrollToPage(pageIdx) {
+    if (!this._iframe || !this._loaded) return;
     try {
-      await this.rendition.display();
-      dbg("rendition.display() complete");
+      const scroller =
+        this._iframe.contentDocument &&
+        this._iframe.contentDocument.getElementById("scroller");
+      if (!scroller) return;
+      scroller.style.transform =
+        pageIdx === 0 ? "" : `translateY(${-pageIdx * this._pageHeight}px)`;
     } catch (ex) {
-      dbgErr("rendition.display() failed", ex);
-      dbgShow(
-        this.container,
-        `FATAL: epub display failed: ${ex.message}`,
-        true,
-      );
-      throw ex;
+      dbgErr("_scrollToPage", ex);
     }
+  }
 
-    this.book.loaded.spine.then(() => {
-      dbg("epub spine loaded");
-      this._updateInfo();
-    });
+  /** Navigate one page forward; wraps to next chapter at chapter end. */
+  nextPage() {
+    if (!this._loaded) return;
+    const newPage = this._pageInChapter + 1;
+    if (newPage >= this._totalPagesInChapter) {
+      if (this._currentIdx < this._total - 1) {
+        this._renderChapter(this._currentIdx + 1, 0);
+      }
+      return;
+    }
+    this._pageInChapter = newPage;
+    this._scrollToPage(newPage);
+    this._updateInfo();
+  }
 
-    this.rendition.on("relocated", () => {
-      this._updateInfo();
-    });
+  /** Navigate one page back; wraps to prev chapter (last page) at chapter start. */
+  prevPage() {
+    if (!this._loaded) return;
+    const newPage = this._pageInChapter - 1;
+    if (newPage < 0) {
+      if (this._currentIdx > 0) {
+        this._renderChapter(this._currentIdx - 1, -1);
+      }
+      return;
+    }
+    this._pageInChapter = newPage;
+    this._scrollToPage(newPage);
+    this._updateInfo();
+  }
+
+  /** Jump to the next chapter (first page). */
+  nextChapter() {
+    if (this._currentIdx < this._total - 1)
+      this._renderChapter(this._currentIdx + 1, 0);
+  }
+
+  /** Jump to the previous chapter (first page). */
+  prevChapter() {
+    if (this._currentIdx > 0) this._renderChapter(this._currentIdx - 1, 0);
   }
 
   _updateInfo() {
-    if (!this.infoEl || !this.book || !this.rendition) {
-      return;
-    }
-    try {
-      const loc = this.rendition.currentLocation();
-      if (!loc || !loc.start) {
-        return;
-      }
-      const spineItems = this.book.spine.items;
-      const idx = spineItems.findIndex((i) => i.href === loc.start.href);
-      this.infoEl.textContent = `Chapter ${Math.max(0, idx) + 1} / ${spineItems.length}`;
-    } catch (ex) {
-      // location info unavailable yet
-    }
-  }
-
-  next() {
-    if (this.rendition) {
-      this.rendition.next();
-    }
-  }
-
-  prev() {
-    if (this.rendition) {
-      this.rendition.prev();
+    if (this.infoEl) {
+      this.infoEl.textContent = `Chapter ${this._currentIdx + 1} / ${this._total}  ·  Page ${this._pageInChapter + 1} / ${this._totalPagesInChapter}`;
     }
   }
 
   destroy() {
     this._destroyed = true;
-    if (this.book) {
-      this.book.destroy();
-      this.book = null;
+    if (this._parser) {
+      this._parser.destroy();
+      this._parser = null;
     }
-    this.rendition = null;
+    for (const u of this._blobUrls) URL.revokeObjectURL(u);
+    this._blobUrls = [];
+    this._chapters = [];
+    this._mobiSpine = [];
+    this._iframe = null;
     this.container.textContent = "";
   }
 }
@@ -559,10 +870,10 @@ export default class Reader {
       this.zoomOutEl.addEventListener("click", () => this._zoom(-0.25));
     }
     if (this.prevEl) {
-      this.prevEl.addEventListener("click", () => this._epub("prev"));
+      this.prevEl.addEventListener("click", () => this._bookPage("prev"));
     }
     if (this.nextEl) {
-      this.nextEl.addEventListener("click", () => this._epub("next"));
+      this.nextEl.addEventListener("click", () => this._bookPage("next"));
     }
     if (this.downloadEl) {
       this.downloadEl.addEventListener("click", this._ondownload.bind(this));
@@ -627,6 +938,7 @@ export default class Reader {
 
     // Toggle zoom / prev-next controls
     const isPdf = rtype === "pdf";
+    const isBook = rtype === "epub" || rtype === "mobi";
     if (this.zoomInEl) {
       this.zoomInEl.classList.toggle("hidden", !isPdf);
     }
@@ -634,10 +946,10 @@ export default class Reader {
       this.zoomOutEl.classList.toggle("hidden", !isPdf);
     }
     if (this.prevEl) {
-      this.prevEl.classList.toggle("hidden", isPdf);
+      this.prevEl.classList.toggle("hidden", !isBook);
     }
     if (this.nextEl) {
-      this.nextEl.classList.toggle("hidden", isPdf);
+      this.nextEl.classList.toggle("hidden", !isBook);
     }
 
     dbg(
@@ -656,10 +968,8 @@ export default class Reader {
         this._renderer = new PDFReader(this.contentEl, this.infoEl);
         await this._renderer.open(file.url);
       } else {
-        this._renderer = new EpubReader(this.contentEl, this.infoEl);
-        // Use the pre-converted EPUB asset URL for MOBI files; fall back to
-        // the raw file URL for native EPUB files.
-        await this._renderer.open(file.readableUrl || file.url);
+        this._renderer = new BookReader(this.contentEl, this.infoEl);
+        await this._renderer.open(file.url, rtype);
       }
     } catch (ex) {
       dbgErr("Reader open error", ex);
@@ -694,9 +1004,19 @@ export default class Reader {
     }
   }
 
-  _epub(dir) {
-    if (this._renderer instanceof EpubReader) {
-      this._renderer[dir]();
+  /** Navigate one page within the current chapter (or wrap to adjacent chapter). */
+  _bookPage(dir) {
+    if (this._renderer instanceof BookReader) {
+      if (dir === "prev") this._renderer.prevPage();
+      else this._renderer.nextPage();
+    }
+  }
+
+  /** Jump to the previous or next chapter. */
+  _bookChapter(dir) {
+    if (this._renderer instanceof BookReader) {
+      if (dir === "prev") this._renderer.prevChapter();
+      else this._renderer.nextChapter();
     }
   }
 
@@ -714,19 +1034,37 @@ export default class Reader {
     if (e.key === "Escape") {
       this.close();
       nukeEvent(e);
-    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+    } else if (e.key === "ArrowLeft") {
+      // Left arrow: previous page (PDF) or previous page within chapter (book)
+      if (this._readerType === "pdf") this._pdf("prev");
+      else this._bookPage("prev");
+      nukeEvent(e);
+    } else if (e.key === "ArrowRight") {
+      // Right arrow: next page (PDF) or next page within chapter (book)
+      if (this._readerType === "pdf") this._pdf("next");
+      else this._bookPage("next");
+      nukeEvent(e);
+    } else if (e.key === "ArrowUp") {
       if (this._readerType === "pdf") {
         this._pdf("prev");
         nukeEvent(e);
-      } else {
-        this._epub("prev");
       }
-    } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+    } else if (e.key === "ArrowDown") {
       if (this._readerType === "pdf") {
         this._pdf("next");
         nukeEvent(e);
-      } else {
-        this._epub("next");
+      }
+    } else if (e.key === "PageUp") {
+      // PageUp: previous chapter (books only)
+      if (this._readerType !== "pdf") {
+        this._bookChapter("prev");
+        nukeEvent(e);
+      }
+    } else if (e.key === "PageDown") {
+      // PageDown: next chapter (books only)
+      if (this._readerType !== "pdf") {
+        this._bookChapter("next");
+        nukeEvent(e);
       }
     }
   }

@@ -223,21 +223,25 @@
   height: auto;
 }
 
-/* ── ePub rendering ──────────────────────────────────────────────────────── */
+/* ── Book (EPUB / MOBI) chapter rendering ────────────────────────────── */
 
-.reader-epub-wrap {
-  width: 100%;
-  flex: 1 1 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-/* epub.js injects an iframe — make it fill available space */
-.reader-epub-wrap iframe {
-  flex: 1 1 0;
+/* A5-sized iframe — JS sets explicit width/height; center it in content area */
+.reader-book-iframe {
   border: none;
   background: #1a1a1a;
+  display: block;
+  flex-shrink: 0;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.65);
+  border-radius: 3px;
+}
+
+/* When a book chapter is displayed, center the A5 page and hide overflow */
+#reader-content:has(.reader-book-iframe) {
+  overflow: hidden;
+  padding: 0;
+  gap: 0;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ── "Read Now" overlay button in gallery ────────────────────────────────── */

@@ -4967,3 +4967,684 @@ Sat, 21 Feb 2026 14:53:56 GMT hsts deprecated The "setIf" parameter is deprecate
 [[34m[1mSat, 21 Feb 2026 14:53:59 GMT[22m[39m] [[33m[1m2965145[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:35068[22m connected
 [[34m[1mSat, 21 Feb 2026 14:54:59 GMT[22m[39m] [[33m[1m2965201[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<73HW2DR3XX>[22m
 [[34m[1mSat, 21 Feb 2026 14:54:59 GMT[22m[39m] [[33m[1m2965101[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:09:00 GMT[22m[39m] [[33m[1m2997145[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Master [1m2997145[22m is running
+[[34m[1mSat, 21 Feb 2026 15:09:00 GMT[22m[39m] [[33m[1m2997145[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Starting [1m21[22m http workers
+[[34m[1mSat, 21 Feb 2026 15:09:00 GMT[22m[39m] [[33m[1m2997145[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Point your browser to http://0.0.0.0:9090/
+[[34m[1mSat, 21 Feb 2026 15:09:00 GMT[22m[39m] [[33m[1m2997288[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:09:00 GMT[22m[39m] [[33m[1m2997206[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:09:00 GMT[22m[39m] [[33m[1m2997279[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:09:00 GMT[22m[39m] [[33m[1m2997288[22m[39m] [[32m[1mexpiration[22m[39m]    [[37mINFO[39m]      Expiration [1m2997288[22m is running
+[[34m[1mSat, 21 Feb 2026 15:09:00 GMT[22m[39m] [[33m[1m2997197[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:09:00 GMT[22m[39m] [[33m[1m2997161[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:09:00 GMT[22m[39m] [[33m[1m2997258[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:09:00 GMT[22m[39m] [[33m[1m2997168[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:09:00 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:09:00 GMT[22m[39m] [[33m[1m2997185[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:09:00 GMT[22m[39m] [[33m[1m2997286[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997159[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997167[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997279[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997279[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997267[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997206[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997206[22m is running on port 9090
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997197[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997197[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997176[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997239[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997258[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997258[22m is running on port 9090
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997161[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997161[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997185[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997185[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997223[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997230[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997167[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997167[22m is running on port 9090
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997205[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997239[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997239[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997261[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997170[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997267[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997267[22m is running on port 9090
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997286[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997286[22m is running on port 9090
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997244[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997257[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997223[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997223[22m is running on port 9090
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997205[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997205[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997230[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997230[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997168[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997168[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997160[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997159[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997159[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997176[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997176[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997170[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997170[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997261[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997261[22m is running on port 9090
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997257[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997257[22m is running on port 9090
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997244[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997244[22m is running on port 9090
+Sat, 21 Feb 2026 15:09:01 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:09:01 GMT[22m[39m] [[33m[1m2997160[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m2997160[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:09:02 GMT[22m[39m] [[33m[1m2997197[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:09:02 GMT[22m[39m] [[33m[1m2997197[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:57410[22m connected
+[[34m[1mSat, 21 Feb 2026 15:09:03 GMT[22m[39m] [[33m[1m2997206[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:09:03 GMT[22m[39m] [[33m[1m2997206[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:57428[22m connected
+[[34m[1mSat, 21 Feb 2026 15:09:10 GMT[22m[39m] [[33m[1m2997258[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Upload to StorageLocation(uploads/r/e/rePYyfCQUu91TtvOzR1-) started
+[[34m[1mSat, 21 Feb 2026 15:09:10 GMT[22m[39m] [[33m[1m2997258[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Known storage
+[[34m[1mSat, 21 Feb 2026 15:09:10 GMT[22m[39m] [[33m[1m2997258[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Uploaded [1mUpload(rePYyfCQUu91TtvOzR1-, 1736776, myM2lm1Q9NFIDqDEKnZVGcIGKQ3n5DJV2zgmAyUu)[22m
+[[34m[1mSat, 21 Feb 2026 15:09:17 GMT[22m[39m] [[33m[1m2997161[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Upload to StorageLocation(uploads/h/C/hCz_QO6WJYQJi6KhFGa_) started
+[[34m[1mSat, 21 Feb 2026 15:09:17 GMT[22m[39m] [[33m[1m2997161[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Known storage
+[[34m[1mSat, 21 Feb 2026 15:09:17 GMT[22m[39m] [[33m[1m2997161[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Uploaded [1mUpload(hCz_QO6WJYQJi6KhFGa_, 543676, 8EYe7oEOjB6VRoGlxi+5pTvuEkDCPxNIdlFF4VAi)[22m
+[[34m[1mSat, 21 Feb 2026 15:10:31 GMT[22m[39m] [[33m[1m3000767[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Master [1m3000767[22m is running
+[[34m[1mSat, 21 Feb 2026 15:10:31 GMT[22m[39m] [[33m[1m3000767[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Starting [1m21[22m http workers
+[[34m[1mSat, 21 Feb 2026 15:10:31 GMT[22m[39m] [[33m[1m3000767[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Point your browser to http://0.0.0.0:9090/
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000907[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000802[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000877[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000907[22m[39m] [[32m[1mexpiration[22m[39m]    [[37mINFO[39m]      Expiration [1m3000907[22m is running
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000775[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000838[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000795[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000777[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000883[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000848[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000776[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000833[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000874[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000787[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000796[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000774[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000862[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000894[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000851[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000783[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000820[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000822[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000814[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000848[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000848[22m is running on port 9090
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000787[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000787[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000795[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000795[22m is running on port 9090
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000833[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000833[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000777[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000777[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000775[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000775[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000883[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000883[22m is running on port 9090
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000838[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000838[22m is running on port 9090
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000774[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000774[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000802[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000802[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000862[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000862[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000877[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000877[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000851[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000851[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000874[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000874[22m is running on port 9090
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000822[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000822[22m is running on port 9090
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000894[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000894[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000776[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000776[22m is running on port 9090
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000783[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000783[22m is running on port 9090
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000796[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000796[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000820[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000820[22m is running on port 9090
+Sat, 21 Feb 2026 15:10:32 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000814[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3000814[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000848[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:10:32 GMT[22m[39m] [[33m[1m3000848[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:58568[22m connected
+[[34m[1mSat, 21 Feb 2026 15:10:33 GMT[22m[39m] [[33m[1m3000883[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:10:33 GMT[22m[39m] [[33m[1m3000848[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:58568[22m disconnected
+[[34m[1mSat, 21 Feb 2026 15:10:33 GMT[22m[39m] [[33m[1m3000787[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:10:33 GMT[22m[39m] [[33m[1m3000787[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:58608[22m connected
+[[34m[1mSat, 21 Feb 2026 15:10:34 GMT[22m[39m] [[33m[1m3000833[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:10:34 GMT[22m[39m] [[33m[1m3000833[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:58624[22m connected
+[[34m[1mSat, 21 Feb 2026 15:10:36 GMT[22m[39m] [[33m[1m3000775[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:10:36 GMT[22m[39m] [[33m[1m3000833[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:58624[22m disconnected
+[[34m[1mSat, 21 Feb 2026 15:10:36 GMT[22m[39m] [[33m[1m3000774[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:10:36 GMT[22m[39m] [[33m[1m3000774[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:58650[22m connected
+[[34m[1mSat, 21 Feb 2026 15:11:21 GMT[22m[39m] [[33m[1m3002956[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Master [1m3002956[22m is running
+[[34m[1mSat, 21 Feb 2026 15:11:21 GMT[22m[39m] [[33m[1m3002956[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Starting [1m21[22m http workers
+[[34m[1mSat, 21 Feb 2026 15:11:21 GMT[22m[39m] [[33m[1m3002956[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Point your browser to http://0.0.0.0:9090/
+[[34m[1mSat, 21 Feb 2026 15:11:21 GMT[22m[39m] [[33m[1m3002985[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002996[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002970[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003033[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002973[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003057[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002966[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003013[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003049[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003067[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002985[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3002985[22m is running on port 9090
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003094[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003033[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3003033[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003081[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003078[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003002[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003094[22m[39m] [[32m[1mexpiration[22m[39m]    [[37mINFO[39m]      Expiration [1m3003094[22m is running
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003042[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002966[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3002966[22m is running on port 9090
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003039[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002965[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002973[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3002973[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002996[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3002996[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002979[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002963[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003020[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003049[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3003049[22m is running on port 9090
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003028[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003013[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3003013[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003057[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3003057[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003067[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3003067[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002970[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3002970[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002985[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002985[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:52238[22m connected
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003078[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3003078[22m is running on port 9090
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002964[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003002[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3003002[22m is running on port 9090
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002965[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3002965[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003042[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3003042[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002963[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3002963[22m is running on port 9090
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003039[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3003039[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003081[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3003081[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002979[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3002979[22m is running on port 9090
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3002964[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3002964[22m is running on port 9090
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:11:22 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003028[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3003028[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:11:22 GMT[22m[39m] [[33m[1m3003020[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3003020[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:11:23 GMT[22m[39m] [[33m[1m3003033[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:11:23 GMT[22m[39m] [[33m[1m3003033[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:52250[22m connected
+[[34m[1mSat, 21 Feb 2026 15:11:24 GMT[22m[39m] [[33m[1m3002973[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:11:24 GMT[22m[39m] [[33m[1m3002985[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:52238[22m disconnected
+[[34m[1mSat, 21 Feb 2026 15:11:24 GMT[22m[39m] [[33m[1m3003013[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:11:24 GMT[22m[39m] [[33m[1m3003013[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:52276[22m connected
+[[34m[1mSat, 21 Feb 2026 15:11:25 GMT[22m[39m] [[33m[1m3003049[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:11:25 GMT[22m[39m] [[33m[1m3003033[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:52250[22m disconnected
+[[34m[1mSat, 21 Feb 2026 15:11:25 GMT[22m[39m] [[33m[1m3003057[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:11:25 GMT[22m[39m] [[33m[1m3003057[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:52316[22m connected
+[[34m[1mSat, 21 Feb 2026 15:12:24 GMT[22m[39m] [[33m[1m3002973[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:12:25 GMT[22m[39m] [[33m[1m3003049[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:12:38 GMT[22m[39m] [[33m[1m3003013[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:52276[22m disconnected
+[[34m[1mSat, 21 Feb 2026 15:12:38 GMT[22m[39m] [[33m[1m3003078[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:12:39 GMT[22m[39m] [[33m[1m3003078[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:36618[22m connected
+[[34m[1mSat, 21 Feb 2026 15:13:24 GMT[22m[39m] [[33m[1m3007430[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Master [1m3007430[22m is running
+[[34m[1mSat, 21 Feb 2026 15:13:24 GMT[22m[39m] [[33m[1m3007430[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Starting [1m21[22m http workers
+[[34m[1mSat, 21 Feb 2026 15:13:24 GMT[22m[39m] [[33m[1m3007430[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Point your browser to http://0.0.0.0:9090/
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007484[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007589[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007589[22m[39m] [[32m[1mexpiration[22m[39m]    [[37mINFO[39m]      Expiration [1m3007589[22m is running
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007457[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007565[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007441[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007499[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007449[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007443[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007554[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007540[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007510[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007497[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007442[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007476[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007559[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007451[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007522[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007565[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007565[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007441[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007441[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007457[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007457[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007583[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007514[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007450[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007560[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007459[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007484[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007484[22m is running on port 9090
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007554[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007554[22m is running on port 9090
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007540[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007540[22m is running on port 9090
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007510[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007510[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007442[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007442[22m is running on port 9090
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007449[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007449[22m is running on port 9090
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007443[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007443[22m is running on port 9090
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007451[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007451[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007476[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007476[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007499[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007499[22m is running on port 9090
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007514[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007514[22m is running on port 9090
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007559[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007559[22m is running on port 9090
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007560[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007560[22m is running on port 9090
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007583[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007583[22m is running on port 9090
+Sat, 21 Feb 2026 15:13:25 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007522[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007522[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007450[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007450[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007459[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007459[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:13:25 GMT[22m[39m] [[33m[1m3007497[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3007497[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:13:26 GMT[22m[39m] [[33m[1m3007457[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:13:26 GMT[22m[39m] [[33m[1m3007457[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:43620[22m connected
+[[34m[1mSat, 21 Feb 2026 15:13:27 GMT[22m[39m] [[33m[1m3007565[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:13:27 GMT[22m[39m] [[33m[1m3007457[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:43620[22m disconnected
+[[34m[1mSat, 21 Feb 2026 15:13:27 GMT[22m[39m] [[33m[1m3007554[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:13:27 GMT[22m[39m] [[33m[1m3007554[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:43628[22m connected
+[[34m[1mSat, 21 Feb 2026 15:13:27 GMT[22m[39m] [[33m[1m3007540[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:13:27 GMT[22m[39m] [[33m[1m3007540[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:43640[22m connected
+[[34m[1mSat, 21 Feb 2026 15:13:29 GMT[22m[39m] [[33m[1m3007442[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:13:29 GMT[22m[39m] [[33m[1m3007540[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:43640[22m disconnected
+[[34m[1mSat, 21 Feb 2026 15:13:29 GMT[22m[39m] [[33m[1m3007449[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:13:29 GMT[22m[39m] [[33m[1m3007449[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:36966[22m connected
+[[34m[1mSat, 21 Feb 2026 15:14:27 GMT[22m[39m] [[33m[1m3007565[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:14:29 GMT[22m[39m] [[33m[1m3007442[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:15:27 GMT[22m[39m] [[33m[1m3007457[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:43620[22m died
+[[34m[1mSat, 21 Feb 2026 15:15:29 GMT[22m[39m] [[33m[1m3007540[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:43640[22m died
+[[34m[1mSat, 21 Feb 2026 15:15:41 GMT[22m[39m] [[33m[1m3007443[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Upload to StorageLocation(uploads/L/V/LVNXSuh6wGYXz14F5bdt) started
+[[34m[1mSat, 21 Feb 2026 15:15:41 GMT[22m[39m] [[33m[1m3007443[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Known storage
+[[34m[1mSat, 21 Feb 2026 15:15:41 GMT[22m[39m] [[33m[1m3007443[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Uploaded [1mUpload(LVNXSuh6wGYXz14F5bdt, 36780396, Tclz2QiZIgn5eU5M/k06SAJcbNGV+6JXjJh5R41K)[22m
+[[34m[1mSat, 21 Feb 2026 15:16:26 GMT[22m[39m] [[33m[1m3007457[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:16:27 GMT[22m[39m] [[33m[1m3007540[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:17:55 GMT[22m[39m] [[33m[1m3007451[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Upload to StorageLocation(uploads/t/P/tP8Rs4TfVU4uZ34J2P_i) started
+[[34m[1mSat, 21 Feb 2026 15:17:56 GMT[22m[39m] [[33m[1m3007451[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      New storage
+[[34m[1mSat, 21 Feb 2026 15:17:56 GMT[22m[39m] [[33m[1m3007451[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Uploaded [1mUpload(tP8Rs4TfVU4uZ34J2P_i, 49545415, y0DaE42nx2fyCIl3FR9Ppb6GRO9nansWmwInI+p0)[22m
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024353[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Master [1m3024353[22m is running
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024353[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Starting [1m21[22m http workers
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024353[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Point your browser to http://0.0.0.0:9090/
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024365[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024366[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024494[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024415[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024494[22m[39m] [[32m[1mexpiration[22m[39m]    [[37mINFO[39m]      Expiration [1m3024494[22m is running
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024373[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024443[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024431[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024403[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:21:07 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024372[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024437[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024366[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024366[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024452[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024398[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:21:07 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:21:07 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:21:07 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024443[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024443[22m is running on port 9090
+Sat, 21 Feb 2026 15:21:07 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024415[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024415[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024373[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024373[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024473[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024365[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024365[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024366[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+Sat, 21 Feb 2026 15:21:07 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024366[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:38782[22m connected
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024480[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024403[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024403[22m is running on port 9090
+Sat, 21 Feb 2026 15:21:07 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024431[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024431[22m is running on port 9090
+Sat, 21 Feb 2026 15:21:07 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024384[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024450[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024425[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024372[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024372[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024396[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:21:07 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024437[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024437[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024486[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024364[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024464[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:21:07 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:21:07 GMT[22m[39m] [[33m[1m3024452[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024452[22m is running on port 9090
+Sat, 21 Feb 2026 15:21:08 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:21:08 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:21:08 GMT[22m[39m] [[33m[1m3024384[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024384[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:21:08 GMT[22m[39m] [[33m[1m3024398[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024398[22m is running on port 9090
+Sat, 21 Feb 2026 15:21:08 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:21:08 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:21:08 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:21:08 GMT[22m[39m] [[33m[1m3024450[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024450[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:21:08 GMT[22m[39m] [[33m[1m3024473[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024473[22m is running on port 9090
+Sat, 21 Feb 2026 15:21:08 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:21:08 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:21:08 GMT[22m[39m] [[33m[1m3024480[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024480[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:21:08 GMT[22m[39m] [[33m[1m3024415[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:21:08 GMT[22m[39m] [[33m[1m3024415[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:38792[22m connected
+[[34m[1mSat, 21 Feb 2026 15:21:08 GMT[22m[39m] [[33m[1m3024486[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024486[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:21:08 GMT[22m[39m] [[33m[1m3024364[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024364[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:21:08 GMT[22m[39m] [[33m[1m3024390[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:21:08 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:21:08 GMT[22m[39m] [[33m[1m3024396[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024396[22m is running on port 9090
+Sat, 21 Feb 2026 15:21:08 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:21:08 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:21:08 GMT[22m[39m] [[33m[1m3024464[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024464[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:21:08 GMT[22m[39m] [[33m[1m3024425[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024425[22m is running on port 9090
+Sat, 21 Feb 2026 15:21:08 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:21:08 GMT[22m[39m] [[33m[1m3024390[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3024390[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029662[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Master [1m3029662[22m is running
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029662[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Starting [1m21[22m http workers
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029662[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Point your browser to http://0.0.0.0:9090/
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029801[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029801[22m[39m] [[32m[1mexpiration[22m[39m]    [[37mINFO[39m]      Expiration [1m3029801[22m is running
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029788[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029678[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029676[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029716[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029698[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029733[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029762[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029711[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029740[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029776[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029680[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029789[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029782[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029692[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029779[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029716[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029716[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029687[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029679[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029704[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029733[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029733[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029756[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029676[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029676[22m is running on port 9090
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029677[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029788[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029788[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029762[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029762[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029748[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029776[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029776[22m is running on port 9090
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029678[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029678[22m is running on port 9090
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029698[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029698[22m is running on port 9090
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029711[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029711[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029680[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029680[22m is running on port 9090
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029740[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029740[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029782[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029782[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029687[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029687[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029692[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029692[22m is running on port 9090
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029748[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029748[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029704[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029704[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029679[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029679[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029789[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029789[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029756[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029756[22m is running on port 9090
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029779[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029779[22m is running on port 9090
+Sat, 21 Feb 2026 15:23:04 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:23:04 GMT[22m[39m] [[33m[1m3029677[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3029677[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:23:05 GMT[22m[39m] [[33m[1m3029716[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:23:05 GMT[22m[39m] [[33m[1m3029716[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:42868[22m connected
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034157[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Master [1m3034157[22m is running
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034157[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Starting [1m21[22m http workers
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034157[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Point your browser to http://0.0.0.0:9090/
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034296[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034296[22m[39m] [[32m[1mexpiration[22m[39m]    [[37mINFO[39m]      Expiration [1m3034296[22m is running
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034226[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034177[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034186[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034225[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034210[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034221[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034289[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034192[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034200[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034172[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:24:35 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034238[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034252[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034226[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034226[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034245[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034282[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034180[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034261[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034173[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:24:35 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034186[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034186[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034171[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:24:35 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034198[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:35 GMT[22m[39m] [[33m[1m3034210[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034210[22m is running on port 9090
+Sat, 21 Feb 2026 15:24:35 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:24:35 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:24:35 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:24:36 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034200[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034200[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034238[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034238[22m is running on port 9090
+Sat, 21 Feb 2026 15:24:36 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034258[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034221[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034221[22m is running on port 9090
+Sat, 21 Feb 2026 15:24:36 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:24:36 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034252[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034252[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034192[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034192[22m is running on port 9090
+Sat, 21 Feb 2026 15:24:36 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034289[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034289[22m is running on port 9090
+Sat, 21 Feb 2026 15:24:36 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034225[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034225[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034173[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034173[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034177[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034177[22m is running on port 9090
+Sat, 21 Feb 2026 15:24:36 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:24:36 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:24:36 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034279[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:24:36 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034172[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034172[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034282[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034282[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034245[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034245[22m is running on port 9090
+Sat, 21 Feb 2026 15:24:36 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:24:36 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:24:36 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034261[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034261[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034180[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034180[22m is running on port 9090
+Sat, 21 Feb 2026 15:24:36 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034171[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034171[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034258[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034258[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034198[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034198[22m is running on port 9090
+Sat, 21 Feb 2026 15:24:36 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034279[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3034279[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034186[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034200[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:24:36 GMT[22m[39m] [[33m[1m3034200[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:50078[22m connected
+[[34m[1mSat, 21 Feb 2026 15:24:44 GMT[22m[39m] [[33m[1m3034252[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:24:44 GMT[22m[39m] [[33m[1m3034252[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:58414[22m connected
+[[34m[1mSat, 21 Feb 2026 15:24:46 GMT[22m[39m] [[33m[1m3034238[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:24:46 GMT[22m[39m] [[33m[1m3034252[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:58414[22m disconnected
+[[34m[1mSat, 21 Feb 2026 15:24:46 GMT[22m[39m] [[33m[1m3034289[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:24:46 GMT[22m[39m] [[33m[1m3034289[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:58452[22m connected
+[[34m[1mSat, 21 Feb 2026 15:25:36 GMT[22m[39m] [[33m[1m3034186[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:25:46 GMT[22m[39m] [[33m[1m3034238[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:25:49 GMT[22m[39m] [[33m[1m3034225[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:25:49 GMT[22m[39m] [[33m[1m3034200[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:50078[22m disconnected
+[[34m[1mSat, 21 Feb 2026 15:25:49 GMT[22m[39m] [[33m[1m3034172[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:25:49 GMT[22m[39m] [[33m[1m3034172[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:35702[22m connected
+[[34m[1mSat, 21 Feb 2026 15:25:50 GMT[22m[39m] [[33m[1m3034177[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:25:50 GMT[22m[39m] [[33m[1m3034172[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:35702[22m disconnected
+[[34m[1mSat, 21 Feb 2026 15:25:50 GMT[22m[39m] [[33m[1m3034282[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:25:50 GMT[22m[39m] [[33m[1m3034282[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:35708[22m connected
+[[34m[1mSat, 21 Feb 2026 15:25:50 GMT[22m[39m] [[33m[1m3034173[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:25:50 GMT[22m[39m] [[33m[1m3034282[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:35708[22m disconnected
+[[34m[1mSat, 21 Feb 2026 15:25:50 GMT[22m[39m] [[33m[1m3034245[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:25:50 GMT[22m[39m] [[33m[1m3034245[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:35724[22m connected
+[[34m[1mSat, 21 Feb 2026 15:25:50 GMT[22m[39m] [[33m[1m3034245[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:35724[22m disconnected
+[[34m[1mSat, 21 Feb 2026 15:25:50 GMT[22m[39m] [[33m[1m3034261[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:25:50 GMT[22m[39m] [[33m[1m3034261[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:35734[22m connected
+[[34m[1mSat, 21 Feb 2026 15:26:46 GMT[22m[39m] [[33m[1m3034252[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:58414[22m died
+[[34m[1mSat, 21 Feb 2026 15:26:49 GMT[22m[39m] [[33m[1m3034225[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:26:50 GMT[22m[39m] [[33m[1m3034177[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:26:50 GMT[22m[39m] [[33m[1m3034173[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:27:24 GMT[22m[39m] [[33m[1m3034180[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:27:24 GMT[22m[39m] [[33m[1m3034261[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:35734[22m disconnected
+[[34m[1mSat, 21 Feb 2026 15:27:24 GMT[22m[39m] [[33m[1m3034258[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:27:24 GMT[22m[39m] [[33m[1m3034258[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:42928[22m connected
+[[34m[1mSat, 21 Feb 2026 15:27:25 GMT[22m[39m] [[33m[1m3034258[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:42928[22m disconnected
+[[34m[1mSat, 21 Feb 2026 15:27:25 GMT[22m[39m] [[33m[1m3034198[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:27:25 GMT[22m[39m] [[33m[1m3034198[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:42944[22m connected
+[[34m[1mSat, 21 Feb 2026 15:27:44 GMT[22m[39m] [[33m[1m3034252[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:27:50 GMT[22m[39m] [[33m[1m3034200[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:50078[22m died
+[[34m[1mSat, 21 Feb 2026 15:27:50 GMT[22m[39m] [[33m[1m3034172[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:35702[22m died
+[[34m[1mSat, 21 Feb 2026 15:27:50 GMT[22m[39m] [[33m[1m3034282[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:35708[22m died
+[[34m[1mSat, 21 Feb 2026 15:27:50 GMT[22m[39m] [[33m[1m3034245[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:35724[22m died
+[[34m[1mSat, 21 Feb 2026 15:28:24 GMT[22m[39m] [[33m[1m3034180[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:28:36 GMT[22m[39m] [[33m[1m3034200[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:28:50 GMT[22m[39m] [[33m[1m3034172[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:28:50 GMT[22m[39m] [[33m[1m3034282[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:28:50 GMT[22m[39m] [[33m[1m3034245[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:34:28 GMT[22m[39m] [[33m[1m3056546[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Master [1m3056546[22m is running
+[[34m[1mSat, 21 Feb 2026 15:34:28 GMT[22m[39m] [[33m[1m3056546[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Starting [1m21[22m http workers
+[[34m[1mSat, 21 Feb 2026 15:34:28 GMT[22m[39m] [[33m[1m3056546[22m[39m] [[32m[1mserver[22m[39m]        [[37mINFO[39m]      Point your browser to http://0.0.0.0:9090/
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056575[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056577[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056561[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056618[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056600[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056588[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056609[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056562[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056649[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056576[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056569[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056563[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056690[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056690[22m[39m] [[32m[1mexpiration[22m[39m]    [[37mINFO[39m]      Expiration [1m3056690[22m is running
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056643[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056600[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056600[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056575[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056575[22m is running on port 9090
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056577[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056577[22m is running on port 9090
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056649[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056649[22m is running on port 9090
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056561[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056561[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056619[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056685[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056633[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056618[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056618[22m is running on port 9090
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056666[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056609[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056609[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056562[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056562[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056563[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056563[22m is running on port 9090
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056576[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056576[22m is running on port 9090
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056588[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056588[22m is running on port 9090
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056641[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056569[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056569[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056643[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056643[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056560[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056659[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056619[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056619[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056666[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056666[22m is running on port 9090
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056633[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056633[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056685[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056685[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056679[22m[39m] [[32m[1mmeta[22m[39m]          [[33mWARN[39m]      Not jailing
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056641[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056641[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056659[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056659[22m is running on port 9090
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056560[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056560[22m is running on port 9090
+Sat, 21 Feb 2026 15:34:29 GMT hsts deprecated The "setIf" parameter is deprecated. Refer to the documentation to see how to set the header conditionally. at node_modules/helmet/dist/index.js:52:34
+[[34m[1mSat, 21 Feb 2026 15:34:29 GMT[22m[39m] [[33m[1m3056679[22m[39m] [[32m[1mhttpserver[22m[39m]    [[37mINFO[39m]      HTTP [1m3056679[22m is running on port 9090
+[[34m[1mSat, 21 Feb 2026 15:34:36 GMT[22m[39m] [[33m[1m3056600[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:34:36 GMT[22m[39m] [[33m[1m3056649[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:34:36 GMT[22m[39m] [[33m[1m3056649[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:54088[22m connected
+[[34m[1mSat, 21 Feb 2026 15:34:39 GMT[22m[39m] [[33m[1m3056561[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:34:39 GMT[22m[39m] [[33m[1m3056561[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:40706[22m connected
+[[34m[1mSat, 21 Feb 2026 15:34:41 GMT[22m[39m] [[33m[1m3056618[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:34:41 GMT[22m[39m] [[33m[1m3056561[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:40706[22m disconnected
+[[34m[1mSat, 21 Feb 2026 15:34:41 GMT[22m[39m] [[33m[1m3056563[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Tracking room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:34:41 GMT[22m[39m] [[33m[1m3056563[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:40740[22m connected
+[[34m[1mSat, 21 Feb 2026 15:34:41 GMT[22m[39m] [[33m[1m3056562[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Upload to StorageLocation(uploads/V/I/VI5vLlmCQ_PZ495DT5W3) started
+[[34m[1mSat, 21 Feb 2026 15:34:41 GMT[22m[39m] [[33m[1m3056562[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Known storage
+[[34m[1mSat, 21 Feb 2026 15:34:41 GMT[22m[39m] [[33m[1m3056562[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Uploaded [1mUpload(VI5vLlmCQ_PZ495DT5W3, 543676, 8EYe7oEOjB6VRoGlxi+5pTvuEkDCPxNIdlFF4VAi)[22m
+[[34m[1mSat, 21 Feb 2026 15:34:47 GMT[22m[39m] [[33m[1m3056576[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Upload to StorageLocation(uploads/e/-/e-_Pz2LxCh7LpQVs3YGv) started
+[[34m[1mSat, 21 Feb 2026 15:34:47 GMT[22m[39m] [[33m[1m3056576[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Known storage
+[[34m[1mSat, 21 Feb 2026 15:34:47 GMT[22m[39m] [[33m[1m3056576[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Uploaded [1mUpload(e-_Pz2LxCh7LpQVs3YGv, 1736776, myM2lm1Q9NFIDqDEKnZVGcIGKQ3n5DJV2zgmAyUu)[22m
+[[34m[1mSat, 21 Feb 2026 15:34:53 GMT[22m[39m] [[33m[1m3056588[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Upload to StorageLocation(uploads/L/c/LcbSHjDpKfolIzQMyRV5) started
+[[34m[1mSat, 21 Feb 2026 15:34:53 GMT[22m[39m] [[33m[1m3056588[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      New storage
+[[34m[1mSat, 21 Feb 2026 15:34:53 GMT[22m[39m] [[33m[1m3056588[22m[39m] [[32m[1mupload[22m[39m]        [[37mINFO[39m]      Uploaded [1mUpload(LcbSHjDpKfolIzQMyRV5, 36871353, seDIh9t13rr1u7K5chanMUXU30IwrrYL6KCISVcj)[22m
+[[34m[1mSat, 21 Feb 2026 15:35:36 GMT[22m[39m] [[33m[1m3056600[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<xQ65YPwtrj>[22m
+[[34m[1mSat, 21 Feb 2026 15:35:41 GMT[22m[39m] [[33m[1m3056618[22m[39m] [[32m[1mroom[22m[39m]          [[37mINFO[39m]      Untracked room [1mRoom<73HW2DR3XX>[22m
+[[34m[1mSat, 21 Feb 2026 15:36:41 GMT[22m[39m] [[33m[1m3056561[22m[39m] [[32m[1mclient[22m[39m]        [[37mINFO[39m]      Client at [1m127.0.0.1:40706[22m died

@@ -20,7 +20,7 @@ Dicefiles is a self-hosted, open-source file sharing platform for hobby communit
 - Real-time chat rooms with file sharing
 - User accounts and moderation
 - File previews (images, videos, audio, PDFs)
-- **In-page streaming PDF and ePub reader** — click "Read Now" on any PDF/ePub cover in gallery view to open a lazy-streaming reader without leaving the room
+- **In-page streaming PDF, ePub, and MOBI reader** — click "Read Now" on any PDF/ePub/MOBI cover in gallery view to open a reader without leaving the room. EPUB and MOBI are parsed entirely client-side; no server-side extraction or conversion is needed
 - **Links Archive** — all URLs posted in chat are automatically captured and stored; browse them via the link-icon toggle in the room toolbar
 - Configurable limits and flood control
 - TLS/HTTPS support
@@ -42,11 +42,11 @@ Dicefiles is a self-hosted, open-source file sharing platform for hobby communit
 - **NEW awareness**: Files and requests newer than your last seen state are highlighted with `NEW!`.
 - **Fast batch downloads**: `Download NEW` and `Download All` buttons with count badges and progress tracking.
 - **Request filtering**: Dedicated request icon in the filter strip to isolate request entries quickly.
-- **In-page document reader**: PDF and ePub files show a **Read Now** button on their gallery cover. Clicking it opens a full-screen reader that fills the file-list area — no new tab, no download required. See [In-Page Document Reader](#in-page-document-reader) for full details.
+- **In-page document reader**: PDF, ePub, and MOBI files show a **Read Now** button on their gallery cover. Clicking it opens a full-screen reader that fills the file-list area — no new tab, no download required. See [In-Page Document Reader](#in-page-document-reader) for full details.
 
 ## In-Page Document Reader
 
-Dicefiles includes a built-in streaming reader for **PDF** and **ePub** files. It requires no additional server-side tooling — both libraries run entirely in the browser.
+Dicefiles includes a built-in streaming reader for **PDF**, **ePub**, and **MOBI** files. It requires no additional server-side tooling — all parsing and rendering runs entirely in the browser.
 
 ### How it works
 
@@ -67,11 +67,17 @@ Dicefiles includes a built-in streaming reader for **PDF** and **ePub** files. I
 
 ### ePub reader
 
-- Powered by [epub.js](https://github.com/futurepress/epub.js) (`epubjs`, BSD-2).
-- The ePub ZIP is parsed entirely client-side (no server-side extraction).
-- Chapters render in a sandboxed iframe with dark-theme defaults.
-- **Prev / Next** buttons and ← / → arrow keys navigate chapters.
-- Chapter counter in the toolbar tracks the current chapter.
+- Parsed natively in the browser using [JSZip](https://stuk.github.io/jszip/) (`jszip`, MIT) — no server-side extraction.
+- OPF manifest and spine are parsed to build the chapter list; CSS and image assets are extracted and served as `blob:` URLs so chapters render correctly without network requests.
+- Chapters render in a `srcdoc` iframe (no `sandbox` restrictions) with injected dark-theme defaults and A5 page layout via CSS multi-column.
+- Content reflows into horizontal A5-sized pages within each chapter — ← / → arrow keys and **Prev / Next** buttons scroll pages; **PageUp / PageDown** jump chapters.
+- Chapter + page counter in the toolbar.
+
+### MOBI / AZW / AZW3 reader
+
+- Parsed natively in the browser using [`@lingo-reader/mobi-parser`](https://github.com/hhk-png/lingo-reader) (MIT) — no conversion or server-side processing.
+- Spine items and chapter HTML are read directly from the MOBI binary; embedded images become `blob:` URLs automatically.
+- Same A5 paginated rendering as ePub: ← / → scroll pages, **PageUp / PageDown** change chapters.
 
 ### Closing the reader
 
@@ -79,14 +85,15 @@ Press **Escape** or click the **✕** button in the toolbar to close the reader 
 
 ### npm packages (installed automatically via `yarn install`)
 
-| Package      | Version     | License    | Purpose                                |
-| ------------ | ----------- | ---------- | -------------------------------------- |
-| `pdfjs-dist` | `^3.11.174` | Apache-2.0 | PDF parsing and canvas rendering       |
-| `epubjs`     | `^0.3.93`   | BSD-2      | ePub ZIP parsing and chapter rendering |
+| Package                     | Version     | License    | Purpose                                 |
+| --------------------------- | ----------- | ---------- | --------------------------------------- |
+| `pdfjs-dist`                | `^3.11.174` | Apache-2.0 | PDF parsing and canvas rendering        |
+| `jszip`                     | `^3.10.1`   | MIT        | EPUB ZIP parsing (client-side)          |
+| `@lingo-reader/mobi-parser` | `^0.4.5`    | MIT        | MOBI / AZW / AZW3 parsing (client-side) |
 
 The PDF.js web worker is built as a separate webpack entry (`pdf.worker.js`) and served at `/pdf.worker.js`. It is only fetched the first time a user opens a PDF — ordinary room usage incurs no overhead.
 
-> **Important distinction:** the `pdfjs-dist` / `epubjs` packages handle **in-browser reading only**. Server-side **cover thumbnail generation** for PDFs (the small preview image shown in the file list) still relies on GraphicsMagick + Ghostscript as documented in the [Install Preview Tooling](#15-install-preview-tooling-recommended) section.
+> **Important distinction:** the reader packages handle **in-browser reading only**. Server-side **cover thumbnail generation** for PDFs (the small preview image shown in the file list) still relies on GraphicsMagick + Ghostscript as documented in the [Install Preview Tooling](#15-install-preview-tooling-recommended) section.
 
 ## User Profiles
 
@@ -153,7 +160,7 @@ Notes:
 
 - PDF preview generation uses GraphicsMagick; after install, verify the `gm` command is available (`gm version`).
 - If you prefer ImageMagick, install it together with Ghostscript so PDF rendering delegates are available.
-- **PDF/ePub in-browser reading does not require any of the above tools.** The `pdfjs-dist` and `epubjs` libraries are bundled client-side JavaScript. These tools are only needed for generating the small cover thumbnails shown in the file list gallery.
+- **PDF/ePub/MOBI in-browser reading does not require any of the above tools.** The reader libraries (`pdfjs-dist`, `jszip`, `@lingo-reader/mobi-parser`) are bundled client-side JavaScript. These tools are only needed for generating the small cover thumbnails shown in the file list gallery.
 
 #### 2. Clone and Install
 
