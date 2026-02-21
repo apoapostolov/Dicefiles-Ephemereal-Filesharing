@@ -721,7 +721,7 @@ export default new class Roomie extends EventEmitter {
     }
 
     const opts = {
-      icon: "/favicon.ico",
+      icon: "/favicon/favicon.ico",
       body: n.msg,
       silent: true,
       noscreen: true,
