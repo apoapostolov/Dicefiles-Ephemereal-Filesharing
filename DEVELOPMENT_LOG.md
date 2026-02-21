@@ -1,6 +1,27 @@
 # Dicefiles Development Log
 
-## 2026-02-22 - Feat: CBZ Comic Book Reader (Phase 1) + Manga Mode Toggle
+## 2026-02-22 - Fix: CBZ Phase 2 — RAR Support, On-demand Index, ComicInfo.xml, Manga/Webtoon Pill
+
+### Summary
+
+Fixed three bugs in the comic reader and added Phase 2 RAR support:
+
+1. **"Comic archive has no readable pages"** — The index endpoint now calls `ensureComicAssets(storage)` on-demand when `comic_index` is absent. This handles files whose initial asset generation was interrupted (e.g. server restarted mid-upload for the 306 MB Batman Dark Designs ZIP).
+2. **CBR/RAR support** — `generateAssetsComic` and `extractComicPage` now detect the internal container format via magic bytes (ZIP: `PK\x03\x04`, RAR: `Rar!`) and route to jszip (ZIP path) or `spawn unrar` (RAR path). Both `CBZ` and `CBR` files with RAR containers now work end-to-end.
+3. **CBZ-override bug** — The extension override in `getMetaData` previously required `FileType === "ZIP"` for `.cbz`, so `.cbz` files with internal RAR containers were stored as `meta.type = "RAR"` and rejected by `comicCheck`. Fix: extension always wins regardless of detected container type.
+4. **ComicInfo.xml metadata** — `generateAssetsComic` now reads `ComicInfo.xml` from both ZIP and RAR archives. Parses title, series, number, year, publisher, writer, and `FrontCover` page index. Cover selection priority: ComicInfo `FrontCover` page → filename "cover" heuristic → index 0.
+5. **`comicCheck` backward compat** — Also accepts files by filename extension (`.cbz/.cbr/.cbt`) for uploads stored with wrong `meta.type` before the override fix, and patches `meta.type` in-memory for the request.
+6. **Manga/Webtoon pill** — Manga and Webtoon buttons are now a single pill (`#reader-view-pill`) placed to the LEFT of the download button instead of after Prev/Next. The pill is shown/hidden as a unit. CSS updated from `.reader-mode-btn` to `.reader-view-pill` + `.reader-view-btn`.
+
+### Changed files
+
+- **`lib/meta.js`** — Fixed CBZ override: removed `FileType === "ZIP"` restriction so any `.cbz` extension is typed `"CBZ"`. Added `detectComicContainer(filePath)` (magic-byte ZIP vs RAR detection), `spawnBuffer(cmd, args)` helper, `rarListImages(archivePath)`, `rarExtractFile(archivePath, fileName)`, `zipReadComicInfo(zip)`, `rarReadComicInfo(archivePath)`, `parseComicInfoXml(xmlStr)`. Rewrote `generateAssetsComic`: routes to jszip or unrar based on container detection, reads ComicInfo.xml, selects cover by FrontCover index/heuristic, always calls `addAssets` to persist index. Rewrote `extractComicPage`: uses container detection to route extraction between jszip and unrar; fallback index listing if `comic_index` absent. Added `ensureComicAssets(storage)`: idempotent on-demand index rebuild (no-op if `comic_index` already set). Exported `ensureComicAssets` with `wrap(maxAssetsProcesses, ...)`.
+- **`lib/httpserver.js`** — `comicCheck`: also accepts files by filename extension when `meta.type` is wrong; patches `meta.type` in-memory if needed. Index route: calls `META.ensureComicAssets(storage)` before computing page count when `comic_index` is absent.
+- **`views/room.ejs`** — Replaced standalone `#reader-manga` / `#reader-webtoon` buttons (after Prev/Next) with `<div id="reader-view-pill">` pill wrapper placed BEFORE `#reader-download`. Buttons inside the pill use `reader-view-btn` class.
+- **`entries/css/reader.css`** — Replaced `.reader-mode-btn` styles with `.reader-view-pill` (flex container, single border-radius, shared border) and `.reader-view-btn` (pill segment, border-right divider, no individual border-radius). Active state removes the per-button border-color override.
+- **`client/files/reader.js`** — Added `this.viewPillEl = document.querySelector("#reader-view-pill")`. In `Reader.open()`: hides/shows `viewPillEl` as a unit instead of toggling individual button hidden classes. `mangaEl` click handler unchanged; `active` class still toggled on `#reader-manga`.
+
+
 
 ### Summary
 

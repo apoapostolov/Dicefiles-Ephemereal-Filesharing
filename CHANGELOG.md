@@ -4,9 +4,20 @@
 
 ### Added
 
-- **CBZ Comic Book Reader**: CBZ comic book archives can now be opened directly in the browser using the "Read Now" button. Pages are served on-demand as transcoded JPEGs (max 1400 px wide) from `/api/v1/comic/:key/page/:n`. The page count is extracted at upload time by scanning the archive; a cover thumbnail is generated from the first page. Navigation uses ← / → arrow keys or the Prev/Next toolbar buttons. Adjacent pages are preloaded for fast flipping.
+- **CBR / RAR comic support**: CBR files (and `.cbz` archives with internal RAR containers) now work end-to-end. Pages are listed via `unrar lb` and extracted per-request via `unrar p -inul`. Cover thumbnails are generated at index time.
 
-- **Manga mode**: A "漫 Manga" toggle button in the reader toolbar switches to right-to-left page order (← advances, → goes back), matching Japanese manga reading conventions. The mode is persisted in `localStorage`.
+- **ComicInfo.xml metadata**: Comic archives are scanned for `ComicInfo.xml`. The `FrontCover` page index is used to select the correct cover thumbnail. Fields `title`, `series`, `number`, `year`, `publisher`, and `writer` are stored in `meta`.
+
+- **On-demand comic index rebuild**: The `/api/v1/comic/:key/index` endpoint now rebuilds a missing `comic_index` on first request instead of returning `pages: 0`. This recovers any comic file whose initial indexing was interrupted.
+
+### Changed
+
+- **Manga/Webtoon as a pill**: The two view-mode buttons are now a single segmented pill (`#reader-view-pill`) placed to the LEFT of the download button, not after Prev/Next.
+
+### Fixed
+
+- **"Comic archive has no readable pages"** for the Batman Dark Designs .cbz — on-demand index rebuild now kicks in automatically.
+- **CBZ override** — `.cbz` files with internal RAR containers were stored as `meta.type = "RAR"` and rejected by the reader API. Extension now always wins over detected container format.
 
 ### Changed
 

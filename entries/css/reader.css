@@ -269,9 +269,17 @@
   justify-content: center;
 }
 
-/* ── Manga / Webtoon mode toggle buttons ─────────────────────────────────── */
+/* ── Manga / Webtoon view-mode pill ──────────────────────────────────────── */
 
-.reader-mode-btn {
+.reader-view-pill {
+  flex: 0 0 auto;
+  display: flex;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+
+.reader-view-btn {
   flex: 0 0 auto;
   cursor: pointer;
   font-size: 0.8rem;
@@ -282,32 +290,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.04);
   white-space: nowrap;
   transition:
     background 0.15s,
-    color 0.15s,
-    border-color 0.15s;
+    color 0.15s;
 }
 
-.reader-mode-btn:hover:not(:disabled) {
+.reader-view-btn:last-child {
+  border-right: none;
+}
+
+.reader-view-btn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
 
-.reader-mode-btn.active {
+.reader-view-btn.active {
   background: rgba(99, 179, 237, 0.18);
-  border-color: rgba(99, 179, 237, 0.5);
   color: #90cdf4;
 }
 
-.reader-mode-btn.active:hover {
+.reader-view-btn.active:hover {
   background: rgba(99, 179, 237, 0.28);
 }
 
-.reader-mode-btn:disabled {
+.reader-view-btn:disabled {
   opacity: 0.38;
   cursor: not-allowed;
 }

@@ -968,6 +968,7 @@ export default class Reader {
     this.prevEl = document.querySelector("#reader-prev");
     this.nextEl = document.querySelector("#reader-next");
     this.downloadEl = document.querySelector("#reader-download");
+    this.viewPillEl = document.querySelector("#reader-view-pill");
     this.mangaEl = document.querySelector("#reader-manga");
     this.webtoonEl = document.querySelector("#reader-webtoon");
 
@@ -1102,12 +1103,12 @@ export default class Reader {
     if (this.nextEl) {
       this.nextEl.classList.toggle("hidden", !(isBook || isComic));
     }
-    if (this.mangaEl) {
-      this.mangaEl.classList.toggle("hidden", !isComic);
-      this.mangaEl.classList.toggle("active", isComic && this._mangaMode);
+    // Show/hide the manga+webtoon pill as a unit; initialise manga active state.
+    if (this.viewPillEl) {
+      this.viewPillEl.classList.toggle("hidden", !isComic);
     }
-    if (this.webtoonEl) {
-      this.webtoonEl.classList.toggle("hidden", !isComic);
+    if (this.mangaEl) {
+      this.mangaEl.classList.toggle("active", isComic && this._mangaMode);
     }
 
     dbg(
