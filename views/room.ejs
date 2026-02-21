@@ -66,25 +66,6 @@
       title="New files at the top"
     ></div>
     <div class="spacer"></div>
-    <div id="links-toggle" class="btn" title="Toggle Links Archive">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-        <path
-          d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
-        />
-      </svg>
-    </div>
     <div id="createrequest" class="btn" title="Create Request">
       <span class="i-question"></span>
     </div>
@@ -124,8 +105,29 @@
       title="Whitelist files"
     ></div>
     <div class="btn-pill viewmode-pill">
-      <div id="nailoff" class="btn i-list active"></div>
-      <div id="nailon" class="btn i-grid"></div>
+      <div id="nailoff" class="btn i-list active" title="List view"></div>
+      <div id="nailon" class="btn i-grid" title="Gallery view"></div>
+      <div id="linkmode" class="btn" title="Links Archive">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path
+            d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+          />
+          <path
+            d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+          />
+        </svg>
+      </div>
     </div>
     <form style="display: none">
       <input
@@ -215,7 +217,7 @@
       <div id="links-header">
         <span class="lh-name">Title / URL</span>
         <span class="lh-tags">Shared by</span>
-        <span class="lh-detail">URL &amp; Age</span>
+        <span class="lh-detail">Age</span>
       </div>
     </section>
   </section>
@@ -238,8 +240,11 @@
       <a id="reader-close" class="i-clear" title="Close reader"></a>
       <span id="reader-title"></span>
       <span id="reader-info"></span>
-      <button id="reader-zoom-out" title="Zoom out">&#8722;</button>
-      <button id="reader-zoom-in" title="Zoom in">&#43;</button>
+      <div class="reader-zoom-pill">
+        <button id="reader-zoom-out" title="Zoom out">&#8722;</button>
+        <button id="reader-zoom-in" title="Zoom in">&#43;</button>
+      </div>
+      <a id="reader-download" class="i-download" title="Download file"></a>
       <button id="reader-prev" class="hidden" title="Previous chapter">
         &lsaquo; Prev
       </button>
@@ -515,5 +520,8 @@
     </section>
   </template>
 
+  <script>
+    window.__CV__ = "<%- v %>";
+  </script>
   <script src="/client.js?v=<%=v%>"></script>
 </body>

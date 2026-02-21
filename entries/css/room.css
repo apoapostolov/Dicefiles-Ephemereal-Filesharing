@@ -244,12 +244,9 @@ body#room {
   transform: translateY(-1px);
 }
 
-#links-toggle.btn {
-  margin-right: 0.55rem;
-}
 #nailoff.btn.active,
 #nailon.btn.active,
-#links-toggle.btn.active {
+#linkmode.btn.active {
   background: rgba(255, 255, 255, 0.5);
   box-shadow: rgb(0 0 0 / 75%) 0px 0px 6px 0px inset;
 }

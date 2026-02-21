@@ -34,6 +34,12 @@
   opacity: 0.3;
 }
 
+/* links panel is inside #filelist — override the empty dimming */
+body.links-mode #filelist,
+body.links-mode #filelist-scroller {
+  opacity: 1 !important;
+}
+
 #dropminder {
   grid-area: files;
   background: linear-gradient(
@@ -659,7 +665,7 @@
 }
 
 #links-header .lh-detail {
-  width: 260px;
+  width: 72px;
   flex: 0 0 auto;
   text-align: right;
 }
@@ -707,26 +713,35 @@ body.links-mode #dropminder {
   min-width: 0;
   overflow: hidden;
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.1rem;
+}
+
+#links > .file > .name > .name-primary {
+  display: flex;
   align-items: center;
-  justify-content: flex-start;
   gap: 0.35rem;
-  font-weight: 500;
-  color: #efefef;
+  max-width: 100%;
+  overflow: hidden;
 }
 
-#links > .file.is-new > .name {
-  color: #ddf2e3;
-}
-
-#links > .file > .name > .name-text {
+#links > .file > .name > .name-primary > .name-text {
   flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 500;
+  color: #efefef;
 }
 
-#links > .file > .name > .file-new-pill {
+#links > .file.is-new > .name > .name-primary > .name-text {
+  color: #ddf2e3;
+}
+
+#links > .file > .name > .name-primary > .file-new-pill {
   display: none;
   flex: 0 0 auto;
   font-size: 9px;
@@ -739,8 +754,18 @@ body.links-mode #dropminder {
   letter-spacing: 0.02em;
 }
 
-#links > .file.is-new > .name > .file-new-pill {
+#links > .file.is-new > .name > .name-primary > .file-new-pill {
   display: inline-block;
+}
+
+#links > .file > .name > .url-sub {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--detail-size);
+  color: var(--dark-fg);
+  opacity: 0.75;
 }
 
 #links > .file > .tags {
@@ -775,31 +800,17 @@ body.links-mode #dropminder {
 
 #links > .file > .detail {
   display: flex;
-  width: 260px;
+  width: 72px;
   flex: 0 0 auto;
   white-space: nowrap;
   justify-content: flex-end;
-  gap: 0.15rem;
   font-size: var(--detail-size);
 }
 
-#links > .file > .detail > span {
-  display: inline-block;
+#links > .file > .detail > .ttl {
   border-left: 1px solid rgba(255, 255, 255, 0.24);
   padding-left: 0.65ex;
-  flex: 2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  letter-spacing: 0.01em;
-}
-
-#links > .file > .detail > .url-display {
-  flex: 5;
-  color: var(--dark-fg);
-}
-
-#links > .file > .detail > .ttl {
-  flex: 2;
   color: #dbdbdb;
   font-weight: 600;
+  letter-spacing: 0.01em;
 }

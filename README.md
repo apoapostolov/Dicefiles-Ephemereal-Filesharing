@@ -1,7 +1,7 @@
 # Dicefiles - Ephemereal Filesharing for Hobby Communities
 
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Version](https://img.shields.io/badge/version-1.2.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![Node](https://img.shields.io/badge/node-LTS-339933)
 ![Redis](https://img.shields.io/badge/redis-required-DC382D)
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
@@ -20,6 +20,8 @@ Dicefiles is a self-hosted, open-source file sharing platform for hobby communit
 - Real-time chat rooms with file sharing
 - User accounts and moderation
 - File previews (images, videos, audio, PDFs)
+- **In-page streaming PDF and ePub reader** — click "Read Now" on any PDF/ePub cover in gallery view to open a lazy-streaming reader without leaving the room
+- **Links Archive** — all URLs posted in chat are automatically captured and stored; browse them via the link-icon toggle in the room toolbar
 - Configurable limits and flood control
 - TLS/HTTPS support
 - Room creation and management
@@ -40,6 +42,51 @@ Dicefiles is a self-hosted, open-source file sharing platform for hobby communit
 - **NEW awareness**: Files and requests newer than your last seen state are highlighted with `NEW!`.
 - **Fast batch downloads**: `Download NEW` and `Download All` buttons with count badges and progress tracking.
 - **Request filtering**: Dedicated request icon in the filter strip to isolate request entries quickly.
+- **In-page document reader**: PDF and ePub files show a **Read Now** button on their gallery cover. Clicking it opens a full-screen reader that fills the file-list area — no new tab, no download required. See [In-Page Document Reader](#in-page-document-reader) for full details.
+
+## In-Page Document Reader
+
+Dicefiles includes a built-in streaming reader for **PDF** and **ePub** files. It requires no additional server-side tooling — both libraries run entirely in the browser.
+
+### How it works
+
+1. Switch to gallery mode (grid icon in the toolbar) and click a PDF or ePub file.
+2. The cover image appears in the gallery overlay.
+3. A persistent **Read Now** button is visible in the lower area of the cover.
+4. Clicking **Read Now** closes the overlay and opens the reader, which fills the file-list area.
+
+### PDF reader
+
+- Powered by [Mozilla PDF.js](https://mozilla.github.io/pdf.js/) (`pdfjs-dist`, Apache-2.0).
+- Pages are fetched via **HTTP Range requests** — the server's existing `Accept-Ranges: bytes` configuration is sufficient, no changes needed.
+- Rendering is **lazy**: only pages within ~300 px of the viewport are decoded; all other pages are lightweight placeholders. Opening a 500-page document is instant.
+- Page scale is auto-fitted to the reader width — no CSS up-scaling artifacts.
+- **Zoom pill** (`−` / `+`) re-renders pages at the new scale in 0.25× steps.
+- **Download** button saves the file without closing the reader.
+- Page counter in the toolbar tracks the currently visible page.
+
+### ePub reader
+
+- Powered by [epub.js](https://github.com/futurepress/epub.js) (`epubjs`, BSD-2).
+- The ePub ZIP is parsed entirely client-side (no server-side extraction).
+- Chapters render in a sandboxed iframe with dark-theme defaults.
+- **Prev / Next** buttons and ← / → arrow keys navigate chapters.
+- Chapter counter in the toolbar tracks the current chapter.
+
+### Closing the reader
+
+Press **Escape** or click the **✕** button in the toolbar to close the reader and return to the file list.
+
+### npm packages (installed automatically via `yarn install`)
+
+| Package      | Version     | License    | Purpose                                |
+| ------------ | ----------- | ---------- | -------------------------------------- |
+| `pdfjs-dist` | `^3.11.174` | Apache-2.0 | PDF parsing and canvas rendering       |
+| `epubjs`     | `^0.3.93`   | BSD-2      | ePub ZIP parsing and chapter rendering |
+
+The PDF.js web worker is built as a separate webpack entry (`pdf.worker.js`) and served at `/pdf.worker.js`. It is only fetched the first time a user opens a PDF — ordinary room usage incurs no overhead.
+
+> **Important distinction:** the `pdfjs-dist` / `epubjs` packages handle **in-browser reading only**. Server-side **cover thumbnail generation** for PDFs (the small preview image shown in the file list) still relies on GraphicsMagick + Ghostscript as documented in the [Install Preview Tooling](#15-install-preview-tooling-recommended) section.
 
 ## User Profiles
 
@@ -106,6 +153,7 @@ Notes:
 
 - PDF preview generation uses GraphicsMagick; after install, verify the `gm` command is available (`gm version`).
 - If you prefer ImageMagick, install it together with Ghostscript so PDF rendering delegates are available.
+- **PDF/ePub in-browser reading does not require any of the above tools.** The `pdfjs-dist` and `epubjs` libraries are bundled client-side JavaScript. These tools are only needed for generating the small cover thumbnails shown in the file list gallery.
 
 #### 2. Clone and Install
 

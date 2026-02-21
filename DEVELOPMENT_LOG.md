@@ -1,5 +1,168 @@
 # Dicefiles Development Log
 
+## 2026-02-21 - Files: Fix insertFilesIntoDOM querySelector Scope Regression
+
+### Root Cause
+
+`insertFilesIntoDOM()` in `client/files.js` used `document.querySelector(".file:not(.upload)")` to find the first existing file row as an insert anchor. After the links panel was added, `#links` also contains `.file` elements. With a link present, `document.querySelector` returned a `.file` from `#links` instead of `#files`. The subsequent `this.el.insertBefore(f.el, head)` then threw `NotFoundError` ("the node before which the new node is to be inserted is not a child of this node"), breaking all file rendering and uploads.
+
+`clear()` had the same broad scope — it found link rows and tried `this.el.removeChild()` on them, silently catching the errors, but it was wasteful.
+
+### Changed Files
+
+- `client/files.js` — `insertFilesIntoDOM()`: changed `document.querySelector(".file:not(.upload)")` → `this.el.querySelector(...)` so it searches only inside `#files`. `clear()`: same scope fix `document.querySelectorAll` → `this.el.querySelectorAll`.
+
+## 2026-02-21 - Links Panel: Column Layout Redesign + Grey Filter Fix
+
+### Root Cause / Problems Fixed
+
+**Grey filter on links panel:** `body.empty #filelist { opacity: 0.3 }` was being applied when links mode was active. Because `#files` is hidden in links mode with no visible children, `body.empty` was set, causing `#filelist` (and everything inside including `#links`) to be dimmed to 30% opacity. Fix: added `body.links-mode #filelist, body.links-mode #filelist-scroller { opacity: 1 !important }` to override the empty-state dimming.
+
+**Column layout:** The previous layout had name, then a detail column containing both the URL and age side by side. User requested: (1) link name + URL as a single stacked column, (2) uploader pill, (3) age only.
+
+### Changed Files
+
+- `client/links.js` — `createLinkElement()`: wrapped `name-text` + `file-new-pill` in a `.name-primary` flex row, added `.url-sub` span as a second line inside `.name`. Removed `.url-display` from `.detail`, leaving only `.ttl` (age).
+- `entries/css/files.css` — `.name` column changed to `flex-direction: column` with `.name-primary` inner row. Added `.url-sub` style (subtle, truncated, uses `--detail-size`). Simplified `.detail` to `width: 72px` (age only), removed old `.detail > span` and `.url-display` rules. Updated `#links-header .lh-detail` width to match (72px). Added `body.links-mode #filelist/filelist-scroller { opacity: 1 !important }` grey-filter override.
+- `views/room.ejs` — Column header `.lh-detail` label changed from "URL & Age" to "Age".
+
+## 2026-02-21 - PDF Reader: Flexbox Collapse Fix + Accurate Placeholder Height
+
+### Root Cause / Problems Fixed
+
+**PDF pages invisible despite "rendered OK":** Debug instrumentation (added in prior session) revealed `scrollHeight = 3086` for 255 pages, when 255 × 1100px placeholder should give ~281,000px. Root cause: `#reader-content` is a `display: flex; flex-direction: column` container with a fixed height (802px via `flex: 1 1 0`). Default `flex-shrink: 1` on the `.reader-page-wrap` children caused the flexbox layout algorithm to shrink all 255 wrappers proportionally to fit within 802px. Each wrapper collapsed to ~12px. With `overflow: hidden` on the wrapper, the 1488px-tall canvas inside each was clipped to invisible. Because all 255 wrappers were ~12px, the IntersectionObserver with `rootMargin: "300px"` fired for pages 1-91 simultaneously, confirming collapsed layout.
+
+**Inaccurate placeholder height:** Placeholder used hardcoded `1100px` (approx A4 at scale 1.4) instead of the actual computed page height, causing layout shift and early IntersectionObserver misfires.
+
+### Changed Files
+
+- `entries/css/reader.css` — added `flex-shrink: 0` to `.reader-page-wrap` to prevent flexbox from collapsing page wrappers to fit the container height.
+- `client/files/reader.js` — `PDFReader.open()`: compute `this._pageHeight = Math.ceil(naturalViewport.height * this.scale)` alongside scale; `_buildPagePlaceholders()` now uses `this._pageHeight || 1100` so placeholder heights match actual rendered page dimensions.
+
+## 2026-02-21 - Links Panel: Pill Exclusivity + Sync Fix + F5 Restore Nail Buttons
+
+### Root Cause / Problems Fixed
+
+**Pill not mutually exclusive (confirmed bug):** When `linkMode()` activated the Links button, it added `active` to `#linkmode` but did NOT remove `active` from `#nailoff` / `#nailon`. Both nail buttons and the Links button appeared "active" at the same time. Conversely, clicking Links a second time (toggle off) restored the file view but didn't re-add `active` to the correct list/gallery nail button — the pill ended up with nothing highlighted.
+
+**F5 restore nail bleed:** The `#nailoff` button starts with `active` in the HTML. On F5 restore when `links` mode was persisted, `links.init()` restored links mode but did not remove `active` from `#nailoff`, so both buttons appeared active after reload.
+
+**Dynamic import complexity:** `files.js` called `import("./links").then(...)` (async webpack dynamic import) to reach `links.show()` / `links.hide()`. Since `registry.links` is the same singleton instance (set synchronously in the first registry pass, before any `init()` runs), the dynamic import was unnecessary indirection with no benefit.
+
+**No links in Redis:** After the previous session's LINK_OFILTER fix, the Redis store was empty — no links had been created since that fix was applied. A test link was seeded directly into `map:links:links` (roomid `73HW2DR3XX`, `https://example.com`) so the display pipeline could be verified end-to-end.
+
+### Changed Files
+
+- `client/files.js` — `linkMode()`: now removes `active` from `nailOffEl` / `nailOnEl` when activating links mode; when deactivating, restores `active` on the correct nail button (`nailOnEl` if gallery mode, otherwise `nailOffEl`). Both `linkMode()` and `applyViewMode()` now call `registry.links.show()` / `registry.links.hide()` synchronously instead of via async dynamic import.
+- `client/links.js` — `init()` restore path now also calls `registry.files.nailOffEl.classList.remove("active")` and `nailOnEl.classList.remove("active")` when restoring links mode on F5, so only the Links button is active after reload.
+
+## 2026-02-21 - Correct MIME Types for PDF and EPUB Uploads
+
+### Root Cause
+
+`lib/meta.js` assigned `mime: "application/octet-stream"` to all `DOC_TYPES` files (PDF, EPUB, DOCX, etc.) because the classification branch only checked the type category, not the specific type. While PDF.js validates file content by magic bytes rather than MIME, some versions of epub.js and certain browser fetch policies do use the `Content-Type` header. More importantly, serving `application/octet-stream` for PDFs causes browsers to trigger a download rather than allow inline viewing in other contexts, and is generally incorrect.
+
+Additionally, files already uploaded before this fix had `application/octet-stream` stored in Redis — the serve path needed a runtime fallback to infer correct MIME from the filename extension for those existing files.
+
+### Changed Files
+
+- `lib/meta.js` — `DOC_TYPES` branch now assigns `application/pdf` for PDF and `application/epub+zip` for EPUB (all other doc types keep `application/octet-stream`). Applies to newly uploaded files.
+- `lib/upload.js` — `serve()` function: added runtime fallback that upgrades `application/octet-stream` to the correct MIME based on filename extension (`.pdf` → `application/pdf`, `.epub` → `application/epub+zip`) for existing files whose metadata was stored before the correct MIME detection was in place. No webpack rebuild needed (server-side only).
+
+## 2026-02-21 - PDF Worker: Cache-Bust URL to Fix Stale CSP
+
+### Root Cause
+
+`pdf.worker.js` is served with `Cache-Control: public, max-age=2592000, immutable`. Chrome applies **the worker script's own cached response headers** as the worker's CSP context — it does not re-evaluate the parent document's headers. The browser had cached the old `pdf.worker.js` response (from before `'unsafe-eval'` was added to the server CSP), so the worker ran with the old cached CSP that lacked `unsafe-eval`. PDF.js's `isEvalSupported` check (`new Function("")`) then threw a SecurityError, and PDF.js logged the warning: _"Note that 'script-src' was not explicitly set, so 'default-src' is used as a fallback."_
+
+Adding `script-src 'unsafe-eval'` to the server header was correct but insufficient — cache invalidation was required.
+
+### Fix
+
+Append the build version hash (`window.__CV__`) to the `pdf.worker.js` URL so the browser considers it a new resource when the build changes, fetching fresh with the current response headers. The version is exposed as `window.__CV__` in `room.ejs` inline script (reusing the same `v` variable already used for `client.js?v=<hash>`).
+
+### Changed Files
+
+- `views/room.ejs` — added `<script>window.__CV__="<%- v %>";</script>` before the client script tag to expose the build hash as a JS global.
+- `client/files/reader.js` — changed `PDF_WORKER_SRC` from `/pdf.worker.js` to `/pdf.worker.js?v=${window.__CV__ || "1"}` so the worker URL changes on each build, busting the immutable cache entry.
+
+## 2026-02-21 - CSP: Add script-src with unsafe-eval for PDF.js Worker
+
+### Root Cause
+
+The server CSP header had `default-src 'self' 'unsafe-inline'` but no explicit `script-src`. Browsers fall back to `default-src` for scripts, which lacks `'unsafe-eval'`. The PDF.js web worker (`pdf.worker.js`) uses `eval()` internally for rendering PostScript/Type4 color-space functions (triggered when processing images with embedded PostScript). This caused the browser to block the eval call and log: _"Note that 'script-src' was not explicitly set, so 'default-src' is used as a fallback."_ Affected PDFs would render blank or partial pages for pages containing those image types.
+
+### Changed Files
+
+- `lib/httpserver.js` — Added explicit `script-src 'self' 'unsafe-inline' 'unsafe-eval'` to the `Content-Security-Policy` header. The `'unsafe-eval'` token is required for the PDF.js worker's PostScript renderer. No webpack rebuild needed (server-side change only).
+
+## 2026-02-21 - Fix Tooltip Tag CSS Class With Spaces
+
+### Root Cause
+
+`addTag(value, tag)` in `client/file.js` used the raw tag name directly as a CSS class suffix: `` `tooltip-tag-${tag}` ``. When `tag` contains spaces (e.g. `"suggested tags"`), `classList.add("tooltip-tag-suggested tags")` threw `InvalidCharacterError` because the space is interpreted as a class separator.
+
+### Fix
+
+Introduced `tagClass = tag.replace(/\s+/g, "-").toLowerCase()` and used `tagClass` in both `tooltip-tag-${tagClass}` class strings, while keeping the original `tag` string for the `tag === "user"` role-class logic and label generation.
+
+### Changed Files
+
+- `client/file.js` — `addTag()`: derived `tagClass` from `tag` by replacing whitespace with `-` before applying it as a CSS class name suffix.
+
+## 2026-02-21 - Fix Links Creation + Links as Third View Mode
+
+### Root Causes / Bugs Fixed
+
+- **`Link.create` always threw `TypeError: set.values is not a function`** — `ofilter(o, set)` in `common/index.js` calls `set.values()`, expecting a proper `Set` instance. However `LINK_OFILTER` in `lib/links.js` was defined as a plain object `{id: true, roomid: true, …}` rather than `new Set([…])`. Every time a chat link was posted, `Link.prototype.toJSON()` was called inside `LINKS.set()`, which triggered `ofilter(this, LINK_OFILTER)` → crash. Links never persisted to Redis, and therefore `getlinks` responses were always empty. Fix: converted `LINK_OFILTER` to `new Set(["id", "roomid", …])`.
+- **`#links-toggle` was a standalone toggle** — replaced with `#linkmode` as the 3rd button in the viewmode pill (List | Gallery | Links). Mode persisted to localStorage alongside list/gallery so F5 restores the links view. The `_pendingLinksRestore` flag bridges the init-order gap (files.init runs before links.init) so the restore applies correctly after links handlers are registered.
+
+### Changed Files
+
+- `lib/links.js` — Changed `LINK_OFILTER` from plain object to `new Set([...])` so that `ofilter()` can call `.values()` on it. This was the root cause of all link creation failures.
+- `client/links.js` — Removed standalone `#links-toggle` click handler and `ontoggle()` method. Added `show()`/`hide()` public methods (DOM-only, no button state). `init()` now checks `registry.files._pendingLinksRestore` and activates links mode if set. Removed `setToggleBtn()` helper (unused).
+- `client/files.js` — Added `linksMode` and `_pendingLinksRestore` boolean properties to constructor. Wired `#linkmode` click → new `linkMode()` method. Extended `applyViewMode()` to deactivate links mode when switching to list/gallery. Added `linkMode()` toggle method. Updated `persistViewMode()` to save `"links"` value. Updated `restoreViewMode()` to handle `"links"` via deferred `_pendingLinksRestore` flag.
+- `views/room.ejs` — Removed standalone `#links-toggle` div. Added `#linkmode` with chain SVG as 3rd button inside `.viewmode-pill`. Added `title="List view"` / `title="Gallery view"` tooltips to `#nailoff` / `#nailon`.
+- `entries/css/room.css` — Removed `#links-toggle.btn { margin-right: 0.55rem }` rule. Replaced `#links-toggle.btn.active` reference with `#linkmode.btn.active` in the shared active-state rule.
+
+## 2026-02-21 - Fix Passive Wheel Event Warning + Wrong Handler Removal
+
+### Root Causes / Bugs Fixed
+
+- **"Unable to preventDefault inside passive event listener"** — Chrome treats `wheel` events on `document.body` as passive by default (opt-in via the [Permissions Policy](https://www.chromestatus.com/feature/6662647093133312)). Passing bare `true` (capture flag) does not override passiveness. Fix: replaced `true` with `{ passive: false, capture: true }` on both the `addEventListener` and matching `removeEventListener` call.
+- **Wheel listener never removed on gallery close** — `close()` called `removeEventListener("wheel", this.onpress, ...)` instead of `this.onwheel`. Because the handler reference didn't match the registered listener, the wheel handler leaked and was never cleaned up, causing duplicate navigation calls and preventing garbage collection. Fix: corrected to `this.onwheel`.
+
+### Changed Files
+
+- `client/files/gallery.js` — `open()`: `addEventListener("wheel", …, { passive: false, capture: true })`. `close()`: corrected handler from `this.onpress` → `this.onwheel` and matched options to `{ passive: false, capture: true }`.
+
+## 2026-02-21 - PDF Rendering Fix + Square Toolbar Buttons
+
+### Root Causes / Bugs Fixed
+
+- **PDF reader rendering blank** — `pdfjs-dist` is a UMD/CJS bundle. webpack 5 wraps CJS modules so the entire `module.exports` API object lands on `.default` of the dynamic import namespace (`await import("pdfjs-dist")`). The previous code accessed `pdfjsLib.GlobalWorkerOptions` and `pdfjsLib.getDocument` directly on the namespace, which were both `undefined`, causing a silent TypeError that prevented the PDF document from loading at all. Fix: `const pdfjsLib = pdfModule.default || pdfModule;` before calling any API, giving correct CJS/ESM interop. (Note: epubjs was already correct because it sets `__esModule: true` and does expose `.default`.)
+
+### Changed Files
+
+- `client/files/reader.js` — `PDFReader.open()`: added `const pdfjsLib = pdfModule.default || pdfModule` CJS interop shim so `GlobalWorkerOptions` and `getDocument` are correctly resolved from the dynamic import.
+- `entries/css/reader.css` — all toolbar buttons (`#reader-close`, `.reader-zoom-pill button`, `#reader-download`, `#reader-prev`, `#reader-next`) now use explicit `width: 2.1rem; height: 2.1rem; padding: 0; display: flex; align-items: center; justify-content: center` for consistent square sizing. `border-radius` unified to `7px` for close/download. Prev/Next retain a minimum width for their text labels.
+
+## 2026-02-21 - Reader Polish: Read Now Button, PDF Blank Fix, Download + Zoom Pill
+
+### Root Causes / Bugs Fixed
+
+- **`#gallery` had no `position`** — was `position: static`, so the absolutely-positioned `#gallery_read_now` button anchored to the wrong containing block (the viewport), and `z-index: 2000` was silently ignored. Fix: added `position: relative` to `#gallery`.
+- **Read Now tied to `.aux` fade** — the button's opacity was `0` by default and only became `1` when the `.aux` class was active (same as the file-size info overlay). Fix: made `.gallery-read-now` always `opacity: 1; pointer-events: auto`, positioned at `bottom: 4%` of the gallery (bottom 5% of the cover area). The `.aux .gallery-read-now` override was removed.
+- **PDF pages blank** — `IntersectionObserver` root was `this.container.parentElement` (`#reader`, `overflow: hidden`, non-scrollable). The IntersectionObserver fires based on scroll in the ROOT element; pages 3+ never triggered because only `#reader-content` scrolls. Also, scale was fixed at 1.4 which could produce canvases wider than the container, causing subtle CSS sizing issues. Fixes: (a) root changed to `this.container` (the scrollable `#reader-content`); (b) scale is now auto-computed from `container.clientWidth / naturalViewport.width` so pages perfectly fill the reader width.
+- **Zoom delta** — changed from additive `±0.2` to `±0.25` for more noticeable zoom steps.
+
+### Changes
+
+- `entries/css/gallery.css`: Added `position: relative` to `#gallery`.
+- `entries/css/reader.css`: Rewrote `.gallery-read-now` — always visible, `bottom: 4%`, no `.aux` dependency. Replaced individual `#reader-zoom-in/out` rules with `.reader-zoom-pill` (joined pill group). Added `#reader-download` button styles.
+- `views/room.ejs`: Wrapped `#reader-zoom-out` / `#reader-zoom-in` in `<div class="reader-zoom-pill">`. Added `<a id="reader-download">` after the pill.
+- `client/files/reader.js`: Auto-compute PDF scale from container width. Fixed `IntersectionObserver` root to `this.container` for both lazy-load observer and page-visibility tracker. Added `downloadEl` to `Reader` constructor, `_ondownload()` handler, and `Object.seal` includes it. Zoom delta changed to `±0.25`.
+
 ## 2026-02-21 - Streaming PDF / ePub In-Page Reader
 
 ### Summary
@@ -22,6 +185,28 @@ Implemented an in-page reader for PDF and ePub files. Clicking a document file i
 - `client/file.js`: added `getReadableType()` returning `"pdf"`, `"epub"`, or `null`.
 - `client/files/gallery.js`: imported `Reader`; added `readNowEl` and `reader` to constructor; added `onreadnow()` handler; shows/hides the Read Now button per file readability.
 - `views/room.ejs`: added `<button id="gallery_read_now" ...>` inside `#gallery`; added `#reader` overlay with toolbar and `#reader-content` scroll area.
+
+## 2026-02-21 - Links Archive: Content Population + Chat Link Capture Fix
+
+### Root Cause
+
+Two related timing bugs:
+
+1. **Client missed initial `"links"` socket event**: The server sends `{ replace: true, links: [...] }` immediately on connect (after an async Redis lookup). The client's `links.init()` registers the socket handler AFTER all components are initialized, so the initial event was already dispatched and dropped. The handler never saw it.
+
+2. **Server's empty-replace cleared test data**: Even in dev testing, after `links.init()` called `onlinks()` with hardcoded test links, the server's delayed `{ replace: true, links: [] }` would arrive a few milliseconds later and wipe everything. This made the panel always appear empty.
+
+3. **Chat links appearing then vanishing**: Links created by chat messages correctly arrived via the "add" event path (no `replace`), but the subsequent server empty-replace cleared them too.
+
+### Changes
+
+- `lib/client.js`:
+  - Added `socket.on("getlinks", async handler)` — when the client emits `"getlinks"`, server responds by fetching current room links from Redis and sending `{ replace: true, links: [...] }`. This is the same code as `emitInitialState` but triggered on demand.
+- `client/links.js`:
+  - Removed all hardcoded `// REMOVEME` test link data from `init()`.
+  - Added `registry.socket.emit("getlinks")` at the end of `init()` (after socket handlers registered) — client requests the fresh room link state, guaranteed to land after the handler is ready to receive it.
+
+---
 
 ## 2026-02-21 - Filter Field Alignment + Links Archive Header Row
 
@@ -960,3 +1145,11 @@ This development log provides a complete overview of the Dicefiles project trans
 - Batch downloads no longer start immediately when opening Download All/New modal; user must press `Start`.
 - Defaulted `Skip existing filenames` to enabled for safer repeat runs.
 - Made `Retries per file` editable and right-aligned on the same options row before start.
+
+## 2026-02-21 - Release v1.1.0 — Link Archive + PDF/ePub Streaming Reader
+
+- `CHANGELOG.md`: Promoted `[Unreleased]` section to `[1.1.0] - 2026-02-21` with full feature entries for Link Archive and Streaming PDF/ePub Reader.
+- `README.md`: Updated version badge from `1.2.0` → `1.1.0`; added Links Archive bullet to the Features list.
+- `package.json`: Updated version from `2.0.0` → `1.1.0` to match release.
+- Redis: Removed hardcoded test link (`testlink001`) from `map:links:links` hash.
+- Git: Committed all staged changes and tagged `v1.1.0`; pushed to origin.

@@ -14,7 +14,34 @@ import { dom, nukeEvent } from "../util";
  *   - Renders chapters in an iframe, with prev/next navigation
  */
 
-const PDF_WORKER_SRC = "/pdf.worker.js";
+// Append the client build version so the browser fetches a fresh copy
+// whenever the build changes (pdf.worker.js is served immutable/30-day cached
+// and Chrome applies the worker script's own cached response headers as its
+// CSP context — stale cache = stale CSP without 'unsafe-eval').
+const PDF_WORKER_SRC = "/pdf.worker.js?v=" + (window.__CV__ || "1");
+
+// ── debug helpers ─────────────────────────────────────────────────────────────
+
+function dbg(label, ...args) {
+  console.log(`[Reader] ${label}`, ...args);
+}
+function dbgErr(label, err) {
+  console.error(`[Reader] ${label}`, err);
+}
+
+/** Append a visible debug line to the reader content area. */
+function dbgShow(container, text, isError = false) {
+  if (!container) {
+    return;
+  }
+  const el = document.createElement("div");
+  el.style.cssText =
+    "font:12px/1.6 monospace;padding:4px 10px;color:" +
+    (isError ? "#f87171" : "#94a3b8") +
+    ";white-space:pre-wrap;word-break:break-all;";
+  el.textContent = text;
+  container.appendChild(el);
+}
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -49,17 +76,103 @@ class PDFReader {
   }
 
   async open(url) {
-    const pdfjsLib = await import("pdfjs-dist");
+    dbg("PDFReader.open() url =", url);
+    dbgShow(this.container, `Opening PDF: ${url}`);
+
+    // pdfjs-dist is a UMD/CJS bundle; webpack 5 wraps CJS modules so that the
+    // full API object lands on .default. Fall back to the namespace itself for
+    // any future ESM builds of pdfjs that expose named exports directly.
+    let pdfjsLib;
+    try {
+      const pdfModule = await import("pdfjs-dist");
+      pdfjsLib = pdfModule.default || pdfModule;
+      dbg(
+        "pdfjs-dist imported, typeof getDocument =",
+        typeof pdfjsLib.getDocument,
+      );
+      dbgShow(
+        this.container,
+        `pdfjs-dist loaded, getDocument=${typeof pdfjsLib.getDocument}`,
+      );
+    } catch (ex) {
+      dbgErr("pdfjs-dist import failed", ex);
+      dbgShow(
+        this.container,
+        `FATAL: pdfjs-dist import failed: ${ex.message}`,
+        true,
+      );
+      throw ex;
+    }
+
+    dbg("Setting workerSrc =", PDF_WORKER_SRC);
+    dbgShow(this.container, `workerSrc: ${PDF_WORKER_SRC}`);
     pdfjsLib.GlobalWorkerOptions.workerSrc = PDF_WORKER_SRC;
 
-    this.pdfDoc = await pdfjsLib.getDocument({
-      url,
-      disableAutoFetch: false,
-      disableStream: false,
-      rangeChunkSize: 65536,
-    }).promise;
+    dbg("Calling getDocument…");
+    dbgShow(this.container, "Calling pdfjsLib.getDocument()…");
+    try {
+      this.pdfDoc = await pdfjsLib.getDocument({
+        url,
+        disableAutoFetch: false,
+        disableStream: false,
+        rangeChunkSize: 65536,
+      }).promise;
+    } catch (ex) {
+      dbgErr("getDocument failed", ex);
+      dbgShow(
+        this.container,
+        `FATAL: getDocument failed: ${ex.message || ex}`,
+        true,
+      );
+      throw ex;
+    }
 
     this.totalPages = this.pdfDoc.numPages;
+    dbg("PDF loaded, pages =", this.totalPages);
+    dbgShow(this.container, `PDF loaded: ${this.totalPages} pages`);
+
+    // Auto-compute scale so pages fill the container width exactly,
+    // avoiding any CSS scaling that can cause blank-canvas issues.
+    const containerWidth = this.container.clientWidth;
+    dbg(
+      "container.clientWidth =",
+      containerWidth,
+      "clientHeight =",
+      this.container.clientHeight,
+    );
+    dbgShow(
+      this.container,
+      `Container size: ${containerWidth} x ${this.container.clientHeight}`,
+    );
+
+    if (containerWidth > 0) {
+      const firstPage = await this.pdfDoc.getPage(1);
+      const naturalViewport = firstPage.getViewport({ scale: 1 });
+      // Leave 32px breathing room for scrollbar / padding
+      this.scale = Math.min((containerWidth - 32) / naturalViewport.width, 2.5);
+      // Pre-compute placeholder height so IntersectionObserver thresholds are accurate
+      this._pageHeight = Math.ceil(naturalViewport.height * this.scale);
+      dbg(
+        "auto scale =",
+        this.scale,
+        "natural page width =",
+        naturalViewport.width,
+        "pageHeight =",
+        this._pageHeight,
+      );
+      dbgShow(
+        this.container,
+        `Scale: ${this.scale.toFixed(3)} (page natural w=${naturalViewport.width.toFixed(0)}, h=${this._pageHeight}px)`,
+      );
+    } else {
+      dbg("WARN: container has zero width, using fallback scale", this.scale);
+      dbgShow(
+        this.container,
+        `WARN: container width is 0 — using fallback scale ${this.scale}`,
+        true,
+      );
+    }
+
     this._updateInfo(0, this.totalPages);
     this._buildPagePlaceholders();
     this._setupObserver();
@@ -79,22 +192,39 @@ class PDFReader {
       const wrapper = dom("div", { classes: ["reader-page-wrap"] });
       wrapper.dataset.page = String(i);
 
-      // Placeholder keeps layout height before render
+      // Placeholder keeps layout height before render (uses computed height so
+      // IntersectionObserver rootMargin thresholds trigger correctly)
       const placeholder = dom("div", { classes: ["reader-page-placeholder"] });
-      placeholder.style.height = "1100px"; // approx A4 at scale 1.4
+      placeholder.style.height = `${this._pageHeight || 1100}px`;
       wrapper.appendChild(placeholder);
 
       this.container.appendChild(wrapper);
       this.canvases.push(wrapper);
     }
+
+    dbg(
+      "_buildPagePlaceholders: created",
+      this.canvases.length,
+      "placeholders",
+    );
   }
 
   _setupObserver() {
+    dbg(
+      "_setupObserver: root =",
+      this.container,
+      "scrollHeight =",
+      this.container.scrollHeight,
+      "offsetHeight =",
+      this.container.offsetHeight,
+    );
+
     this.observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             const pageNum = parseInt(entry.target.dataset.page, 10);
+            dbg("IntersectionObserver: page", pageNum, "is intersecting");
             if (!this.renderedPages.has(pageNum)) {
               this._renderPage(pageNum, entry.target);
             }
@@ -102,8 +232,9 @@ class PDFReader {
         }
       },
       {
-        root: this.container.parentElement,
-        rootMargin: "200px 0px 200px 0px",
+        // root must be the SCROLLABLE element, not its parent
+        root: this.container,
+        rootMargin: "300px 0px 300px 0px",
         threshold: 0,
       },
     );
@@ -111,12 +242,15 @@ class PDFReader {
     for (const wrapper of this.canvases) {
       this.observer.observe(wrapper);
     }
+    dbg("_setupObserver: observing", this.canvases.length, "wrappers");
 
     // Immediately render first 2 pages
     if (this.canvases[0]) {
+      dbg("_setupObserver: force-rendering page 1");
       this._renderPage(1, this.canvases[0]);
     }
     if (this.canvases[1]) {
+      dbg("_setupObserver: force-rendering page 2");
       this._renderPage(2, this.canvases[1]);
     }
   }
@@ -126,10 +260,15 @@ class PDFReader {
       return;
     }
     this.renderedPages.add(pageNum);
+    dbg("_renderPage: rendering page", pageNum);
 
     try {
       const page = await this.pdfDoc.getPage(pageNum);
       const viewport = page.getViewport({ scale: this.scale });
+
+      dbg(
+        `_renderPage: page ${pageNum} viewport ${viewport.width.toFixed(0)}x${viewport.height.toFixed(0)}`,
+      );
 
       const canvas = dom("canvas", { classes: ["reader-page-canvas"] });
       canvas.width = viewport.width;
@@ -141,12 +280,24 @@ class PDFReader {
       wrapperEl.style.minHeight = "";
 
       const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        throw new Error(`getContext('2d') returned null for page ${pageNum}`);
+      }
+
       await page.render({ canvasContext: ctx, viewport }).promise;
+      dbg(`_renderPage: page ${pageNum} rendered OK`);
 
       // Scroll-tracking: which page is visible
       this._trackVisible(wrapperEl, pageNum);
     } catch (ex) {
-      console.error("PDF render page error:", ex);
+      dbgErr(`_renderPage page ${pageNum} failed`, ex);
+      // Show the error on the page placeholder itself
+      wrapperEl.textContent = "";
+      const errEl = document.createElement("div");
+      errEl.style.cssText =
+        "padding:1rem;color:#f87171;font:13px monospace;background:#1a0000;border-radius:4px;";
+      errEl.textContent = `Page ${pageNum} render error: ${ex.message || ex}`;
+      wrapperEl.appendChild(errEl);
     }
   }
 
@@ -158,7 +309,8 @@ class PDFReader {
         }
       },
       {
-        root: this.container.parentElement,
+        // same scrollable root
+        root: this.container,
         threshold: 0.3,
       },
     );
@@ -204,9 +356,24 @@ class EpubReader {
   }
 
   async open(url) {
-    const Epub = (await import("epubjs")).default;
+    dbg("EpubReader.open() url =", url);
+
+    let Epub;
+    try {
+      Epub = (await import("epubjs")).default;
+      dbg("epubjs imported, Epub =", typeof Epub);
+    } catch (ex) {
+      dbgErr("epubjs import failed", ex);
+      dbgShow(
+        this.container,
+        `FATAL: epubjs import failed: ${ex.message}`,
+        true,
+      );
+      throw ex;
+    }
 
     this.book = new Epub(url, { openAs: "epub" });
+    dbg("Epub book created");
 
     const iframeWrap = dom("div", { classes: ["reader-epub-wrap"] });
     this.container.textContent = "";
@@ -218,6 +385,7 @@ class EpubReader {
       spread: "none",
       flow: "paginated",
     });
+    dbg("rendition created");
 
     this.rendition.themes.default({
       body: {
@@ -230,9 +398,21 @@ class EpubReader {
       a: { color: "#7ec8e3" },
     });
 
-    await this.rendition.display();
+    try {
+      await this.rendition.display();
+      dbg("rendition.display() complete");
+    } catch (ex) {
+      dbgErr("rendition.display() failed", ex);
+      dbgShow(
+        this.container,
+        `FATAL: epub display failed: ${ex.message}`,
+        true,
+      );
+      throw ex;
+    }
 
     this.book.loaded.spine.then(() => {
+      dbg("epub spine loaded");
       this._updateInfo();
     });
 
@@ -294,6 +474,22 @@ export default class Reader {
     this.zoomOutEl = document.querySelector("#reader-zoom-out");
     this.prevEl = document.querySelector("#reader-prev");
     this.nextEl = document.querySelector("#reader-next");
+    this.downloadEl = document.querySelector("#reader-download");
+
+    // Log which DOM elements were found / missing
+    dbg(
+      "Reader constructor — DOM elements:",
+      "#reader",
+      !!this.el,
+      "#reader-content",
+      !!this.contentEl,
+      "#reader-close",
+      !!this.closeEl,
+      "#reader-zoom-in",
+      !!this.zoomInEl,
+      "#reader-prev",
+      !!this.prevEl,
+    );
 
     this.file = null;
     this._renderer = null;
@@ -305,16 +501,19 @@ export default class Reader {
       this.closeEl.addEventListener("click", this.close.bind(this));
     }
     if (this.zoomInEl) {
-      this.zoomInEl.addEventListener("click", () => this._zoom(0.2));
+      this.zoomInEl.addEventListener("click", () => this._zoom(0.25));
     }
     if (this.zoomOutEl) {
-      this.zoomOutEl.addEventListener("click", () => this._zoom(-0.2));
+      this.zoomOutEl.addEventListener("click", () => this._zoom(-0.25));
     }
     if (this.prevEl) {
       this.prevEl.addEventListener("click", () => this._epub("prev"));
     }
     if (this.nextEl) {
       this.nextEl.addEventListener("click", () => this._epub("next"));
+    }
+    if (this.downloadEl) {
+      this.downloadEl.addEventListener("click", this._ondownload.bind(this));
     }
 
     Object.seal(this);
@@ -325,10 +524,37 @@ export default class Reader {
     return getReadableType(file);
   }
 
+  _ondownload() {
+    if (!this.file) {
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = this.file.url;
+    a.download = this.file.name;
+    a.rel = "nofollow,noindex";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
   /** Open the reader overlay for `file`. */
   async open(file) {
     const rtype = getReadableType(file);
+    dbg(
+      "Reader.open() file =",
+      file && file.name,
+      "url =",
+      file && file.url,
+      "type =",
+      file && file.type,
+      "meta.type =",
+      file && file.meta && file.meta.type,
+      "detected rtype =",
+      rtype,
+    );
+
     if (!rtype || !this.el) {
+      dbg("Reader.open() early-exit: rtype =", rtype, "el =", !!this.el);
       return false;
     }
 
@@ -362,6 +588,17 @@ export default class Reader {
       this.nextEl.classList.toggle("hidden", isPdf);
     }
 
+    dbg(
+      "Reader.open() starting renderer, isPdf =",
+      isPdf,
+      "contentEl =",
+      this.contentEl,
+      "contentEl dimensions:",
+      this.contentEl && this.contentEl.clientWidth,
+      "x",
+      this.contentEl && this.contentEl.clientHeight,
+    );
+
     try {
       if (isPdf) {
         this._renderer = new PDFReader(this.contentEl, this.infoEl);
@@ -371,9 +608,15 @@ export default class Reader {
         await this._renderer.open(file.url);
       }
     } catch (ex) {
-      console.error("Reader open error:", ex);
+      dbgErr("Reader open error", ex);
       if (this.infoEl) {
         this.infoEl.textContent = "Failed to load — " + (ex.message || ex);
+      }
+      if (this.contentEl) {
+        dbgShow(this.contentEl, `OPEN ERROR: ${ex.message || ex}`, true);
+        if (ex.stack) {
+          dbgShow(this.contentEl, ex.stack, true);
+        }
       }
     }
 

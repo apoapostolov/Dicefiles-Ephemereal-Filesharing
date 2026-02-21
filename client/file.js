@@ -130,6 +130,7 @@ class FileTooltip extends Tooltip {
 
   addTag(value, tag) {
     const tagText = this.getTagLabel(tag);
+    const tagClass = tag.replace(/\s+/g, "-").toLowerCase();
     const strongPrefixes = new Set([
       "title",
       "description",
@@ -143,14 +144,14 @@ class FileTooltip extends Tooltip {
         classes: [
           "tooltip-tag",
           "tooltip-tag-tag",
-          `tooltip-tag-${tag}`,
+          `tooltip-tag-${tagClass}`,
           ...(isMetaPrefix ? ["tooltip-prefix-strong"] : []),
         ],
         text: isMetaPrefix ? `${tagText}:` : tagText,
       }),
     );
     const el = dom("span", {
-      classes: ["tooltip-tag", "tooltip-tag-value", `tooltip-tag-${tag}`],
+      classes: ["tooltip-tag", "tooltip-tag-value", `tooltip-tag-${tagClass}`],
       text: value.toString().trim(),
     });
     if (tag === "user") {

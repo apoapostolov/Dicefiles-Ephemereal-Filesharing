@@ -1,27 +1,27 @@
 "use strict";
 
 import EventEmitter from "events";
-import registry from "./registry";
-import * as filesfilter from "./files/filter";
-import {
-  PromisePool,
-  debounce,
-  dom,
-  idle,
-  iter,
-  naturalCaseSort,
-  riter,
-  sort,
-} from "./util";
-import {APOOL} from "./animationpool";
-import {REMOVALS} from "./files/tracker";
-import Upload from "./files/upload";
-import File from "./files/file";
-import Gallery from "./files/gallery";
+import { APOOL } from "./animationpool";
 import DownloadBatchModal from "./files/downloadmodal";
+import File from "./files/file";
+import * as filesfilter from "./files/filter";
+import Gallery from "./files/gallery";
 import RequestModal from "./files/requestmodal";
 import ScrollState from "./files/scrollstate";
+import { REMOVALS } from "./files/tracker";
+import Upload from "./files/upload";
+import registry from "./registry";
 import Scroller from "./scroller";
+import {
+    PromisePool,
+    debounce,
+    dom,
+    idle,
+    iter,
+    naturalCaseSort,
+    riter,
+    sort,
+} from "./util";
 
 const ROBOCOPFILES =
   /^(?:thumbs.*\.db|\.ds_store.*|.*\.ds_store|.\tthn|desktop.*.ini)$/i;
@@ -32,12 +32,14 @@ const BATCH_PREFS_PREFIX = "dicefiles:downloadprefs:room:";
 const BATCH_QUEUE_PREFIX = "dicefiles:downloadqueue:room:";
 const DOWNLOADED_NAMES_PREFIX = "dicefiles:downloadednames:room:";
 
-export default new class Files extends EventEmitter {
+export default new (class Files extends EventEmitter {
   constructor() {
     super();
     this.el = document.querySelector("#files");
     this.scroller = new Scroller(
-      this.el, document.querySelector("#filelist-scroller"));
+      this.el,
+      document.querySelector("#filelist-scroller"),
+    );
     this.ubutton = document.querySelector("#upload-button");
     this.gallery = new Gallery(this);
     this.filterButtons = Array.from(document.querySelectorAll(".filterbtn"));
@@ -56,6 +58,7 @@ export default new class Files extends EventEmitter {
     this.newFiles = false;
     this.selectionStart = null;
     this.galleryMode = false;
+    this.linksMode = false;
     this.newFileKeys = new Set();
     this.forceNewKeys = new Set();
     this.newSinceServerTime = 0;
@@ -73,6 +76,7 @@ export default new class Files extends EventEmitter {
     this.batchRestoreChecked = false;
     this.downloadedNameSet = null;
     this.fileStyleLocked = false;
+    this._pendingLinksRestore = false;
 
     this.onfiles = this.onfiles.bind(this);
     this.filesQueue = [];
@@ -84,7 +88,9 @@ export default new class Files extends EventEmitter {
     this.addUploadElements = APOOL.wrap(this.addUploadElements);
     this.uploadOne = PromisePool.wrapNew(1, this, this.uploadOne);
     this.delayedUpdateStatus = debounce(
-      idle(this.updateStatus.bind(this)), 100);
+      idle(this.updateStatus.bind(this)),
+      100,
+    );
     this.setFileStyle = idle(this.setFileStyle);
     this.onfilterbutton = this.onfilterbutton.bind(this);
     this.onuploadbutton = this.onuploadbutton.bind(this);
@@ -99,14 +105,19 @@ export default new class Files extends EventEmitter {
     addEventListener("dragleave", this.ondragleave, true);
     addEventListener("mouseout", this.ondragleave, true);
 
-    this.filterButtons.forEach(e => {
+    this.filterButtons.forEach((e) => {
       e.addEventListener("click", this.onfilterbutton, true);
       e.addEventListener("contextmenu", this.onfilterbutton, true);
     });
     this.filter.addEventListener(
-      "input", debounce(idle(this.onfilter.bind(this), 2000), 200));
+      "input",
+      debounce(idle(this.onfilter.bind(this), 2000), 200),
+    );
     this.filterClear.addEventListener(
-      "click", this.clearFilter.bind(this), true);
+      "click",
+      this.clearFilter.bind(this),
+      true,
+    );
 
     this.ubutton.addEventListener("change", this.onuploadbutton.bind(this));
 
@@ -118,34 +129,49 @@ export default new class Files extends EventEmitter {
     this.el.addEventListener("click", this.onclick.bind(this));
     this.el.addEventListener("contextmenu", this.onclick.bind(this));
     this.el.addEventListener("scroll", this.onscroll.bind(this), {
-      passive: true
+      passive: true,
     });
 
-    document.querySelector("#selectall").addEventListener(
-      "click", this.selectAll.bind(this));
-    document.querySelector("#clearselection").addEventListener(
-      "click", this.clearSelection.bind(this));
+    document
+      .querySelector("#selectall")
+      .addEventListener("click", this.selectAll.bind(this));
+    document
+      .querySelector("#clearselection")
+      .addEventListener("click", this.clearSelection.bind(this));
     this.downloadNewEl.addEventListener("click", this.downloadNew.bind(this));
     this.downloadAllEl.addEventListener("click", this.downloadAll.bind(this));
-    this.createRequestEl.addEventListener("click", this.createRequest.bind(this));
+    this.createRequestEl.addEventListener(
+      "click",
+      this.createRequest.bind(this),
+    );
 
     const actions = [
-      "banFiles", "unbanFiles",
-      "whitelist", "blacklist",
-      "trash", "nailOff", "nailOn"];
+      "banFiles",
+      "unbanFiles",
+      "whitelist",
+      "blacklist",
+      "trash",
+      "nailOff",
+      "nailOn",
+    ];
     for (const a of actions) {
       const e = document.querySelector(`#${a.toLowerCase()}`);
       e.addEventListener("click", this[a].bind(this));
       this[`${a}El`] = e;
     }
 
+    this.linkModeEl = document.querySelector("#linkmode");
+    if (this.linkModeEl) {
+      this.linkModeEl.addEventListener("click", this.linkMode.bind(this));
+    }
+
     Object.seal(this);
   }
 
   get visible() {
-    return Array.from(document.querySelectorAll(".file:not(.upload)")).
-      map(e => this.elmap.get(e)).
-      filter(e => e);
+    return Array.from(document.querySelectorAll(".file:not(.upload)"))
+      .map((e) => this.elmap.get(e))
+      .filter((e) => e);
   }
 
   init() {
@@ -158,10 +184,13 @@ export default new class Files extends EventEmitter {
       this.downloadedNamesKey = `${DOWNLOADED_NAMES_PREFIX}${roomid}`;
     }
     const configuredMaxConcurrent = Number(
-      registry.config && registry.config.get("downloadMaxConcurrent"));
+      registry.config && registry.config.get("downloadMaxConcurrent"),
+    );
     if (Number.isFinite(configuredMaxConcurrent)) {
       this.scriptSettings.maxConcurrentDownloads = Math.min(
-        4, Math.max(1, configuredMaxConcurrent));
+        4,
+        Math.max(1, configuredMaxConcurrent),
+      );
     }
     this.initNewState();
     this.restoreViewMode();
@@ -169,8 +198,8 @@ export default new class Files extends EventEmitter {
     registry.socket.on("files-deleted", this.onfilesdeleted);
     registry.socket.on("files-updated", this.onfilesupdated);
     registry.roomie.on("tooltip-hidden", () => this.adjustEmpty());
-    addEventListener("pagehide", this.onleave, {passive: true});
-    addEventListener("beforeunload", this.onleave, {passive: true});
+    addEventListener("pagehide", this.onleave, { passive: true });
+    addEventListener("beforeunload", this.onleave, { passive: true });
   }
 
   initNewState() {
@@ -185,19 +214,20 @@ export default new class Files extends EventEmitter {
       const parsed = JSON.parse(raw);
       const v = Number(parsed && parsed.lastSeenServerTime);
       this.newSinceServerTime = Number.isFinite(v) && v > 0 ? v : fallback;
-    }
-    catch (ex) {
+    } catch (ex) {
       this.newSinceServerTime = fallback;
     }
   }
 
   persistNewState() {
     try {
-      localStorage.setItem(this.newStateKey, JSON.stringify({
-        lastSeenServerTime: registry.roomie.toServerTime(Date.now()),
-      }));
-    }
-    catch (ex) {
+      localStorage.setItem(
+        this.newStateKey,
+        JSON.stringify({
+          lastSeenServerTime: registry.roomie.toServerTime(Date.now()),
+        }),
+      );
+    } catch (ex) {
       // ignored
     }
   }
@@ -213,14 +243,17 @@ export default new class Files extends EventEmitter {
   }
 
   persistViewMode() {
-    const value = this.galleryMode ? "gallery" : "list";
+    const value = this.linksMode
+      ? "links"
+      : this.galleryMode
+        ? "gallery"
+        : "list";
     try {
       if (this.viewModeKey) {
         localStorage.setItem(this.viewModeKey, value);
       }
       localStorage.setItem(VIEW_MODE_GLOBAL_KEY, value);
-    }
-    catch (ex) {
+    } catch (ex) {
       // ignored
     }
   }
@@ -229,18 +262,23 @@ export default new class Files extends EventEmitter {
     let mode = null;
     try {
       mode = this.viewModeKey && localStorage.getItem(this.viewModeKey);
-      if (mode !== "gallery" && mode !== "list") {
+      if (mode !== "gallery" && mode !== "list" && mode !== "links") {
         mode = localStorage.getItem(VIEW_MODE_GLOBAL_KEY);
       }
-    }
-    catch (ex) {
+    } catch (ex) {
       mode = null;
     }
-    if (mode !== "gallery" && mode !== "list") {
+    if (mode !== "gallery" && mode !== "list" && mode !== "links") {
       return;
     }
     this.viewModeRestored = true;
-    this.applyViewMode(mode === "gallery", false);
+    if (mode === "links") {
+      // Links mode restore is deferred to after links.init() runs
+      // We store the intent and apply after init
+      this._pendingLinksRestore = true;
+    } else {
+      this.applyViewMode(mode === "gallery", false);
+    }
   }
 
   isFileNew(file, existing) {
@@ -280,21 +318,20 @@ export default new class Files extends EventEmitter {
   }
 
   onclick(e) {
-    const {target: el} = e;
+    const { target: el } = e;
     if (el.classList.contains("tag")) {
       e.preventDefault();
       e.stopPropagation();
-      const {tag, tagValue} = el.dataset;
-      let val = /[\s'"]/.test(tagValue) ?
-        `'${tagValue.replace(/'/g, "\\'")}'` :
-        tagValue;
+      const { tag, tagValue } = el.dataset;
+      let val = /[\s'"]/.test(tagValue)
+        ? `'${tagValue.replace(/'/g, "\\'")}'`
+        : tagValue;
       if (val === "true") {
         val = "";
       }
       if (e.button || e.shiftKey) {
         this.filter.value = `${this.filter.value} -${tag}:${val}`.trim();
-      }
-      else {
+      } else {
         this.filter.value = `${tag}:${val}`.trim();
       }
       this.doFilter();
@@ -313,21 +350,20 @@ export default new class Files extends EventEmitter {
     e.stopPropagation();
 
     try {
-      const {target: btn} = e;
-      const {filterButtons: btns} = this;
+      const { target: btn } = e;
+      const { filterButtons: btns } = this;
       if (e.button) {
         const anyEnabled = btns.some(
-          e => e !== btn && !e.classList.contains("disabled"));
-        btns.forEach(e => {
+          (e) => e !== btn && !e.classList.contains("disabled"),
+        );
+        btns.forEach((e) => {
           e.classList[e === btn || !anyEnabled ? "remove" : "add"]("disabled");
         });
-      }
-      else {
+      } else {
         const act = btn.classList.contains("disabled") ? "remove" : "add";
         btn.classList[act]("disabled");
       }
-    }
-    catch (ex) {
+    } catch (ex) {
       console.error(ex);
     }
     this.doFilter();
@@ -338,7 +374,7 @@ export default new class Files extends EventEmitter {
   }
 
   clearFilter() {
-    this.filterButtons.forEach(e => e.classList.remove("disabled"));
+    this.filterButtons.forEach((e) => e.classList.remove("disabled"));
     this.filter.value = "";
 
     this.doFilter();
@@ -351,16 +387,18 @@ export default new class Files extends EventEmitter {
 
   doFilter() {
     this.filterFunc = filesfilter.toFilterFuncs(
-      this.filterButtons, this.filter.value);
+      this.filterButtons,
+      this.filter.value,
+    );
     this.filterClear.classList[this.filterFunc ? "remove" : "add"]("disabled");
     REMOVALS.trigger();
     if (!this.applying) {
-      this.applying = this.applyFilter().then(() => this.applying = null);
+      this.applying = this.applyFilter().then(() => (this.applying = null));
     }
   }
 
   filtered(files) {
-    const {filterFunc} = this;
+    const { filterFunc } = this;
     if (filterFunc === filesfilter.NONE) {
       return [];
     }
@@ -374,16 +412,16 @@ export default new class Files extends EventEmitter {
     const files = this.filtered(this.files);
     if (!files || !files.length) {
       return APOOL.schedule(null, () => {
-        this.visible.forEach(e => e.el.parentElement.removeChild(e.el));
+        this.visible.forEach((e) => e.el.parentElement.removeChild(e.el));
       });
     }
 
-    const {visible} = this;
+    const { visible } = this;
     const fileset = new Set(files);
     // Remove now hidden
     let diff = false;
     const remove = [];
-    visible.forEach(e => {
+    visible.forEach((e) => {
       if (fileset.has(e)) {
         return;
       }
@@ -418,8 +456,7 @@ export default new class Files extends EventEmitter {
   updateStatus() {
     if (!this.files.length) {
       this.filterStatus.classList.add("hidden");
-    }
-    else {
+    } else {
       const text = `${this.visible.length} of ${this.files.length} files`;
       if (this.filterStatus.textContent !== text) {
         this.filterStatus.textContent = text;
@@ -433,19 +470,20 @@ export default new class Files extends EventEmitter {
 
     if (!this.newFiles) {
       this.newStatus.classList.add("hidden");
-    }
-    else {
+    } else {
       this.newStatus.classList.remove("hidden");
     }
     this.updateDownloadButtons();
   }
 
   get allDownloadable() {
-    return this.files.filter(f => !f.expired && !(f.meta && f.meta.request));
+    return this.files.filter((f) => !f.expired && !(f.meta && f.meta.request));
   }
 
   get newDownloadable() {
-    return this.allDownloadable.filter(f => f.el.classList.contains("is-new"));
+    return this.allDownloadable.filter((f) =>
+      f.el.classList.contains("is-new"),
+    );
   }
 
   updateDownloadButtons() {
@@ -475,38 +513,49 @@ export default new class Files extends EventEmitter {
       await registry.init();
       const modal = new RequestModal();
       const payload = await registry.roomie.showModal(modal);
-      const text = typeof payload === "string" ?
-        payload.trim() :
-        (payload && payload.text || "").trim();
-      const requestUrl = payload && typeof payload === "object" ?
-        (payload.url || "").trim() :
-        "";
-      const requestImage = payload && typeof payload === "object" ?
-        (payload.requestImage || "").trim() :
-        "";
+      const text =
+        typeof payload === "string"
+          ? payload.trim()
+          : ((payload && payload.text) || "").trim();
+      const requestUrl =
+        payload && typeof payload === "object"
+          ? (payload.url || "").trim()
+          : "";
+      const requestImage =
+        payload && typeof payload === "object"
+          ? (payload.requestImage || "").trim()
+          : "";
       if (!text) {
         return;
       }
       const ack = await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error("Request timeout")), 10000);
-        registry.socket.emit("request", {
-          text,
-          url: requestUrl,
-          requestImage,
-        }, rv => {
-          clearTimeout(timeout);
-          resolve(rv || {});
-        });
+        const timeout = setTimeout(
+          () => reject(new Error("Request timeout")),
+          10000,
+        );
+        registry.socket.emit(
+          "request",
+          {
+            text,
+            url: requestUrl,
+            requestImage,
+          },
+          (rv) => {
+            clearTimeout(timeout);
+            resolve(rv || {});
+          },
+        );
       });
       if (ack.err) {
         throw new Error(ack.err);
       }
-    }
-    catch (ex) {
+    } catch (ex) {
       if (!ex || ex.message === "cancelled") {
         return;
       }
-      registry.messages.addSystemMessage(`Failed to create request: ${ex.message || ex}`);
+      registry.messages.addSystemMessage(
+        `Failed to create request: ${ex.message || ex}`,
+      );
     }
   }
 
@@ -518,8 +567,7 @@ export default new class Files extends EventEmitter {
       }
       const parsed = JSON.parse(raw);
       return parsed && typeof parsed === "object" ? parsed : fallback;
-    }
-    catch (ex) {
+    } catch (ex) {
       return fallback;
     }
   }
@@ -527,24 +575,32 @@ export default new class Files extends EventEmitter {
   writeLocalJSON(key, value) {
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    }
-    catch (ex) {
+    } catch (ex) {
       // ignored
     }
   }
 
   getDownloadPrefs() {
-    return Object.assign({
-      skipExisting: true,
-      maxRetries: 2,
-      maxConcurrent: 4,
-    }, this.readLocalJSON(this.batchPrefsKey, {}));
+    return Object.assign(
+      {
+        skipExisting: true,
+        maxRetries: 2,
+        maxConcurrent: 4,
+      },
+      this.readLocalJSON(this.batchPrefsKey, {}),
+    );
   }
 
   saveDownloadPrefs(prefs) {
     const merged = Object.assign(this.getDownloadPrefs(), prefs || {});
-    merged.maxRetries = Math.max(0, Math.min(5, Number(merged.maxRetries) || 0));
-    merged.maxConcurrent = Math.max(1, Math.min(4, Number(merged.maxConcurrent) || 4));
+    merged.maxRetries = Math.max(
+      0,
+      Math.min(5, Number(merged.maxRetries) || 0),
+    );
+    merged.maxConcurrent = Math.max(
+      1,
+      Math.min(4, Number(merged.maxConcurrent) || 4),
+    );
     merged.skipExisting = !!merged.skipExisting;
     this.writeLocalJSON(this.batchPrefsKey, merged);
     return merged;
@@ -554,15 +610,16 @@ export default new class Files extends EventEmitter {
     if (this.downloadedNameSet) {
       return this.downloadedNameSet;
     }
-    const data = this.readLocalJSON(this.downloadedNamesKey, {names: []});
+    const data = this.readLocalJSON(this.downloadedNamesKey, { names: [] });
     this.downloadedNameSet = new Set(
-      (data.names || []).map(e => e.toString().toLowerCase()));
+      (data.names || []).map((e) => e.toString().toLowerCase()),
+    );
     return this.downloadedNameSet;
   }
 
   persistDownloadedNames() {
     const names = Array.from(this.getDownloadedNameSet()).slice(-300);
-    this.writeLocalJSON(this.downloadedNamesKey, {names});
+    this.writeLocalJSON(this.downloadedNamesKey, { names });
   }
 
   markFilenameDownloaded(name) {
@@ -586,15 +643,22 @@ export default new class Files extends EventEmitter {
       title,
       skipExisting: !!options.skipExisting,
       maxRetries: Math.max(0, Math.min(5, Number(options.maxRetries) || 0)),
-      maxConcurrent: Math.max(1, Math.min(4, Number(options.maxConcurrent) || 4)),
-      remainingKeys: files.map(f => f.key),
+      maxConcurrent: Math.max(
+        1,
+        Math.min(4, Number(options.maxConcurrent) || 4),
+      ),
+      remainingKeys: files.map((f) => f.key),
       createdAt: Date.now(),
       started: false,
     };
   }
 
   persistBatchQueue(state) {
-    if (!state || !Array.isArray(state.remainingKeys) || !state.remainingKeys.length) {
+    if (
+      !state ||
+      !Array.isArray(state.remainingKeys) ||
+      !state.remainingKeys.length
+    ) {
       this.clearBatchQueue();
       return;
     }
@@ -608,8 +672,7 @@ export default new class Files extends EventEmitter {
   clearBatchQueue() {
     try {
       localStorage.removeItem(this.batchQueueKey);
-    }
-    catch (ex) {
+    } catch (ex) {
       // ignored
     }
   }
@@ -620,22 +683,27 @@ export default new class Files extends EventEmitter {
     }
     this.batchRestoreChecked = true;
     const queue = this.loadBatchQueue();
-    if (!queue || !Array.isArray(queue.remainingKeys) || !queue.remainingKeys.length) {
+    if (
+      !queue ||
+      !Array.isArray(queue.remainingKeys) ||
+      !queue.remainingKeys.length
+    ) {
       return;
     }
     if (!queue.started) {
       this.clearBatchQueue();
       return;
     }
-    const files = queue.remainingKeys.
-      map(key => this.filemap.get(key)).
-      filter(f => f && !f.expired && !(f.meta && f.meta.request));
+    const files = queue.remainingKeys
+      .map((key) => this.filemap.get(key))
+      .filter((f) => f && !f.expired && !(f.meta && f.meta.request));
     if (!files.length) {
       this.clearBatchQueue();
       return;
     }
     registry.messages.addSystemMessage(
-      `Resuming previous batch download (${files.length} file${files.length === 1 ? "" : "s"}).`);
+      `Resuming previous batch download (${files.length} file${files.length === 1 ? "" : "s"}).`,
+    );
     await this.downloadBatch(files, queue.title || "Download Resume", {
       resumeState: queue,
       restored: true,
@@ -648,26 +716,32 @@ export default new class Files extends EventEmitter {
     }
     this.batchRunning = true;
     const prefs = this.getDownloadPrefs();
-    const queueState = options.resumeState || this.createBatchQueueState(targets, title, {
-      skipExisting: prefs.skipExisting,
-      maxRetries: prefs.maxRetries,
-      maxConcurrent: prefs.maxConcurrent,
-    });
+    const queueState =
+      options.resumeState ||
+      this.createBatchQueueState(targets, title, {
+        skipExisting: prefs.skipExisting,
+        maxRetries: prefs.maxRetries,
+        maxConcurrent: prefs.maxConcurrent,
+      });
     const modal = new DownloadBatchModal(title, targets.length, {
       skipExisting: queueState.skipExisting,
       retries: queueState.maxRetries,
       concurrent: queueState.maxConcurrent,
-      onOptionsChange: values => {
+      onOptionsChange: (values) => {
         this.saveDownloadPrefs(values);
         queueState.skipExisting = !!values.skipExisting;
         queueState.maxRetries = Math.max(
-          0, Math.min(5, Number(values.maxRetries) || 0));
+          0,
+          Math.min(5, Number(values.maxRetries) || 0),
+        );
         queueState.maxConcurrent = Math.max(
-          1, Math.min(4, Number(values.maxConcurrent) || 4));
+          1,
+          Math.min(4, Number(values.maxConcurrent) || 4),
+        );
         if (queueState.started) {
           this.persistBatchQueue(queueState);
         }
-      }
+      },
     });
 
     const modalPromise = registry.roomie.showModal(modal).catch(() => {
@@ -677,13 +751,16 @@ export default new class Files extends EventEmitter {
       const values = await modal.waitForStart();
       queueState.skipExisting = !!values.skipExisting;
       queueState.maxRetries = Math.max(
-        0, Math.min(5, Number(values.maxRetries) || 0));
+        0,
+        Math.min(5, Number(values.maxRetries) || 0),
+      );
       queueState.maxConcurrent = Math.max(
-        1, Math.min(4, Number(values.maxConcurrent) || 4));
+        1,
+        Math.min(4, Number(values.maxConcurrent) || 4),
+      );
       this.saveDownloadPrefs(values);
       this.persistBatchQueue(queueState);
-    }
-    catch (ex) {
+    } catch (ex) {
       // Cancelled before start
       modal.cancelRequested = true;
       this.clearBatchQueue();
@@ -696,8 +773,9 @@ export default new class Files extends EventEmitter {
     queueState.startedAt = Date.now();
     this.persistBatchQueue(queueState);
 
-    const workers = this.runBatchDownload(targets, modal, queueState).
-      catch(console.error);
+    const workers = this.runBatchDownload(targets, modal, queueState).catch(
+      console.error,
+    );
     await workers;
     await modalPromise;
     this.batchRunning = false;
@@ -719,19 +797,23 @@ export default new class Files extends EventEmitter {
       Math.max(
         1,
         Number(queueState.maxConcurrent) ||
-        this.scriptSettings.maxConcurrentDownloads),
+          this.scriptSettings.maxConcurrentDownloads,
+      ),
       4,
-      total);
+      total,
+    );
 
-    const removeRemaining = key => {
+    const removeRemaining = (key) => {
       if (!queueState || !Array.isArray(queueState.remainingKeys)) {
         return;
       }
-      queueState.remainingKeys = queueState.remainingKeys.filter(k => k !== key);
+      queueState.remainingKeys = queueState.remainingKeys.filter(
+        (k) => k !== key,
+      );
       this.persistBatchQueue(queueState);
     };
 
-    const worker = async() => {
+    const worker = async () => {
       for (;;) {
         if (modal.cancelRequested) {
           return;
@@ -753,7 +835,9 @@ export default new class Files extends EventEmitter {
         }
 
         const maxRetries = Math.max(
-          0, Math.min(5, Number(queueState.maxRetries) || 0));
+          0,
+          Math.min(5, Number(queueState.maxRetries) || 0),
+        );
         const maxAttempts = maxRetries + 1;
         let success = false;
         let lastErr = null;
@@ -761,7 +845,8 @@ export default new class Files extends EventEmitter {
           modal.upsertFileStatus(
             file.name,
             attempt === 1 ? "running" : "retrying",
-            attempt);
+            attempt,
+          );
           try {
             await this.fetchAndTriggerDownload(file);
             done++;
@@ -770,12 +855,15 @@ export default new class Files extends EventEmitter {
             this.markFilenameDownloaded(file.name);
             modal.upsertFileStatus(file.name, "success", attempt);
             break;
-          }
-          catch (ex) {
+          } catch (ex) {
             lastErr = ex;
             if (attempt < maxAttempts) {
               modal.upsertFileStatus(
-                file.name, "retrying", attempt, ex.message || "failed");
+                file.name,
+                "retrying",
+                attempt,
+                ex.message || "failed",
+              );
             }
           }
         }
@@ -787,7 +875,8 @@ export default new class Files extends EventEmitter {
             file.name,
             "failed",
             maxAttempts,
-            (lastErr && lastErr.message) || "download failed");
+            (lastErr && lastErr.message) || "download failed",
+          );
           console.error(`failed to download ${file.name}`, lastErr);
         }
 
@@ -796,7 +885,7 @@ export default new class Files extends EventEmitter {
       }
     };
 
-    await Promise.all(Array.from({length: concurrency}, worker));
+    await Promise.all(Array.from({ length: concurrency }, worker));
     if (!modal.cancelRequested) {
       this.clearBatchQueue();
     }
@@ -804,7 +893,7 @@ export default new class Files extends EventEmitter {
   }
 
   async fetchAndTriggerDownload(file) {
-    const res = await fetch(file.url, {credentials: "same-origin"});
+    const res = await fetch(file.url, { credentials: "same-origin" });
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
     }
@@ -816,13 +905,12 @@ export default new class Files extends EventEmitter {
           href: url,
           download: file.name,
           style: "display:none",
-        }
+        },
       });
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-    }
-    finally {
+    } finally {
       setTimeout(() => URL.revokeObjectURL(url), 2500);
     }
   }
@@ -834,24 +922,23 @@ export default new class Files extends EventEmitter {
       let entries = [];
       if (this.ubutton.webkitEntries && this.ubutton.webkitEntries.length) {
         entries = Array.from(this.ubutton.webkitEntries);
-      }
-      else {
+      } else {
         files = Array.from(this.ubutton.files);
       }
       this.ubutton.parentElement.reset();
       this.queueUploads(entries, files);
-    }
-    catch (ex) {
+    } catch (ex) {
       console.error("failed to handle button upload", ex);
     }
   }
 
   get canUpload() {
-    const disabled = registry.config.get("requireAccounts") &&
+    const disabled =
+      registry.config.get("requireAccounts") &&
       registry.chatbox.role === "white";
-    return !registry.config.get("disabled") &&
-      !disabled &&
-      registry.roomie.connected;
+    return (
+      !registry.config.get("disabled") && !disabled && registry.roomie.connected
+    );
   }
 
   get requestModalOpen() {
@@ -927,7 +1014,7 @@ export default new class Files extends EventEmitter {
       await registry.init();
       const files = [];
       const entries = [];
-      const {dataTransfer: data} = e;
+      const { dataTransfer: data } = e;
       if (data.items && data.items.length) {
         for (const file of Array.from(data.items)) {
           if (file.kind !== "file") {
@@ -949,8 +1036,7 @@ export default new class Files extends EventEmitter {
       }
       console.log(entries, files);
       this.queueUploads(entries, files);
-    }
-    catch (ex) {
+    } catch (ex) {
       console.error("failed to handle drop", ex);
     }
   }
@@ -960,8 +1046,7 @@ export default new class Files extends EventEmitter {
       if (entry.isFile) {
         try {
           files.push(await this.toFile(entry));
-        }
-        catch (ex) {
+        } catch (ex) {
           console.error("failed to get file for entry", entry);
         }
         continue;
@@ -969,8 +1054,7 @@ export default new class Files extends EventEmitter {
       if (entry.isDirectory) {
         try {
           await this.readDir(entry, files);
-        }
-        catch (ex) {
+        } catch (ex) {
           console.error("failed to read directory", entry);
         }
         continue;
@@ -981,8 +1065,8 @@ export default new class Files extends EventEmitter {
 
   async readDir(entry, files) {
     const reader = entry.createReader();
-    await new Promise(resolve => {
-      reader.readEntries(async entries => {
+    await new Promise((resolve) => {
+      reader.readEntries(async (entries) => {
         await this.processEntries(entries, files);
         resolve();
       });
@@ -997,19 +1081,18 @@ export default new class Files extends EventEmitter {
     try {
       await registry.init();
       await this.processEntries(entries, files);
-      sort(files, f => f.name, naturalCaseSort).reverse();
-      const uploads = files.
-        filter(f => !ROBOCOPFILES.test(f.name)).
-        map(f => new Upload(this, f));
+      sort(files, (f) => f.name, naturalCaseSort).reverse();
+      const uploads = files
+        .filter((f) => !ROBOCOPFILES.test(f.name))
+        .map((f) => new Upload(this, f));
       if (!uploads.length) {
         return;
       }
-      uploads.forEach(u => this.uploadOne(u));
+      uploads.forEach((u) => this.uploadOne(u));
       await this.addUploadElements(uploads);
       this.adjustEmpty();
       uploads[0].el.scrollIntoView(false);
-    }
-    catch (ex) {
+    } catch (ex) {
       console.error(ex);
     }
   }
@@ -1034,23 +1117,25 @@ export default new class Files extends EventEmitter {
       }
       const data = this.filesQueue.shift();
 
-      const {replace = false} = data;
+      const { replace = false } = data;
       if (replace) {
         await this.clear();
       }
-      const files = data.files.
-        filter(f => {
+      const files = data.files
+        .filter((f) => {
           const existing = this.filemap.get(f.key);
           if (!existing) {
             return true;
           }
-          existing.update(Object.assign({}, f, {
-            isNew: this.isFileNew(f, existing),
-          }));
+          existing.update(
+            Object.assign({}, f, {
+              isNew: this.isFileNew(f, existing),
+            }),
+          );
           return false;
-        }).
-        map(f => {
-          f = Object.assign({}, f, {isNew: this.isFileNew(f)});
+        })
+        .map((f) => {
+          f = Object.assign({}, f, { isNew: this.isFileNew(f) });
           f = new File(this, f);
           if (f.expired) {
             return null;
@@ -1059,7 +1144,8 @@ export default new class Files extends EventEmitter {
           this.emit("file-added", f, replace);
           this.emit(`file-added-${f.key}`, f, replace);
           return f;
-        }).filter(e => e);
+        })
+        .filter((e) => e);
       if (files.length) {
         await this.addFileElements(files);
       }
@@ -1077,9 +1163,11 @@ export default new class Files extends EventEmitter {
       if (!existing) {
         continue;
       }
-      existing.update(Object.assign({}, f, {
-        isNew: this.isFileNew(f, existing),
-      }));
+      existing.update(
+        Object.assign({}, f, {
+          isNew: this.isFileNew(f, existing),
+        }),
+      );
     }
     this.delayedUpdateStatus();
   }
@@ -1105,11 +1193,10 @@ export default new class Files extends EventEmitter {
   }
 
   clear() {
-    Array.from(document.querySelectorAll(".file:not(.upload)")).forEach(f => {
+    Array.from(this.el.querySelectorAll(".file:not(.upload)")).forEach((f) => {
       try {
         this.el.removeChild(f);
-      }
-      catch (ex) {
+      } catch (ex) {
         // ignored
       }
     });
@@ -1122,8 +1209,7 @@ export default new class Files extends EventEmitter {
   adjustEmpty(forceOn) {
     if (!forceOn && this.el.childElementCount) {
       document.body.classList.remove("empty");
-    }
-    else {
+    } else {
       document.body.classList.add("empty");
     }
   }
@@ -1136,29 +1222,34 @@ export default new class Files extends EventEmitter {
       return;
     }
     const rules = [];
-    const height = getComputedStyle(file.el, null).
-      getPropertyValue("height");
+    const height = getComputedStyle(file.el, null).getPropertyValue("height");
     rules.push(`#files > .file { height: ${height}; }`);
-    const nameHeight = getComputedStyle(file.nameEl, null).
-      getPropertyValue("height");
+    const nameHeight = getComputedStyle(file.nameEl, null).getPropertyValue(
+      "height",
+    );
     rules.push(`#files > .file > .name { height: ${nameHeight}; }`);
-    const iconHeight = getComputedStyle(file.iconEl, null).
-      getPropertyValue("height");
+    const iconHeight = getComputedStyle(file.iconEl, null).getPropertyValue(
+      "height",
+    );
     rules.push(`#files > .file > .icon { height: ${iconHeight}; }`);
-    const tagsHeight = getComputedStyle(file.tagsEl, null).
-      getPropertyValue("height");
+    const tagsHeight = getComputedStyle(file.tagsEl, null).getPropertyValue(
+      "height",
+    );
     rules.push(`#files > .file > .tags { height: ${tagsHeight}; }`);
-    const detailHeight = getComputedStyle(file.detailEl, null).
-      getPropertyValue("height");
+    const detailHeight = getComputedStyle(file.detailEl, null).getPropertyValue(
+      "height",
+    );
     rules.push(`#files > .file > .detail { height: ${detailHeight}; }`);
-    document.body.appendChild(dom("style", {
-      text: rules.join("\n")
-    }));
+    document.body.appendChild(
+      dom("style", {
+        text: rules.join("\n"),
+      }),
+    );
     this.fileStyleLocked = true;
   }
 
   normalizeListRows() {
-    this.visible.forEach(f => {
+    this.visible.forEach((f) => {
       f.el.style.width = "100%";
       f.el.style.maxWidth = "100%";
       f.el.style.flex = "0 0 auto";
@@ -1176,14 +1267,13 @@ export default new class Files extends EventEmitter {
 
   insertFilesIntoDOM(files, remove) {
     if (remove) {
-      remove.forEach(el => el.parentElement.removeChild(el));
+      remove.forEach((el) => el.parentElement.removeChild(el));
     }
-    let head = document.querySelector(".file:not(.upload)");
+    let head = this.el.querySelector(".file:not(.upload)");
     for (const f of this.filtered(files)) {
       if (head) {
         this.el.insertBefore(f.el, head);
-      }
-      else {
+      } else {
         this.el.appendChild(f.el);
         this.setFileStyle(f);
       }
@@ -1200,15 +1290,13 @@ export default new class Files extends EventEmitter {
       // XXX not restore save
       if (!this.files.length) {
         this.files = files;
-        this.filemap = new Map(this.files.map(f => [f.key, f]));
-      }
-      else {
+        this.filemap = new Map(this.files.map((f) => [f.key, f]));
+      } else {
         this.files.push(...files);
         if (files.length > 5) {
-          this.filemap = new Map(this.files.map(f => [f.key, f]));
-        }
-        else {
-          files.forEach(e => this.filemap.set(e.key, e));
+          this.filemap = new Map(this.files.map((f) => [f.key, f]));
+        } else {
+          files.forEach((e) => this.filemap.set(e.key, e));
         }
       }
       this.adjustEmpty();
@@ -1217,9 +1305,9 @@ export default new class Files extends EventEmitter {
       this.adjustEmpty();
       await this.scrollState.pop();
       if (!this.newFiles) {
-        const {scrollTop, offsetTop: ot} = this.el;
+        const { scrollTop, offsetTop: ot } = this.el;
         for (const file of files) {
-          const {offsetHeight, offsetTop} = file.el;
+          const { offsetHeight, offsetTop } = file.el;
           const top = offsetTop - ot;
           const bottom = top + offsetHeight;
           if (bottom <= scrollTop) {
@@ -1231,8 +1319,7 @@ export default new class Files extends EventEmitter {
       if (this.pendingNotificationHighlightKey) {
         this.highlightFromNotification(this.pendingNotificationHighlightKey);
       }
-    }
-    catch (ex) {
+    } catch (ex) {
       console.error(ex);
     }
   }
@@ -1248,9 +1335,8 @@ export default new class Files extends EventEmitter {
     }
     this.pendingNotificationHighlightKey = null;
     try {
-      file.el.scrollIntoView({block: "center", behavior: "smooth"});
-    }
-    catch (ex) {
+      file.el.scrollIntoView({ block: "center", behavior: "smooth" });
+    } catch (ex) {
       file.el.scrollIntoView(false);
     }
     file.el.classList.add("notification-focus");
@@ -1263,15 +1349,14 @@ export default new class Files extends EventEmitter {
   }
 
   sortFiles() {
-    const {visible} = this;
+    const { visible } = this;
     if (!visible.length) {
       return;
     }
     const [head] = visible;
-    sort(visible, e => e.uploaded).
-      reverse();
+    sort(visible, (e) => e.uploaded).reverse();
     let idx = 0;
-    const {el} = this;
+    const { el } = this;
     for (; idx < el.childElementCount; ++idx) {
       if (el.children[idx] === head.el) {
         break;
@@ -1317,8 +1402,7 @@ export default new class Files extends EventEmitter {
           this.files.splice(this.files.indexOf(f), 1);
         }
       }
-    }
-    finally {
+    } finally {
       this.adjustEmpty();
       this.delayedUpdateStatus();
     }
@@ -1329,29 +1413,27 @@ export default new class Files extends EventEmitter {
       for (const u of uploads) {
         this.el.insertBefore(u.el, this.el.firstChild);
       }
-    }
-    catch (ex) {
+    } catch (ex) {
       console.error(ex);
     }
   }
 
   get selection() {
-    return Array.from(document.querySelectorAll(".file.selected")).
-      map(e => this.elmap.get(e)).
-      filter(e => e);
+    return Array.from(document.querySelectorAll(".file.selected"))
+      .map((e) => this.elmap.get(e))
+      .filter((e) => e);
   }
 
   select(file, e) {
-    const {metaKey: meta, ctrlKey: ctrl, shiftKey: shift} = e;
+    const { metaKey: meta, ctrlKey: ctrl, shiftKey: shift } = e;
     // Windows style of engagement
     if (shift) {
-      const {visible} = this;
+      const { visible } = this;
       let startIdx;
       if (!this.selectionStart) {
         [this.selectionStart] = visible;
         startIdx = 0;
-      }
-      else {
+      } else {
         startIdx = visible.indexOf(this.selectionStart);
         if (startIdx < 0) {
           [this.selectionStart] = visible;
@@ -1363,32 +1445,30 @@ export default new class Files extends EventEmitter {
         [startIdx, endIdx] = [endIdx, startIdx];
       }
       this._clearSelection();
-      visible.slice(startIdx, endIdx + 1).
-        forEach(e => e.el.classList.add("selected"));
-    }
-    else if (ctrl || meta) {
+      visible
+        .slice(startIdx, endIdx + 1)
+        .forEach((e) => e.el.classList.add("selected"));
+    } else if (ctrl || meta) {
       file.el.classList.toggle("selected");
-    }
-    else {
+    } else {
       const already = file.el.classList.contains("selected");
       this._clearSelection();
       if (!already) {
         file.el.classList.add("selected");
         this.selectionStart = file;
-      }
-      else {
+      } else {
         this.selectionStart = null;
       }
     }
   }
 
   _clearSelection() {
-    this.selection.forEach(e => e.el.classList.remove("selected"));
+    this.selection.forEach((e) => e.el.classList.remove("selected"));
   }
 
   selectAll() {
     this.selectionStart = null;
-    this.visible.forEach(f => f.el.classList.add("selected"));
+    this.visible.forEach((f) => f.el.classList.add("selected"));
   }
 
   clearSelection() {
@@ -1397,10 +1477,11 @@ export default new class Files extends EventEmitter {
   }
 
   trash() {
-    const {selection} = this;
+    const { selection } = this;
     if (!selection.length) {
       registry.messages.addSystemMessage(
-        "Select some files by (shift-, ctrl-)clicking on their icon first");
+        "Select some files by (shift-, ctrl-)clicking on their icon first",
+      );
       return;
     }
     this.clearSelection();
@@ -1408,19 +1489,22 @@ export default new class Files extends EventEmitter {
   }
 
   trashFiles(files) {
-    registry.socket.emit("trash", files.map(e => e.key).filter(e => e));
+    registry.socket.emit(
+      "trash",
+      files.map((e) => e.key).filter((e) => e),
+    );
   }
 
   subjectsFromSelection() {
-    const {selection} = this;
+    const { selection } = this;
     const subjects = {
       ips: [],
-      accounts: []
+      accounts: [],
     };
     if (!selection.length) {
       return subjects;
     }
-    selection.forEach(f => {
+    selection.forEach((f) => {
       if (f.ip) {
         subjects.ips.push(f.ip);
       }
@@ -1444,8 +1528,7 @@ export default new class Files extends EventEmitter {
   }
 
   blacklist() {
-    const selected = this.selection.
-      map(e => e.key);
+    const selected = this.selection.map((e) => e.key);
     if (!selected.length) {
       return;
     }
@@ -1453,9 +1536,9 @@ export default new class Files extends EventEmitter {
   }
 
   whitelist() {
-    const selected = this.selection.
-      filter(e => e.tagsMap.has("hidden")).
-      map(e => e.key);
+    const selected = this.selection
+      .filter((e) => e.tagsMap.has("hidden"))
+      .map((e) => e.key);
     if (!selected.length) {
       return;
     }
@@ -1466,28 +1549,37 @@ export default new class Files extends EventEmitter {
     const ips = new Set(subjects.ips);
     const accounts = new Set(subjects.accounts);
     const a = accounts.size > 0;
-    const purges = this.files.filter(f => {
+    const purges = this.files.filter((f) => {
       return ips.has(f.ip) || (a && f.meta && accounts.has(f.meta.account));
     });
     this.trashFiles(purges);
   }
 
   applyViewMode(galleryMode, persist = true) {
+    // Deactivate links mode if we're switching back to file view
+    if (this.linksMode) {
+      this.linksMode = false;
+      if (registry.links) registry.links.hide();
+      if (this.linkModeEl) this.linkModeEl.classList.remove("active");
+      this.el.classList.remove("hidden");
+    }
+
     this.galleryMode = !!galleryMode;
     if (this.galleryMode) {
       this.nailOffEl.classList.remove("active");
       this.el.classList.remove("listmode");
       this.nailOnEl.classList.add("active");
       this.el.classList.add("gallerymode");
-      this.visible.forEach(f => {
+      this.visible.forEach((f) => {
         f.el.style.removeProperty("width");
         f.el.style.removeProperty("max-width");
         f.el.style.removeProperty("flex");
       });
 
-      APOOL.schedule(null, () => this.visible.forEach(f => f.adjustPreview()));
-    }
-    else {
+      APOOL.schedule(null, () =>
+        this.visible.forEach((f) => f.adjustPreview()),
+      );
+    } else {
       this.nailOffEl.classList.add("active");
       this.el.classList.add("listmode");
       this.nailOnEl.classList.remove("active");
@@ -1502,6 +1594,32 @@ export default new class Files extends EventEmitter {
     APOOL.schedule(null, () => this.scroller.update());
   }
 
+  linkMode() {
+    if (this.linksMode) {
+      // Toggle off — restore previous list/gallery state
+      this.linksMode = false;
+      if (registry.links) registry.links.hide();
+      if (this.linkModeEl) this.linkModeEl.classList.remove("active");
+      this.el.classList.remove("hidden");
+      // Restore correct nail active state
+      if (this.galleryMode) {
+        this.nailOnEl.classList.add("active");
+      } else {
+        this.nailOffEl.classList.add("active");
+      }
+      this.persistViewMode();
+      return;
+    }
+    // Activate links mode — deactivate list/gallery nail buttons
+    this.nailOffEl.classList.remove("active");
+    this.nailOnEl.classList.remove("active");
+    this.linksMode = true;
+    this.el.classList.add("hidden");
+    if (registry.links) registry.links.show();
+    if (this.linkModeEl) this.linkModeEl.classList.add("active");
+    this.persistViewMode();
+  }
+
   nailOff() {
     this.applyViewMode(false, true);
   }
@@ -1513,4 +1631,4 @@ export default new class Files extends EventEmitter {
   async uploadOne(u) {
     await u.upload();
   }
-}();
+})();

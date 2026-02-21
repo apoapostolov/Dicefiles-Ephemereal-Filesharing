@@ -119,7 +119,10 @@ export default class Gallery {
   close() {
     // Unhook navigation (see .open for counterpart)
     document.body.removeEventListener("keydown", this.onpress, true);
-    document.body.removeEventListener("wheel", this.onpress, true);
+    document.body.removeEventListener("wheel", this.onwheel, {
+      passive: false,
+      capture: true,
+    });
 
     // Turn off gallery mode and garbage collect
     this.el.parentElement.classList.remove("gallery");
@@ -268,7 +271,10 @@ export default class Gallery {
 
     // Hook up gallery navigation (see counterpart in .close)
     document.body.addEventListener("keydown", this.onpress, true);
-    document.body.addEventListener("wheel", this.onwheel, true);
+    document.body.addEventListener("wheel", this.onwheel, {
+      passive: false,
+      capture: true,
+    });
     return true;
   }
 }

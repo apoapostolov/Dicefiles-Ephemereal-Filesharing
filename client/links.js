@@ -18,15 +18,16 @@ export default new (class Links extends EventEmitter {
     this.onlinksdeleted = this.onlinksdeleted.bind(this);
     this.onlinksupdated = this.onlinksupdated.bind(this);
     this.onleave = this.onleave.bind(this);
-    this.ontoggle = this.ontoggle.bind(this);
 
-    this.toggleBtn = document.querySelector("#links-toggle");
-    if (this.toggleBtn) {
-      this.toggleBtn.addEventListener("click", this.ontoggle);
-    }
+    // toggleBtn is #linkmode — set by files.js via setToggleBtn()
+    this.toggleBtn = null;
 
     addEventListener("pagehide", this.onleave, { passive: true });
     addEventListener("beforeunload", this.onleave, { passive: true });
+  }
+
+  setToggleBtn(btn) {
+    this.toggleBtn = btn;
   }
 
   init() {
@@ -37,54 +38,26 @@ export default new (class Links extends EventEmitter {
     registry.socket.on("links-deleted", this.onlinksdeleted);
     registry.socket.on("links-updated", this.onlinksupdated);
 
-    // REMOVEME: hardcoded test links for visual style development
-    const _now = Date.now();
-    this.onlinks({
-      replace: true,
-      links: [
-        {
-          id: "_t1",
-          url: "https://github.com/apoapostolov/dicefiles",
-          name: "dicefiles — GitHub",
-          sharer: "testuser",
-          date: _now - 300000,
-          expires: _now + 1e10,
-        },
-        {
-          id: "_t2",
-          url: "https://developer.mozilla.org/en-US/docs/Web/CSS",
-          name: "CSS: Cascading Style Sheets | MDN Web Docs",
-          sharer: "anon",
-          date: _now - 60000,
-          expires: _now + 1e10,
-        },
-        {
-          id: "_t3",
-          url: "https://www.example.com/very/long/path/that/should/be/truncated/in/the/display/column/properly",
-          name: "",
-          sharer: "longnick_user",
-          date: _now - 1800000,
-          expires: _now + 1e10,
-        },
-        {
-          id: "_t4",
-          url: "https://news.ycombinator.com",
-          name: "Hacker News",
-          sharer: "anon",
-          date: _now - 7200000,
-          expires: _now + 1e10,
-        },
-        {
-          id: "_t5",
-          url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-          name: "Rick Astley — Never Gonna Give You Up",
-          sharer: "testuser",
-          date: _now - 10000,
-          expires: _now + 1e10,
-        },
-      ],
-    });
-    // END REMOVEME
+    // Request the current room links now that the handler is registered
+    registry.socket.emit("getlinks");
+
+    // Restore links mode if files.js marked it pending
+    if (registry.files && registry.files._pendingLinksRestore) {
+      registry.files._pendingLinksRestore = false;
+      registry.files.linksMode = true;
+      registry.files.el.classList.add("hidden");
+      this.show();
+      if (registry.files.linkModeEl) {
+        registry.files.linkModeEl.classList.add("active");
+      }
+      // Deactivate list/gallery nail buttons (nailoff starts active in HTML)
+      if (registry.files.nailOffEl) {
+        registry.files.nailOffEl.classList.remove("active");
+      }
+      if (registry.files.nailOnEl) {
+        registry.files.nailOnEl.classList.remove("active");
+      }
+    }
   }
 
   initNewState() {
@@ -121,28 +94,21 @@ export default new (class Links extends EventEmitter {
     this.persistNewState();
   }
 
-  ontoggle() {
-    const filesEl = document.querySelector("#files");
-    if (this.el.classList.contains("hidden")) {
-      // Show links archive
-      this.el.classList.remove("hidden");
-      // Lazily create the Scroller now that #links is visible
-      if (!this.scroller) {
-        this.scroller = new Scroller(
-          this.el,
-          document.querySelector("#filelist-scroller"),
-        );
-      }
-      filesEl.classList.add("hidden");
-      document.body.classList.add("links-mode");
-      if (this.toggleBtn) this.toggleBtn.classList.add("active");
-    } else {
-      // Restore files view
-      this.el.classList.add("hidden");
-      filesEl.classList.remove("hidden");
-      document.body.classList.remove("links-mode");
-      if (this.toggleBtn) this.toggleBtn.classList.remove("active");
+  show() {
+    // Lazily create the Scroller now that #links is visible
+    if (!this.scroller) {
+      this.scroller = new Scroller(
+        this.el,
+        document.querySelector("#filelist-scroller"),
+      );
     }
+    this.el.classList.remove("hidden");
+    document.body.classList.add("links-mode");
+  }
+
+  hide() {
+    this.el.classList.add("hidden");
+    document.body.classList.remove("links-mode");
   }
 
   getRoomId() {
@@ -182,23 +148,34 @@ export default new (class Links extends EventEmitter {
       el.classList.add("is-new");
     }
 
-    // Name column
+    // Name column: primary line (name + NEW pill) stacked above URL subtitle
     const nameEl = document.createElement("span");
     nameEl.className = "name";
+
+    const namePrimaryEl = document.createElement("span");
+    namePrimaryEl.className = "name-primary";
 
     const nameTextEl = document.createElement("span");
     nameTextEl.className = "name-text";
     nameTextEl.textContent = link.name || link.url;
-    nameEl.appendChild(nameTextEl);
+    namePrimaryEl.appendChild(nameTextEl);
 
     const newPill = document.createElement("span");
     newPill.className = "file-new-pill";
     newPill.textContent = "NEW!";
-    nameEl.appendChild(newPill);
+    namePrimaryEl.appendChild(newPill);
+
+    nameEl.appendChild(namePrimaryEl);
+
+    const urlSubEl = document.createElement("span");
+    urlSubEl.className = "url-sub";
+    urlSubEl.textContent = link.url || "";
+    urlSubEl.title = link.url || "";
+    nameEl.appendChild(urlSubEl);
 
     el.appendChild(nameEl);
 
-    // Tags (sharer)
+    // Tags (sharer pill)
     const tagsEl = document.createElement("span");
     tagsEl.className = "tags";
 
@@ -209,17 +186,9 @@ export default new (class Links extends EventEmitter {
 
     el.appendChild(tagsEl);
 
-    // Detail column (URL + age)
+    // Detail column: age only
     const detailEl = document.createElement("span");
     detailEl.className = "detail";
-
-    const urlSpan = document.createElement("span");
-    urlSpan.className = "url-display";
-    const rawUrl = link.url || "";
-    urlSpan.textContent =
-      rawUrl.length > 48 ? rawUrl.substring(0, 45) + "…" : rawUrl;
-    urlSpan.title = rawUrl;
-    detailEl.appendChild(urlSpan);
 
     const ageSpan = document.createElement("span");
     ageSpan.className = "ttl";
