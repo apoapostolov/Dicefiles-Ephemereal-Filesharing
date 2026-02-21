@@ -154,6 +154,8 @@ For reliable file previews (especially PDFs), install:
 ```bash
 sudo apt update
 sudo apt install -y exiftool ffmpeg graphicsmagick ghostscript
+
+*If you cannot install some of these utilities, the server will still run. “Preview” assets simply won’t be generated and your gallery will fall back to the generic file icon — there are no crashes.*
 ```
 
 Notes:
