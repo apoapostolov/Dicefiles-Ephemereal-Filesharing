@@ -11,6 +11,7 @@ mod.log
 node_modules/
 yarn-error.log
 uploads/
+.vscode/
 /.project
 dump.rdb
 AGENTS.md
@@ -19,3 +20,5 @@ DEVELOPMENT_LOG.md
 UI_STYLE.md
 
 ACHIEVEMENT_SYSTEM.md
+server.log
+ops.log
