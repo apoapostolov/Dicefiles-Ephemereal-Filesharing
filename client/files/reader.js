@@ -3,7 +3,7 @@
 import { dom, nukeEvent } from "../util";
 
 /**
- * Streaming PDF / EPUB / MOBI in-page reader.
+ * Streaming PDF / EPUB / MOBI / CBZ in-page reader.
  *
  * PDF rendering: Mozilla PDF.js (Apache-2.0 / FOSS)
  *   - Streams pages via HTTP Range requests
@@ -14,6 +14,9 @@ import { dom, nukeEvent } from "../util";
  *
  * MOBI rendering: native — @lingo-reader/mobi-parser (browser build),
  *   returns chapter HTML with blob: image URLs, rendered in a sandboxless iframe.
+ *
+ * CBZ rendering: native — fetches each page as a server-transcoded JPEG from
+ *   /api/v1/comic/:key/page/:n, displays one page at a time, preloads adjacent.
  */
 
 // Append the client build version so the browser fetches a fresh copy
@@ -61,6 +64,14 @@ function getReadableType(file) {
   }
   if (t === "MOBI" || /\.(mobi|azw|azw3)$/i.test(n)) {
     return "mobi";
+  }
+  if (
+    t === "CBZ" ||
+    t === "CBR" ||
+    t === "CBT" ||
+    /\.(cbz|cbr|cbt)$/i.test(n)
+  ) {
+    return "comic";
   }
   return null;
 }
@@ -824,6 +835,125 @@ class BookReader {
   }
 }
 
+// ── Comic reader ──────────────────────────────────────────────────────────────
+
+/**
+ * Paged comic book reader for CBZ archives.
+ *
+ * Pages are fetched on-demand from /api/v1/comic/:key/page/:n (server-side
+ * JPEG transcode, 1 400 px width cap).  Adjacent pages are preloaded into
+ * the browser image cache after every navigation.
+ *
+ * Manga mode: calling setMangaMode(true) swaps left/right so that "next"
+ * physically moves to the left and "previous" to the right, matching right-to-
+ * left Japanese reading order without changing server-side page numbering.
+ */
+class ComicReader {
+  constructor(container, infoEl) {
+    this.container = container;
+    this.infoEl = infoEl;
+    this._key = null;
+    this._totalPages = 0;
+    this._currentPage = 0; // 0-indexed
+    this._mangaMode = false;
+    this._imgEl = null;
+    this._destroyed = false;
+  }
+
+  /** Extract the upload key from a file href like "/g/<key>" or "/g/<key>/<name>". */
+  static _keyFromFile(file) {
+    const parts = ((file && file.href) || "").split("/").filter(Boolean);
+    // href is "/g/<key>" or "/g/<key>/<name>" — key is right after "g"
+    const gi = parts.indexOf("g");
+    return gi >= 0 ? parts[gi + 1] || null : parts[parts.length - 1] || null;
+  }
+
+  async open(file) {
+    this._key = ComicReader._keyFromFile(file);
+    dbg("ComicReader.open() key =", this._key);
+    if (!this._key) {
+      throw new Error("Cannot determine upload key from file href");
+    }
+
+    dbgShow(this.container, `Loading comic: ${file.name}`);
+
+    const resp = await fetch(`/api/v1/comic/${this._key}/index`);
+    if (!resp.ok) {
+      throw new Error(`Comic index fetch failed: HTTP ${resp.status}`);
+    }
+    const { pages } = await resp.json();
+    this._totalPages = pages;
+    dbg("ComicReader: pages =", pages);
+
+    if (pages === 0) {
+      throw new Error("Comic archive has no readable pages");
+    }
+
+    this.container.textContent = "";
+    this._imgEl = dom("img", { classes: ["reader-comic-page"] });
+    this._imgEl.alt = "";
+    this.container.appendChild(this._imgEl);
+
+    await this._showPage(0);
+  }
+
+  async _showPage(n) {
+    if (this._destroyed) return;
+    const clamped = Math.max(0, Math.min(n, this._totalPages - 1));
+    this._currentPage = clamped;
+    this._updateInfo();
+
+    if (this._imgEl) {
+      this._imgEl.src = `/api/v1/comic/${this._key}/page/${clamped}`;
+    }
+    // Preload neighbours into browser cache
+    this._preloadPage(clamped + 1);
+    this._preloadPage(clamped - 1);
+  }
+
+  _preloadPage(n) {
+    if (n >= 0 && n < this._totalPages) {
+      const img = new Image();
+      img.src = `/api/v1/comic/${this._key}/page/${n}`;
+    }
+  }
+
+  /** Advance by one "reading unit" (respects manga RTL mode). */
+  nextPage() {
+    const next = this._mangaMode
+      ? this._currentPage - 1
+      : this._currentPage + 1;
+    this._showPage(next);
+  }
+
+  /** Go back by one "reading unit" (respects manga RTL mode). */
+  prevPage() {
+    const prev = this._mangaMode
+      ? this._currentPage + 1
+      : this._currentPage - 1;
+    this._showPage(prev);
+  }
+
+  /** Toggle manga (right-to-left) reading mode. */
+  setMangaMode(enabled) {
+    this._mangaMode = enabled;
+    this._updateInfo();
+  }
+
+  _updateInfo() {
+    if (this.infoEl) {
+      const rtl = this._mangaMode ? " [RTL]" : "";
+      this.infoEl.textContent = `Page ${this._currentPage + 1} / ${this._totalPages}${rtl}`;
+    }
+  }
+
+  destroy() {
+    this._destroyed = true;
+    this._imgEl = null;
+    this.container.textContent = "";
+  }
+}
+
 // ── Reader UI ─────────────────────────────────────────────────────────────────
 
 export default class Reader {
@@ -838,6 +968,8 @@ export default class Reader {
     this.prevEl = document.querySelector("#reader-prev");
     this.nextEl = document.querySelector("#reader-next");
     this.downloadEl = document.querySelector("#reader-download");
+    this.mangaEl = document.querySelector("#reader-manga");
+    this.webtoonEl = document.querySelector("#reader-webtoon");
 
     // Log which DOM elements were found / missing
     dbg(
@@ -857,6 +989,10 @@ export default class Reader {
     this.file = null;
     this._renderer = null;
     this._readerType = null;
+    this._mangaMode = !!(
+      typeof localStorage !== "undefined" &&
+      localStorage.getItem("reader_manga") === "1"
+    );
 
     this._onKey = this._onKey.bind(this);
 
@@ -870,13 +1006,27 @@ export default class Reader {
       this.zoomOutEl.addEventListener("click", () => this._zoom(-0.25));
     }
     if (this.prevEl) {
-      this.prevEl.addEventListener("click", () => this._bookPage("prev"));
+      this.prevEl.addEventListener("click", () => this._paginatePage("prev"));
     }
     if (this.nextEl) {
-      this.nextEl.addEventListener("click", () => this._bookPage("next"));
+      this.nextEl.addEventListener("click", () => this._paginatePage("next"));
     }
     if (this.downloadEl) {
       this.downloadEl.addEventListener("click", this._ondownload.bind(this));
+    }
+    if (this.mangaEl) {
+      this.mangaEl.addEventListener("click", () => {
+        this._mangaMode = !this._mangaMode;
+        try {
+          localStorage.setItem("reader_manga", this._mangaMode ? "1" : "0");
+        } catch (_) {
+          // ignore private-browsing quota errors
+        }
+        this.mangaEl.classList.toggle("active", this._mangaMode);
+        if (this._renderer instanceof ComicReader) {
+          this._renderer.setMangaMode(this._mangaMode);
+        }
+      });
     }
 
     Object.seal(this);
@@ -936,9 +1086,10 @@ export default class Reader {
     document.body.classList.add("reading");
     document.body.addEventListener("keydown", this._onKey, true);
 
-    // Toggle zoom / prev-next controls
+    // Toggle zoom / prev-next / mode controls
     const isPdf = rtype === "pdf";
     const isBook = rtype === "epub" || rtype === "mobi";
+    const isComic = rtype === "comic";
     if (this.zoomInEl) {
       this.zoomInEl.classList.toggle("hidden", !isPdf);
     }
@@ -946,10 +1097,17 @@ export default class Reader {
       this.zoomOutEl.classList.toggle("hidden", !isPdf);
     }
     if (this.prevEl) {
-      this.prevEl.classList.toggle("hidden", !isBook);
+      this.prevEl.classList.toggle("hidden", !(isBook || isComic));
     }
     if (this.nextEl) {
-      this.nextEl.classList.toggle("hidden", !isBook);
+      this.nextEl.classList.toggle("hidden", !(isBook || isComic));
+    }
+    if (this.mangaEl) {
+      this.mangaEl.classList.toggle("hidden", !isComic);
+      this.mangaEl.classList.toggle("active", isComic && this._mangaMode);
+    }
+    if (this.webtoonEl) {
+      this.webtoonEl.classList.toggle("hidden", !isComic);
     }
 
     dbg(
@@ -967,6 +1125,10 @@ export default class Reader {
       if (isPdf) {
         this._renderer = new PDFReader(this.contentEl, this.infoEl);
         await this._renderer.open(file.url);
+      } else if (isComic) {
+        this._renderer = new ComicReader(this.contentEl, this.infoEl);
+        this._renderer.setMangaMode(this._mangaMode);
+        await this._renderer.open(file);
       } else {
         this._renderer = new BookReader(this.contentEl, this.infoEl);
         await this._renderer.open(file.url, rtype);
@@ -998,6 +1160,15 @@ export default class Reader {
     document.body.removeEventListener("keydown", this._onKey, true);
   }
 
+  /** Route "prev" or "next" click/key to the appropriate renderer. */
+  _paginatePage(dir) {
+    if (this._renderer instanceof BookReader) {
+      this._bookPage(dir);
+    } else if (this._renderer instanceof ComicReader) {
+      this._comicPage(dir);
+    }
+  }
+
   _zoom(delta) {
     if (this._renderer instanceof PDFReader) {
       this._renderer.setZoom(delta);
@@ -1007,6 +1178,14 @@ export default class Reader {
   /** Navigate one page within the current chapter (or wrap to adjacent chapter). */
   _bookPage(dir) {
     if (this._renderer instanceof BookReader) {
+      if (dir === "prev") this._renderer.prevPage();
+      else this._renderer.nextPage();
+    }
+  }
+
+  /** Navigate comics by one page. */
+  _comicPage(dir) {
+    if (this._renderer instanceof ComicReader) {
       if (dir === "prev") this._renderer.prevPage();
       else this._renderer.nextPage();
     }
@@ -1035,13 +1214,15 @@ export default class Reader {
       this.close();
       nukeEvent(e);
     } else if (e.key === "ArrowLeft") {
-      // Left arrow: previous page (PDF) or previous page within chapter (book)
+      // Left arrow: previous page (PDF/comic) or previous page within chapter (book)
       if (this._readerType === "pdf") this._pdf("prev");
+      else if (this._readerType === "comic") this._comicPage("prev");
       else this._bookPage("prev");
       nukeEvent(e);
     } else if (e.key === "ArrowRight") {
-      // Right arrow: next page (PDF) or next page within chapter (book)
+      // Right arrow: next page (PDF/comic) or next page within chapter (book)
       if (this._readerType === "pdf") this._pdf("next");
+      else if (this._readerType === "comic") this._comicPage("next");
       else this._bookPage("next");
       nukeEvent(e);
     } else if (e.key === "ArrowUp") {

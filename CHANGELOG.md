@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- **CBZ Comic Book Reader**: CBZ comic book archives can now be opened directly in the browser using the "Read Now" button. Pages are served on-demand as transcoded JPEGs (max 1400 px wide) from `/api/v1/comic/:key/page/:n`. The page count is extracted at upload time by scanning the archive; a cover thumbnail is generated from the first page. Navigation uses ← / → arrow keys or the Prev/Next toolbar buttons. Adjacent pages are preloaded for fast flipping.
+
+- **Manga mode**: A "漫 Manga" toggle button in the reader toolbar switches to right-to-left page order (← advances, → goes back), matching Japanese manga reading conventions. The mode is persisted in `localStorage`.
+
 ### Changed
 
 - Switched to serving a full `/favicon` directory of multiple icon sizes and manifest; updated templates and CSS to point at new paths.

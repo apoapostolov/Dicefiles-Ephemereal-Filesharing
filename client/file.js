@@ -4,13 +4,13 @@ import registry from "./registry";
 import Removable from "./removable";
 import Tooltip from "./tooltip";
 import {
-  dom,
-  Rect,
-  sort,
-  toPrettyDuration,
-  toPrettyInt,
-  toPrettySize,
-  toType,
+    dom,
+    Rect,
+    sort,
+    toPrettyDuration,
+    toPrettyInt,
+    toPrettySize,
+    toType,
 } from "./util";
 
 const BASE_FILE = {
@@ -283,7 +283,8 @@ export default class File extends Removable {
   }
 
   /**
-   * Returns "pdf", "epub", or null if this file can be read in the built-in reader.
+   * Returns "pdf", "epub", "mobi", "comic", or null if this file can be read
+   * in the built-in reader.
    */
   getReadableType() {
     if (this.type !== "document") {
@@ -299,6 +300,14 @@ export default class File extends Removable {
     }
     if (t === "MOBI" || /\.(mobi|azw|azw3)$/i.test(n)) {
       return "mobi";
+    }
+    if (
+      t === "CBZ" ||
+      t === "CBR" ||
+      t === "CBT" ||
+      /\.(cbz|cbr|cbt)$/i.test(n)
+    ) {
+      return "comic";
     }
     return null;
   }
