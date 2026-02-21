@@ -1,29 +1,29 @@
 "use strict";
 
 import EventEmitter from "events";
+import { APOOL } from "./animationpool";
+import { ContextMenu } from "./contextmenu";
+import { MessageBox } from "./modal";
 import registry from "./registry";
-import {dom, debounce, openInNew, nukeEvent} from "./util";
-import {APOOL} from "./animationpool";
-import {ContextMenu} from "./contextmenu";
-import {MessageBox} from "./modal";
-import {LoginModal} from "./roomie/logindlg";
-import {BanModal, UnbanModal} from "./roomie/bandlg";
-import {BlacklistModal} from "./roomie/bldlg";
-import {HelpModal} from "./roomie/helpdlg";
-import {OptionsModal} from "./roomie/optsdlg";
-import {ChangePWModal} from "./roomie/changepwdlg";
-import {ReportModal} from "./roomie/reportdlg";
+import { BanModal, UnbanModal } from "./roomie/bandlg";
+import { BlacklistModal } from "./roomie/bldlg";
+import { ChangePWModal } from "./roomie/changepwdlg";
+import { HelpModal } from "./roomie/helpdlg";
+import { LoginModal } from "./roomie/logindlg";
 import {
-  DEFAULT_NOTIFICATION_SETTINGS,
-  NotificationModal,
+    DEFAULT_NOTIFICATION_SETTINGS,
+    NotificationModal,
 } from "./roomie/notifdlg";
+import { OptionsModal } from "./roomie/optsdlg";
+import { ReportModal } from "./roomie/reportdlg";
+import { debounce, dom, nukeEvent, openInNew } from "./util";
 
 const ALLOW_DRIFT = 200;
 const NOTIFY_SETTINGS_PREFIX = "dicefiles:notifications:settings:";
 const NOTIFY_SEEN_PREFIX = "dicefiles:notifications:seen:";
 const MAX_NOTIFY_SEEN = 400;
 
-export default new class Roomie extends EventEmitter {
+export default new (class Roomie extends EventEmitter {
   constructor() {
     super();
     this._name = "New Room";
@@ -43,7 +43,7 @@ export default new class Roomie extends EventEmitter {
     this._installTooltip = debounce(this._installTooltip.bind(this), 250);
 
     this.incrUnread = this.incrUnread.bind(this);
-    this.mousepos = Object.seal({x: 0, y: 0});
+    this.mousepos = Object.seal({ x: 0, y: 0 });
     this.onmousemove = this.onmousemove.bind(this);
     this.onmouseout = this.onmouseout.bind(this);
     this.onmodalkey = this.onmodalkey.bind(this);
@@ -54,19 +54,34 @@ export default new class Roomie extends EventEmitter {
 
     Object.seal(this);
 
-    document.querySelector("#ips").addEventListener("click", () => {
-      document.body.classList.toggle("noips");
-      this.emit("ips");
-    }, { passive: true });
+    document.querySelector("#ips").addEventListener(
+      "click",
+      () => {
+        document.body.classList.toggle("noips");
+        this.emit("ips");
+      },
+      { passive: true },
+    );
 
     addEventListener("mouseout", this.onmouseout, {
       capture: true,
-      passive: true
+      passive: true,
     });
     const ces = [
-      "home", "newroom", "roomlist", "report", "options", "notifications",
-      "ban", "unban", "nuke", "modlog",
-      "register", "login", "account", "logout"
+      "home",
+      "newroom",
+      "roomlist",
+      "report",
+      "options",
+      "notifications",
+      "ban",
+      "unban",
+      "nuke",
+      "modlog",
+      "register",
+      "login",
+      "account",
+      "logout",
     ];
     for (const ce of ces) {
       this.context.on(`ctx-${ce}`, this[`onctx${ce}`].bind(this));
@@ -116,11 +131,10 @@ export default new class Roomie extends EventEmitter {
         "R.I.P",
         "i-nuke",
         "NUKE",
-        "Nah, I'm robocop!"
+        "Nah, I'm robocop!",
       );
       registry.socket.emit("NUKE!!!!");
-    }
-    catch (ex) {
+    } catch (ex) {
       console.log("nuke cancelled");
     }
   }
@@ -145,14 +159,13 @@ export default new class Roomie extends EventEmitter {
       await registry.socket.rest("logout");
       registry.socket.emit("session", null);
       registry.messages.addSystemMessage("Successfully logged out!");
-    }
-    catch (ex) {
+    } catch (ex) {
       await this.showMessage(ex.message || ex, "Error");
     }
   }
 
   init() {
-    registry.socket.on("usercount", v => {
+    registry.socket.on("usercount", (v) => {
       document.querySelector("#usercount").textContent = v;
     });
     const connection = document.querySelector("#connection");
@@ -164,21 +177,21 @@ export default new class Roomie extends EventEmitter {
       connection.classList.remove("visible");
       this.connected = true;
     });
-    registry.socket.on("authed", authed => {
+    registry.socket.on("authed", (authed) => {
       document.body.classList[authed ? "add" : "remove"]("authed");
       document.body.classList[!authed ? "add" : "remove"]("unauthed");
     });
-    registry.socket.on("role", role => {
+    registry.socket.on("role", (role) => {
       this.role = role;
       document.body.classList[role === "mod" ? "add" : "remove"]("mod");
       document.body.classList[role !== "mod" ? "add" : "remove"]("regular");
       this.updateRole();
     });
-    registry.socket.on("owner", owner => {
+    registry.socket.on("owner", (owner) => {
       document.body.classList[owner ? "add" : "remove"]("owner");
     });
 
-    registry.socket.on("time", v => {
+    registry.socket.on("time", (v) => {
       const now = Date.now();
       const drift = v - now;
       this.drift =
@@ -186,15 +199,15 @@ export default new class Roomie extends EventEmitter {
         (drift < 0 ? -ALLOW_DRIFT : ALLOW_DRIFT);
     });
 
-    registry.config.on("change-roomname", v => {
+    registry.config.on("change-roomname", (v) => {
       this.name = v;
     });
 
-    registry.config.on("change-disableReports", disabled => {
+    registry.config.on("change-disableReports", (disabled) => {
       document.body.classList[disabled ? "add" : "remove"]("noreports");
     });
 
-    registry.config.on("change-motd", v => {
+    registry.config.on("change-motd", (v) => {
       if (JSON.stringify(this.motd) === JSON.stringify(v)) {
         return;
       }
@@ -206,7 +219,7 @@ export default new class Roomie extends EventEmitter {
     registry.config.on("roomCreation", () => this.updateRole());
     registry.config.on("roomCreationRequiresAccount", () => this.updateRole());
 
-    registry.messages.on("message", m => {
+    registry.messages.on("message", (m) => {
       if (m.saved) {
         return;
       }
@@ -232,7 +245,8 @@ export default new class Roomie extends EventEmitter {
 
       const isRequest = !!(file.meta && file.meta.request);
       const kind = isRequest ? "request" : "file";
-      const settings = this.notificationSettings || DEFAULT_NOTIFICATION_SETTINGS;
+      const settings =
+        this.notificationSettings || DEFAULT_NOTIFICATION_SETTINGS;
       if (settings.muteRoom || !settings.enabled) {
         this.rememberNotificationKey(key);
         return;
@@ -279,8 +293,8 @@ export default new class Roomie extends EventEmitter {
   }
 
   onmousemove(e) {
-    const x = this.mousepos.x = e.pageX;
-    const y = this.mousepos.y = e.pageY;
+    const x = (this.mousepos.x = e.pageX);
+    const y = (this.mousepos.y = e.pageY);
     if (this.tooltip) {
       this.tooltip.position(x, y);
     }
@@ -289,7 +303,6 @@ export default new class Roomie extends EventEmitter {
   onmouseout() {
     this.hideTooltip();
   }
-
 
   _installMouseMove() {
     if (this._mouseMoveInstalled) {
@@ -334,7 +347,7 @@ export default new class Roomie extends EventEmitter {
       if (!this.tooltip) {
         return;
       }
-      const {x, y} = this.mousepos;
+      const { x, y } = this.mousepos;
       this.tooltip.position(x, y);
       this.tooltip.show();
       this.emit("tooltip-shown", this.tooltip);
@@ -356,9 +369,14 @@ export default new class Roomie extends EventEmitter {
   }
 
   onmodalkey(e) {
-    const {key, target: {localName}} = e;
-    if (key === "Enter" && (
-      localName === "input" || localName === "textarea")) {
+    const {
+      key,
+      target: { localName },
+    } = e;
+    if (
+      key === "Enter" &&
+      (localName === "input" || localName === "textarea")
+    ) {
       return;
     }
     if (key === "Enter" || key === "Escape") {
@@ -369,8 +387,7 @@ export default new class Roomie extends EventEmitter {
       nukeEvent(e);
       if (key === "Enter") {
         modal.accept();
-      }
-      else {
+      } else {
         modal.dismiss();
       }
     }
@@ -383,30 +400,27 @@ export default new class Roomie extends EventEmitter {
     this.hideTooltip();
     if (!this.modals.size) {
       addEventListener("keydown", this.onmodalkey);
-    }
-    else {
-      this.modals.forEach(e => {
+    } else {
+      this.modals.forEach((e) => {
         e.disable();
       });
     }
     this.modals.add(modal);
     const holder = dom("div", {
-      classes: ["modal-holder"]
+      classes: ["modal-holder"],
     });
     holder.appendChild(modal.el);
     document.body.appendChild(holder);
     try {
       modal.onshown();
       return await modal.promise;
-    }
-    finally {
+    } finally {
       document.body.removeChild(holder);
       this.modals.delete(modal);
       const newtop = Array.from(this.modals).pop();
       if (newtop) {
         newtop.enable();
-      }
-      else {
+      } else {
         removeEventListener("keydown", this.onmodalkey);
       }
     }
@@ -414,10 +428,10 @@ export default new class Roomie extends EventEmitter {
 
   async showMessage(text, caption, icon) {
     try {
-      console.log(await this.showModal(
-        new MessageBox(caption || "Message", text, icon)));
-    }
-    catch (ex) {
+      console.log(
+        await this.showModal(new MessageBox(caption || "Message", text, icon)),
+      );
+    } catch (ex) {
       console.error(ex);
       // don't care
     }
@@ -432,18 +446,18 @@ export default new class Roomie extends EventEmitter {
         id: i,
         text: e,
         default: !i,
-        cancel: i === a.length - 1
+        cancel: i === a.length - 1,
       };
     });
     return await this.showModal(
-      new MessageBox(caption || "Message", text, icon, ...buttons));
+      new MessageBox(caption || "Message", text, icon, ...buttons),
+    );
   }
 
   async showOptionsModal() {
     try {
       await this.showModal(new OptionsModal(this));
-    }
-    catch (ex) {
+    } catch (ex) {
       if (ex) {
         console.error(ex);
       }
@@ -453,8 +467,7 @@ export default new class Roomie extends EventEmitter {
   async showLoginModal() {
     try {
       await this.showModal(new LoginModal(this));
-    }
-    catch (ex) {
+    } catch (ex) {
       // ignored
     }
   }
@@ -467,8 +480,7 @@ export default new class Roomie extends EventEmitter {
       }
 
       await this.showModal(new ReportModal(this));
-    }
-    catch (ex) {
+    } catch (ex) {
       // ignored
     }
   }
@@ -476,8 +488,7 @@ export default new class Roomie extends EventEmitter {
   async showChangePWModal() {
     try {
       await this.showModal(new ChangePWModal(this));
-    }
-    catch (ex) {
+    } catch (ex) {
       // ignored
     }
   }
@@ -497,47 +508,46 @@ export default new class Roomie extends EventEmitter {
         "All (IP, Room)",
         "All (User)",
         "All (IP)",
-        "Nope");
+        "Nope",
+      );
       const options = {
         user: false,
         ip: false,
         room: false,
       };
       switch (res) {
-      case "accept":
-        break;
+        case "accept":
+          break;
 
-      case 1:
-        options.room = true;
-        options.user = true;
-        break;
+        case 1:
+          options.room = true;
+          options.user = true;
+          break;
 
-      case 2:
-        options.room = true;
-        options.ip = true;
-        break;
+        case 2:
+          options.room = true;
+          options.ip = true;
+          break;
 
-      case 3:
-        options.user = true;
-        break;
+        case 3:
+          options.user = true;
+          break;
 
-      case 4:
-        options.ip = true;
-        break;
-      default:
-        throw new Error("invalid res");
+        case 4:
+          options.ip = true;
+          break;
+        default:
+          throw new Error("invalid res");
       }
       await registry.socket.makeCall("removeMessage", id, options);
-    }
-    catch (ex) {
+    } catch (ex) {
       console.error("message removal cancelled", ex);
     }
   }
   async showBanModal(subjects, template) {
     try {
       await this.showModal(new BanModal(this, subjects, template));
-    }
-    catch (ex) {
+    } catch (ex) {
       if (ex) {
         console.error(ex);
       }
@@ -547,8 +557,7 @@ export default new class Roomie extends EventEmitter {
   async showUnbanModal(subjects) {
     try {
       await this.showModal(new UnbanModal(this, subjects));
-    }
-    catch (ex) {
+    } catch (ex) {
       if (ex) {
         console.error(ex);
       }
@@ -558,8 +567,7 @@ export default new class Roomie extends EventEmitter {
   async showBlacklistModal(files, template) {
     try {
       await this.showModal(new BlacklistModal(this, files, template));
-    }
-    catch (ex) {
+    } catch (ex) {
       if (ex) {
         console.error(ex);
       }
@@ -569,8 +577,7 @@ export default new class Roomie extends EventEmitter {
   async showHelpModal() {
     try {
       await this.showModal(new HelpModal(this));
-    }
-    catch (ex) {
+    } catch (ex) {
       if (ex) {
         console.error(ex);
       }
@@ -592,17 +599,21 @@ export default new class Roomie extends EventEmitter {
         return Object.assign({}, DEFAULT_NOTIFICATION_SETTINGS);
       }
       return Object.assign({}, DEFAULT_NOTIFICATION_SETTINGS, JSON.parse(raw));
-    }
-    catch (ex) {
+    } catch (ex) {
       return Object.assign({}, DEFAULT_NOTIFICATION_SETTINGS);
     }
   }
 
   saveNotificationSettings(settings) {
-    this.notificationSettings = Object.assign({}, DEFAULT_NOTIFICATION_SETTINGS, settings || {});
+    this.notificationSettings = Object.assign(
+      {},
+      DEFAULT_NOTIFICATION_SETTINGS,
+      settings || {},
+    );
     localStorage.setItem(
       this.notificationSettingsKey(),
-      JSON.stringify(this.notificationSettings));
+      JSON.stringify(this.notificationSettings),
+    );
   }
 
   loadNotificationSeen() {
@@ -616,8 +627,7 @@ export default new class Roomie extends EventEmitter {
         return new Set();
       }
       return new Set(arr.slice(-MAX_NOTIFY_SEEN));
-    }
-    catch (ex) {
+    } catch (ex) {
       return new Set();
     }
   }
@@ -661,25 +671,28 @@ export default new class Roomie extends EventEmitter {
       const modal = new NotificationModal(this, this.notificationSettings);
       await this.showModal(modal);
       const settings = modal.values;
-      if (settings.enabled && "Notification" in window && Notification.permission === "default") {
+      if (
+        settings.enabled &&
+        "Notification" in window &&
+        Notification.permission === "default"
+      ) {
         const perm = await Notification.requestPermission();
         if (perm !== "granted") {
           settings.enabled = false;
           await this.showMessage(
             "Desktop notification permission was not granted. Notifications remain disabled for this room.",
             "Notifications",
-            "i-warning");
+            "i-warning",
+          );
         }
       }
       this.saveNotificationSettings(settings);
-    }
-    catch (ex) {
+    } catch (ex) {
       if (ex) {
         console.error(ex);
       }
     }
   }
-
 
   incrUnread() {
     if (!this.hidden) {
@@ -729,7 +742,8 @@ export default new class Roomie extends EventEmitter {
     };
     const notification = new Notification(
       n.user + " | " + this.name + " | " + registry.config.get("name"),
-      opts);
+      opts,
+    );
 
     notification.onclick = () => {
       notification.close();
@@ -762,7 +776,6 @@ export default new class Roomie extends EventEmitter {
     return remote - this.toServerTime(local);
   }
 
-
   _updateTitle() {
     const unread = this.unread ? `(${this.unread}) ` : "";
     const title = `${unread}${this.name}`;
@@ -777,17 +790,17 @@ export default new class Roomie extends EventEmitter {
 
   updateRole() {
     let enabled;
-    const {config: c} = registry;
+    const { config: c } = registry;
     if (this.role === "mod") {
       enabled = true;
-    }
-    else if (this.role === "white") {
-      enabled = c.get("roomCreation") && !c.get("requireAccounts") &&
+    } else if (this.role === "white") {
+      enabled =
+        c.get("roomCreation") &&
+        !c.get("requireAccounts") &&
         !c.get("roomCreationRequiresAccount");
-    }
-    else {
+    } else {
       enabled = c.get("roomCreation");
     }
     document.body.classList[enabled ? "add" : "remove"]("newroom");
   }
-}();
+})();
