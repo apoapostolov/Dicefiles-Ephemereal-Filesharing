@@ -8,7 +8,11 @@
   "scripts": {
     "pack": "webpack -w",
     "prestart": "webpack --mode=production",
-    "restart": "sh ./scripts/restart-server.sh"
+    "restart": "sh ./scripts/restart-server.sh",
+    "test": "node ./node_modules/.bin/jest",
+    "test:unit": "node ./node_modules/.bin/jest test/unit test/views",
+    "test:integration": "node ./node_modules/.bin/jest test/integration",
+    "test:coverage": "node ./node_modules/.bin/jest --coverage"
   },
   "dependencies": {
     "@lingo-reader/mobi-parser": "^0.4.5",
@@ -20,10 +24,10 @@
     "css-loader": "^2.1.0",
     "cssnano": "^4.1.10",
     "ejs": "^3.1.6",
-    "jszip": "^3.10.1",
     "express": "^4.16.4",
     "file-loader": "^3.0.1",
     "helmet": "^3.15.1",
+    "jszip": "^3.10.1",
     "localforage": "^1.7.3",
     "lru-cache": "^6.0.0",
     "mini-css-extract-plugin": "^0.5.0",
@@ -54,6 +58,7 @@
     "gm": "^1.23.1"
   },
   "devDependencies": {
+    "jest": "^29.7.0",
     "stylelint-config-recommended": "^5.0.0"
   }
 }

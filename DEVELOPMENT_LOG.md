@@ -1,5 +1,57 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - Chore: Full test suite for v1.2.0 release
+
+### Summary
+
+Added a complete Jest 29 test suite in preparation for the v1.2.0 release. Tests
+cover pure utilities, view rendering, and live integration with the running server.
+
+### Test suites (9 total, 185 tests)
+
+| File                              | Tests | Notes                                                                                                                                  |
+| --------------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `test/unit/common.test.js`        | 57    | toPrettySize, toPrettyInt, toPrettyETA, toPrettyDuration, ofilter, plural, shuffle, randint, sleep, debounce, CoalescedUpdate, memoize |
+| `test/unit/sorting.test.js`       | 10    | naturalSort, naturalCaseSort, sort, sorted                                                                                             |
+| `test/unit/iter.test.js`          | 8     | iter, riter (forward/reverse/wrap)                                                                                                     |
+| `test/unit/message.test.js`       | 22    | normalizeURL, toMessage (all token types)                                                                                              |
+| `test/unit/markdown.test.js`      | 15    | renderMarkdown (paragraphs, bold/italic, links, XSS, scheme rejection)                                                                 |
+| `test/unit/achievements.test.js`  | 13    | computeAchievements — correct return shape (filesOnly, bytesOnly, downloadsOnly, unlockedList, lockedList, all)                        |
+| `test/unit/previewretry.test.js`  | 10    | scheduleRetry via broker mock pattern (zadd/hset/hdel paths, error swallowing, timer start/stop)                                       |
+| `test/views/render.test.js`       | 30    | EJS renderFile for every view: index, room, register, terms, rules, error, notfound, user, account, modlog*, toplist*, discover        |
+| `test/integration/routes.test.js` | 30    | Live HTTP fetch to port 9090: all public routes, 404 handling, API auth, static assets, CSP headers, /new redirect                     |
+
+### Infrastructure
+
+- **`jest.config.js`** (new) — Jest 29 config with `transform: {}` (CJS, no transpile), 20 s timeout, coverage collection from `lib/**` and `common/**`
+- **`package.json`** — added `jest@^29.7.0` devDependency; added `test`, `test:unit`, `test:integration`, `test:coverage` scripts all using explicit Node 18 binary path
+
+### Bugs caught and fixed in tests
+
+- `toPrettySize` boundary is strict `>`: `toPrettySize(1024)` → `"1024 B"` not `"1 KiB"`; tests use `1025` for KiB threshold
+- `toPrettyETA` zero-pads all digits; `toPrettyETA(3600)` → `"01:00:00"`
+- `memoize` requires functions with ≥ 1 argument
+- `renderMarkdown` normalizes `https://example.com` → `https://example.com/` (trailing slash added by URL parser)
+- `computeAchievements` returns named groups (`filesOnly`, `bytesOnly`, `downloadsOnly`) not arrays keyed by `files`/`bytes`/`downloads`; `files`/`uploaded`/`downloaded` are the numeric inputs
+- `GET /healthz` uptime is at `json.metrics.uptimeSec`, not `json.uptime`
+- `GET /` template does not emit `</html>` (closes at `</body>`); test updated to assert `</footer>` instead
+
+### Changed files
+
+- `jest.config.js` — created
+- `package.json` — jest devDep + test scripts
+- `test/unit/common.test.js` — created
+- `test/unit/sorting.test.js` — created
+- `test/unit/iter.test.js` — created
+- `test/unit/message.test.js` — created
+- `test/unit/markdown.test.js` — created (URL normalization fix applied)
+- `test/unit/achievements.test.js` — created (corrected return-shape assertions)
+- `test/unit/previewretry.test.js` — created
+- `test/views/render.test.js` — created (achievements stub fixed to use `all`, `unlockedList`, etc.)
+- `test/integration/routes.test.js` — created (`uptime` path + `</html>` fixes applied)
+
+---
+
 ## 2026-02-22 - Feat: Preview retry queue; README config docs
 
 ### Summary
@@ -25,8 +77,6 @@ Two items in one session:
 - **`lib/upload.js`** — On generateAssets failure, schedule retry instead of silent log.
 - **`lib/httpserver.js`** — Start retry poller at HTTP worker init.
 - **`TODO.md`** — Mark "Add retry queue for transient preview failures" completed.
-
-
 
 ### Summary
 
