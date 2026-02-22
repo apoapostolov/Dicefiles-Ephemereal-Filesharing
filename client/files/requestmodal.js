@@ -451,11 +451,18 @@ export class RequestViewModal extends Modal {
       classes: ["requestview-upload-zone"],
       attrs: { title: "Drop files here or click to choose" },
     });
+    // Three-line "Drop / Files / Here" label — mirrors the dropminder overlay
     this.uploadZoneLabelEl = dom("span", {
       classes: ["requestview-upload-label"],
-      text: "Drop files to upload (optional)",
+      text: "Drop\u00a0Files\u00a0Here",
     });
     this.uploadZoneEl.appendChild(this.uploadZoneLabelEl);
+    this.uploadZoneEl.appendChild(
+      dom("span", {
+        classes: ["requestview-upload-hint"],
+        text: "or click to choose",
+      }),
+    );
     this.uploadZoneEl.addEventListener("click", this._onZoneClick.bind(this));
     this.rightEl.appendChild(this.uploadZoneEl);
 
@@ -621,6 +628,9 @@ export class RequestViewModal extends Modal {
     this.stagedListEl.textContent = "";
     if (!this.stagedFiles.length) {
       this.stagedListEl.classList.add("hidden");
+      if (this.uploadZoneLabelEl) {
+        this.uploadZoneLabelEl.textContent = "Drop\u00a0Files\u00a0Here";
+      }
       return;
     }
     this.stagedListEl.classList.remove("hidden");

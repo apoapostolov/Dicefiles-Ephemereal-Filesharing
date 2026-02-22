@@ -831,58 +831,83 @@ class BookReader {
 
     iframe.addEventListener("load", () => {
       if (this._destroyed || this._iframe !== iframe) return;
-      try {
-        const doc = iframe.contentDocument;
-        if (!doc || !doc.body) return;
-        const scroller = doc.getElementById("scroller");
-        if (!scroller) return;
-
-        // ── Measure total pages using a sentinel element ─────────────────
-        // With CSS multi-column, the scroller DOM width is fixed at 30 000 px.
-        // We measure the rightmost extent of actual content via a sentinel
-        // appended at the end.  getBoundingClientRect().left inside the iframe
-        // document returns the absolute column-layout x coordinate even beyond
-        // the clipped viewport.
-        //
-        // Column geometry (matching buildSrcdoc):
-        //   page N text starts at: HP + N * pageWidth
-        //   sentinel on last page: HP + N*pageWidth ≤ x < (N+1)*pageWidth
-        //   ∴ N = floor((sentinel.left − HP) / pageWidth)  →  total = N+1
-        const HP =
-          this._opts && this._opts.margin != null ? this._opts.margin : 56;
-        let totalPages = 1;
+      // Defer the sentinel measurement by one animation frame so the browser
+      // finishes computing CSS multi-column layout before we read geometry.
+      // Without this, getBoundingClientRect() can return 0 on the first load
+      // after a font-size change, making totalPages = 1 and breaking pagination.
+      requestAnimationFrame(() => {
+        if (this._destroyed || this._iframe !== iframe) return;
         try {
-          const sentinel = doc.createElement("span");
-          sentinel.style.cssText =
-            "display:inline-block;width:1px;height:1px;visibility:hidden;";
-          scroller.appendChild(sentinel);
-          const sl = sentinel.getBoundingClientRect().left;
-          scroller.removeChild(sentinel);
-          if (isFinite(sl) && sl >= 0) {
-            totalPages = Math.max(
-              1,
-              Math.floor((sl - HP) / this._pageWidth) + 1,
-            );
+          const doc = iframe.contentDocument;
+          if (!doc || !doc.body) {
+            // Document not accessible — mark loaded with a single page so
+            // buttons are always functional even in degraded state.
+            this._totalPagesInChapter = 1;
+            this._pageInChapter = 0;
+            this._loaded = true;
+            this._updateInfo();
+            return;
           }
-        } catch (_) {}
+          const scroller = doc.getElementById("scroller");
+          if (!scroller) {
+            this._totalPagesInChapter = 1;
+            this._pageInChapter = 0;
+            this._loaded = true;
+            this._updateInfo();
+            return;
+          }
 
-        this._totalPagesInChapter = totalPages;
-        const target =
-          startAtPage < 0
-            ? totalPages - 1
-            : Math.min(startAtPage, totalPages - 1);
-        this._pageInChapter = target;
-        if (target > 0) {
-          scroller.style.transform = `translateX(${-target * this._pageWidth}px)`;
+          // ── Measure total pages using a sentinel element ────────────────
+          // With CSS multi-column, the scroller DOM width is fixed at 30 000 px.
+          // We measure the rightmost extent of actual content via a sentinel
+          // appended at the end.  getBoundingClientRect().left inside the iframe
+          // document returns the absolute column-layout x coordinate even beyond
+          // the clipped viewport.
+          //
+          // Column geometry (matching buildSrcdoc):
+          //   page N text starts at: HP + N * pageWidth
+          //   sentinel on last page: HP + N*pageWidth ≤ x < (N+1)*pageWidth
+          //   ∴ N = floor((sentinel.left − HP) / pageWidth)  →  total = N+1
+          const HP =
+            this._opts && this._opts.margin != null ? this._opts.margin : 56;
+          let totalPages = 1;
+          try {
+            const sentinel = doc.createElement("span");
+            sentinel.style.cssText =
+              "display:inline-block;width:1px;height:1px;visibility:hidden;";
+            scroller.appendChild(sentinel);
+            const sl = sentinel.getBoundingClientRect().left;
+            scroller.removeChild(sentinel);
+            if (isFinite(sl) && sl >= 0) {
+              totalPages = Math.max(
+                1,
+                Math.floor((sl - HP) / this._pageWidth) + 1,
+              );
+            }
+          } catch (_) {}
+
+          this._totalPagesInChapter = totalPages;
+          const target =
+            startAtPage < 0
+              ? totalPages - 1
+              : Math.min(startAtPage, totalPages - 1);
+          this._pageInChapter = target;
+          if (target > 0) {
+            scroller.style.transform = `translateX(${-target * this._pageWidth}px)`;
+          }
+          this._loaded = true;
+          this._updateInfo();
+          dbg(
+            `Chapter ${idx + 1}: ${totalPages} pages (sentinel-based, HP=${HP})`,
+          );
+        } catch (ex) {
+          dbgErr("iframe rAF measure", ex);
+          // Ensure buttons are always functional even if measurement throws.
+          this._totalPagesInChapter = 1;
+          this._loaded = true;
+          this._updateInfo();
         }
-        this._loaded = true;
-        this._updateInfo();
-        dbg(
-          `Chapter ${idx + 1}: ${totalPages} pages (sentinel-based, HP=${HP})`,
-        );
-      } catch (ex) {
-        dbgErr("iframe load handler", ex);
-      }
+      });
     });
 
     iframe.srcdoc = buildSrcdoc(

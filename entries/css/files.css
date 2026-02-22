@@ -225,18 +225,36 @@ body.links-mode #filelist-scroller {
   color: #fff8d5;
 }
 
-/* Fulfilled request: dimmed + strikethrough */
+/* Fulfilled request: dimmed text + Fulfilled pill */
 #files > .file.request-file.request-fulfilled > .name {
   color: #888;
 }
 
 #files > .file.request-file.request-fulfilled > .name > .name-text {
-  text-decoration: line-through;
-  text-decoration-color: #777;
+  color: #888;
 }
 
 #files > .file.request-file.request-fulfilled > .icon {
   opacity: 0.45;
+}
+
+/* Grey "Fulfilled" pill that appears after the request text */
+#files > .file.request-file > .name > .request-fulfilled-pill {
+  display: none;
+  flex: 0 0 auto;
+  font-size: 9px;
+  background: rgba(160, 160, 160, 0.16);
+  border: 1px solid rgba(160, 160, 160, 0.38);
+  color: #999;
+  border-radius: 999px;
+  padding: 2px 0.62ex;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  margin-left: 0.3em;
+}
+#files > .file.request-file.request-fulfilled > .name > .request-fulfilled-pill {
+  display: inline-flex;
+  align-items: center;
 }
 
 /* Make request files show a pointer cursor to hint they're clickable */

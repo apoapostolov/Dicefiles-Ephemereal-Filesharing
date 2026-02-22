@@ -19,6 +19,11 @@ export default class File extends BaseFile {
       this.el.classList.add("request-file");
       if ((file.status || "open") === "fulfilled") {
         this.el.classList.add("request-fulfilled");
+        this.fulfilledPillEl = dom("span", {
+          classes: ["request-fulfilled-pill"],
+          text: "Fulfilled",
+        });
+        this.nameEl.appendChild(this.fulfilledPillEl);
       }
     }
 
@@ -63,6 +68,7 @@ export default class File extends BaseFile {
       }),
     );
     this.requestUrlEl = null;
+    this.fulfilledPillEl = null;
     this.copyMetaEl = null;
     this.ttlValueEl = null;
     this.nameEl.addEventListener("mouseenter", this.onenter.bind(this), {
@@ -283,10 +289,18 @@ export default class File extends BaseFile {
       return;
     }
     if (this.isRequest) {
-      this.el.classList.toggle(
-        "request-fulfilled",
-        (this.status || "open") === "fulfilled",
-      );
+      const isFulfilled = (this.status || "open") === "fulfilled";
+      this.el.classList.toggle("request-fulfilled", isFulfilled);
+      if (isFulfilled && !this.fulfilledPillEl) {
+        this.fulfilledPillEl = dom("span", {
+          classes: ["request-fulfilled-pill"],
+          text: "Fulfilled",
+        });
+        this.nameEl.appendChild(this.fulfilledPillEl);
+      } else if (!isFulfilled && this.fulfilledPillEl) {
+        this.fulfilledPillEl.remove();
+        this.fulfilledPillEl = null;
+      }
     }
     this.setupTags();
     if (typeof isNew === "boolean") {

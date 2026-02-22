@@ -661,28 +661,67 @@
 }
 
 .modal-requestview .requestview-upload-zone {
-  border: 1px dashed rgba(200, 200, 200, 0.28);
-  border-radius: 6px;
-  padding: 0.55em 0.8em;
+  border: 2px dashed rgba(160, 160, 160, 0.35);
+  border-radius: 10px;
+  padding: 1.2em 1em;
   text-align: center;
   cursor: pointer;
-  font-size: 0.8em;
-  color: rgba(190, 190, 190, 0.7);
+  background: linear-gradient(
+    180deg,
+    rgba(16, 16, 16, 0.92),
+    rgba(20, 20, 20, 0.86)
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25em;
   transition:
     border-color 0.15s,
-    color 0.15s;
+    background 0.15s;
   user-select: none;
+  min-height: 6.5em;
 }
 
 .modal-requestview .requestview-upload-zone:hover {
-  border-color: rgba(200, 200, 200, 0.5);
-  color: rgba(220, 220, 220, 0.9);
+  border-color: rgba(180, 180, 180, 0.55);
+  background: linear-gradient(
+    180deg,
+    rgba(20, 20, 20, 0.95),
+    rgba(26, 26, 26, 0.9)
+  );
 }
 
 .modal-requestview .requestview-upload-zone.dragging {
-  border-color: rgba(208, 236, 214, 0.88);
-  color: rgba(230, 250, 230, 0.92);
-  background: rgba(208, 236, 214, 0.06);
+  border-color: rgba(208, 236, 214, 0.72);
+  background: rgba(208, 236, 214, 0.04);
+}
+
+/* Drop-here text lines (mimic dropminder big text) */
+.modal-requestview .requestview-upload-label {
+  display: block;
+  font-size: 1.55em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(100, 100, 100, 0.85);
+  line-height: 1.15;
+  pointer-events: none;
+}
+
+.modal-requestview .requestview-upload-zone:hover .requestview-upload-label,
+.modal-requestview .requestview-upload-zone.dragging .requestview-upload-label {
+  color: rgba(140, 140, 140, 0.95);
+}
+
+/* Sub-caption shown below the big text */
+.modal-requestview .requestview-upload-hint {
+  display: block;
+  font-size: 0.68em;
+  color: rgba(120, 120, 120, 0.7);
+  font-weight: 400;
+  margin-top: 0.15em;
+  letter-spacing: 0.01em;
+  pointer-events: none;
 }
 
 .modal-requestview .requestview-staged-list {

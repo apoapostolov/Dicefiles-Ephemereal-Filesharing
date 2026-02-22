@@ -996,7 +996,10 @@ export default new (class Files extends EventEmitter {
   }
 
   get requestModalOpen() {
-    return !!document.querySelector(".modal-requestcreate");
+    return !!(
+      document.querySelector(".modal-requestcreate") ||
+      document.querySelector(".modal-requestview")
+    );
   }
 
   ondragenter(e) {
