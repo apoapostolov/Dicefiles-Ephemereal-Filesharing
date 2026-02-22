@@ -632,6 +632,30 @@ function buildSrcdoc(html, cssUrls, pageWidth, pageHeight, opts) {
   const linkTags = cssUrls
     .map((h) => `<link rel="stylesheet" href="${h}">`)
     .join("\n");
+
+  // ── Column-stretching fix ─────────────────────────────────────────────────
+  // CSS multi-column distributes the container's content-box width evenly
+  // across N columns.  If content-box is not a perfect multiple of
+  // (column-width + column-gap), the browser stretches columns slightly so
+  // they tile exactly, making the actual step > pageWidth.  Each page turn
+  // then drifts by that fractional pixel, accumulating visibly by page 3–5.
+  //
+  // Fix: use box-sizing:content-box on #scroller so padding-left doesn't
+  // reduce the content width, then set width = COLS*pageWidth - 2*HP so that:
+  //   N = floor((contentBoxWidth + gap) / (textW + gap))
+  //     = floor((COLS*pageWidth - 2*HP + 2*HP) / pageWidth) = COLS  ✓
+  //   actualColumnWidth = (contentBoxWidth − (N−1)·gap) / N
+  //     = (COLS·pageWidth − 2·HP − (COLS−1)·2·HP) / COLS
+  //     = (COLS·pageWidth − 2·COLS·HP) / COLS
+  //     = pageWidth − 2·HP = textW  ✓  (exact, zero remainder)
+  //
+  // Column positions (in element coord space, including padding-left offset):
+  //   col N text: [HP + N·pageWidth, HP + N·pageWidth + textW]
+  // translateX(−N·pageWidth) brings col N into viewport [0, pageWidth]:
+  //   left margin = HP, right margin = pageWidth − (HP + textW) = HP  ✓
+  const COLS = 500; // max pages per chapter (generous upper bound)
+  const scrollerContentW = COLS * pageWidth - 2 * HP;
+
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 ${linkTags}
@@ -641,23 +665,26 @@ ${linkTags}
     width: ${pageWidth}px;
     height: ${pageHeight}px;
     overflow: hidden;
-    /* contain:paint clips the multi-column scroller (30 000 px wide) so only
-       the current page column is visible in the iframe viewport. */
+    /* contain:paint clips the wide multi-column scroller so only the
+       current page column is visible in the iframe viewport. */
     contain: paint;
     background: #1a1a1a;
   }
   #scroller {
-    /* ── CSS multi-column pagination ────────────────────────────────────── */
-    /* Large fixed width gives the browser room for many columns horizontally */
-    width: 30000px;
+    /* ── CSS multi-column pagination ─────────────────────────────────── */
+    /* box-sizing:content-box is required: padding-left must NOT reduce the
+       content-box width, otherwise the column count changes and the browser
+       stretches columns — see comment above. */
+    box-sizing: content-box !important;
+    width: ${scrollerContentW}px;   /* content-box = COLS*pageWidth − 2*HP */
     height: ${colH}px;
     margin-top: ${VP}px;
-    /* Column geometry — each column = one A5 page */
+    /* Column geometry — each column = exactly one A5 page (no stretching) */
     column-count: auto;
     column-width: ${textW}px;
     column-gap: ${2 * HP}px;
     column-fill: auto;
-    /* Left margin of page 0 — subsequent pages get it from the column-gap right half */
+    /* Provides the left margin for every page (column N sits at HP + N*pageWidth) */
     padding-left: ${HP}px;
     /* Typography */
     color: #e8e8e8;
@@ -1320,7 +1347,9 @@ class WebtoonReader {
           img.style.minHeight = this._pageHeight + "px";
           img.addEventListener(
             "load",
-            () => { img.style.minHeight = ""; },
+            () => {
+              img.style.minHeight = "";
+            },
             { once: true },
           );
         }
@@ -1337,8 +1366,11 @@ class WebtoonReader {
       this._restoring = true;
       requestAnimationFrame(() => {
         const target = this._imgEls[saved.page];
-        if (target) target.scrollIntoView({ behavior: "instant", block: "start" });
-        requestAnimationFrame(() => { this._restoring = false; });
+        if (target)
+          target.scrollIntoView({ behavior: "instant", block: "start" });
+        requestAnimationFrame(() => {
+          this._restoring = false;
+        });
       });
     }
 
@@ -1352,7 +1384,9 @@ class WebtoonReader {
         saveProgress(this._fileKey, { page: this._visiblePage });
       }, 300);
     };
-    this.container.addEventListener("scroll", this._onContainerScroll, { passive: true });
+    this.container.addEventListener("scroll", this._onContainerScroll, {
+      passive: true,
+    });
 
     // Separate visibility tracker: update page counter + persist progress.
     // Reads _restoring so the initial position restore cannot be overwritten.
