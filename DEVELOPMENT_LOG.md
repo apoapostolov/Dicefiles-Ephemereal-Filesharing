@@ -1,5 +1,22 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - Feature: EPUB/MOBI Reader Options Modal (Kindle-style typography)
+
+- `views/room.ejs` — Added `<button id="reader-opts">Aa</button>` to `#reader-bar` (shows only for EPUB/MOBI) and `<div id="reader-opts-modal">` panel with four sections: font family (4 swatches), font size stepper, line spacing (Compact/Normal/Relaxed), and margins (Narrow/Normal/Wide).
+- `client/files/reader.js` — Added `READER_OPTS_KEY`, `READER_OPTS_DEFAULTS`, `FONT_FAMILIES` map, `loadReaderOpts()` / `saveReaderOpts()` helpers. Modified `buildSrcdoc()` to accept an `opts` argument and apply dynamic `font-family`, `font-size`, `line-height`, and horizontal padding. Added `_opts` field and `applyOpts(patch)` method to `BookReader` which re-renders the current chapter page. Added `readerOptsEl`, `readerOptsModalEl`, `_optsOpen` fields to `Reader`; wired click handlers for all modal controls; `_openOptsModal`, `_closeOptsModal`, `_toggleOptsModal`, `_applyReaderOpt`, `_updateOptsUI` methods added. Modal auto-closes on outside click and on reader close. Options persist in `localStorage` under `dicefiles:readeropts`.
+- `entries/css/reader.css` — Added `#reader-opts` button styles (matches fullscreen button), `#reader-opts-modal` dark panel with gap-based flex layout, `.rom-section`, `.rom-label`, `.rom-fonts`, `.rom-font-btn`, `.rom-row`, `.rom-step-btn`, `#rom-size-val`, `.rom-choices`, `.rom-choice-btn` styles including active/hover states. Added `position: relative` to `#reader` to anchor the modal.
+
+
+
+- `entries/css/files.css` — Added `#files.gallerymode > .file.request-file { display: none !important; }` so request tiles are hidden in gallery mode (they have no cover image to show).
+- `client/files/reader.js` — Webtoon `PageDown`/`PageUp` now scroll by one full natural page height (`this._renderer._pageHeight`) instead of falling through to the book chapter handler. `F` key also toggles focus mode.
+- `client/files/reader.js` — `buildSrcdoc()` now injects `*:not(a) { color: #e8e8e8 !important; background-color: transparent !important; }` to override publisher dark-on-dark text colour declarations in EPUB/MOBI content.
+- `views/room.ejs` — Added `<button id="reader-fullscreen">` (⛎) to the reader toolbar before the download button.
+- `entries/css/reader.css` — Added `#reader-fullscreen` button styles and full focus-mode rules: `body.focus-reading #reader` fixed-positions the reader over the whole viewport; `#reader-bar` is opacity-0/pointer-events:none and transitions in via `body.focus-reading.focus-bar-visible` (toggled by mousemove, removed after 2 s).
+- `client/files/reader.js` — `Reader._toggleFocus()`: toggles `body.focus-reading`, attaches/detaches mousemove listener, shows bar on entry, clears timer on exit. `Escape` exits focus mode before closing reader. `close()` exits focus mode automatically.
+
+---
+
 ## 2026-02-22 - Fix: Comic/Webtoon Reading Progress Not Persisting Across Refreshes
 
 **Root cause**: Progress was saved via an `onPageChange` callback wired in `_openComicRenderer()` using `const fileKey = this.file.key` (a closure over `Reader.this.file.key`). If `file.key` was falsy or differed from the href-derived key used by `ComicReader._fileKey`, `saveProgress(undefined, …)` silently returned without writing to localStorage. Meanwhile `loadProgress(this._fileKey)` used the href-derived fallback and found nothing — so comics always opened at page 0 after F5.
@@ -17,8 +34,6 @@ The same class of bug existed latently for the webtoon and book renderers.
   - `Reader._openComicRenderer()` — removed `fileKey` local variable and `onPageChange` assignments
 
 ---
-
-
 
 **Root cause**: Browser UA stylesheet applies `background-color: ButtonFace` (typically white) to `<button>` elements on `:focus`. After clicking a toggled-off mode button the focus ring activates with the UA background, overriding the dark translucent `.reader-view-btn` background — making it appear white.
 

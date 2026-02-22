@@ -259,6 +259,10 @@
           &#8597; Webtoon
         </button>
       </div>
+      <button id="reader-opts" class="hidden" title="Reader options">Aa</button>
+      <button id="reader-fullscreen" title="Focus reading mode (F)">
+        &#9974;
+      </button>
       <a id="reader-download" class="i-download" title="Download file"></a>
       <button id="reader-prev" class="hidden" title="Previous chapter">
         &lsaquo; Prev
@@ -268,6 +272,103 @@
       </button>
     </div>
     <div id="reader-content"></div>
+    <div id="reader-opts-modal" class="hidden">
+      <div class="rom-section">
+        <div class="rom-label">Font</div>
+        <div class="rom-fonts">
+          <button
+            class="rom-font-btn"
+            data-font="georgia"
+            title="Georgia (serif)"
+          >
+            <span style="font-family: Georgia, serif">Ag</span
+            ><small>Georgia</small>
+          </button>
+          <button
+            class="rom-font-btn"
+            data-font="bookerly"
+            title="Bookerly (Kindle)"
+          >
+            <span
+              style="
+                font-family:
+                  &quot;Bookerly&quot;, &quot;Palatino Linotype&quot;,
+                  &quot;Palatino&quot;, serif;
+              "
+              >Ag</span
+            ><small>Bookerly</small>
+          </button>
+          <button
+            class="rom-font-btn"
+            data-font="helvetica"
+            title="Helvetica (sans-serif)"
+          >
+            <span style="font-family: Helvetica, Arial, sans-serif">Ag</span
+            ><small>Helvetica</small>
+          </button>
+          <button
+            class="rom-font-btn"
+            data-font="dyslexic"
+            title="OpenDyslexic (accessibility)"
+          >
+            <span
+              style="
+                font-family: OpenDyslexic, &quot;Comic Sans MS&quot;, cursive;
+              "
+              >Ag</span
+            ><small>OpenDyslexic</small>
+          </button>
+        </div>
+      </div>
+      <div class="rom-section">
+        <div class="rom-label">Font size</div>
+        <div class="rom-row">
+          <button
+            id="rom-size-dec"
+            class="rom-step-btn"
+            title="Decrease font size"
+          >
+            A&#8722;
+          </button>
+          <span id="rom-size-val"></span>
+          <button
+            id="rom-size-inc"
+            class="rom-step-btn"
+            title="Increase font size"
+          >
+            A&#43;
+          </button>
+        </div>
+      </div>
+      <div class="rom-section">
+        <div class="rom-label">Line spacing</div>
+        <div class="rom-row rom-choices" id="rom-spacing-row">
+          <button class="rom-choice-btn" data-spacing="1.4" title="Compact">
+            &#8803; Compact
+          </button>
+          <button class="rom-choice-btn" data-spacing="1.75" title="Normal">
+            &#8803; Normal
+          </button>
+          <button class="rom-choice-btn" data-spacing="2.2" title="Relaxed">
+            &#8803; Relaxed
+          </button>
+        </div>
+      </div>
+      <div class="rom-section">
+        <div class="rom-label">Margins</div>
+        <div class="rom-row rom-choices" id="rom-margin-row">
+          <button class="rom-choice-btn" data-margin="16" title="Narrow">
+            Narrow
+          </button>
+          <button class="rom-choice-btn" data-margin="40" title="Normal">
+            Normal
+          </button>
+          <button class="rom-choice-btn" data-margin="72" title="Wide">
+            Wide
+          </button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <div id="preload"></div>

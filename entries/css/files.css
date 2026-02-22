@@ -328,6 +328,11 @@ body.links-mode #filelist-scroller {
   gap: 0.85rem;
 }
 
+/* Hide request-file tiles in gallery mode — they have no cover to show */
+#files.gallerymode > .file.request-file {
+  display: none !important;
+}
+
 #files.gallerymode > .file:not(.upload) {
   position: relative;
   display: block !important;

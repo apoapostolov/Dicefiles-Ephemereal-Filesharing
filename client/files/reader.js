@@ -594,9 +594,13 @@ async function parseEpubChapters(zip) {
  * applying translateY(-pageIdx * pageHeight) to #scroller.
  * Total pages = ceil(scroller.offsetHeight / pageHeight) measured after load.
  */
-function buildSrcdoc(html, cssUrls, pageWidth, pageHeight) {
-  const HP = 40; // horizontal padding (px)
+function buildSrcdoc(html, cssUrls, pageWidth, pageHeight, opts) {
+  const o = opts || READER_OPTS_DEFAULTS;
+  const HP = o.margin != null ? o.margin : 40; // horizontal padding (px)
   const VP = 28; // top padding (px)
+  const fontFamily = FONT_FAMILIES[o.fontFamily] || FONT_FAMILIES.georgia;
+  const fontSize = (o.fontSize || 1.05) + "em";
+  const lineHeight = o.lineSpacing || 1.75;
   const linkTags = cssUrls
     .map((h) => `<link rel="stylesheet" href="${h}">`)
     .join("\n");
@@ -616,15 +620,18 @@ ${linkTags}
     box-sizing: border-box;
     width: ${pageWidth}px;
     color: #e8e8e8;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 1.05em;
-    line-height: 1.75;
+    font-family: ${fontFamily};
+    font-size: ${fontSize};
+    line-height: ${lineHeight};
     will-change: transform;
   }
   img, svg, video { max-width: 100%; height: auto; }
-  a { color: #7ec8e3; }
+  /* Force all inline text colours to a readable light value, overriding
+     publisher styles that may embed dark-on-dark colour declarations. */
+  *:not(a) { color: #e8e8e8 !important; background-color: transparent !important; }
+  a { color: #7ec8e3 !important; }
   p { margin: 0 0 1em; text-align: justify; }
-  h1,h2,h3,h4,h5,h6 { color: #f0f0f0; margin-top: 0; }
+  h1,h2,h3,h4,h5,h6 { color: #f0f0f0 !important; margin-top: 0; }
   * { box-sizing: border-box; }
 </style>
 </head><body><div id="scroller">${html}</div></body></html>`;
@@ -649,6 +656,7 @@ class BookReader {
     this._loaded = false; // true once current chapter iframe fires 'load'
     this._destroyed = false;
     this._fileKey = null;
+    this._opts = null; // reader typography options (set in open())
     this.onPageChange = null; // callback(chapterIdx) — set by Reader
   }
 
@@ -677,6 +685,7 @@ class BookReader {
   async open(url, type, fileKey) {
     this._type = type;
     this._fileKey = fileKey || null;
+    this._opts = loadReaderOpts();
     dbg("BookReader.open() url =", url, "type =", type);
     this.container.textContent = "";
     this._computePageSize();
@@ -780,7 +789,13 @@ class BookReader {
       }
     });
 
-    iframe.srcdoc = buildSrcdoc(html, css, this._pageWidth, this._pageHeight);
+    iframe.srcdoc = buildSrcdoc(
+      html,
+      css,
+      this._pageWidth,
+      this._pageHeight,
+      this._opts,
+    );
     this.container.appendChild(iframe);
     this._updateInfo();
   }
@@ -797,6 +812,17 @@ class BookReader {
     } catch (ex) {
       dbgErr("_scrollToPage", ex);
     }
+  }
+
+  /**
+   * Update reader typography options and re-render the current chapter
+   * at the current page position.
+   * @param {object} newOpts — partial or full options object
+   */
+  applyOpts(newOpts) {
+    this._opts = { ...this._opts, ...newOpts };
+    // Re-render current chapter preserving page position
+    this._renderChapter(this._currentIdx, this._pageInChapter);
   }
 
   /** Navigate one page forward; wraps to next chapter at chapter end. */
@@ -844,7 +870,10 @@ class BookReader {
     if (this.infoEl) {
       this.infoEl.textContent = `Chapter ${this._currentIdx + 1} / ${this._total}  ·  Page ${this._pageInChapter + 1} / ${this._totalPagesInChapter}`;
     }
-    saveProgress(this._fileKey, { chapter: this._currentIdx, page: this._pageInChapter });
+    saveProgress(this._fileKey, {
+      chapter: this._currentIdx,
+      page: this._pageInChapter,
+    });
     if (this.onPageChange) this.onPageChange(this._currentIdx);
   }
 
@@ -994,6 +1023,51 @@ class ComicReader {
 // ── Reading progress helpers ─────────────────────────────────────────────────
 
 const PROGRESS_PREFIX = "dicefiles:readprogress:";
+const READER_OPTS_KEY = "dicefiles:readeropts";
+
+/**
+ * Default reader typography options (Kindle-style).
+ * fontFamily: key into FONT_FAMILIES
+ * fontSize:   em multiplier (relative to root)
+ * lineSpacing: CSS line-height value
+ * margin:     horizontal padding in px
+ */
+const READER_OPTS_DEFAULTS = {
+  fontFamily: "georgia",
+  fontSize: 1.05,
+  lineSpacing: 1.75,
+  margin: 40,
+};
+
+const FONT_FAMILIES = {
+  georgia: 'Georgia,"Times New Roman",serif',
+  bookerly: '"Bookerly","Palatino Linotype","Palatino","Book Antiqua",serif',
+  helvetica: "Helvetica,Arial,sans-serif",
+  dyslexic: 'OpenDyslexic,"Comic Sans MS",cursive',
+};
+
+/** Load persisted reader options, falling back to defaults. */
+function loadReaderOpts() {
+  try {
+    const raw = localStorage.getItem(READER_OPTS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return { ...READER_OPTS_DEFAULTS, ...parsed };
+    }
+  } catch (_) {
+    // ignore
+  }
+  return { ...READER_OPTS_DEFAULTS };
+}
+
+/** Persist reader options. */
+function saveReaderOpts(opts) {
+  try {
+    localStorage.setItem(READER_OPTS_KEY, JSON.stringify(opts));
+  } catch (_) {
+    // ignore
+  }
+}
 
 /**
  * Persist the reading position for `fileKey`.
@@ -1236,6 +1310,12 @@ export default class Reader {
     this.viewPillEl = document.querySelector("#reader-view-pill");
     this.mangaEl = document.querySelector("#reader-manga");
     this.webtoonEl = document.querySelector("#reader-webtoon");
+    this.fullscreenEl = document.querySelector("#reader-fullscreen");
+    this.readerOptsEl = document.querySelector("#reader-opts");
+    this.readerOptsModalEl = document.querySelector("#reader-opts-modal");
+    this._optsOpen = false;
+    this._focusMode = false;
+    this._focusMouseTimer = null;
 
     // Log which DOM elements were found / missing
     dbg(
@@ -1321,6 +1401,95 @@ export default class Reader {
       });
     }
 
+    if (this.fullscreenEl) {
+      this.fullscreenEl.addEventListener("click", () => this._toggleFocus());
+    }
+
+    // Reader options modal
+    if (this.readerOptsEl && this.readerOptsModalEl) {
+      this.readerOptsEl.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this._toggleOptsModal();
+      });
+
+      // Font family buttons
+      this.readerOptsModalEl
+        .querySelectorAll(".rom-font-btn")
+        .forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const fontFamily = btn.dataset.font;
+            this._applyReaderOpt({ fontFamily });
+            this._updateOptsUI();
+          });
+        });
+
+      // Font size stepper
+      const sizeDecEl = this.readerOptsModalEl.querySelector("#rom-size-dec");
+      const sizeIncEl = this.readerOptsModalEl.querySelector("#rom-size-inc");
+      const SIZES = [0.8, 0.9, 1.0, 1.05, 1.15, 1.3, 1.5, 1.75, 2.0];
+      if (sizeDecEl) {
+        sizeDecEl.addEventListener("click", () => {
+          const cur = loadReaderOpts().fontSize;
+          const idx = SIZES.findIndex((s) => Math.abs(s - cur) < 0.01);
+          const next = SIZES[Math.max(0, idx < 0 ? SIZES.length - 1 : idx - 1)];
+          this._applyReaderOpt({ fontSize: next });
+          this._updateOptsUI();
+        });
+      }
+      if (sizeIncEl) {
+        sizeIncEl.addEventListener("click", () => {
+          const cur = loadReaderOpts().fontSize;
+          const idx = SIZES.findIndex((s) => Math.abs(s - cur) < 0.01);
+          const next = SIZES[Math.min(SIZES.length - 1, idx < 0 ? 0 : idx + 1)];
+          this._applyReaderOpt({ fontSize: next });
+          this._updateOptsUI();
+        });
+      }
+
+      // Line spacing buttons
+      this.readerOptsModalEl
+        .querySelectorAll("#rom-spacing-row .rom-choice-btn")
+        .forEach((btn) => {
+          btn.addEventListener("click", () => {
+            this._applyReaderOpt({
+              lineSpacing: parseFloat(btn.dataset.spacing),
+            });
+            this._updateOptsUI();
+          });
+        });
+
+      // Margin buttons
+      this.readerOptsModalEl
+        .querySelectorAll("#rom-margin-row .rom-choice-btn")
+        .forEach((btn) => {
+          btn.addEventListener("click", () => {
+            this._applyReaderOpt({ margin: parseInt(btn.dataset.margin, 10) });
+            this._updateOptsUI();
+          });
+        });
+
+      // Close modal when clicking outside
+      document.addEventListener("click", (e) => {
+        if (
+          this._optsOpen &&
+          !this.readerOptsModalEl.contains(e.target) &&
+          e.target !== this.readerOptsEl
+        ) {
+          this._closeOptsModal();
+        }
+      });
+    }
+
+    // Focus-mode overlay mouse-move handler — show bar, fade after 2 s
+    this._onFocusMouseMove = () => {
+      if (!this._focusMode) return;
+      document.body.classList.add("focus-bar-visible");
+      clearTimeout(this._focusMouseTimer);
+      this._focusMouseTimer = setTimeout(() => {
+        document.body.classList.remove("focus-bar-visible");
+      }, 2000);
+    };
+
     Object.seal(this);
   }
 
@@ -1398,6 +1567,11 @@ export default class Reader {
     if (this.viewPillEl) {
       this.viewPillEl.classList.toggle("hidden", !isComic);
     }
+    if (this.readerOptsEl) {
+      this.readerOptsEl.classList.toggle("hidden", !isBook);
+    }
+    // Always close opts modal on open
+    this._closeOptsModal();
     if (this.mangaEl) {
       this.mangaEl.classList.toggle(
         "active",
@@ -1462,11 +1636,106 @@ export default class Reader {
     }
   }
 
+  _toggleOptsModal() {
+    if (this._optsOpen) {
+      this._closeOptsModal();
+    } else {
+      this._openOptsModal();
+    }
+  }
+
+  _openOptsModal() {
+    if (!this.readerOptsModalEl) return;
+    this._optsOpen = true;
+    this._updateOptsUI();
+    this.readerOptsModalEl.classList.remove("hidden");
+    if (this.readerOptsEl) this.readerOptsEl.classList.add("active");
+  }
+
+  _closeOptsModal() {
+    if (!this.readerOptsModalEl) return;
+    this._optsOpen = false;
+    this.readerOptsModalEl.classList.add("hidden");
+    if (this.readerOptsEl) this.readerOptsEl.classList.remove("active");
+  }
+
+  /**
+   * Apply a partial opts update: save to localStorage and re-render the book.
+   * @param {object} patch — partial opts object
+   */
+  _applyReaderOpt(patch) {
+    const current = loadReaderOpts();
+    const updated = { ...current, ...patch };
+    saveReaderOpts(updated);
+    // If a book is open, re-render with new opts
+    if (this._renderer && this._renderer.applyOpts) {
+      this._renderer.applyOpts(updated);
+    }
+  }
+
+  /** Sync the active states in the opts modal UI to current persisted opts. */
+  _updateOptsUI() {
+    if (!this.readerOptsModalEl) return;
+    const opts = loadReaderOpts();
+
+    // Font family
+    this.readerOptsModalEl.querySelectorAll(".rom-font-btn").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.font === opts.fontFamily);
+    });
+
+    // Font size display
+    const sizeValEl = this.readerOptsModalEl.querySelector("#rom-size-val");
+    if (sizeValEl) {
+      sizeValEl.textContent = Math.round(opts.fontSize * 100) + "%";
+    }
+
+    // Line spacing
+    this.readerOptsModalEl
+      .querySelectorAll("#rom-spacing-row .rom-choice-btn")
+      .forEach((btn) => {
+        btn.classList.toggle(
+          "active",
+          Math.abs(parseFloat(btn.dataset.spacing) - opts.lineSpacing) < 0.01,
+        );
+      });
+
+    // Margins
+    this.readerOptsModalEl
+      .querySelectorAll("#rom-margin-row .rom-choice-btn")
+      .forEach((btn) => {
+        btn.classList.toggle(
+          "active",
+          parseInt(btn.dataset.margin, 10) === opts.margin,
+        );
+      });
+  }
+
+  _toggleFocus() {
+    this._focusMode = !this._focusMode;
+    document.body.classList.toggle("focus-reading", this._focusMode);
+    if (this._focusMode) {
+      document.addEventListener("mousemove", this._onFocusMouseMove);
+      // Show bar briefly on entry
+      this._onFocusMouseMove();
+    } else {
+      document.removeEventListener("mousemove", this._onFocusMouseMove);
+      clearTimeout(this._focusMouseTimer);
+      document.body.classList.remove("focus-bar-visible");
+    }
+    if (this.fullscreenEl) {
+      this.fullscreenEl.classList.toggle("active", this._focusMode);
+    }
+  }
+
   close() {
     if (this._renderer) {
       this._renderer.destroy();
       this._renderer = null;
     }
+    // Exit focus mode if active
+    if (this._focusMode) this._toggleFocus();
+    // Close opts modal if open
+    this._closeOptsModal();
     this.file = null;
     this._readerType = null;
     document.body.classList.remove("reading");
@@ -1530,6 +1799,11 @@ export default class Reader {
 
   _onKey(e) {
     if (e.key === "Escape") {
+      if (this._focusMode) {
+        this._toggleFocus();
+        nukeEvent(e);
+        return;
+      }
       this.close();
       nukeEvent(e);
     } else if (e.key === "ArrowLeft") {
@@ -1561,17 +1835,36 @@ export default class Reader {
         nukeEvent(e);
       }
     } else if (e.key === "PageUp") {
-      // PageUp: previous chapter (books only)
-      if (this._readerType !== "pdf") {
+      if (this._readerType === "comic" && this._webtoonMode) {
+        // PageUp in webtoon = scroll back one full page height
+        if (this._renderer instanceof WebtoonReader) {
+          this._renderer.container.scrollBy({
+            top: -this._renderer._pageHeight,
+            behavior: "smooth",
+          });
+        }
+        nukeEvent(e);
+      } else if (this._readerType !== "pdf") {
         this._bookChapter("prev");
         nukeEvent(e);
       }
     } else if (e.key === "PageDown") {
-      // PageDown: next chapter (books only)
-      if (this._readerType !== "pdf") {
+      if (this._readerType === "comic" && this._webtoonMode) {
+        // PageDown in webtoon = scroll forward one full page height
+        if (this._renderer instanceof WebtoonReader) {
+          this._renderer.container.scrollBy({
+            top: this._renderer._pageHeight,
+            behavior: "smooth",
+          });
+        }
+        nukeEvent(e);
+      } else if (this._readerType !== "pdf") {
         this._bookChapter("next");
         nukeEvent(e);
       }
+    } else if (e.key === "f" || e.key === "F") {
+      this._toggleFocus();
+      nukeEvent(e);
     }
   }
 }

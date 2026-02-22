@@ -7,6 +7,7 @@
   z-index: 1500;
   background: #111;
   overflow: hidden;
+  position: relative; /* anchor for #reader-opts-modal */
 }
 
 .reading #reader {
@@ -365,6 +366,78 @@
   align-items: center;
   justify-content: flex-start;
 }
+
+/* ── Focus / full-screen reading mode ───────────────────────────────────── */
+
+/* Fullscreen button in reader bar */
+#reader-fullscreen {
+  flex: 0 0 auto;
+  cursor: pointer;
+  font-size: 1rem;
+  color: rgba(210, 210, 210, 0.82);
+  height: 2.1rem;
+  min-width: 2.1rem;
+  padding: 0 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+#reader-fullscreen:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+#reader-fullscreen:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.05);
+}
+#reader-fullscreen:focus-visible {
+  outline: 2px solid rgba(99, 179, 237, 0.6);
+  outline-offset: -2px;
+}
+#reader-fullscreen.active {
+  background: rgba(99, 179, 237, 0.18);
+  color: #90cdf4;
+}
+
+/* Focus reading mode: #reader takes the entire viewport */
+body.focus-reading #reader {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9000 !important;
+}
+
+/* Bar is hidden by default in focus mode; revealed on mouse move for 2 s */
+body.focus-reading #reader-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9001;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+body.focus-reading.focus-bar-visible #reader-bar {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Focus-mode close button: always shown in top-right corner when bar is visible */
+body.focus-reading #reader-close {
+  margin-left: auto;
+}
+
+/* Content fills remaining space */
+body.focus-reading #reader-content {
+  flex: 1 1 0;
+}
+
 /* ── "Read Now" overlay button in gallery ────────────────────────────────── */
 
 /* Positioned within #gallery (which now has position:relative).
@@ -401,4 +474,202 @@
   background: rgba(0, 0, 0, 0.8);
   border-color: rgba(210, 210, 210, 0.88);
   color: #fff;
+}
+
+/* ── Reader options button (EPUB / MOBI only) ────────────────────────────── */
+
+#reader-opts {
+  flex: 0 0 auto;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: rgba(210, 210, 210, 0.82);
+  height: 2.1rem;
+  padding: 0 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+#reader-opts:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+#reader-opts:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.05);
+}
+#reader-opts:focus-visible {
+  outline: 2px solid rgba(99, 179, 237, 0.6);
+  outline-offset: -2px;
+}
+#reader-opts.active {
+  background: rgba(99, 179, 237, 0.18);
+  color: #90cdf4;
+  border-color: rgba(99, 179, 237, 0.35);
+}
+
+/* ── Reader options modal ────────────────────────────────────────────────── */
+
+#reader-opts-modal {
+  position: absolute;
+  top: calc(var(--reader-bar-h, 2.8rem) + 6px);
+  right: 10px;
+  z-index: 9100;
+  background: #1e2028;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  min-width: 280px;
+  max-width: 330px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.rom-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.rom-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(180, 180, 180, 0.55);
+}
+
+/* Font family swatches */
+.rom-fonts {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.rom-font-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.55rem 0.4rem 0.45rem;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+  color: #ccc;
+}
+
+.rom-font-btn span {
+  font-size: 1.4rem;
+  line-height: 1;
+  color: #e8e8e8;
+}
+
+.rom-font-btn small {
+  font-size: 0.64rem;
+  color: rgba(180, 180, 180, 0.65);
+  white-space: nowrap;
+}
+
+.rom-font-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.rom-font-btn.active {
+  background: rgba(99, 179, 237, 0.16);
+  border-color: rgba(99, 179, 237, 0.5);
+  color: #90cdf4;
+}
+
+.rom-font-btn.active small {
+  color: #90cdf4;
+}
+
+/* Stepper row (font size) */
+.rom-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rom-step-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: #ccc;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.rom-step-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+#rom-size-val {
+  flex: 1;
+  text-align: center;
+  font-size: 0.88rem;
+  color: #ddd;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Choice buttons row (line spacing, margins) */
+.rom-choices {
+  gap: 0.4rem;
+}
+
+.rom-choice-btn {
+  flex: 1;
+  height: 2rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(180, 180, 180, 0.75);
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+  white-space: nowrap;
+}
+
+.rom-choice-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.rom-choice-btn.active {
+  background: rgba(99, 179, 237, 0.18);
+  border-color: rgba(99, 179, 237, 0.45);
+  color: #90cdf4;
 }
