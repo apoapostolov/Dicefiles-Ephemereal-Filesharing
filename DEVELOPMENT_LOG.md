@@ -1,10 +1,22 @@
 # Dicefiles Development Log
 
+## 2026-02-23 — Latest Activity tab, tab hover fix, profileActivity config
+
+- `lib/user.js` — Added `zadd` and `zremrangebyrank` to `redis.getMethods()`; added `ACTIVITY_MAX = 20` and `activityKey()` constants; added `recordActivity(type, entry)` (writes to Redis sorted set `activity:{account}` capped at 20) and `getActivity()` (returns last 20 entries newest-first) methods to `User` class.
+- `lib/upload.js` — Added `recordActivity("upload", ...)` call after `OBS.trackUploadCreated(upload)`; added `recordActivity("download", ...)` call after `req.user.addDownload()` in `serve()`.
+- `lib/httpserver.js` — Added `info.activity = CONFIG.get("profileActivity") !== false ? await user.getActivity() : null` to profile render route. Returns `null` when disabled, causing the tab button to be hidden in the template.
+- `defaults.js` — Added `profileActivity: true` with comment; explicit `false` disables the tab for all users.
+- `views/user.ejs` — Added "Latest Activity" tab button (conditional on `info.activity !== null`); added `profile-activity` section with borderless table showing FA upload/download arrow icons, file link, human-readable size, and formatted date. Empty state shows "No activity recorded yet."
+- `entries/css/page.css` — Added `outline: none; box-shadow: none` to `.profile-tab` base and `:hover`/`:focus` rules to remove browser button border artifacts (only bottom-line indicator retained); added `.profile-activity { display: none }` with `.tab-activity` show/hide rules; added full `.activity-table` borderless styles with upload (blue `#7c93ff`) and download (green `#6ec97e`) type colors; `.activity-name` ellipsis truncation.
+- `.config.json.example` — Added commented `profileActivity` entry with explanation.
+- `README.md` — Added `profileActivity` row to configuration table.
+
 ## 2026-02-22 — Profile Overview: About Me + Looking For, FA icons CSP fix, achievement count badge
 
 **Root cause (FA icons):** The Content Security Policy in `lib/httpserver.js` had `style-src-elem 'self' 'unsafe-inline' blob:` and no `font-src` directive — neither of which allowed `cdnjs.cloudflare.com`. The browser silently blocked the Font Awesome stylesheet and webfonts, so all FA `<i>` elements rendered as blank boxes.
 
 **Changes:**
+
 - `lib/httpserver.js` — Added `https://cdnjs.cloudflare.com` to `style-src-elem`; added `font-src 'self' data: https://cdnjs.cloudflare.com` directive.
 - `lib/user.js` — Added `"looking"` to `ADOPT_OFILTER`; added 2000-char length guard for the new field in `adopt()`.
 - `lib/httpserver.js` — Added `info.lookingHtml = renderMarkdown(user.looking || "")` to the profile render.
