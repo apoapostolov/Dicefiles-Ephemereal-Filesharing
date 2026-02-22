@@ -333,7 +333,7 @@ body.links-mode #filelist-scroller {
   display: none !important;
 }
 
-#files.gallerymode > .file:not(.upload) {
+#files.gallerymode > .file:not(.upload):not(.request-file) {
   position: relative;
   display: block !important;
   width: 250px !important;

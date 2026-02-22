@@ -596,11 +596,14 @@ async function parseEpubChapters(zip) {
  */
 /** Vertical gap (px) between the A5 page frame and the container edges. */
 const BOOK_VMARGIN = 10;
+/** Top/bottom padding (px) inside the book iframe — used both in buildSrcdoc and
+ *  in the line-snapping logic so both sides always agree on the value. */
+const BOOK_VP = 28;
 
 function buildSrcdoc(html, cssUrls, pageWidth, pageHeight, opts) {
   const o = opts || READER_OPTS_DEFAULTS;
   const HP = o.margin != null ? o.margin : 40; // horizontal padding (px)
-  const VP = 28; // top padding (px)
+  const VP = BOOK_VP; // top/bottom padding (px) — keep in sync with BOOK_VP
   const fontFamily = FONT_FAMILIES[o.fontFamily] || FONT_FAMILIES.georgia;
   const fontSize = (o.fontSize || 1.05) + "em";
   const lineHeight = o.lineSpacing || 1.75;
@@ -774,8 +777,35 @@ class BookReader {
         if (!doc || !doc.body) return;
         const scroller = doc.getElementById("scroller");
         if (!scroller) return;
-        // Total content height — number of A5 "pages" this chapter spans
+        // Total content height (measure before any snapping so the full
+        // natural content height is captured regardless of iframe clip).
         const totalH = scroller.offsetHeight;
+
+        // Snap _pageHeight to a whole-line multiple so that translateY page
+        // offsets always land on a line boundary, preventing the half-line
+        // bleed at the top and bottom of each page.
+        try {
+          const sampleEl =
+            scroller.querySelector("p,li,div,span") || scroller;
+          const lhPx = parseFloat(
+            iframe.contentWindow.getComputedStyle(sampleEl).lineHeight,
+          );
+          if (lhPx > 4 && isFinite(lhPx)) {
+            const usableH = this._pageHeight - 2 * BOOK_VP;
+            const linesPerPage = Math.floor(usableH / lhPx);
+            if (linesPerPage > 0) {
+              const snappedH =
+                Math.round(linesPerPage * lhPx) + 2 * BOOK_VP;
+              if (snappedH > 0 && snappedH <= this._pageHeight) {
+                iframe.style.height = snappedH + "px";
+                doc.documentElement.style.height = snappedH + "px";
+                doc.body.style.height = snappedH + "px";
+                this._pageHeight = snappedH;
+              }
+            }
+          }
+        } catch (_) {}
+
         this._totalPagesInChapter = Math.max(
           1,
           Math.ceil(totalH / this._pageHeight),
@@ -1736,12 +1766,14 @@ export default class Reader {
     document.body.classList.toggle("focus-reading", this._focusMode);
     if (this._focusMode) {
       document.addEventListener("mousemove", this._onFocusMouseMove);
+      // Sync when native fullscreen is dismissed externally (Escape, F11, OS).
       document.addEventListener("fullscreenchange", this._onFullscreenChange);
-      // Enter browser native fullscreen so the OS chrome disappears too
+      // Ask the browser to enter native fullscreen — OS chrome disappears and
+      // the in-app overlay (body.focus-reading) already fills the viewport.
       try {
         document.documentElement.requestFullscreen();
       } catch (_) {
-        // ignore — unsupported contexts (iframes, some browsers)
+        // Unsupported (iframes, some browsers) — in-app overlay still works.
       }
       // Show bar briefly on entry
       this._onFocusMouseMove();
@@ -1753,7 +1785,7 @@ export default class Reader {
       );
       clearTimeout(this._focusMouseTimer);
       document.body.classList.remove("focus-bar-visible");
-      // Exit browser native fullscreen if it is still active
+      // Exit native fullscreen if still active.
       if (document.fullscreenElement) {
         try {
           document.exitFullscreen();

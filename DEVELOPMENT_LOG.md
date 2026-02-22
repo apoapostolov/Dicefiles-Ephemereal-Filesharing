@@ -1,10 +1,11 @@
 # Dicefiles Development Log
 
-## 2026-02-22 - Fix: A5 reader margin + text overflow on font size change
+## 2026-02-22 - Fix: focus mode no longer hijacks native fullscreen; gallery truly hides request tiles
+
+- `client/files/reader.js` — Removed `document.documentElement.requestFullscreen()` from `_toggleFocus()` entry path. The in-app CSS overlay (`body.focus-reading`) is the intended reading experience; calling `requestFullscreen()` was handing control to the browser and breaking the layout. Exiting focus mode still calls `document.exitFullscreen()` when `document.fullscreenElement` is set, so if the user was in native fullscreen (e.g. F11) closing the reading experience will also dismiss it. The `fullscreenchange` sync listener is kept on entry so externally-triggered fullscreen dismissal still syncs state.
+- `entries/css/files.css` — Fixed CSS specificity battle: `#files.gallerymode > .file:not(.upload)` had `display: block !important` and came after `#files.gallerymode > .file.request-file { display: none !important }` in source order. Both rules had the same specificity, so source-order caused the `block` to win. Changed `:not(.upload)` → `:not(.upload):not(.request-file)` so request tiles are fully excluded from the gallery tile rule and the `display: none` rule takes effect.
 
 - `client/files/reader.js` — Added `BOOK_VMARGIN = 10` constant. `_computePageSize()` now uses `container.clientHeight - 2 * BOOK_VMARGIN` so the A5 page is 10 px shorter than the container on each side, giving a visible gap above and below the page frame. `applyOpts()` now calls `_computePageSize()` before re-rendering so page dimensions are always fresh when font size / spacing change — prevents pagination drift where a larger font caused measured scroller height to exceed the stale `pageHeight`. Removed `will-change: transform` from `#scroller` inside `buildSrcdoc` (premature compositor-layer hint that allows painted content to escape `overflow: hidden` bounds on some GPU rendering paths); replaced with `contain: paint` on `html, body` which strictly clips compositor layers to the body boundary.
-
-
 
 - `client/files/reader.js` — Added `_onFullscreenChange` field (declared before `Object.seal`). `_toggleFocus()` now calls `document.documentElement.requestFullscreen()` when entering focus mode and `document.exitFullscreen()` when leaving (guarded by `document.fullscreenElement` check). A `fullscreenchange` listener is attached on enter and removed on exit so that externally-triggered fullscreen dismissal (F11, OS shortcut) syncs the focus mode state automatically. Closing the reader via ✕ while in focus mode therefore also exits native browser fullscreen.
 - `CHANGELOG.md` — Updated `[Unreleased]` section: merged duplicate `Changed` blocks, added Focus reading mode, EPUB/MOBI reader options, Webtoon PgDn/PgUp, gallery request tile hiding, and EPUB/MOBI dark-text fix entries.
