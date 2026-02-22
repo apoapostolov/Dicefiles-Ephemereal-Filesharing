@@ -2,8 +2,8 @@
 
 const os = require("os");
 
-const {HTTP_PORT: port = 8080} = process.env;
-const {HTTPS_PORT: tlsport = 8443} = process.env;
+const { HTTP_PORT: port = 8080 } = process.env;
+const { HTTPS_PORT: tlsport = 8443 } = process.env;
 const NUM_CPUS = os.cpus().length;
 
 const LINUX = os.platform() === "linux";
@@ -174,7 +174,6 @@ module.exports = {
   // Number of ms to block new rooms from flooding user
   roomFloodDuration: 60 * 60 * 1000,
 
-
   /************/
   /* Previews */
   /************/
@@ -198,7 +197,6 @@ module.exports = {
   // Max number of concurrent metadata extractor processes
   maxMetaProcesses: 5,
 
-
   /***************/
   /* Fine tuning */
   /***************/
@@ -215,4 +213,16 @@ module.exports = {
   // For testing mostly, always create a new storage
   // (leaking old ones, potentially)
   forceNewStorage: false,
+
+  /***********************/
+  /* Per-room Capability */
+  /***********************/
+
+  // Whether new rooms allow request creation.
+  // Room owners can override this per room via Room Options.
+  allowRequests: true,
+
+  // Whether new rooms enable the link-collection archive (URLs shared in chat).
+  // Room owners can override this per room via Room Options.
+  linkCollection: true,
 };

@@ -199,8 +199,24 @@ export default new (class Files extends EventEmitter {
     registry.socket.on("files-deleted", this.onfilesdeleted);
     registry.socket.on("files-updated", this.onfilesupdated);
     registry.roomie.on("tooltip-hidden", () => this.adjustEmpty());
+    registry.socket.on("config", () => this.updateCapabilityButtons());
+    this.updateCapabilityButtons();
     addEventListener("pagehide", this.onleave, { passive: true });
     addEventListener("beforeunload", this.onleave, { passive: true });
+  }
+
+  updateCapabilityButtons() {
+    const allowRequests = registry.config.get("allowRequests");
+    const linkCollection = registry.config.get("linkCollection");
+    // undefined = config not yet received from server; default to showing the button
+    this.createRequestEl.classList.toggle("hidden", allowRequests === false);
+    if (this.linkModeEl) {
+      this.linkModeEl.classList.toggle("hidden", linkCollection === false);
+      // If we're in links mode and it just got disabled, exit links mode
+      if (linkCollection === false && this.linksMode) {
+        this.normalMode();
+      }
+    }
   }
 
   initNewState() {

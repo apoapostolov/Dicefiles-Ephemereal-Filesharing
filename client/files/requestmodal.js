@@ -390,7 +390,15 @@ export class RequestViewModal extends Modal {
     this.rightEl = dom("div", { classes: ["requestview-right"] });
     this.body.appendChild(this.rightEl);
 
-    // Requester name
+    // Request text — shown first so the fulfiller immediately sees what is needed
+    this.rightEl.appendChild(
+      dom("p", {
+        classes: ["requestview-text"],
+        text: requestFile.name,
+      }),
+    );
+
+    // Requester attribution — secondary info below the request description
     if (requester) {
       this.rightEl.appendChild(
         dom("p", {
@@ -399,14 +407,6 @@ export class RequestViewModal extends Modal {
         }),
       );
     }
-
-    // Request text
-    this.rightEl.appendChild(
-      dom("p", {
-        classes: ["requestview-text"],
-        text: requestFile.name,
-      }),
-    );
 
     // Reference URL
     const refUrl = requestFile.meta && requestFile.meta.requestUrl;

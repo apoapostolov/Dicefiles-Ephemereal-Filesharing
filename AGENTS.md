@@ -259,16 +259,16 @@ When the user requests a changelog update, agents must follow this procedure exa
 
 ### What does NOT go in the changelog
 
-| Category                 | Example                                                        | Decision                 |
-| ------------------------ | -------------------------------------------------------------- | ------------------------ |
-| Build / infra            | webpack config change, Node version pin                        | Omit                     |
-| CSS micro-polish         | 2 px alignment tweak                                           | Omit unless user-visible |
-| Dependency sync only     | `package.json` version bump matching already-logged dep change | Omit                     |
-| Log / gitignore          | `server.log` added to `.gitignore`                             | Omit                     |
-| AGENTS.md updates        | New agent rules or procedures                                  | Omit                     |
-| README edits             | Corrected a badge URL                                          | Omit                     |
-| Bug invisible to user    | Internal Redis key format fixed                                | Omit                     |
+| Category                           | Example                                                                               | Decision                                                       |
+| ---------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Build / infra                      | webpack config change, Node version pin                                               | Omit                                                           |
+| CSS micro-polish                   | 2 px alignment tweak                                                                  | Omit unless user-visible                                       |
+| Dependency sync only               | `package.json` version bump matching already-logged dep change                        | Omit                                                           |
+| Log / gitignore                    | `server.log` added to `.gitignore`                                                    | Omit                                                           |
+| AGENTS.md updates                  | New agent rules or procedures                                                         | Omit                                                           |
+| README edits                       | Corrected a badge URL                                                                 | Omit                                                           |
+| Bug invisible to user              | Internal Redis key format fixed                                                       | Omit                                                           |
 | Fix/change to same-version feature | EPUB options-panel navigation fix shipped in same version as typography options panel | Omit — fold into the base `Added` description or omit entirely |
-| **Major feature**        | Request Fulfillment Workflow                                   | **Include**              |
-| **UX-visible bug fix**   | EPUB pagination broke after font-size change                   | **Include**              |
-| **Visible state change** | Fulfilled requests show a pill badge instead of strikethrough  | **Include**              |
+| **Major feature**                  | Request Fulfillment Workflow                                                          | **Include**                                                    |
+| **UX-visible bug fix**             | EPUB pagination broke after font-size change                                          | **Include**                                                    |
+| **Visible state change**           | Fulfilled requests show a pill badge instead of strikethrough                         | **Include**                                                    |

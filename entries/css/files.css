@@ -252,7 +252,10 @@ body.links-mode #filelist-scroller {
   letter-spacing: 0.03em;
   margin-left: 0.3em;
 }
-#files > .file.request-file.request-fulfilled > .name > .request-fulfilled-pill {
+#files
+  > .file.request-file.request-fulfilled
+  > .name
+  > .request-fulfilled-pill {
   display: inline-flex;
   align-items: center;
 }

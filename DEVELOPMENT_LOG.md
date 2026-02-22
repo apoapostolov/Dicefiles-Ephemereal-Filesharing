@@ -5,6 +5,7 @@
 ### Summary
 
 Three areas touched in one session:
+
 1. **EPUB/MOBI focus-mode centering**: In focus reading mode the A5 page was top-aligned inside the full-viewport content area. Added a CSS override (`justify-content: center; padding: 0`) scoped to `body.focus-reading #reader-content:has(.reader-book-iframe)`.
 2. **P0-3 TODO update**: Marked 9 of 11 implementation checklist items done; heading updated to "Mostly Done"; clarified the webhook gap (fires on deletion only, not `setStatus`).
 3. **P0.5 security hardening** (safe/additive items only):

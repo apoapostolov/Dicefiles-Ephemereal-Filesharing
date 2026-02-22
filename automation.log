@@ -499,3 +499,6 @@
 {"at":"2026-02-22T09:16:04.115Z","status":304,"method":"GET","path":"/api/v1/comic/TzJVPB5ZBLuvYgvtPsna/index","scope":"unknown","apiKeyId":"","account":"","ip":"127.0.0.1","durationMs":5}
 {"at":"2026-02-22T09:16:14.600Z","status":304,"method":"GET","path":"/api/v1/comic/TzJVPB5ZBLuvYgvtPsna/index","scope":"unknown","apiKeyId":"","account":"","ip":"127.0.0.1","durationMs":4}
 {"at":"2026-02-22T09:16:20.182Z","status":304,"method":"GET","path":"/api/v1/comic/TzJVPB5ZBLuvYgvtPsna/index","scope":"unknown","apiKeyId":"","account":"","ip":"127.0.0.1","durationMs":1}
+{"at":"2026-02-22T10:23:33.185Z","status":401,"method":"GET","path":"/api/v1/files","scope":"files:read","apiKeyId":"","account":"","ip":"127.0.0.1","err":"Invalid automation API key"}
+{"at":"2026-02-22T10:23:33.188Z","status":401,"method":"GET","path":"/api/v1/files","scope":"files:read","apiKeyId":"","account":"","ip":"127.0.0.1","durationMs":3}
+{"at":"2026-02-22T10:30:12.407Z","status":304,"method":"GET","path":"/api/v1/comic/TzJVPB5ZBLuvYgvtPsna/index","scope":"unknown","apiKeyId":"","account":"","ip":"127.0.0.1","durationMs":3}

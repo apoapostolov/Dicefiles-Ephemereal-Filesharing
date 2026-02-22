@@ -18,8 +18,8 @@ export class OptionsModal extends Modal {
     const fields = [
       "owners", "invitees",
       "name", "motd",
-      "inviteonly", "adult", "disabled",
-      "disablereports", "ttl",
+      "inviteonly", "adult", "allowrequests", "linkcollection",
+      "disabled", "disablereports", "ttl",
     ];
     for (const f of fields) {
       this[f] = this.el.elements[f];
@@ -34,6 +34,8 @@ export class OptionsModal extends Modal {
     this.motd.value = c.get("rawmotd") || "";
     this.inviteonly.checked = !!c.get("inviteonly");
     this.adult.checked = !!c.get("adult");
+    this.allowrequests.checked = c.get("allowRequests") !== false;
+    this.linkcollection.checked = c.get("linkCollection") !== false;
     this.disabled.checked = !!c.get("disabled");
     this.disablereports.checked = !!c.get("disableReports");
     this.ttl.value = c.get("fileTTL") || 0;
@@ -97,6 +99,8 @@ will NOT be aborted, and they also retain their chat histories.`,
       let {value: ttl} = this.ttl;
       const {checked: inviteonly} = this.inviteonly;
       const {checked: adult} = this.adult;
+      const {checked: allowRequests} = this.allowrequests;
+      const {checked: linkCollection} = this.linkcollection;
       const {checked: disabled} = this.disabled;
       const {checked: disableReports} = this.disablereports;
 
@@ -116,6 +120,12 @@ will NOT be aborted, and they also retain their chat histories.`,
       }
       if (adult !== !!c.get("adult")) {
         await socket.makeCall("setconfig", "adult", adult);
+      }
+      if (allowRequests !== (c.get("allowRequests") !== false)) {
+        await socket.makeCall("setconfig", "allowRequests", allowRequests);
+      }
+      if (linkCollection !== (c.get("linkCollection") !== false)) {
+        await socket.makeCall("setconfig", "linkCollection", linkCollection);
       }
       if (registry.chatbox.role === "mod") {
         if (disabled !== !!c.get("disabled")) {
