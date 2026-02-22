@@ -1,5 +1,23 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - Feat: CSS-column A5 pagination; trade-book margins; name/ext API filters
+
+### A5 BookReader overhaul (EPUB/MOBI)
+
+**Root cause of half-line bleed**: Previous approach used `translateY` to shift a tall `#scroller` div, combined with manual line-snapping logic. The snapping measured one `<p>` element's `lineHeight` but was fragile with mixed content (headings, block elements have different heights). Also, `padding` on a vertically-scrolled div only appears at the very top/bottom of the whole content, not on each "page".
+
+**Fix**: Switch to CSS multi-column layout. The browser's column engine handles all line-boundary splits natively and respects `orphans`/`widows` rules. Each column = one page. Column geometry: `padding-left: HP` (left margin), `column-width: pageWidth−2·HP` (text area), `column-gap: 2·HP` (right margin of page N + left of page N+1), step = pageWidth ✓.
+
+- `client/files/reader.js` — `BOOK_VP` 28→40 (top/bottom margin). `READER_OPTS_DEFAULTS.margin` 40→56. `buildSrcdoc` rewritten: `#scroller` gets `width:30000px`, `height: pageHeight-2·VP`, `margin-top: VP`, and CSS column properties. Load handler uses sentinel `<span>.getBoundingClientRect().left` to measure total pages. `_scrollToPage` uses `translateX`. `applyOpts` resets to page 0. Removed all line-snapping code.
+- `entries/css/reader.css` — `#reader-content:has(.reader-book-iframe)`: `justify-content: flex-start` + `padding-top: 12px` — page is top-aligned, not vertically centred.
+- `views/room.ejs` — Margin presets: 16/40/72 → 40/56/72px.
+- `static/client.js` — Rebuilt.
+
+### API: name/ext filters on file listing endpoints
+
+- `lib/httpserver.js` — `GET /api/v1/files` and `GET /api/v1/downloads` accept `name_contains` (case-insensitive substring) and `ext` (comma-separated extension list). Combinable with existing `type`/`scope`/`since`.
+- `API.md` — Documented new params; §6.9 includes agent polling shell examples.
+
 ## 2026-02-22 - Fix: WebtoonReader progress restore — pixel-based scroll + \_restoring guard
 
 **Root cause**: Two compounding bugs caused webtoon reading position to always reset to page 0 on refresh:
