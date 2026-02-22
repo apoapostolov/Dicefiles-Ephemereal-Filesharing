@@ -116,7 +116,10 @@ describe("GET / — public room directory", () => {
 
   ifServer("room rows include file count and user count columns", async () => {
     const { body } = await get("/");
-    if (!body.includes('id="room-directory"') || body.includes("No rooms yet")) {
+    if (
+      !body.includes('id="room-directory"') ||
+      body.includes("No rooms yet")
+    ) {
       return; // no rooms — skip column check
     }
     // Three columns per row (name, files, users) — at least 3 cells expected
