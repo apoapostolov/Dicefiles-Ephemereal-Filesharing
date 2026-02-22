@@ -1,16 +1,36 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - P1.5 archive-only cleanup, TODO hygiene rule, Node 20 compatibility confirmed
+
+### Changes
+
+- **`TODO.md`** — P1.5 section rewritten: removed Feature B (Comic Book Reader), Feature C (Manga/Webtoon Reader), Shared Implementation Plan, and Open Questions blocks that accounted for ~320 lines of spec. Only the Archive Viewer (Feature A) content remains. Section header renamed from "Archive Viewer and Comic Book Reader" to "Archive Viewer". Execution Order table updated: removed "Comic reader Phase 1" row, renamed "Archive browser Phase 3" row to "Archive Viewer (P1.5)", renumbered all rows 1–5.
+- **`AGENTS.md`** — Added "TODO.md Hygiene (Mandatory)" section with six enforcement rules for agents: no design documents in TODO (use docs/), every section must have at least one checkbox, no aspirational P-level or Research Backlog sections without concrete next actions, remove completed sections immediately, P-level assignments must be real engineering work, and Execution Order must stay in sync on every add/remove. Also added a "Failure mode: Spec-creep" paragraph.
+
+### Node Compatibility Research
+
+Full compatibility investigation for Node 20/22/24:
+
+- **Node 20.20.0** — 262/262 Jest tests pass, webpack production build is clean (same 4 pre-existing warnings, no new ones), all native modules load (sharp 0.31.3, redis 3.1.2, socket.io 4.8.3). **Zero code changes required.** Node 20 is safe to use as the new baseline today.
+- **Node 22** — Functional, but `punycode` (DEP0040) and `url.parse()` (DEP0169) deprecation warnings fire from inside node_modules (not our source). Our source code contains zero uses of any deprecated API. Main practical blocker: `redis@3.1.2` is callback-based; redis@4 rewrote the entire API to promise/async-await. Migrating `lib/broker/` and any direct redis usage is the primary work item before Node 22 can be considered fully clean.
+- **Node 24** — Same blockers as Node 22 plus `AsyncLocalStorage` now defaults to `AsyncContextFrame`. Not yet LTS (October 2025); no urgent reason to target.
+- **Node 18 EOL**: Node 18 reached Maintenance LTS in Oct 2023 and goes EOL April 2025. The project is currently pinned to an imminently EOL runtime.
+
+**Recommendation**: update AGENTS.md runtime pin to Node 20 immediately (zero-risk); plan redis@3→redis@4 migration for Node 22 support before April 2025.
+
+---
+
 ## 2026-02-22 - GitHub Actions, AI automation P-level, TODO.md cleanup
 
 ### Changes
 
-- **`.github/workflows/ci.yml`** *(new)* — CI test workflow; runs Jest on every push and PR to `main` using Node 18.
-- **`.github/workflows/release.yml`** *(new)* — Release automation; triggered by any `v*.*.*` tag push; runs tests, builds webpack, extracts the matching CHANGELOG.md section, and publishes a GitHub Release.
-- **`.github/workflows/stale.yml`** *(new)* — Marks issues/PRs stale after 60 days of inactivity, closes after a further 7.
-- **`.github/workflows/compat.yml`** *(new)* — Node compatibility matrix; tests on Node 18, 20, and 22 in parallel on every push to `main` and weekly on Mondays.
-- **`.github/workflows/lint.yml`** *(new)* — ESLint check on every push and PR to `main`.
-- **`.github/dependabot.yml`** *(new)* — Dependabot weekly npm scan; groups minor/patch production updates; blocks major upgrades for webpack, pdfjs-dist, socket.io, express, redis.
-- **`.eslintignore`** *(new)* — Excludes `static/` (webpack output), `uploads/`, `views/`, `scripts/`, `contrib/`, `core/`, `images/`, `tests/` from lint scope.
+- **`.github/workflows/ci.yml`** _(new)_ — CI test workflow; runs Jest on every push and PR to `main` using Node 18.
+- **`.github/workflows/release.yml`** _(new)_ — Release automation; triggered by any `v*.*.*` tag push; runs tests, builds webpack, extracts the matching CHANGELOG.md section, and publishes a GitHub Release.
+- **`.github/workflows/stale.yml`** _(new)_ — Marks issues/PRs stale after 60 days of inactivity, closes after a further 7.
+- **`.github/workflows/compat.yml`** _(new)_ — Node compatibility matrix; tests on Node 18, 20, and 22 in parallel on every push to `main` and weekly on Mondays.
+- **`.github/workflows/lint.yml`** _(new)_ — ESLint check on every push and PR to `main`.
+- **`.github/dependabot.yml`** _(new)_ — Dependabot weekly npm scan; groups minor/patch production updates; blocks major upgrades for webpack, pdfjs-dist, socket.io, express, redis.
+- **`.eslintignore`** _(new)_ — Excludes `static/` (webpack output), `uploads/`, `views/`, `scripts/`, `contrib/`, `core/`, `images/`, `tests/` from lint scope.
 - **`package.json`** — Added `eslint@^8.57.0` to `devDependencies`; added `"lint": "eslint ."` to `scripts`.
 - **`TODO.md`** — Full rewrite: removed all fully-implemented sections (P0.5, P2 webhooks/API hardening, P1 notifications/downloads/metadata); added new **P2 — AI Automation Infrastructure** section with 11 server-side feature items from `docs/ai_automation.md`; updated execution order.
 
