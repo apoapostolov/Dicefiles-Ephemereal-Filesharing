@@ -9,13 +9,13 @@ import registry from "./registry";
 import Scroller from "./scroller";
 import Tooltip from "./tooltip";
 import {
-  debounce,
-  dom,
-  nukeEvent,
-  roleToIcon,
-  roleToStatus,
-  toMessage,
-  toType,
+    debounce,
+    dom,
+    nukeEvent,
+    roleToIcon,
+    roleToStatus,
+    toMessage,
+    toType,
 } from "./util";
 
 const DATE_FORMAT_SHORT = (function () {
