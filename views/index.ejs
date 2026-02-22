@@ -4,6 +4,34 @@
   <nav>
     <h1 id="name"><%=NAME%></h1>
   </nav>
+  <% if (locals.publicRooms && locals.rooms && rooms.length > 0) { %>
+  <article id="room-directory">
+    <h2>Rooms</h2>
+    <table class="room-list">
+      <thead>
+        <tr>
+          <th>Room</th>
+          <th>Files</th>
+          <th>Users online</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (const room of rooms) { %>
+        <tr>
+          <td><a href="/r/<%= room.roomid %>"><%= room.name || room.roomid %></a></td>
+          <td><%= room.files %></td>
+          <td><%= room.users %></td>
+        </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </article>
+  <% } else if (locals.publicRooms && locals.rooms && rooms.length === 0) { %>
+  <article>
+    <h2>No rooms yet</h2>
+    <p>Be the first — <a href="/new">create a room</a> to start sharing.</p>
+  </article>
+  <% } else { %>
   <article>
     <h2>Welcome to Dicefiles</h2>
     <p>A self-hosted file sharing platform designed for hobby communities.</p>
@@ -42,5 +70,6 @@
       <li>Check out our <a href="https://github.com/apoapostolov/dicefiles" target="_blank">GitHub repository</a></li>
     </ul>
   </article>
+  <% } %>
   <%- include("footer"); %>
 </body>

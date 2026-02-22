@@ -677,6 +677,53 @@ body#page {
   padding-left: 2ex;
 }
 
+/* Public room directory */
+#room-directory {
+  max-width: 860px;
+}
+
+#room-directory h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.room-list {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.room-list th,
+.room-list td {
+  padding: 0.55rem 0.9rem;
+  text-align: left;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.room-list th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.room-list td:nth-child(2),
+.room-list td:nth-child(3),
+.room-list th:nth-child(2),
+.room-list th:nth-child(3) {
+  text-align: right;
+  white-space: nowrap;
+  width: 7ex;
+}
+
+.room-list tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.room-list a {
+  font-weight: 500;
+}
+
 #modlog {
   max-width: 70vw;
   width: 70vw;

@@ -242,6 +242,25 @@ module.exports = {
   profileActivity: true,
 
   /*****************************/
+  /* Server Directory          */
+  /*****************************/
+
+  // When true, the home page shows a directory of all rooms ordered by file count.
+  // When false (default), the home page shows the intro/welcome text.
+  publicRooms: false,
+
+  /******************/
+  /* Room Pruning   */
+  /******************/
+
+  // When true (default), rooms that have had no file or chat activity for
+  // roomPruningDays days are permanently deleted along with all their files.
+  roomPruning: true,
+
+  // Number of days of inactivity before a room is pruned.
+  roomPruningDays: 21,
+
+  /*****************************/
   /* Optional External Services */
   /*****************************/
 

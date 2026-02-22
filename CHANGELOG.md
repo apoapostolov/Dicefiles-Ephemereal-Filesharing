@@ -4,6 +4,10 @@
 
 ### Added
 
+- **Public room directory**: When `publicRooms: true` is set in the project configuration, the home page becomes a live directory of all registered rooms sorted by file count. Each entry links directly to the room and shows its current file count and number of online users. Disabled by default so existing deployments are unaffected.
+
+- **Automatic room pruning**: Rooms that have received no file uploads or chat messages within the last 21 days are automatically deleted, including all their files and Redis state. The prune cycle runs once at startup (60 s delay) then every 24 hours. Configurable via `roomPruning` (on/off) and `roomPruningDays` (default 21) in the project configuration file.
+
 - **Latest Activity tab on user profiles**: Each user's profile page now includes a "Latest Activity" tab showing their most recent 20 uploads and downloads. Each row displays an upload or download icon, the file name (linked to the file's share page), human-readable file size, and a relative timestamp. The tab is hidden when there is no activity yet. Activity recording can be disabled site-wide with `profileActivity: false` in the project configuration file.
 
 - **MCP server for AI clients** (`scripts/mcp-server.js`): A Model Context Protocol server is now bundled with the project, wrapping all automation API endpoints as 13 named, schema-validated tools. AI clients — Claude Desktop, Cursor, Continue, OpenClaw, AutoGen — can discover and call Dicefiles operations directly without writing HTTP code. Stdio mode (default) works out of the box with Claude Desktop; Streamable HTTP mode supports remote orchestrators. See `MCP.md` for setup instructions, Claude Desktop config JSON, and the full tool reference.

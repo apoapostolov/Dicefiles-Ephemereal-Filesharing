@@ -345,3 +345,43 @@ Rules:
 | **Major feature**                  | Request Fulfillment Workflow                                                          | **Include**                                                    |
 | **UX-visible bug fix**             | EPUB pagination broke after font-size change                                          | **Include**                                                    |
 | **Visible state change**           | Fulfilled requests show a pill badge instead of strikethrough                         | **Include**                                                    |
+
+---
+
+## Feature Confirmation Test Coverage (Mandatory)
+
+When the user **confirms** that a feature is complete (i.e., approves it, says "good", asks to merge/commit, or asks to update the changelog), the agent must **also** create or update test files to cover the new functionality in the same response. This is non-negotiable — shipping without tests is the same class of failure as shipping without a changelog entry.
+
+### What to test
+
+Cover every new server-side code path at the unit or integration level:
+
+| New code                                  | What to test                                                                         |
+| ----------------------------------------- | ------------------------------------------------------------------------------------ |
+| New `lib/` function or method             | Unit test with at least a happy-path and one error/edge case                         |
+| New HTTP endpoint                         | Integration test: valid request returns expected status + body; invalid returns 4xx  |
+| New config key with conditional behaviour | Two test cases: feature enabled and feature disabled                                 |
+| Scheduled / timer-driven logic            | Unit test the underlying function (not the `setInterval` call itself)                |
+| New EJS template conditional              | Not tested directly — covered by the integration test for the endpoint that feeds it |
+
+### File conventions
+
+- Test files live in `tests/unit/` (pure logic, no network) or `tests/integration/` (HTTP requests against a real or mocked app).
+- Name the file after the module under test: `tests/unit/room-prune.test.js`, `tests/integration/public-rooms.test.js`.
+- Use the same test runner already configured in the project (check `package.json` → `scripts.test`).
+- Never add a test framework that is not already a `devDependency`. If coverage requires a new dep, propose it to the user first.
+
+### Minimum bar
+
+Each new feature must have at least **two test cases**: one where it works correctly, and one where a boundary condition or misconfiguration is handled gracefully (e.g., feature disabled via config, empty result set, invalid input).
+
+### Ordering in the response
+
+1. Implement the feature (code changes).
+2. Update `CHANGELOG.md` (if user confirmed completion).
+3. **Write or update test files.**
+4. Update `DEVELOPMENT_LOG.md` — the log entry must name every test file created or modified.
+
+### Failure mode
+
+Confirming a feature complete without adding tests leaves the codebase in a regressing-unknown state. If tests already existed for the touched module, update them. If none existed, create them. A response that adds feature code and a changelog entry but no test file is incomplete.

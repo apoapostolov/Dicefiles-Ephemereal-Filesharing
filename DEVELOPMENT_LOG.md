@@ -1,5 +1,38 @@
 # Dicefiles Development Log
 
+## 2026-02-22 — Public room directory + room pruning
+
+Two new operator-configurable features implemented end-to-end.
+
+**Public Servers (`publicRooms: false` default)**
+
+- `defaults.js`: added `publicRooms: false` config key.
+- `lib/httpserver.js`: `GET /` made async; when `publicRooms` is enabled, calls `Room.list()`, sorts by file count descending, and passes result to the template.
+- `views/index.ejs`: conditional render — `#room-directory` table with room name (linked), file count, and online user count when `publicRooms` is true; "No rooms yet" empty state; fallback to existing welcome text when feature is disabled.
+- `entries/css/page.css`: added `.room-list` and `#room-directory` styles matching site design (bordered rows, right-aligned counts, hover highlight).
+- `.config.json`: added `"publicRooms": true` and `"roomPruning": true` for local testing.
+
+**Room Pruning (`roomPruning: true`, `roomPruningDays: 21` defaults)**
+
+- `defaults.js`: added `roomPruning: true` and `roomPruningDays: 21` config keys.
+- `lib/room/index.js`:
+  - `redis` binding extended with `"del"`.
+  - `touchActivity()` instance method: records `lastActivity` timestamp in `pconfig`, debounced to once per 5 minutes.
+  - `static async destroy(roomid)`: evicts room from in-process cache, trashes all files via `UPLOADS`, wipes three Redis keys (`rooms:${id}`, `map:rco:${id}`, `map:rpco:${id}`), invalidates `"roomlist"` cache.
+  - `static async prune()`: scans all `rooms:*` keys, reads `lastActivity` from pconfig (falls back to creation timestamp stored as key value), calls `destroy()` for rooms inactive longer than `roomPruningDays`.
+- `lib/room/filelister.js`: calls `this.room.touchActivity()` whenever a file is added to a room.
+- `lib/client.js`: calls `this.room.touchActivity()` after broadcasting a real (non-hellbanned) chat message.
+- `lib/expiration.js`: imports `Room`; schedules `pruneOnce()` to run 60 s after expiration-worker startup then every 24 h.
+
+**Tests added**
+
+- `tests/unit/room-prune.test.js`: 10 unit tests covering `Room.prune()` (disabled, active rooms, stale rooms, creation-timestamp fallback, missing timestamp, error recovery, custom days) and `Room.touchActivity()` (initial write, debounce suppression, post-debounce write). All mocked — no Redis required.
+- `tests/integration/public-rooms.test.js`: 7 integration tests against the live server covering HTTP 200, room-directory article presence, table render, `/r/<id>` links, empty-state branch, no-error HTML, and column count. Skipped automatically if server is unreachable.
+
+**AGENTS.md updated**
+
+- Added "Feature Confirmation Test Coverage (Mandatory)" section documenting the rule that confirmed features must ship with tests in the same response.
+
 ## 2026-02-22 — Gallery mode: fix tile height on toggle and 4-per-row wrap
 
 Root cause 1 (minimal height on toggle): `setFileStyle()` injects `#files > .file { height: Xpx; }` into a `<style>` tag to normalise list rows. `aspect-ratio` only controls height when height is `auto`, so the injected pixel value suppressed it — tiles rendered as collapsing bars until F5.

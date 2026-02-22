@@ -17,7 +17,6 @@ dump.rdb
 AGENTS.md
 DEVELOPMENT_LOG.md
 docs/*.draft.md
-tests/
 server.log
 ops.log
 automation.log
