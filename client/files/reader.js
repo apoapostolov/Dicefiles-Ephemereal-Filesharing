@@ -594,6 +594,9 @@ async function parseEpubChapters(zip) {
  * applying translateY(-pageIdx * pageHeight) to #scroller.
  * Total pages = ceil(scroller.offsetHeight / pageHeight) measured after load.
  */
+/** Vertical gap (px) between the A5 page frame and the container edges. */
+const BOOK_VMARGIN = 10;
+
 function buildSrcdoc(html, cssUrls, pageWidth, pageHeight, opts) {
   const o = opts || READER_OPTS_DEFAULTS;
   const HP = o.margin != null ? o.margin : 40; // horizontal padding (px)
@@ -613,6 +616,9 @@ ${linkTags}
     width: ${pageWidth}px;
     height: ${pageHeight}px;
     overflow: hidden;
+    /* contain: paint prevents GPU-composited child layers from painting
+       outside the body bounds when translateY is applied to #scroller */
+    contain: paint;
     background: #1a1a1a;
   }
   #scroller {
@@ -623,7 +629,8 @@ ${linkTags}
     font-family: ${fontFamily};
     font-size: ${fontSize};
     line-height: ${lineHeight};
-    will-change: transform;
+    /* No will-change: transform — the hint promotes a compositor layer that can
+       escape the body's overflow clip on some browsers; apply transform only. */
   }
   img, svg, video { max-width: 100%; height: auto; }
   /* Force all inline text colours to a readable light value, overriding
@@ -660,10 +667,12 @@ class BookReader {
     this.onPageChange = null; // callback(chapterIdx) — set by Reader
   }
 
-  /** Compute A5-proportioned page size constrained by the container. */
+  /** Compute A5-proportioned page size constrained by the container.
+   * BOOK_VMARGIN px is reserved above and below the page so it never
+   * touches the container edge. */
   _computePageSize() {
     const cW = this.container.clientWidth;
-    const cH = this.container.clientHeight;
+    const cH = Math.max(0, this.container.clientHeight - 2 * BOOK_VMARGIN);
     const A5 = 148 / 210; // width-to-height ratio
     if (cH > 0 && cW > 0) {
       if (cW / cH > A5) {
@@ -821,6 +830,9 @@ class BookReader {
    */
   applyOpts(newOpts) {
     this._opts = { ...this._opts, ...newOpts };
+    // Recompute page dimensions — font size changes alter effective content
+    // height, so a fresh measurement ensures pagination stays accurate.
+    this._computePageSize();
     // Re-render current chapter preserving page position
     this._renderChapter(this._currentIdx, this._pageInChapter);
   }
