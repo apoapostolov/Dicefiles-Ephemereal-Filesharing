@@ -66,6 +66,9 @@
         Achievements
         <span class="tab-badge"><%=info.achievements.unlocked%> / <%=info.achievements.total%></span>
       </button>
+      <% if (info.activity !== null) { %>
+      <button class="profile-tab" data-tab="activity" role="tab" aria-selected="false">Latest Activity</button>
+      <% } %>
     </nav>
 
     <section class="profile-message">
@@ -132,6 +135,39 @@
         <% } %>
       </div>
     </section>
+
+    <% if (info.activity !== null) { %>
+    <section class="profile-activity">
+      <% if (info.activity.length === 0) { %>
+      <p class="activity-empty">No activity recorded yet.</p>
+      <% } else { %>
+      <table class="activity-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>File</th>
+            <th>Size</th>
+            <th>When</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const ev of info.activity) { %>
+          <tr class="activity-row activity-<%=ev.type%>">
+            <td class="activity-type">
+              <% if (ev.type === 'upload') { %><i class="fa-solid fa-arrow-up" title="Uploaded"></i><% } else { %><i class="fa-solid fa-arrow-down" title="Downloaded"></i><% } %>
+            </td>
+            <td class="activity-name">
+              <a href="/g/<%=ev.key%>" title="<%=ev.name%>"><%=ev.name%></a>
+            </td>
+            <td class="activity-size"><%=ev.size ? (ev.size >= 1073741824 ? (ev.size/1073741824).toFixed(1)+' GiB' : ev.size >= 1048576 ? (ev.size/1048576).toFixed(1)+' MiB' : ev.size >= 1024 ? (ev.size/1024).toFixed(0)+' KiB' : ev.size+' B') : '—'%></td>
+            <td class="activity-when"><time datetime="<%=new Date(ev.ts).toISOString()%>"><%=new Date(ev.ts).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'})%></time></td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+      <% } %>
+    </section>
+    <% } %>
     </div><!-- /profile-tabbed -->
   </article>
   <script src="/user.js?v=<%=v%>"></script>

@@ -455,6 +455,8 @@ body#page {
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
+  outline: none;
+  box-shadow: none;
   color: var(--dark-fg);
   cursor: pointer;
   font-size: 0.92rem;
@@ -468,8 +470,11 @@ body#page {
   gap: 0.4rem;
 }
 
-#page #userprofile .profile-tab:hover {
+#page #userprofile .profile-tab:hover,
+#page #userprofile .profile-tab:focus {
   color: var(--text-fg);
+  outline: none;
+  box-shadow: none;
 }
 
 #page #userprofile .profile-tab.active {
@@ -505,6 +510,11 @@ body#page {
   display: none;
 }
 
+/* Activity hidden by default */
+#page #userprofile .profile-activity {
+  display: none;
+}
+
 /* When achievements tab is active */
 #page #userprofile.tab-achievements .profile-message {
   display: none;
@@ -512,6 +522,94 @@ body#page {
 
 #page #userprofile.tab-achievements .profile-achievements {
   display: block;
+}
+
+/* When activity tab is active */
+#page #userprofile.tab-activity .profile-message {
+  display: none;
+}
+
+#page #userprofile.tab-activity .profile-activity {
+  display: block;
+}
+
+/* ── Activity table ─────────────────────────────────────────── */
+
+#page #userprofile .activity-empty {
+  color: var(--dark-fg);
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+}
+
+#page #userprofile .activity-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+#page #userprofile .activity-table thead th {
+  text-align: left;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--dark-fg);
+  padding: 0 0.5rem 0.5rem;
+  border-bottom: 1px solid var(--hairline);
+}
+
+#page #userprofile .activity-table thead th:first-child {
+  width: 1.6rem;
+  padding-left: 0;
+}
+
+#page #userprofile .activity-row td {
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  vertical-align: middle;
+}
+
+#page #userprofile .activity-row:last-child td {
+  border-bottom: none;
+}
+
+#page #userprofile .activity-type {
+  width: 1.6rem;
+  padding-left: 0 !important;
+  color: var(--dark-fg);
+}
+
+#page #userprofile .activity-upload .activity-type {
+  color: #7c93ff;
+}
+
+#page #userprofile .activity-download .activity-type {
+  color: #6ec97e;
+}
+
+#page #userprofile .activity-name {
+  max-width: 26ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#page #userprofile .activity-name a {
+  color: var(--text-fg);
+  text-decoration: none;
+}
+
+#page #userprofile .activity-name a:hover {
+  text-decoration: underline;
+}
+
+#page #userprofile .activity-size {
+  color: var(--dark-fg);
+  white-space: nowrap;
+}
+
+#page #userprofile .activity-when {
+  color: var(--dark-fg);
+  white-space: nowrap;
+  text-align: right;
 }
 
 @media (max-width: 920px) {

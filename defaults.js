@@ -237,6 +237,10 @@ module.exports = {
   // Room owners can override this per room via Room Options.
   linkCollection: true,
 
+  // Show a Latest Activity tab on user profiles listing the last 20 uploads/downloads.
+  // Set to false to disable for all users (privacy).
+  profileActivity: true,
+
   /*****************************/
   /* Optional External Services */
   /*****************************/
@@ -246,8 +250,4 @@ module.exports = {
   // than raw HTML scraping). Falls back to HTML <title> scraping when unset or
   // when the API call fails. Get a key at https://www.opengraph.io/
   opengraphIoKey: "",
-
-  // Enable seasonal/event achievements. When false (default) seasonal
-  // achievements are not computed or displayed. Set true to activate.
-  seasonalAchievements: false,
 };

@@ -161,6 +161,12 @@
   // are automatically captured).  Room owners can disable per room.  Default: true.
   // "linkCollection": true,
 
+  // Show a Latest Activity tab on user profile pages listing the last 20
+  // uploads and downloads.  Set to false to disable globally (privacy).
+  // Individual users cannot override this — disabling here hides it for everyone.
+  // Default: true.
+  // "profileActivity": true,
+
   // ----------------------------------------------------------
   // FILE EXPIRY
   // ----------------------------------------------------------
