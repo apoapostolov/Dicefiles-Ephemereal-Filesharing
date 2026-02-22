@@ -81,7 +81,7 @@ export default new (class Files extends EventEmitter {
     this.downloadedNameSet = null;
     this.fileStyleLocked = false;
     this._pendingLinksRestore = false;
-    // P1 — Smart Collections
+    // Saved filters and sort state
     this.presetsKey = null;
     this.sortModeKey = null;
     this.sortMode = "newest"; // newest | largest | expiring
@@ -181,7 +181,7 @@ export default new (class Files extends EventEmitter {
       this.linkModeEl.addEventListener("click", this.linkMode.bind(this));
     }
 
-    // P1 — Smart Collections button wiring
+    // Filter preset button wiring
     if (this.presetSaveEl) {
       this.presetSaveEl.addEventListener(
         "click",
@@ -481,7 +481,9 @@ export default new (class Files extends EventEmitter {
       result = files;
     }
     if (this.showingNewOnly) {
-      result = result.filter((f) => Number(f.uploaded) > this.newSinceServerTime);
+      result = result.filter(
+        (f) => Number(f.uploaded) > this.newSinceServerTime,
+      );
     }
     return result;
   }
@@ -1514,7 +1516,7 @@ export default new (class Files extends EventEmitter {
     }
   }
 
-  // ----- P1: Sort Modes -----
+  // ----- Sort Modes -----
   initSortMode() {
     try {
       const saved = this.sortModeKey && localStorage.getItem(this.sortModeKey);
@@ -1544,14 +1546,20 @@ export default new (class Files extends EventEmitter {
       this.sortNewestEl.classList.toggle("active", this.sortMode === "newest");
     }
     if (this.sortLargestEl) {
-      this.sortLargestEl.classList.toggle("active", this.sortMode === "largest");
+      this.sortLargestEl.classList.toggle(
+        "active",
+        this.sortMode === "largest",
+      );
     }
     if (this.sortExpiringEl) {
-      this.sortExpiringEl.classList.toggle("active", this.sortMode === "expiring");
+      this.sortExpiringEl.classList.toggle(
+        "active",
+        this.sortMode === "expiring",
+      );
     }
   }
 
-  // ----- P1: Show-New toggle -----
+  // ----- Show-New toggle -----
   toggleNewOnly() {
     this.showingNewOnly = !this.showingNewOnly;
     if (this.showNewBtnEl) {
@@ -1562,7 +1570,7 @@ export default new (class Files extends EventEmitter {
     }
   }
 
-  // ----- P1: Filter Presets -----
+  // ----- Filter Presets -----
   loadPresets() {
     if (!this.presetsKey) {
       return [];
@@ -1592,7 +1600,8 @@ export default new (class Files extends EventEmitter {
     const buttonState = {};
     if (this.filterButtons) {
       this.filterButtons.forEach((b) => {
-        buttonState[b.id.replace(/^filter-/, "")] = !b.classList.contains("disabled");
+        buttonState[b.id.replace(/^filter-/, "")] =
+          !b.classList.contains("disabled");
       });
     }
     const presets = this.loadPresets().filter((p) => p.name !== trimmed);

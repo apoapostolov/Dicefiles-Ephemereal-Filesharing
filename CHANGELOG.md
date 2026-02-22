@@ -4,6 +4,12 @@
 
 ### Added
 
+- **Sort controls redesigned with icons**: The sort buttons in the file browser (newest / largest / expiring) now display compact inline icons instead of text labels. A lightning bolt indicates newest-first, a descending bar chart indicates largest-first, and an hourglass indicates expiring-soon. The active sort method is always highlighted with an accent background.
+
+- **"Show new files" button integrated into the filter bar**: The "Show only files newer than your last visit" toggle is now part of the filter pill as its rightmost button, placing all file-type and visibility controls in one consistent row.
+
+- **MCP server for AI clients** (`scripts/mcp-server.js`): A Model Context Protocol server is now bundled with the project, wrapping all automation API endpoints as 13 named, schema-validated tools. AI clients — Claude Desktop, Cursor, Continue, OpenClaw, AutoGen — can discover and call Dicefiles operations directly without writing HTTP code. Stdio mode (default) works out of the box with Claude Desktop; Streamable HTTP mode supports remote orchestrators. See `MCP.md` for setup instructions, Claude Desktop config JSON, and the full tool reference.
+
 - **Per-account login lockout**: failed login attempts against the same account now trigger a configurable cool-down. After 10 failures (default) within a 15-minute window the account is temporarily locked and further attempts are rejected with a clear error. Both thresholds are tunable via `loginAccountFloodTrigger` and `loginAccountFloodDuration` in the project configuration file.
 
 - **Centralized input validation** (`lib/validate.js`): all register, login, and password-change routes now route their inputs through typed validation helpers (`requireString`, `optionalString`, `requireRoomId`, `requireNick`, `validatePassword`). Malformed requests receive explicit 400 responses instead of silent no-ops or server errors.
@@ -38,7 +44,7 @@
 
 - **`BROKER` not imported in automation rate-limit path**: `BROKER.emit()` was called in `lib/httpserver.js` before `BROKER` was ever imported. The module import was missing; this caused a `ReferenceError` (silently masked in single-worker setups where the import-time evaluation path was not reached). Added as part of the distributed rate-limiting work.
 
-## [1.2.0] - 2026-02-22
+## [1.2.0] - 2026-02-22 [Comics, Links, Polished Reading Experience]
 
 ### Added
 
@@ -88,7 +94,7 @@
 
 - **EPUB cover page blank on first open**: Calibre-generated EPUBs (and many EPUB3 files) use an SVG cover page with `<image xlink:href="cover.jpeg"/>`. The reader now rewrites `xlink:href` and bare `href` attributes on SVG `<image>` elements to blob: URLs, so the cover renders correctly instead of producing a 404.
 
-## [1.1.0] - 2026-02-21
+## [1.1.0] - 2026-02-21 [PDF, Epub, Mobi Reading]
 
 ### Added
 

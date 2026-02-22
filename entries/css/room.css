@@ -1098,7 +1098,7 @@ a.r::before {
   outline: 0;
 }
 
-/* ===== P1: Sort Pill ===== */
+/* ===== Sort Pill ===== */
 .sort-pill {
   margin-left: 0.5rem;
 }
@@ -1118,7 +1118,7 @@ a.r::before {
   color: #fff;
 }
 
-/* ===== P1: Show-New Button (inside filter pill as rightmost item) ===== */
+/* ===== Show-New Button (inside filter pill as rightmost item) ===== */
 #show-new-btn {
   opacity: 0.55;
   transition: opacity 0.15s;
@@ -1126,11 +1126,10 @@ a.r::before {
 
 #show-new-btn.active {
   opacity: 1;
-  color: var(--accent-light, #4af);
   background: var(--surface-2);
 }
 
-/* ===== P1: Presets Row ===== */
+/* ===== Presets Row ===== */
 #presets-row {
   display: flex;
   flex-wrap: wrap;

@@ -1,5 +1,39 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - Comment cleanup, AGENTS.md rule, changelog, UI tweak
+
+### Summary
+
+Housekeeping pass following the P1/P2 feature work.
+
+- **PXX comment cleanup**: All `P1`, `P2`, and `PX-X` labels removed from source code
+  comments in `client/files.js`, `lib/httpserver.js`, and `entries/css/room.css`.
+  Replaced with descriptions of what the code actually does. Follows the new AGENTS.md
+  rule (see below). No logic changed.
+- **AGENTS.md — Code Comment Standards**: Added a mandatory section documenting the
+  rule: agents must never write `P0`/`P1`/`P2`/`PX-X` labels into source code
+  comments. Rationale, before/after examples, and failure mode description included.
+- **UI — show-new-btn active colour removed**: The blue `color: var(--accent-light, #4af)`
+  was removed from `#show-new-btn.active`. The button now signals active state with
+  opacity and background only, matching the neutral style of the filter buttons.
+- **CHANGELOG updated**: Three new items added under `[Unreleased] → Added`: sort
+  icons on sort controls, "show new files" button integrated into filter bar, and MCP
+  server for AI clients.
+
+### Changed Files
+
+- **`client/files.js`** — Removed `P1 —` prefix from 2 inline comments; removed
+  `P1:` prefix from 3 section-divider comments.
+- **`lib/httpserver.js`** — Removed `P2` from 2 section-divider comments
+  (`AI Automation API` / `End AI Automation API`).
+- **`entries/css/room.css`** — Removed `P1:` from 3 CSS section comments; removed
+  `color: var(--accent-light, #4af)` from `#show-new-btn.active`.
+- **`AGENTS.md`** — Added "Code Comment Standards (Mandatory)" section with rule,
+  rationale, examples table, applicability scope, and failure mode.
+- **`CHANGELOG.md`** — Prepended 3 new `[Unreleased] → Added` entries.
+
+---
+
 ## 2026-02-23 - P1 sort icons + filter pill, P2 MCP server
 
 ### Summary

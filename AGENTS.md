@@ -15,6 +15,37 @@ If an automated agent (Codex/Claude/etc.) is working in this repo, it must:
 2. If current shell Node is not 20, run commands with the explicit Node 20 path above.
 3. Never start/restart Dicefiles with Bun or a different Node major.
 
+## Code Comment Standards (Mandatory)
+
+Never reference `TODO.md` planning labels (P0, P1, P2, P3, P0-1, P1.5, or any `PX`/`PX-X` variant) in source code comments, CSS comments, or any file that is part of the compiled or served codebase.
+
+### Why
+
+`TODO.md` is a living planning document — it is regularly wiped, reordered, and recreated with new priorities. Its section headings carry no stable meaning across sessions. A `// P1 — Smart Collections` comment in `files.js` will refer to a section that no longer exists in `TODO.md` within a few sessions, making it actively misleading.
+
+### What to write instead
+
+Describe **what** the code does, not which planning item it belongs to:
+
+| ❌ Do not write             | ✅ Write instead                  |
+| --------------------------- | --------------------------------- |
+| `// P1 — Smart Collections` | `// Saved filters and sort state` |
+| `// P2 AI Automation API`   | `// AI Automation API`            |
+| `/* P1: Sort Pill */`       | `/* Sort Pill */`                 |
+
+This rule applies to:
+
+- JavaScript/Node.js source files (`client/`, `lib/`, `scripts/`, `entries/`)
+- CSS/SCSS files
+- EJS templates
+- Any file compiled into the client bundle or executed by the server
+
+It does **not** apply to `DEVELOPMENT_LOG.md`, `CHANGELOG.md`, `README.md`, `AGENTS.md` itself, or `docs/` — these are documentation files where planning-phase context is appropriate.
+
+### Failure mode
+
+An agent adding `// P1` comments in source code is the programming equivalent of leaving a sticky note on production hardware. Treat discovery of any `PX` label in a `.js`, `.css`, or `.ejs` file as a linting failure and fix it in the same response.
+
 ## Strict Server Startup Procedure (Mandatory)
 
 Use this exact sequence every time:
