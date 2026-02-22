@@ -1,5 +1,16 @@
 # Dicefiles Development Log
 
+## 2026-02-22 — Fix profile tabs breaking grid layout
+
+**Root cause:** The tab nav was inserted as a free-floating grid item inside `#userprofile` (a single-column CSS grid), and the two tab panel divs used `display: contents` to pass their children through to the parent grid. This desynced the tab nav from its content sections, causing the nav to appear detached in the lower area while the stats and message sections reordered unpredictably.
+
+**Fix:** Consolidated the tab nav + `.profile-message` + `.profile-achievements` into a single `.profile-tabbed` wrapper div — one grid cell. Tab state is now driven by a `.tab-achievements` class on `#userprofile` itself, with CSS show/hide rules. No `display: contents` anywhere.
+
+**Changed files:**
+- `views/user.ejs` — Removed `profile-panel` wrapper divs; introduced `<div class="profile-tabbed">` wrapping the nav + message + achievements sections.
+- `entries/css/page.css` — Removed `display: contents` / `.hidden` rules for panels; added `.profile-tabbed` flex-column container; added `#userprofile.tab-achievements .profile-message { display: none }` and `#userprofile.tab-achievements .profile-achievements { display: block }`.
+- `entries/user.js` — Tab click handler now toggles `.tab-<name>` class on `#userprofile` instead of `.hidden` on individual panel divs.
+
 ## 2026-02-22 - P3 surgical: Font Awesome achievement icons, profile tabs, Node guard
 
 ### Summary
