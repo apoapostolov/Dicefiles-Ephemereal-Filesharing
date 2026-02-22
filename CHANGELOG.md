@@ -4,6 +4,12 @@
 
 ### Added
 
+- **Request Fulfillment Workflow**: Request tiles are now fully interactive. Clicking any open request opens a management overlay where participants can drag-and-drop or browse for files that fulfill it. Uploaded files are linked to the original request at upload time, recording the requester's name in the upload metadata. After all files are confirmed, the request transitions to "fulfilled" state automatically. Any user can reopen a fulfilled request; moderators can remove one outright. Drag-and-drop into the management overlay is fully intercepted so dropped files go directly to the request rather than the general room upload queue.
+
+- **Fulfilled Request Pill**: Fulfilled requests now display a compact grey "Fulfilled" badge inline after the request title, replacing the previous strikethrough text decoration. The request title is also muted to mid-grey, giving fulfilled items a clearly resolved appearance without cluttering the list.
+
+- **Reading Progress Persistence**: All reader formats — PDF, EPUB/MOBI (chapter + page), comics, and webtoon — now save the current reading position to `localStorage` as each page changes. Re-opening the same file resumes from exactly where you left off, surviving page refreshes and browser restarts.
+
 - **CBR / RAR comic support**: CBR files (and `.cbz` archives with internal RAR containers) now work end-to-end. Pages are listed via `unrar lb` and extracted per-request via `unrar p -inul`. Cover thumbnails are generated at index time.
 
 - **ComicInfo.xml metadata**: Comic archives are scanned for `ComicInfo.xml`. The `FrontCover` page index is used to select the correct cover thumbnail. Fields `title`, `series`, `number`, `year`, `publisher`, and `writer` are stored in `meta`.
@@ -22,9 +28,15 @@
 
 - **Webtoon PageDown / PageUp**: In webtoon mode PageDown/PageUp scroll by exactly one full page height rather than jumping to the next chapter.
 
+- **Webtoon stream-ahead loading**: The webtoon lazy-loader now preloads the next 10 pages as each image enters the viewport (previously one at a time), with a 600 px scroll margin. This eliminates the blank-image flash during fast continuous scrolling.
+
+- **API file-listing filters**: `GET /api/v1/files` and `GET /api/v1/downloads` accept new `name_contains` (case-insensitive substring match) and `ext` (comma-separated extension list) query parameters, combinable with existing `type`, `scope`, and `since` filters.
+
 - Switched to serving a full `/favicon` directory of multiple icon sizes and manifest; updated templates and CSS to point at new paths.
 
 ### Fixed
+
+- **EPUB/MOBI page navigation after typography changes**: Adjusting font size, line spacing, or margins in the reader options panel previously caused Left/Right arrow navigation to stop working for the remainder of the session. Root cause: the CSS multi-column geometry sentinel was measured inside the iframe `load` event before the browser had resolved column widths, so `totalPages` was always computed as 1. Fixed by deferring the measurement to a `requestAnimationFrame` callback so layout is fully settled before the page count is taken.
 
 - **"Comic archive has no readable pages"** for the Batman Dark Designs .cbz — on-demand index rebuild now kicks in automatically.
 - **CBZ override** — `.cbz` files with internal RAR containers were stored as `meta.type = "RAR"` and rejected by the reader API. Extension now always wins over detected container format.

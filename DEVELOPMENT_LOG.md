@@ -1,16 +1,75 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - Docs: Changelog update + AGENTS.md changelog procedure
+
+### Summary
+
+Updated `CHANGELOG.md` with all user-facing features and fixes shipped since the last recorded entry, and added a **Changelog Update Procedure** section to `AGENTS.md` so future agents follow a consistent, quality-controlled process when updating the changelog.
+
+### DEVELOPMENT_LOG.md entries reviewed
+
+Reviewed all 2026-02-22 entries from the most recent backward until reaching content already represented in `CHANGELOG.md`. The following entries were evaluated:
+
+| Dev Log Entry | Decision |
+|---|---|
+| Fix: EPUB pagination, fulfilled pill, drop zone, modal drag | **Included** (EPUB fix + fulfilled pill are UX-visible) |
+| Fix: A5 box-sizing / name+ext API filters | **Included** (API filters are user-facing; box-sizing is technical root-cause for already-listed pagination fix) |
+| Fix: WebtoonReader saves/restores by page | Omitted — internal correctness fix behind the reading-progress feature, not independently user-visible |
+| Fix: WebtoonReader progress restore — \_restoring guard | Omitted — implementation detail of same progress feature |
+| Fix: \_focusTransitioning guard | Omitted — double-press edge case that only manifested in unusual conditions; below the "would a user notice?" bar |
+| Fix: focus mode no longer hijacks native fullscreen | Omitted — the overall focus-mode feature is already in the changelog; this was a refinement pass |
+| Fix: Comic/Webtoon progress not persisting | **Included** — root cause for reading progress feature; bundled into the progress feature bullet |
+| Feat: Reading Progress Persistence + Webtoon stream-ahead | **Included** — clearly user-visible |
+| Feat: Webtoon Mode for Comic Reader | Already in changelog via existing Webtoon entries |
+| Fix: File List TTL/Size Column Alignment | Omitted — layout micro-fix invisible to most users |
+| Fix: CBZ Phase 2 — RAR support, ComicInfo.xml, Manga pill | Already in changelog |
+| Request Fulfillment Workflow (P0-3) | **Included** — major user-facing feature |
+| All 2026-02-21 and earlier entries | Already represented in CHANGELOG.md v1.1.0 and earlier |
+
+### New bullets added to CHANGELOG.md [Unreleased]
+
+**Added:**
+- Request Fulfillment Workflow — click a request to open management overlay, upload files to fulfill, fulfilled state transitions automatically, drag-and-drop intercepted correctly
+- Fulfilled Request Pill — grey "Fulfilled" badge replaces strikethrough; title muted to mid-grey
+- Reading Progress Persistence — all reader formats (PDF, EPUB/MOBI, comics, webtoon) save and restore last-read page via localStorage
+- Webtoon stream-ahead loading — moved from 1-at-a-time to 10-page preload buffer with 600 px margin
+
+**Changed:**
+- Webtoon stream-ahead (added as Changed entry clarifying preload improvement)
+- API file-listing filters — `name_contains` and `ext` query params on `/api/v1/files` and `/api/v1/downloads`
+
+**Fixed:**
+- EPUB/MOBI page navigation after typography changes — rAF deferral of sentinel measurement
+
+### AGENTS.md changes
+
+Added **Changelog Update Procedure (Mandatory)** section (after the GitHub Release Protocol failure-modes block) covering:
+- Pre-writing review procedure (read dev log backward, filter for user-visible items)
+- Writing style requirements (user-directed language, no internal identifiers, root-cause note acceptable only in Fixed)
+- Post-update dev log obligation
+- Decision table (what does NOT go in the changelog)
+
+### Changed files
+
+- `CHANGELOG.md` — added 6 new bullets to `[Unreleased]` (4 Added, 1 Changed expanded, 1 Fixed) and reorganised section order
+- `AGENTS.md` — added Changelog Update Procedure section
+- `DEVELOPMENT_LOG.md` — this entry
+
+---
+
 ## 2026-02-22 - Fix: EPUB pagination, fulfilled pill, drop zone, modal drag
 
 Four bug fixes targeting the EPUB/MOBI reader, request fulfilled styling, the RequestViewModal upload zone, and drag-and-drop interception.
 
 **Root causes & fixes:**
+
 - `BookReader._renderChapter` measured the CSS multi-column sentinel inside the `load` event handler, which fires before the browser finalises column geometry. Result: `totalPages` always returned 1 after a font-size change, making pagination buttons appear broken. Fix: wrapped the measurement in `requestAnimationFrame`; also added explicit `_loaded = true` fallback so buttons are never permanently silenced.
 - Fulfilled requests showed strikethrough (unwanted). Replaced with a grey `Fulfilled` pill element appended into `.nameEl` alongside the name text. Pill is created/removed on status transitions (constructor + `update()`).
 - `RequestViewModal` upload zone used a plain dashed outline with small text. Redesigned to match the room's dropminder overlay: dark gradient background, thick dashed border, bold "Drop Files Here" heading, sub-caption "or click to choose". Label resets to default text when staged file list empties.
 - `requestModalOpen` only detected `.modal-requestcreate`, so drag events over the open `RequestViewModal` passed through to the room upload handler and/or spawned the full-page drop overlay. Added `.modal-requestview` to the check so all drag/drop paths correctly defer to the modal's own handlers.
 
 **Changed files:**
+
 - `client/files/reader.js` — `_renderChapter` load handler: add rAF wrapper + error fallback for `_loaded`
 - `client/files/file.js` — add `fulfilledPillEl`; create/remove in constructor and `update()`
 - `client/files/requestmodal.js` — dropminder-style zone markup ("Drop Files Here" + hint); reset label on empty staged list
