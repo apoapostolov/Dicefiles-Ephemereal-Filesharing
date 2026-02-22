@@ -1,10 +1,11 @@
 # Dicefiles Development Log
 
-## 2026-02-22 - Fix: WebtoonReader progress restore — pixel-based scroll + _restoring guard
+## 2026-02-22 - Fix: WebtoonReader progress restore — pixel-based scroll + \_restoring guard
 
 **Root cause**: Two compounding bugs caused webtoon reading position to always reset to page 0 on refresh:
+
 1. `scrollIntoView` on unloaded images: `.reader-webtoon-page` has `height: auto` with no `min-height`. An `<img>` without a loaded source has 0px height, so all images before the target are also 0px — `scrollIntoView` scrolled to y=0 regardless of the saved page.
-2. `visTracker` IntersectionObserver clobbered saved progress: the visibility tracker was set up *before* `loadProgress`/scroll, so its initial IO callback for page 0 (always in the initial viewport) called `saveProgress({page: 0})`, overwriting the correct saved position before the restore rAF could fire.
+2. `visTracker` IntersectionObserver clobbered saved progress: the visibility tracker was set up _before_ `loadProgress`/scroll, so its initial IO callback for page 0 (always in the initial viewport) called `saveProgress({page: 0})`, overwriting the correct saved position before the restore rAF could fire.
 
 - `client/files/reader.js` — Added `this._restoring = false` field to `WebtoonReader` constructor. Moved the position restore **before** `visTracker` setup. On restore: sets `_restoring = true`, gives all unloaded images a provisional `style.minHeight = _pageHeight + 'px'` so the pixel-based scroll has an accurate DOM layout, then uses `container.scrollTop = saved.page * _pageHeight` instead of `scrollIntoView`. A second `requestAnimationFrame` clears `min-height` on all images and sets `_restoring = false`. `visTracker` callback now checks `!this._restoring` before calling `saveProgress`, so no clobber can occur during the restore window.
 - `static/client.js` — Rebuilt production bundle.

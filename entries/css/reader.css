@@ -239,10 +239,10 @@
 /* When a book chapter is displayed, center the A5 page and hide overflow */
 #reader-content:has(.reader-book-iframe) {
   overflow: hidden;
-  padding: 0;
+  padding: 12px 0 0;
   gap: 0;
-  align-items: center;
-  justify-content: center;
+  align-items: center; /* horizontal centre — A5 page narrower than content area */
+  justify-content: flex-start; /* top-align — book text starts at the top, not vertically centred */
 }
 
 /* ── Comic (CBZ/CBR) page rendering ─────────────────────────────────────── */

@@ -50,13 +50,17 @@ Configure in `.config.json` via `automationApiKeys`.
 ```json
 {
   "automationApiKeys": [
-    {"id": "readonly", "key": "replace-read-key", "scopes": ["files:read"]},
+    { "id": "readonly", "key": "replace-read-key", "scopes": ["files:read"] },
     {
       "id": "uploader",
       "key": "replace-upload-key",
       "scopes": ["files:read", "rooms:write", "uploads:write", "requests:write"]
     },
-    {"id": "moderator", "key": "replace-mod-key", "scopes": ["files:delete", "mod:*"]}
+    {
+      "id": "moderator",
+      "key": "replace-mod-key",
+      "scopes": ["files:delete", "mod:*"]
+    }
   ]
 }
 ```
@@ -75,10 +79,10 @@ Config:
 
 ```json
 {
-  "automationApiRateLimit": {"windowMs": 60000, "max": 180},
+  "automationApiRateLimit": { "windowMs": 60000, "max": 180 },
   "automationApiRateLimitByScope": {
-    "files:read": {"windowMs": 60000, "max": 600},
-    "uploads:write": {"windowMs": 60000, "max": 120}
+    "files:read": { "windowMs": 60000, "max": 600 },
+    "uploads:write": { "windowMs": 60000, "max": 120 }
   },
   "automationAuditLog": "automation.log"
 }
@@ -95,18 +99,18 @@ Audit logs are appended as JSON lines to `automationAuditLog`.
 
 ## 5. Endpoint Matrix
 
-| Method | Path | Scope | Session Required |
-| --- | --- | --- | --- |
-| `POST` | `/api/v1/auth/login` | `auth:login` | No |
-| `POST` | `/api/v1/auth/logout` | `auth:logout` | Yes |
-| `POST` | `/api/v1/rooms` | `rooms:write` | Yes |
-| `POST` | `/api/v1/requests` | `requests:write` | Yes |
-| `POST` | `/api/v1/uploads/key` | `uploads:write` | Yes |
-| `GET` | `/api/v1/uploads/:key/offset` | `uploads:write` | Yes |
-| `PUT` | `/api/v1/uploads/:key` | `uploads:write` | Yes |
-| `GET` | `/api/v1/files` | `files:read` | Optional |
-| `GET` | `/api/v1/downloads` | `files:read` | Optional |
-| `POST` | `/api/v1/files/delete` | `files:delete` | Yes |
+| Method | Path                          | Scope            | Session Required |
+| ------ | ----------------------------- | ---------------- | ---------------- |
+| `POST` | `/api/v1/auth/login`          | `auth:login`     | No               |
+| `POST` | `/api/v1/auth/logout`         | `auth:logout`    | Yes              |
+| `POST` | `/api/v1/rooms`               | `rooms:write`    | Yes              |
+| `POST` | `/api/v1/requests`            | `requests:write` | Yes              |
+| `POST` | `/api/v1/uploads/key`         | `uploads:write`  | Yes              |
+| `GET`  | `/api/v1/uploads/:key/offset` | `uploads:write`  | Yes              |
+| `PUT`  | `/api/v1/uploads/:key`        | `uploads:write`  | Yes              |
+| `GET`  | `/api/v1/files`               | `files:read`     | Optional         |
+| `GET`  | `/api/v1/downloads`           | `files:read`     | Optional         |
+| `POST` | `/api/v1/files/delete`        | `files:delete`   | Yes              |
 
 ## 6. Endpoint Details
 
@@ -142,7 +146,7 @@ All automation responses are JSON.
 - Success:
 
 ```json
-{"ok": true}
+{ "ok": true }
 ```
 
 ### 6.3 Create Room
@@ -195,7 +199,7 @@ Validation:
 - Body:
 
 ```json
-{"roomid": "AbCdEf1234"}
+{ "roomid": "AbCdEf1234" }
 ```
 
 - Success:
@@ -231,7 +235,7 @@ Validation:
 - Success:
 
 ```json
-{"key": "fileKey"}
+{ "key": "fileKey" }
 ```
 
 ### 6.8 List Files/Requests
@@ -240,7 +244,12 @@ Validation:
 - Query:
   - `roomid` required
   - `type` = `all` | `uploads` | `requests` | `new`
-  - `since` required when `type=new` (unix ms)
+  - `since` required when `type=new` (unix ms timestamp)
+  - `name_contains` optional — case-insensitive substring match on filename (e.g. `pathfinder`)
+  - `ext` optional — comma-separated extensions without dot (e.g. `epub,mobi,pdf`)
+- Notes:
+  - `type=new` and `name_contains`/`ext` can be combined arbitrarily
+  - `isNew` is always `false` unless `since` is provided
 - Success:
 
 ```json
@@ -267,10 +276,37 @@ Validation:
 - Query:
   - `roomid` required
   - `scope` = `all` | `new`
-  - `since` required when `scope=new`
+  - `since` required when `scope=new` (unix ms timestamp)
+  - `name_contains` optional — case-insensitive substring match on filename
+  - `ext` optional — comma-separated extensions without dot
 - Notes:
-  - request pseudo-files are excluded
+  - request pseudo-files are always excluded
   - returns `href` suitable for file retrieval
+  - filters combine: `scope=new&since=X&ext=epub,mobi` = new EPUB/MOBI since timestamp X
+
+#### Polling example (agent loop)
+
+```bash
+# Step 1 — initial snapshot: record the latest upload timestamp
+LAST_CHECK=$(curl -s "$BASE/api/v1/downloads?roomid=$ROOM" \
+  -H "X-Dicefiles-API-Key: $KEY" | jq '[.files[].uploaded] | max // 0')
+
+# Step 2 — in a cron / timer loop: fetch only files added since last check
+curl -s "$BASE/api/v1/downloads?roomid=$ROOM&scope=new&since=$LAST_CHECK" \
+  -H "X-Dicefiles-API-Key: $KEY"
+
+# Step 3 — download all PDFs with “pathfinder” in the name
+curl -s "$BASE/api/v1/downloads?roomid=$ROOM&name_contains=pathfinder&ext=pdf" \
+  -H "X-Dicefiles-API-Key: $KEY" \
+  | jq -r '.files[] | "$BASE" + .href' \
+  | xargs -I{} curl -OJL {}
+
+# Step 4 — download all EPUB and MOBI files
+curl -s "$BASE/api/v1/downloads?roomid=$ROOM&ext=epub,mobi" \
+  -H "X-Dicefiles-API-Key: $KEY" \
+  | jq -r '.files[].href' \
+  | xargs -I{} curl -OJL "$BASE{}"
+```
 
 ### 6.10 Delete Files/Requests
 
@@ -313,8 +349,8 @@ Response:
   "ok": true,
   "now": "2026-02-18T17:00:00.000Z",
   "checks": {
-    "redis": {"ok": true, "latencyMs": 2, "detail": "PONG"},
-    "storage": {"ok": true, "latencyMs": 1, "path": "uploads"}
+    "redis": { "ok": true, "latencyMs": 2, "detail": "PONG" },
+    "storage": { "ok": true, "latencyMs": 1, "path": "uploads" }
   },
   "metrics": {
     "uploadsCreated": 10,
@@ -345,12 +381,17 @@ Configure in `.config.json`:
       "id": "my-bot",
       "url": "https://example.org/hooks/dicefiles",
       "secret": "replace-with-random-secret",
-      "events": ["file_uploaded", "request_created", "request_fulfilled", "file_deleted"],
+      "events": [
+        "file_uploaded",
+        "request_created",
+        "request_fulfilled",
+        "file_deleted"
+      ],
       "retries": 3,
       "timeoutMs": 7000
     }
   ],
-  "webhookRetry": {"retries": 3, "baseDelayMs": 1500, "maxDelayMs": 30000},
+  "webhookRetry": { "retries": 3, "baseDelayMs": 1500, "maxDelayMs": 30000 },
   "webhookDeadLetterLog": "webhook-dead-letter.log"
 }
 ```
@@ -393,7 +434,7 @@ Retries use exponential backoff. Permanent failures are written as JSON lines to
 Error shape:
 
 ```json
-{"err": "Human-readable message"}
+{ "err": "Human-readable message" }
 ```
 
 Typical status codes:

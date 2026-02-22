@@ -596,14 +596,36 @@ async function parseEpubChapters(zip) {
  */
 /** Vertical gap (px) between the A5 page frame and the container edges. */
 const BOOK_VMARGIN = 10;
-/** Top/bottom padding (px) inside the book iframe — used both in buildSrcdoc and
- *  in the line-snapping logic so both sides always agree on the value. */
-const BOOK_VP = 28;
+/**
+ * Top/bottom padding (px) inside the book iframe.
+ * This IS the book's top and bottom page margin — the CSS column height is
+ * (pageHeight - 2 * BOOK_VP) so every column has this space above and below.
+ */
+const BOOK_VP = 40;
 
+/**
+ * Build the srcdoc for a BookReader chapter iframe.
+ *
+ * Pagination strategy: CSS multi-column layout (column-fill: auto).
+ * The browser lays text into columns of exactly (usableHeight) px, respecting
+ * line boundaries natively — no half-line bleed at the page boundary.
+ * Each "column" is one A5 page.  Translation per page = pageWidth.
+ *
+ * Column geometry:
+ *   padding-left = HP              ← left margin of every page
+ *   column-width = pageWidth−2·HP  ← text area
+ *   column-gap   = 2·HP            ← right margin of page N + left margin of page N+1
+ *   ∴ step = column-width + gap = pageWidth  ✓
+ *
+ * Page N is revealed by: scroller.style.transform = translateX(−N · pageWidth).
+ * Total pages: measured from a sentinel span appended at the end of scroller.
+ */
 function buildSrcdoc(html, cssUrls, pageWidth, pageHeight, opts) {
   const o = opts || READER_OPTS_DEFAULTS;
-  const HP = o.margin != null ? o.margin : 40; // horizontal padding (px)
-  const VP = BOOK_VP; // top/bottom padding (px) — keep in sync with BOOK_VP
+  const HP = o.margin != null ? o.margin : 56; // horizontal padding (px)
+  const VP = BOOK_VP; // top/bottom padding (px)
+  const textW = pageWidth - 2 * HP; // text column width
+  const colH = pageHeight - 2 * VP; // column / usable height
   const fontFamily = FONT_FAMILIES[o.fontFamily] || FONT_FAMILIES.georgia;
   const fontSize = (o.fontSize || 1.05) + "em";
   const lineHeight = o.lineSpacing || 1.75;
@@ -619,29 +641,39 @@ ${linkTags}
     width: ${pageWidth}px;
     height: ${pageHeight}px;
     overflow: hidden;
-    /* contain: paint prevents GPU-composited child layers from painting
-       outside the body bounds when translateY is applied to #scroller */
+    /* contain:paint clips the multi-column scroller (30 000 px wide) so only
+       the current page column is visible in the iframe viewport. */
     contain: paint;
     background: #1a1a1a;
   }
   #scroller {
-    padding: ${VP}px ${HP}px ${VP}px;
-    box-sizing: border-box;
-    width: ${pageWidth}px;
+    /* ── CSS multi-column pagination ────────────────────────────────────── */
+    /* Large fixed width gives the browser room for many columns horizontally */
+    width: 30000px;
+    height: ${colH}px;
+    margin-top: ${VP}px;
+    /* Column geometry — each column = one A5 page */
+    column-count: auto;
+    column-width: ${textW}px;
+    column-gap: ${2 * HP}px;
+    column-fill: auto;
+    /* Left margin of page 0 — subsequent pages get it from the column-gap right half */
+    padding-left: ${HP}px;
+    /* Typography */
     color: #e8e8e8;
     font-family: ${fontFamily};
     font-size: ${fontSize};
     line-height: ${lineHeight};
-    /* No will-change: transform — the hint promotes a compositor layer that can
-       escape the body's overflow clip on some browsers; apply transform only. */
   }
-  img, svg, video { max-width: 100%; height: auto; }
+  img, svg, video { max-width: ${textW}px; height: auto; display: block; }
   /* Force all inline text colours to a readable light value, overriding
      publisher styles that may embed dark-on-dark colour declarations. */
   *:not(a) { color: #e8e8e8 !important; background-color: transparent !important; }
   a { color: #7ec8e3 !important; }
-  p { margin: 0 0 1em; text-align: justify; }
-  h1,h2,h3,h4,h5,h6 { color: #f0f0f0 !important; margin-top: 0; }
+  p { margin: 0 0 0.85em; text-align: justify; }
+  h1,h2,h3,h4,h5,h6 { color: #f0f0f0 !important; margin-top: 0; break-after: avoid; }
+  /* Avoid orphan lines at column boundaries */
+  p { orphans: 2; widows: 2; }
   * { box-sizing: border-box; }
 </style>
 </head><body><div id="scroller">${html}</div></body></html>`;
@@ -777,49 +809,49 @@ class BookReader {
         if (!doc || !doc.body) return;
         const scroller = doc.getElementById("scroller");
         if (!scroller) return;
-        // Total content height (measure before any snapping so the full
-        // natural content height is captured regardless of iframe clip).
-        const totalH = scroller.offsetHeight;
 
-        // Snap _pageHeight to a whole-line multiple so that translateY page
-        // offsets always land on a line boundary, preventing the half-line
-        // bleed at the top and bottom of each page.
+        // ── Measure total pages using a sentinel element ─────────────────
+        // With CSS multi-column, the scroller DOM width is fixed at 30 000 px.
+        // We measure the rightmost extent of actual content via a sentinel
+        // appended at the end.  getBoundingClientRect().left inside the iframe
+        // document returns the absolute column-layout x coordinate even beyond
+        // the clipped viewport.
+        //
+        // Column geometry (matching buildSrcdoc):
+        //   page N text starts at: HP + N * pageWidth
+        //   sentinel on last page: HP + N*pageWidth ≤ x < (N+1)*pageWidth
+        //   ∴ N = floor((sentinel.left − HP) / pageWidth)  →  total = N+1
+        const HP =
+          this._opts && this._opts.margin != null ? this._opts.margin : 56;
+        let totalPages = 1;
         try {
-          const sampleEl = scroller.querySelector("p,li,div,span") || scroller;
-          const lhPx = parseFloat(
-            iframe.contentWindow.getComputedStyle(sampleEl).lineHeight,
-          );
-          if (lhPx > 4 && isFinite(lhPx)) {
-            const usableH = this._pageHeight - 2 * BOOK_VP;
-            const linesPerPage = Math.floor(usableH / lhPx);
-            if (linesPerPage > 0) {
-              const snappedH = Math.round(linesPerPage * lhPx) + 2 * BOOK_VP;
-              if (snappedH > 0 && snappedH <= this._pageHeight) {
-                iframe.style.height = snappedH + "px";
-                doc.documentElement.style.height = snappedH + "px";
-                doc.body.style.height = snappedH + "px";
-                this._pageHeight = snappedH;
-              }
-            }
+          const sentinel = doc.createElement("span");
+          sentinel.style.cssText =
+            "display:inline-block;width:1px;height:1px;visibility:hidden;";
+          scroller.appendChild(sentinel);
+          const sl = sentinel.getBoundingClientRect().left;
+          scroller.removeChild(sentinel);
+          if (isFinite(sl) && sl >= 0) {
+            totalPages = Math.max(
+              1,
+              Math.floor((sl - HP) / this._pageWidth) + 1,
+            );
           }
         } catch (_) {}
 
-        this._totalPagesInChapter = Math.max(
-          1,
-          Math.ceil(totalH / this._pageHeight),
-        );
+        this._totalPagesInChapter = totalPages;
         const target =
           startAtPage < 0
-            ? this._totalPagesInChapter - 1
-            : Math.min(startAtPage, this._totalPagesInChapter - 1);
+            ? totalPages - 1
+            : Math.min(startAtPage, totalPages - 1);
         this._pageInChapter = target;
         if (target > 0) {
-          scroller.style.transform = `translateY(${-target * this._pageHeight}px)`;
+          scroller.style.transform = `translateX(${-target * this._pageWidth}px)`;
         }
         this._loaded = true;
         this._updateInfo();
         dbg(
-          `Chapter ${idx + 1}: ${this._totalPagesInChapter} pages (contentH=${totalH}px)`,
+          `Chapter ${idx + 1}: ${totalPages} pages (sentinel-based, HP=${HP})`,
         );
       } catch (ex) {
         dbgErr("iframe load handler", ex);
@@ -845,7 +877,7 @@ class BookReader {
         this._iframe.contentDocument.getElementById("scroller");
       if (!scroller) return;
       scroller.style.transform =
-        pageIdx === 0 ? "" : `translateY(${-pageIdx * this._pageHeight}px)`;
+        pageIdx === 0 ? "" : `translateX(${-pageIdx * this._pageWidth}px)`;
     } catch (ex) {
       dbgErr("_scrollToPage", ex);
     }
@@ -858,11 +890,12 @@ class BookReader {
    */
   applyOpts(newOpts) {
     this._opts = { ...this._opts, ...newOpts };
-    // Recompute page dimensions — font size changes alter effective content
-    // height, so a fresh measurement ensures pagination stays accurate.
+    // Recompute page dimensions before re-rendering.
     this._computePageSize();
-    // Re-render current chapter preserving page position
-    this._renderChapter(this._currentIdx, this._pageInChapter);
+    // Font size / margin changes alter the number of pages per chapter, so the
+    // old page index is no longer meaningful.  Re-render from page 0 so the
+    // user sees a clean, correctly-paginated chapter start.
+    this._renderChapter(this._currentIdx, 0);
   }
 
   /** Navigate one page forward; wraps to next chapter at chapter end. */
@@ -1076,7 +1109,7 @@ const READER_OPTS_DEFAULTS = {
   fontFamily: "georgia",
   fontSize: 1.05,
   lineSpacing: 1.75,
-  margin: 40,
+  margin: 56,
 };
 
 const FONT_FAMILIES = {
