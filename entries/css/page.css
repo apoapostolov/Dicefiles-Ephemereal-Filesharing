@@ -544,6 +544,7 @@ body#page {
 #page #userprofile .activity-table {
   width: 100%;
   border-collapse: collapse;
+  border: none;
   font-size: 0.88rem;
 }
 
@@ -555,6 +556,8 @@ body#page {
   text-transform: uppercase;
   color: var(--dark-fg);
   padding: 0 0.75rem 0.65rem;
+  background: none;
+  border: none;
 }
 
 #page #userprofile .activity-table thead th:first-child {
@@ -567,6 +570,7 @@ body#page {
 #page #userprofile .activity-row td {
   padding: 0.5rem 0.75rem;
   vertical-align: middle;
+  border: none;
 }
 
 #page #userprofile .activity-row:nth-child(odd) td {

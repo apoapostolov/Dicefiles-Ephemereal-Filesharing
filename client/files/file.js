@@ -223,7 +223,7 @@ export default class File extends BaseFile {
       attrs: {
         download: this.name,
         rel: "nofollow,noindex",
-        href: this.isRequest ? "" : (this.url || ""),
+        href: this.isRequest ? "" : this.url || "",
         title: "Download",
       },
       classes: ["gallery-dl", "i-download"],
@@ -391,13 +391,17 @@ export default class File extends BaseFile {
       if (tn === "usernick" && this.meta && this.meta.account) {
         tag.classList.add("tag-user");
       }
-      if ((tn === "usernick" || tn === "user") && this.meta && this.meta.account) {
+      if (
+        (tn === "usernick" || tn === "user") &&
+        this.meta &&
+        this.meta.account
+      ) {
         const account = this.meta.account;
         tag.classList.add("tag-user-link");
         tag.addEventListener("click", (e) => {
           e.stopPropagation();
           e.preventDefault();
-          window.open(`/user/${account}`, "_blank");
+          window.open(`/u/${account}`, "_blank");
         });
       }
       this.tagsEl.appendChild(tag);
