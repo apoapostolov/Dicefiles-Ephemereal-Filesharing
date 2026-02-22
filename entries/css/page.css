@@ -318,12 +318,26 @@ body#page {
   color: var(--rarity-fg);
 }
 
-#page #userprofile .achievement-icon::before {
+#page #userprofile .achievement-icon i {
   font-size: 1.45rem;
+  line-height: 1;
 }
 
-#page #userprofile .achievement.unlocked .achievement-icon {
-  box-shadow: 0 0 14px rgba(0, 0, 0, 0.15);
+#page #userprofile .achievement-progress {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  margin: 0.3rem 0 0.2rem;
+  overflow: hidden;
+}
+
+#page #userprofile .achievement-progress-bar {
+  height: 100%;
+  background: var(--rarity-fg);
+  border-radius: 999px;
+  opacity: 0.55;
+  transition: width 0.4s ease;
 }
 
 #page #userprofile .achievement h4 {
@@ -394,7 +408,7 @@ body#page {
   color: #ff8b8b;
 }
 
-/* ── Profile tabs ─────────────────────────────────────────────────────────── */
+/* ── Profile tabs ──────────────────────────────────────────────────────────── */
 
 #page #userprofile .profile-tabs {
   display: flex;
@@ -414,9 +428,7 @@ body#page {
   font-size: 0.92rem;
   padding: 0.55rem 1.1rem;
   margin-bottom: -1px;
-  transition:
-    color 0.15s,
-    border-color 0.15s;
+  transition: color 0.15s, border-color 0.15s;
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -446,7 +458,7 @@ body#page {
   padding: 0 0.3em;
 }
 
-/* ── Profile panels ────────────────────────────────────────────────────────── */
+/* ── Profile panels ─────────────────────────────────────────────────────────── */
 
 #page #userprofile .profile-panel {
   display: contents;
@@ -454,131 +466,6 @@ body#page {
 
 #page #userprofile .profile-panel.hidden {
   display: none;
-}
-
-/* ── Interests block ──────────────────────────────────────────────────────── */
-
-#page #userprofile .profile-interests {
-  border: 1px solid var(--hairline);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 1rem;
-}
-
-#page #userprofile #profile-interests-input {
-  width: 95%;
-  border: 1px solid var(--hairline);
-  border-radius: 10px;
-  padding: 0.5rem 0.8rem;
-  background: var(--surface-1, rgba(255, 255, 255, 0.04));
-  color: var(--text-fg);
-  font-size: 0.95rem;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-#page #userprofile .interests-display {
-  margin: 0;
-  color: var(--text-fg);
-  font-size: 0.96rem;
-}
-
-/* ── Achievement progress bar ────────────────────────────────────────────── */
-
-#page #userprofile .progress-bar-wrap {
-  display: inline-block;
-  width: 60px;
-  height: 5px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  vertical-align: middle;
-  margin-right: 0.35rem;
-  overflow: hidden;
-}
-
-#page #userprofile .progress-bar-fill {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: var(--rarity-edge, rgba(145, 153, 163, 0.5));
-  transition: width 0.3s ease;
-}
-
-#page #userprofile .achievement-status {
-  font-size: 0.78rem;
-}
-
-#page #userprofile .unlocked-label {
-  color: var(--rarity-fg, #c6ccd4);
-}
-
-#page #userprofile .locked-label {
-  color: var(--dark-fg);
-}
-
-/* ── Activity list ────────────────────────────────────────────────────────── */
-
-#page #userprofile .profile-activity {
-  border: 1px solid var(--hairline);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 1rem;
-}
-
-#page #userprofile .activity-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-#page #userprofile .activity-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.55rem 0.7rem;
-  border-radius: 10px;
-  border: 1px solid var(--hairline);
-  background: rgba(255, 255, 255, 0.02);
-}
-
-#page #userprofile .activity-item .activity-icon {
-  flex-shrink: 0;
-  color: var(--dark-fg);
-}
-
-#page #userprofile .activity-item .activity-icon::before {
-  font-size: 1.1rem;
-}
-
-#page #userprofile .activity-meta {
-  flex: 1;
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  overflow: hidden;
-}
-
-#page #userprofile .activity-name {
-  font-size: 0.92rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 32ch;
-}
-
-#page #userprofile .activity-type {
-  font-size: 0.78rem;
-  white-space: nowrap;
-}
-
-#page #userprofile .activity-time {
-  font-size: 0.78rem;
-  white-space: nowrap;
-  flex-shrink: 0;
 }
 
 @media (max-width: 920px) {
@@ -594,11 +481,6 @@ body#page {
 
   #page #userprofile .profile-stats {
     grid-template-columns: 1fr;
-  }
-
-  #page #userprofile .profile-tabs {
-    overflow-x: auto;
-    white-space: nowrap;
   }
 }
 

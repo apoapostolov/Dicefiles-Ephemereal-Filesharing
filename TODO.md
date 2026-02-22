@@ -2,40 +2,53 @@
 
 Last updated: 2026-02-22
 
-## P1.5 — Archive Viewer
+## P1 — Archive Viewer
 
-Spec: [docs/archive-viewer.md](docs/archive-viewer.md)
+See `docs/archive-viewer.md` for full spec, format support table, and security constraints.
 
-### Server — metadata at upload
+### Server
 
-- [ ] Add `indexArchive(storage)` to `lib/meta.js`: list entries, write `meta.archive_count` and `meta.archive_ext_sample` via `addAssets([])`.
-- [ ] ZIP listing branch: use yauzl for archives ≥ 100 MB, jszip for smaller.
-- [ ] RAR listing branch: spawn `unrar lb`.
-- [ ] TAR listing branch: spawn `tar tf` (handles `.tar`, `.tar.gz`, `.tar.bz2`).
-- [ ] Call `indexArchive` during ingest for zip/rar/tar type uploads.
+- [ ] `lib/meta.js` — `indexArchive(storage)` — list ZIP/RAR/TAR contents at upload, write `meta.archive_count` and `meta.archive_ext_sample`
+- [ ] `lib/httpserver.js` — `GET /api/v1/archive/:hash/ls` endpoint returning entry manifest as JSON
+- [ ] `lib/httpserver.js` — `GET /api/v1/archive/:hash/file?path=` streaming extraction endpoint
 
-### Server — API endpoints
+### Memory / Deps
 
-- [ ] Add `GET /api/v1/archive/:hash/ls` → `{ files, format, count }`.
-- [ ] Add `GET /api/v1/archive/:hash/file?path=...` → stream extracted bytes.
-- [ ] Path traversal guard: reject paths not present in the manifest or containing `..`.
-- [ ] File size guard: reject single-file extraction > 50 MB with 413.
-- [ ] Rate-limit extraction endpoint using existing `wrap(maxAssetsProcesses, ...)` pattern.
-- [ ] Encrypted archive detection: return 400 on password-protected entries.
+- [ ] `npm install yauzl` — add to `package.json`; implement `yauzlListImages` and `yauzlExtractEntry` helpers in `lib/meta.js` for ZIP files ≥ 100 MB
 
-### Client UI
+### Security
 
-- [ ] Gallery card: archive icon, file-count badge, ext-sample tag (e.g. "STLs · 42 files").
-- [ ] Archive Contents panel component (`client/files/archivepanel.js`) — flat scrollable entry list with path, size, per-row download button.
-- [ ] Integrate panel with file viewer open/close pattern (same as reader).
+- [ ] Validate every requested extraction path against the archive manifest (reject `..` and absolute paths after normalization)
+- [ ] Reject single-entry extractions > 50 MB with 413
+- [ ] Apply `wrap(maxAssetsProcesses, ...)` to the extraction endpoint to cap concurrent spawns
 
-### 7z support (blocked on operator action)
+### Client
 
-- [ ] Add 7z listing + extraction once `p7zip-full` is installed: `7z l -slt` for listing, `7z x -so` for extraction.
+- [ ] Gallery card badge: file count + ext sample ("STLs · 42 files") for archive files
+- [ ] Archive Contents panel (sliding drawer) listing all entry paths with file sizes
+- [ ] Per-entry download button in the panel rows
+
+---
+
+## P2 — Profile Completion
+
+- [ ] Activity tab (third tab alongside Overview and Achievements) with paginated recent-upload list
+- [ ] Persist last-read page server-side, synced via API (currently localStorage-only)
+- [ ] Optional "currently looking for" interests block on profile (owner-editable)
+
+---
+
+## P3 — Achievement Polish
+
+- [ ] Seasonal / limited-time achievements behind feature flag (`SEASONAL_ACHIEVEMENTS=1` env var)
+
+---
 
 ## Execution Order
 
-| Step | Section                   | Why first                                              |
-| ---- | ------------------------- | ------------------------------------------------------ |
-| 1    | Archive Viewer (P1.5)     | Highest user-visible impact; server tools already present. |
+| Priority | Section            |
+| -------- | ------------------ |
+| P1       | Archive Viewer     |
+| P2       | Profile Completion |
+| P3       | Achievement Polish |
 

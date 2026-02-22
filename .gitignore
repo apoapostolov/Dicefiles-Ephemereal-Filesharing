@@ -16,7 +16,7 @@ uploads/
 dump.rdb
 AGENTS.md
 DEVELOPMENT_LOG.md
-docs/
+docs/*.draft.md
 tests/
 server.log
 ops.log
