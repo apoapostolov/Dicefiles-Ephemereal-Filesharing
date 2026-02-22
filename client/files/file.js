@@ -218,6 +218,25 @@ export default class File extends BaseFile {
       this.detailEl.appendChild(this.ttlEl);
     }
 
+    // Gallery-mode per-tile download button (hidden in list mode via CSS)
+    this.galleryDlEl = dom("a", {
+      attrs: {
+        download: this.name,
+        rel: "nofollow,noindex",
+        href: this.isRequest ? "" : (this.url || ""),
+        title: "Download",
+      },
+      classes: ["gallery-dl", "i-download"],
+    });
+    this.galleryDlEl.addEventListener("click", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (!this.isRequest) {
+        this.download();
+      }
+    });
+    this.el.appendChild(this.galleryDlEl);
+
     this.setNew(!!file.isNew);
   }
 
@@ -371,7 +390,10 @@ export default class File extends BaseFile {
       tag.dataset.tagLabel = label;
       if (tn === "usernick" && this.meta && this.meta.account) {
         tag.classList.add("tag-user");
+      }
+      if ((tn === "usernick" || tn === "user") && this.meta && this.meta.account) {
         const account = this.meta.account;
+        tag.classList.add("tag-user-link");
         tag.addEventListener("click", (e) => {
           e.stopPropagation();
           e.preventDefault();

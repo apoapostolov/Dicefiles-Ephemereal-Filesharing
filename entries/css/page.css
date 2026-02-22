@@ -549,32 +549,43 @@ body#page {
 
 #page #userprofile .activity-table thead th {
   text-align: left;
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--dark-fg);
-  padding: 0 0.5rem 0.5rem;
-  border-bottom: 1px solid var(--hairline);
+  padding: 0 0.75rem 0.65rem;
 }
 
 #page #userprofile .activity-table thead th:first-child {
-  width: 1.6rem;
+  width: 2.2rem;
+  text-align: center;
   padding-left: 0;
+  padding-right: 0;
 }
 
 #page #userprofile .activity-row td {
-  padding: 0.45rem 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 0.5rem 0.75rem;
   vertical-align: middle;
 }
 
-#page #userprofile .activity-row:last-child td {
-  border-bottom: none;
+#page #userprofile .activity-row:nth-child(odd) td {
+  background: rgba(255, 255, 255, 0.028);
+}
+
+#page #userprofile .activity-row:first-child td:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+#page #userprofile .activity-row:first-child td:last-child {
+  border-radius: 0 6px 6px 0;
 }
 
 #page #userprofile .activity-type {
-  width: 1.6rem;
+  width: 2.2rem;
+  text-align: center;
   padding-left: 0 !important;
-  color: var(--dark-fg);
+  padding-right: 0 !important;
 }
 
 #page #userprofile .activity-upload .activity-type {
