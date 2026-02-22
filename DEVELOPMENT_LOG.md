@@ -1,5 +1,12 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - Fix: WebtoonReader saves/restores by page, not pixels; debounced scroll save
+
+**Root cause**: `_pageHeight` was captured from `first.naturalHeight` (the image's intrinsic pixel size, e.g. 2048 px), but CSS renders images at `width:100%; max-width:900px; height:auto`, so the actual displayed height is scaled (e.g. 2048 × 900/1280 = 1440 px). The restore calculation `scrollTop = saved.page × naturalHeight` overshoots by the ratio `imageWidth / containerWidth`, placing the user far past the correct page.
+
+- `client/files/reader.js` — `_pageHeight` now set from `first.offsetHeight` (CSS-rendered px, same coordinate space as `scrollTop`). Restore now uses `scrollIntoView({ behavior: "instant", block: "start" })` instead of the pixel estimate. To ensure `scrollIntoView` works on unloaded images (which otherwise have 0px height), each unloaded image gets `minHeight = offsetHeight` as a placeholder; a one-shot `load` listener clears `minHeight` per-image so scroll anchoring keeps the viewport stable as real images load. Added `_onContainerScroll` debounced listener (300 ms) that saves progress on every scroll stop — covers mousewheel, touch, scrollbar drag, and `PageUp`/`PageDown`. `nextPage()` and `prevPage()` now also call `saveProgress` immediately on each press so no button interaction is lost. `destroy()` removes the scroll listener and clears the debounce timer.
+- `static/client.js` — Rebuilt.
+
 ## 2026-02-22 - Feat: CSS-column A5 pagination; trade-book margins; name/ext API filters
 
 ### A5 BookReader overhaul (EPUB/MOBI)
