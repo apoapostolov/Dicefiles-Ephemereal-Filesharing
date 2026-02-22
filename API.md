@@ -1192,11 +1192,9 @@ See `docs/mcp.md` for the full specification, security model, and deployment gui
 | `DELETE` | `/api/v1/agent/subscriptions/:name` | `files:read`     | No               | v1.1    |
 | `GET`    | `/api/v1/admin/config`              | `admin:config`   | No               | v1.2    |
 | `PATCH`  | `/api/v1/admin/config`              | `admin:config`   | No               | v1.2    |
-| `POST`   | `/api/v1/admin/rooms/               |
-
-`        |`admin:rooms`   | No               | v1.2    |
-|`DELETE`|`/api/v1/admin/rooms/:id`          |`admin:rooms`   | No               | v1.2    |
-|`DELETE`|`/api/v1/admin/rooms`              |`admin:rooms` | No | v1.2 |
+| `POST`   | `/api/v1/admin/rooms/prune`         | `admin:rooms`    | No               | v1.2    |
+| `DELETE` | `/api/v1/admin/rooms/:id`           | `admin:rooms`    | No               | v1.2    |
+| `DELETE` | `/api/v1/admin/rooms`               | `admin:rooms`    | No               | v1.2    |
 
 ---
 
