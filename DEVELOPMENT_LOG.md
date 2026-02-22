@@ -1,5 +1,64 @@
 # Dicefiles Development Log
 
+## 2026-02-23 - P1 sort icons + filter pill, P2 MCP server
+
+### Summary
+
+Two parallel deliverables: P1 UI polish (sort pill icons, filter pill reorganisation)
+and the full P2 MCP server implementation.
+
+**P1 — Sort icons**: The three sort buttons ("New", "Size", "Exp") now display inline
+SVG icons instead of text labels. Lightning bolt = newest first, descending bar chart =
+largest first, hourglass = expiring soon. No Font Awesome dependency needed. The
+active sort button continues to receive the `.active` class (background accent). CSS
+updated to remove text-sizing overrides from `.sort-pill .btn` and add
+`pointer-events: none` on SVG children.
+
+**P1 — Filter pill reorganisation**: The "Show Only New Files" button (`#show-new-btn`)
+is now the rightmost element inside the `.filter-pill` div instead of a standalone
+button. It retains its `btn i-arrow-up` class (not `filterbtn`) so it does not
+register in the `filterButtons` array and does not interfere with the type-filter
+toggle system. The `margin-left: 0.5rem` rule was removed; pill border-radius
+is handled automatically by the existing `.btn-pill .btn:last-child` rule in CSS.
+
+**P2 — MCP server** (`scripts/mcp-server.js`): Full CommonJS implementation of a
+Model Context Protocol server wrapping all 13 v1.1 REST endpoints as named tools with
+Zod input schemas. Supports stdio transport (default, for Claude Desktop) and
+Streamable HTTP transport (for remote orchestrators). Exports `registerTools()` and
+`api()` for unit-test injection. Includes startup API-key warning and graceful
+`require.main` guard so the module can be `require()`d from tests safely.
+
+**P2 — MCP.md** (root): Complete MCP reference in API.md format. Replaced the
+informal `docs/mcp.md` stub. Covers: setup & env vars, Claude Desktop config JSON,
+HTTP transport mode, 13-tool matrix with scope table, per-tool spec + "What this
+enables" prose, security model, and 3 workflow examples (Claude Desktop assistant,
+multi-agent request fulfillment loop, OpenClaw enrichment pipeline). Old `docs/mcp.md`
+removed from git tracking.
+
+**P2 — Tests** (`tests/unit/mcp-tools.test.js`): 25 unit tests covering tool
+registration count, every tool's REST call (URL, method, path encoding, query params,
+request body), auth header presence, download base64 encoding, oversized file guard,
+non-200 error handling, and MCP content wrapping. All mocks are virtual (no SDK or
+Zod install required). All 324 tests pass.
+
+**Dependencies added**: `@modelcontextprotocol/sdk: ^1.6.0`, `zod: ^3.24.0` added
+to `package.json` dependencies. Both have CJS exports and are compatible with Node 20.
+
+### Changed Files
+
+- **`views/room.ejs`** — Sort pill buttons replaced with SVG icons; `#show-new-btn`
+  moved into filter-pill as last child.
+- **`entries/css/room.css`** — `.sort-pill .btn` text sizing removed, SVG display rules
+  added; `#show-new-btn` margin-left removed.
+- **`scripts/mcp-server.js`** (new) — Full MCP server: 13 tools, stdio + HTTP
+  transports, auth, exported helpers.
+- **`MCP.md`** (new, root) — Complete MCP reference in API.md format.
+- **`docs/mcp.md`** (deleted) — Superseded by root `MCP.md`.
+- **`package.json`** — Added `@modelcontextprotocol/sdk ^1.6.0` and `zod ^3.24.0`.
+- **`tests/unit/mcp-tools.test.js`** (new) — 25 unit tests for all MCP tools.
+
+---
+
 ## 2026-02-22 - API documentation enrichment, MCP guide, automation tests
 
 ### Summary
@@ -41,8 +100,6 @@ shipped in the previous session.
   MCP Server Wrapper section. Updated Execution Order.
 - **`tests/integration/automation-v1.1.test.js`** (new) — 37-test automation v1.1
   integration and workflow simulation suite.
-
-
 
 ### Summary
 

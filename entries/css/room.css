@@ -1104,9 +1104,13 @@ a.r::before {
 }
 
 .sort-pill .btn {
-  min-width: 34px;
-  font-size: 10pt;
-  padding: 0 6px;
+  padding: 0;
+  line-height: 0;
+}
+
+.sort-pill .btn svg {
+  pointer-events: none;
+  display: block;
 }
 
 .sort-pill .btn.active {
@@ -1114,10 +1118,8 @@ a.r::before {
   color: #fff;
 }
 
-/* ===== P1: Show-New Button ===== */
+/* ===== P1: Show-New Button (inside filter pill as rightmost item) ===== */
 #show-new-btn {
-  margin-left: 0.5rem;
-  font-size: 11pt;
   opacity: 0.55;
   transition: opacity 0.15s;
 }
@@ -1125,6 +1127,7 @@ a.r::before {
 #show-new-btn.active {
   opacity: 1;
   color: var(--accent-light, #4af);
+  background: var(--surface-2);
 }
 
 /* ===== P1: Presets Row ===== */
@@ -1134,7 +1137,7 @@ a.r::before {
   align-items: center;
   gap: 5px;
   padding: 4px 10px;
-  border-top: 1px solid var(--border, rgba(255,255,255,.08));
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.08));
 }
 
 #presets-row.hidden {
@@ -1154,7 +1157,7 @@ a.r::before {
   gap: 4px;
   padding: 2px 8px;
   border-radius: 12px;
-  border: 1px solid var(--border, rgba(255,255,255,.25));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.25));
   background: transparent;
   color: inherit;
   font-size: 10pt;
@@ -1163,7 +1166,7 @@ a.r::before {
 }
 
 .preset-pill:hover {
-  background: var(--hover-bg, rgba(255,255,255,.08));
+  background: var(--hover-bg, rgba(255, 255, 255, 0.08));
 }
 
 .preset-pill-del {

@@ -46,6 +46,11 @@
         class="filterbtn i-question"
         title="Filter Requests"
       ></button>
+      <button
+        id="show-new-btn"
+        class="btn i-arrow-up"
+        title="Show only files newer than your last visit"
+      ></button>
     </div>
     <input
       id="filter"
@@ -65,11 +70,6 @@
       class="hidden blink i-arrow-up"
       title="New files at the top"
     ></div>
-    <button
-      id="show-new-btn"
-      class="btn i-arrow-up"
-      title="Show only new files since last visit"
-    ></button>
     <div class="spacer"></div>
     <div id="createrequest" class="btn" title="Create Request">
       <span class="i-question"></span>
@@ -110,9 +110,62 @@
       title="Whitelist files"
     ></div>
     <div class="btn-pill sort-pill">
-      <div id="sort-newest" class="btn active" data-sort-mode="newest" title="Sort: Newest first">New</div>
-      <div id="sort-largest" class="btn" data-sort-mode="largest" title="Sort: Largest first">Size</div>
-      <div id="sort-expiring" class="btn" data-sort-mode="expiring" title="Sort: Expiring soon">Exp</div>
+      <div
+        id="sort-newest"
+        class="btn active"
+        data-sort-mode="newest"
+        title="Sort: Newest first"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 14 14"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M9.5 1 L4 8 H7 L4.5 13 L10 6 H7.5 Z" />
+        </svg>
+      </div>
+      <div
+        id="sort-largest"
+        class="btn"
+        data-sort-mode="largest"
+        title="Sort: Largest first"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 14 14"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <rect x="0" y="2" width="3" height="12" />
+          <rect x="4" y="5" width="3" height="9" />
+          <rect x="8" y="8" width="3" height="6" />
+          <rect x="11" y="11" width="3" height="3" />
+        </svg>
+      </div>
+      <div
+        id="sort-expiring"
+        class="btn"
+        data-sort-mode="expiring"
+        title="Sort: Expiring soon"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 14 14"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <rect x="1" y="0" width="12" height="1.5" />
+          <rect x="1" y="12.5" width="12" height="1.5" />
+          <path d="M1 1.5 L13 1.5 L7 7 Z M7 7 L13 12.5 L1 12.5 Z" />
+        </svg>
+      </div>
     </div>
     <div class="btn-pill viewmode-pill">
       <div id="nailoff" class="btn i-list active" title="List view"></div>
@@ -154,7 +207,11 @@
 
   <nav id="presets-row" class="layer hidden">
     <div id="presets-list"></div>
-    <button id="preset-save" class="btn i-plus" title="Save current filter as preset"></button>
+    <button
+      id="preset-save"
+      class="btn i-plus"
+      title="Save current filter as preset"
+    ></button>
   </nav>
 
   <section id="chat" class="layer">
