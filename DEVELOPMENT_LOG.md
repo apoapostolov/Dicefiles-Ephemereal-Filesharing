@@ -1,5 +1,35 @@
 # Dicefiles Development Log
 
+## 2026-02-22 — MOTD left-bar removed; admin config and room-management API (v1.2)
+
+**MOTD CSS: left-bar stripe removed**
+
+- `entries/css/room.css`: Removed the `::before` pseudo-element from `.welcome_motd` that drew a left-side accent stripe. Also dropped `position: relative` and the extra 0.1 rem of left padding that existed only to accommodate the stripe. The panel itself (background, border, border-radius, text) remains unchanged.
+
+**New API scope: `admin:config`**
+
+- `lib/httpserver.js`: Added `ADMIN_CONFIG_WHITELIST` constant — a Set of 20 config keys safe to mutate at runtime without a restart (excludes security/listen keys such as `secret`, `port`, `tls*`, `workers`).
+- `GET /api/v1/admin/config` returns all whitelisted key-value pairs from the live in-process `CONFIG` map.
+- `PATCH /api/v1/admin/config` accepts a JSON body with any subset of whitelisted keys and applies them to the in-process `CONFIG` immediately. Optional `persist: true` in the body additionally serialises the accepted changes back to `.config.json` for persistence across restarts. Rejected keys (non-whitelisted) are returned in a `rejected` map without failing the entire request.
+- `lib/httpserver.js`: Added `app.patch("*", bodyParser.json())` and `app.delete("*", bodyParser.json())` — previously only POST had its JSON body parsed.
+
+**New API scope: `admin:rooms`**
+
+- `POST /api/v1/admin/rooms/prune` — triggers an immediate prune pass (same logic as the 24-hour schedule). Returns `{ pruned: N }`.
+- `DELETE /api/v1/admin/rooms/:id` — permanently destroys a single room and all its files. Returns 404 if the room does not exist (checked via `Room.get()`).
+- `DELETE /api/v1/admin/rooms` — nuclear option: destroys every room and all uploaded files. Requires `{ "confirm": "destroy-all-rooms" }` in the request body; returns 400 without it. Uses `Room.list()` to enumerate rooms rather than a direct Redis scan.
+- `lib/httpserver.js` (`mod` scope preset): added `admin:config` and `admin:rooms` to the list of scopes included in the `mod` preset.
+
+**API documentation**
+
+- `API.md` endpoint matrices (§5 and §20): added 5 new rows for the admin endpoints with `admin:config` and `admin:rooms` scopes, marked as v1.2.
+- `API.md` §21 (new section): full reference for all five admin endpoints including request/response shapes, mutable key list, nuclear confirmation requirement, and a warning about the nuclear endpoint.
+
+**Tests**
+
+- `tests/integration/admin-api.test.js` (new): 13 integration tests covering GET config, PATCH config (happy path, persist flag, rejected keys, 401), force prune, single-room 404, nuclear 400 (missing confirm / wrong confirm), and 401 (unauthenticated). Cross-request state consistency tests are intentionally omitted because CONFIG changes are in-process per-worker.
+- `.config.json`: added `admin:config` and `admin:rooms` scopes to the `test-mod` key so the integration tests can authenticate.
+
 ## 2026-02-22 — MOTD frame in welcome card + README update
 
 **MOTD moved out of the chat stream into the welcome card**

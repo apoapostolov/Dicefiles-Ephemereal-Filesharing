@@ -99,18 +99,23 @@ Audit logs are appended as JSON lines to `automationAuditLog`.
 
 ## 5. Endpoint Matrix
 
-| Method | Path                          | Scope            | Session Required |
-| ------ | ----------------------------- | ---------------- | ---------------- |
-| `POST` | `/api/v1/auth/login`          | `auth:login`     | No               |
-| `POST` | `/api/v1/auth/logout`         | `auth:logout`    | Yes              |
-| `POST` | `/api/v1/rooms`               | `rooms:write`    | Yes              |
-| `POST` | `/api/v1/requests`            | `requests:write` | Yes              |
-| `POST` | `/api/v1/uploads/key`         | `uploads:write`  | Yes              |
-| `GET`  | `/api/v1/uploads/:key/offset` | `uploads:write`  | Yes              |
-| `PUT`  | `/api/v1/uploads/:key`        | `uploads:write`  | Yes              |
-| `GET`  | `/api/v1/files`               | `files:read`     | Optional         |
-| `GET`  | `/api/v1/downloads`           | `files:read`     | Optional         |
-| `POST` | `/api/v1/files/delete`        | `files:delete`   | Yes              |
+| Method   | Path                          | Scope            | Session Required |
+| -------- | ----------------------------- | ---------------- | ---------------- |
+| `POST`   | `/api/v1/auth/login`          | `auth:login`     | No               |
+| `POST`   | `/api/v1/auth/logout`         | `auth:logout`    | Yes              |
+| `POST`   | `/api/v1/rooms`               | `rooms:write`    | Yes              |
+| `POST`   | `/api/v1/requests`            | `requests:write` | Yes              |
+| `POST`   | `/api/v1/uploads/key`         | `uploads:write`  | Yes              |
+| `GET`    | `/api/v1/uploads/:key/offset` | `uploads:write`  | Yes              |
+| `PUT`    | `/api/v1/uploads/:key`        | `uploads:write`  | Yes              |
+| `GET`    | `/api/v1/files`               | `files:read`     | Optional         |
+| `GET`    | `/api/v1/downloads`           | `files:read`     | Optional         |
+| `POST`   | `/api/v1/files/delete`        | `files:delete`   | Yes              |
+| `GET`    | `/api/v1/admin/config`        | `admin:config`   | No               |
+| `PATCH`  | `/api/v1/admin/config`        | `admin:config`   | No               |
+| `POST`   | `/api/v1/admin/rooms/prune`   | `admin:rooms`    | No               |
+| `DELETE` | `/api/v1/admin/rooms/:id`     | `admin:rooms`    | No               |
+| `DELETE` | `/api/v1/admin/rooms`         | `admin:rooms`    | No               |
 
 ## 6. Endpoint Details
 
@@ -1158,7 +1163,7 @@ See `docs/mcp.md` for the full specification, security model, and deployment gui
 
 ---
 
-## 20. Complete Endpoint Matrix (v1.0 + v1.1)
+## 20. Complete Endpoint Matrix (v1.0 + v1.1 + v1.2)
 
 | Method   | Path                                | Scope            | Session Required | Version |
 | -------- | ----------------------------------- | ---------------- | ---------------- | ------- |
@@ -1185,3 +1190,136 @@ See `docs/mcp.md` for the full specification, security model, and deployment gui
 | `POST`   | `/api/v1/agent/subscriptions`       | `files:read`     | No               | v1.1    |
 | `GET`    | `/api/v1/agent/subscriptions`       | `files:read`     | No               | v1.1    |
 | `DELETE` | `/api/v1/agent/subscriptions/:name` | `files:read`     | No               | v1.1    |
+| `GET`    | `/api/v1/admin/config`              | `admin:config`   | No               | v1.2    |
+| `PATCH`  | `/api/v1/admin/config`              | `admin:config`   | No               | v1.2    |
+| `POST`   | `/api/v1/admin/rooms/               |
+
+`        |`admin:rooms`   | No               | v1.2    |
+|`DELETE`|`/api/v1/admin/rooms/:id`          |`admin:rooms`   | No               | v1.2    |
+|`DELETE`|`/api/v1/admin/rooms`              |`admin:rooms` | No | v1.2 |
+
+---
+
+## 21. Admin: Remote Config and Room Management (v1.2)
+
+These endpoints require the `admin:config` or `admin:rooms` scope. Both scopes
+are included in the `mod` scope preset.
+
+### 21.1 Get mutable config
+
+- `GET /api/v1/admin/config`
+- Scope: `admin:config`
+- Returns the current values of all runtime-mutable configuration keys.
+
+Success:
+
+```json
+{
+  "ok": true,
+  "config": {
+    "publicRooms": false,
+    "roomPruning": true,
+    "roomPruningDays": 21,
+    "roomCreation": true,
+    "requireAccounts": false,
+    "name": "My File Share"
+  }
+}
+```
+
+### 21.2 Update config at runtime
+
+- `PATCH /api/v1/admin/config`
+- Scope: `admin:config`
+- Body: any subset of mutable config keys, plus an optional `persist` flag.
+
+```json
+{
+  "roomPruning": false,
+  "roomPruningDays": 30,
+  "persist": true
+}
+```
+
+When `persist` is `true`, accepted changes are written back to `.config.json`
+so they survive a server restart.
+
+Mutable keys: `publicRooms`, `roomPruning`, `roomPruningDays`, `roomCreation`,
+`roomCreationRequiresAccount`, `requireAccounts`, `allowRequests`,
+`linkCollection`, `profileActivity`, `maxFileSize`, `TTL`,
+`downloadMaxConcurrent`, `chatFloodTrigger`, `chatFloodDuration`,
+`uploadFloodTrigger`, `uploadFloodDuration`, `name`, `motto`, `opengraphIoKey`.
+
+Success:
+
+```json
+{
+  "ok": true,
+  "applied": { "roomPruning": false, "roomPruningDays": 30 },
+  "persisted": true
+}
+```
+
+If any keys were rejected (not in the mutable whitelist), the response includes
+a `rejected` map:
+
+```json
+{
+  "ok": true,
+  "applied": {},
+  "rejected": { "secret": "key not runtime-mutable" }
+}
+```
+
+### 21.3 Force room prune
+
+- `POST /api/v1/admin/rooms/prune`
+- Scope: `admin:rooms`
+- Immediately runs the room prune pass (same logic as the 24-hour scheduled
+  prune, respecting `roomPruningDays`). Useful after lowering `roomPruningDays`
+  to reclaim space immediately.
+
+Success:
+
+```json
+{ "ok": true, "pruned": 3 }
+```
+
+### 21.4 Destroy a single room
+
+- `DELETE /api/v1/admin/rooms/:id`
+- Scope: `admin:rooms`
+- Permanently deletes the room and all its files, regardless of prune settings.
+
+Success:
+
+```json
+{ "ok": true, "roomid": "AbCdEf1234" }
+```
+
+On unknown room: `404` with `{ "err": "Room not found" }`.
+
+### 21.5 Destroy all rooms (nuclear)
+
+- `DELETE /api/v1/admin/rooms`
+- Scope: `admin:rooms`
+- **Irreversible.** Destroys every room and all associated files on the server.
+- Requires explicit confirmation in the request body.
+
+Body:
+
+```json
+{ "confirm": "destroy-all-rooms" }
+```
+
+Omitting the confirmation string returns `400`.
+
+Success:
+
+```json
+{ "ok": true, "destroyed": 12 }
+```
+
+> **Warning:** This operation is intended for emergency use (e.g., legal
+> takedown). It permanently erases all rooms and uploaded files. There is no
+> undo. Protect keys carrying the `admin:rooms` scope accordingly.
