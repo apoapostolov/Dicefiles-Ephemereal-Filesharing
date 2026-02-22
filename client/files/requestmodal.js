@@ -386,15 +386,7 @@ export class RequestViewModal extends Modal {
         (requestFile.tags.usernick || requestFile.tags.user)) ||
       "";
 
-    // ── Left column: image preview or placeholder ──────────────────────────
-    this.previewEl = dom("div", { classes: ["requestview-preview"] });
-    if (requestFile.meta && requestFile.meta.requestImageDataUrl) {
-      this.previewEl.style.backgroundImage = `url(${requestFile.meta.requestImageDataUrl})`;
-      this.previewEl.classList.add("has-image");
-    }
-    this.body.appendChild(this.previewEl);
-
-    // ── Right column: info + action area ───────────────────────────────────
+    // ── Content area: info + action area ──────────────────────────────────
     this.rightEl = dom("div", { classes: ["requestview-right"] });
     this.body.appendChild(this.rightEl);
 

@@ -597,11 +597,10 @@
 /* ── RequestViewModal ─────────────────────────────────────────────────────── */
 
 .modal-requestview .modal-body {
-  display: grid;
-  grid-template-columns: 11em 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 1.1em;
-  min-width: 34em;
-  align-items: start;
+  min-width: 28em;
 }
 
 .modal-requestview .requestview-preview {
@@ -624,7 +623,6 @@
   flex-direction: column;
   gap: 0.55em;
   min-width: 0;
-  min-height: 11em;
 }
 
 .modal-requestview .requestview-requester {

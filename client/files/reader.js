@@ -947,7 +947,14 @@ class BookReader {
     // Font size / margin changes alter the number of pages per chapter, so the
     // old page index is no longer meaningful.  Re-render from page 0 so the
     // user sees a clean, correctly-paginated chapter start.
+    //
+    // _renderChapter sets _loaded = false synchronously (before its first await).
+    // Restore it right after so that Prev/Next buttons and arrow-key navigation
+    // remain responsive during the re-flow.  The load-event handler will update
+    // _totalPagesInChapter once the new layout has settled.
+    const wasLoaded = this._loaded;
     this._renderChapter(this._currentIdx, 0);
+    if (wasLoaded) this._loaded = true;
   }
 
   /** Navigate one page forward; wraps to next chapter at chapter end. */
