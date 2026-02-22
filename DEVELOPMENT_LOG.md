@@ -1,5 +1,9 @@
 # Dicefiles Development Log
 
+## 2026-02-22 — Fix profile-stats stretch
+
+- `entries/css/page.css` — Added `align-self: start` to `.profile-stats`. Same root cause as the previous `.profile-tabbed` fix: `#userprofile` is a CSS grid whose cells default to `stretch`, causing the stats box to expand to the full row height alongside the (shorter) activity table.
+
 ## 2026-02-22 — Activity table header centering and stretch fix
 
 - `entries/css/page.css` — Added `align-self: start` to `.profile-tabbed`. Root cause: `#userprofile` is a CSS grid whose items default to `align-items: stretch`, so the tabbed panel was expanding to fill the full row height and pushing the table toward the bottom. `align-self: start` makes the cell shrink-wrap to its content.
