@@ -1,6 +1,6 @@
 <!doctype html>
 <%- include("head"); %>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" />
 <body id="page">
   <nav>
     <h1 id="name"><%=user.name%> Profile</h1>
@@ -64,31 +64,54 @@
       <button class="profile-tab active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
       <button class="profile-tab" data-tab="achievements" role="tab" aria-selected="false">
         Achievements
-        <span class="tab-badge"><%=info.achievements.unlocked%></span>
+        <span class="tab-badge"><%=info.achievements.unlocked%> / <%=info.achievements.total%></span>
       </button>
     </nav>
 
     <section class="profile-message">
-      <h3>Profile Message</h3>
       <% if (info.canEditMessage) { %>
       <form id="profile-message-form" action="javascript:">
         <input type="hidden" id="profile-token" value="<%=token%>">
-        <textarea
-          id="profile-message-input"
-          name="message"
-          maxlength="2000"
-          placeholder="Write a message for visitors. Markdown and links are supported."><%=user.message || ""%></textarea>
+        <div class="profile-message-fields">
+          <div class="profile-message-field">
+            <label for="profile-about-input">About Me</label>
+            <textarea
+              id="profile-about-input"
+              name="message"
+              maxlength="2000"
+              placeholder="Tell visitors about yourself…"><%=user.message || ""%></textarea>
+          </div>
+          <div class="profile-message-field profile-message-field--looking">
+            <label for="profile-looking-input">What I'm Looking For</label>
+            <textarea
+              id="profile-looking-input"
+              name="looking"
+              maxlength="2000"
+              placeholder="What kind of files or collaborations are you looking for?"><%=user.looking || ""%></textarea>
+          </div>
+        </div>
         <div class="form-actions">
           <span id="profile-message-status" class="muted"></span>
-          <button id="profile-message-save" type="submit">Save Message</button>
+          <button id="profile-message-save" type="submit">Save</button>
         </div>
       </form>
       <% } %>
-      <div class="profile-message-rendered" id="profile-message-rendered">
+      <% if (info.messageHtml || info.lookingHtml) { %>
+      <div class="profile-message-view">
         <% if (info.messageHtml) { %>
-        <%-info.messageHtml%>
+        <div class="profile-message-block">
+          <h4>About Me</h4>
+          <div class="profile-message-rendered"><%- info.messageHtml %></div>
+        </div>
+        <% } %>
+        <% if (info.lookingHtml) { %>
+        <div class="profile-message-block">
+          <h4>What I'm Looking For</h4>
+          <div class="profile-message-rendered"><%- info.lookingHtml %></div>
+        </div>
         <% } %>
       </div>
+      <% } %>
     </section>
 
     <section class="profile-achievements">

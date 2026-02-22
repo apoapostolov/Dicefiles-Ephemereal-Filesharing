@@ -9,7 +9,10 @@ tabs.forEach((tab) => {
     const target = tab.dataset.tab;
     tabs.forEach((t) => {
       t.classList.toggle("active", t.dataset.tab === target);
-      t.setAttribute("aria-selected", t.dataset.tab === target ? "true" : "false");
+      t.setAttribute(
+        "aria-selected",
+        t.dataset.tab === target ? "true" : "false",
+      );
     });
     profileEl.className = profileEl.className.replace(/\btab-\w+/g, "").trim();
     if (target !== "overview") profileEl.classList.add("tab-" + target);
@@ -20,7 +23,8 @@ tabs.forEach((tab) => {
 const form = document.querySelector("#profile-message-form");
 
 if (form) {
-  const input = document.querySelector("#profile-message-input");
+  const aboutInput = document.querySelector("#profile-about-input");
+  const lookingInput = document.querySelector("#profile-looking-input");
   const token = document.querySelector("#profile-token");
   const status = document.querySelector("#profile-message-status");
 
@@ -41,7 +45,8 @@ if (form) {
         body: JSON.stringify({
           token: token.value,
           realm: "acct",
-          message: input.value || "",
+          message: aboutInput.value || "",
+          looking: lookingInput.value || "",
         }),
       });
       const payload = await response.json();
