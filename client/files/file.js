@@ -283,7 +283,10 @@ export default class File extends BaseFile {
       return;
     }
     if (this.isRequest) {
-      this.el.classList.toggle("request-fulfilled", (this.status || "open") === "fulfilled");
+      this.el.classList.toggle(
+        "request-fulfilled",
+        (this.status || "open") === "fulfilled",
+      );
     }
     this.setupTags();
     if (typeof isNew === "boolean") {

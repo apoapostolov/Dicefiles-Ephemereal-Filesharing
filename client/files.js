@@ -7,7 +7,7 @@ import File from "./files/file";
 import * as filesfilter from "./files/filter";
 import Gallery from "./files/gallery";
 import { flushStaleProgress } from "./files/reader";
-import RequestModal, {RequestViewModal} from "./files/requestmodal";
+import RequestModal, { RequestViewModal } from "./files/requestmodal";
 import ScrollState from "./files/scrollstate";
 import { REMOVALS } from "./files/tracker";
 import Upload from "./files/upload";
@@ -564,12 +564,11 @@ export default new (class Files extends EventEmitter {
     try {
       await registry.init();
       const isMod = document.body.classList.contains("mod");
-      const modal = new RequestViewModal(fileInst, {isMod});
+      const modal = new RequestViewModal(fileInst, { isMod });
       let result;
       try {
         result = await registry.roomie.showModal(modal);
-      }
-      catch (ex) {
+      } catch (ex) {
         if (!ex || ex.message === "cancelled") {
           return;
         }
@@ -578,22 +577,33 @@ export default new (class Files extends EventEmitter {
       if (!result || !result.action) {
         return;
       }
-      const {action} = result;
+      const { action } = result;
       if (action === "remove" || action === "fulfill" || action === "reopen") {
-        const status = action === "reopen" ? "open" : (action === "remove" ? "removed" : "fulfilled");
+        const status =
+          action === "reopen"
+            ? "open"
+            : action === "remove"
+              ? "removed"
+              : "fulfilled";
         const ack = await new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => reject(new Error("Request timeout")), 10000);
-          registry.socket.emit("requeststatus", {key: fileInst.key, status}, rv => {
-            clearTimeout(timeout);
-            resolve(rv || {});
-          });
+          const timeout = setTimeout(
+            () => reject(new Error("Request timeout")),
+            10000,
+          );
+          registry.socket.emit(
+            "requeststatus",
+            { key: fileInst.key, status },
+            (rv) => {
+              clearTimeout(timeout);
+              resolve(rv || {});
+            },
+          );
         });
         if (ack.err) {
           throw new Error(ack.err);
         }
       }
-    }
-    catch (ex) {
+    } catch (ex) {
       if (!ex || ex.message === "cancelled") {
         return;
       }

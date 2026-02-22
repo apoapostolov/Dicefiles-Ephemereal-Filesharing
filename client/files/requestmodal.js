@@ -2,7 +2,7 @@
 
 import Modal from "../modal";
 import registry from "../registry";
-import {dom} from "../util";
+import { dom } from "../util";
 
 const MAX_IMAGE_BYTES = 35 * 1024 * 1024;
 const PREVIEW_SIZE = 320;
@@ -11,15 +11,20 @@ const UPLOAD_TIMEOUT_MS = 120_000;
 
 export default class RequestModal extends Modal {
   constructor() {
-    super("requestcreate", "Create Request", {
-      id: "create",
-      text: "Create",
-      default: true,
-    }, {
-      id: "cancel",
-      text: "Cancel",
-      cancel: true,
-    });
+    super(
+      "requestcreate",
+      "Create Request",
+      {
+        id: "create",
+        text: "Create",
+        default: true,
+      },
+      {
+        id: "cancel",
+        text: "Cancel",
+        cancel: true,
+      },
+    );
     this.el.classList.add("modal-requestcreate");
     this.imageDataUrl = "";
     this.dragActive = false;
@@ -29,7 +34,7 @@ export default class RequestModal extends Modal {
 
     this.previewEl = dom("div", {
       classes: ["request-image-drop"],
-      attrs: {title: "Drop image here or click to choose"},
+      attrs: { title: "Drop image here or click to choose" },
     });
     this.previewTextEl = dom("div", {
       classes: ["request-image-drop-text"],
@@ -44,31 +49,35 @@ export default class RequestModal extends Modal {
         type: "file",
         accept: "image/*",
         style: "display:none",
-      }
+      },
     });
     this.filePickerEl.addEventListener("change", this.onpickfile.bind(this));
     this.body.appendChild(this.filePickerEl);
 
-    this.fieldsEl = dom("div", {classes: ["request-fields"]});
-    this.fieldsEl.appendChild(dom("label", {text: "What do you want someone to upload?"}));
+    this.fieldsEl = dom("div", { classes: ["request-fields"] });
+    this.fieldsEl.appendChild(
+      dom("label", { text: "What do you want someone to upload?" }),
+    );
     this.inputEl = dom("textarea", {
       attrs: {
         maxlength: "200",
         rows: "5",
         placeholder: "e.g. Looking for Player's Handbook PDF",
-      }
+      },
     });
     this.fieldsEl.appendChild(this.inputEl);
 
-    this.fieldsEl.appendChild(dom("label", {
-      text: "Optional product/reference URL",
-    }));
+    this.fieldsEl.appendChild(
+      dom("label", {
+        text: "Optional product/reference URL",
+      }),
+    );
     this.urlEl = dom("input", {
       attrs: {
         type: "url",
         maxlength: "500",
         placeholder: "https://example.com/product-page",
-      }
+      },
     });
     this.fieldsEl.appendChild(this.urlEl);
     this.body.appendChild(this.fieldsEl);
@@ -80,12 +89,12 @@ export default class RequestModal extends Modal {
   }
 
   _makeLifecycleSafe() {
-    const {resolve, reject} = this;
-    this.resolve = v => {
+    const { resolve, reject } = this;
+    this.resolve = (v) => {
       this.uninstallDragDrop();
       resolve(v);
     };
-    this.reject = v => {
+    this.reject = (v) => {
       this.uninstallDragDrop();
       reject(v);
     };
@@ -101,7 +110,7 @@ export default class RequestModal extends Modal {
       dragleave: this.ondragleave.bind(this),
       drop: this.ondrop.bind(this),
     };
-    const opts = {capture: true};
+    const opts = { capture: true };
     addEventListener("dragenter", this.dragHandlers.dragenter, opts);
     addEventListener("dragover", this.dragHandlers.dragover, opts);
     addEventListener("dragleave", this.dragHandlers.dragleave, opts);
@@ -112,7 +121,7 @@ export default class RequestModal extends Modal {
     if (!this.dragHandlers) {
       return;
     }
-    const opts = {capture: true};
+    const opts = { capture: true };
     removeEventListener("dragenter", this.dragHandlers.dragenter, opts);
     removeEventListener("dragover", this.dragHandlers.dragover, opts);
     removeEventListener("dragleave", this.dragHandlers.dragleave, opts);
@@ -237,8 +246,7 @@ export default class RequestModal extends Modal {
       this.previewEl.style.backgroundImage = `url(${dataUrl})`;
       this.previewEl.classList.add("has-image");
       this.previewTextEl.textContent = "Image ready";
-    }
-    catch (ex) {
+    } catch (ex) {
       this.imageDataUrl = "";
       this.previewEl.style.backgroundImage = "";
       this.previewEl.classList.remove("has-image");
@@ -269,7 +277,10 @@ export default class RequestModal extends Modal {
       }
       ctx.fillStyle = "#1f1f1f";
       ctx.fillRect(0, 0, PREVIEW_SIZE, PREVIEW_SIZE);
-      const ratio = Math.min(PREVIEW_SIZE / img.width, PREVIEW_SIZE / img.height);
+      const ratio = Math.min(
+        PREVIEW_SIZE / img.width,
+        PREVIEW_SIZE / img.height,
+      );
       const w = Math.max(1, Math.round(img.width * ratio));
       const h = Math.max(1, Math.round(img.height * ratio));
       const x = Math.floor((PREVIEW_SIZE - w) / 2);
@@ -286,8 +297,7 @@ export default class RequestModal extends Modal {
         throw new Error("Image is too detailed, please use a smaller one");
       }
       return out;
-    }
-    catch (ex) {
+    } catch (ex) {
       if (
         typeof sourceUrl === "string" &&
         sourceUrl.startsWith("data:image/") &&
@@ -323,22 +333,36 @@ export default class RequestModal extends Modal {
 // RequestViewModal — manage an existing request (fulfill / reopen / remove)
 // ---------------------------------------------------------------------------
 
-const ACCEPTED_TYPES = "";  // accept all file types
+const ACCEPTED_TYPES = ""; // accept all file types
 
 export class RequestViewModal extends Modal {
-  constructor(requestFile, {isMod = false} = {}) {
+  constructor(requestFile, { isMod = false } = {}) {
     const status = requestFile.status || "open";
     const isFulfilled = status === "fulfilled";
 
     const primaryBtn = isFulfilled
-      ? {id: "reopen", text: "Reopen", default: !isMod, cls: "modal-button-reopen"}
-      : {id: "fulfill", text: "Fulfill", default: true, cls: "modal-button-fulfill"};
+      ? {
+          id: "reopen",
+          text: "Reopen",
+          default: !isMod,
+          cls: "modal-button-reopen",
+        }
+      : {
+          id: "fulfill",
+          text: "Fulfill",
+          default: true,
+          cls: "modal-button-fulfill",
+        };
 
     const buttons = [primaryBtn];
     if (isMod) {
-      buttons.push({id: "remove", text: "Remove", cls: "modal-button-remove"});
+      buttons.push({
+        id: "remove",
+        text: "Remove",
+        cls: "modal-button-remove",
+      });
     }
-    buttons.push({id: "cancel", text: "Cancel", cancel: true});
+    buttons.push({ id: "cancel", text: "Cancel", cancel: true });
 
     super("requestview", "Request", ...buttons);
     this.el.classList.add("modal-requestview");
@@ -356,11 +380,14 @@ export class RequestViewModal extends Modal {
   }
 
   _buildBody() {
-    const {requestFile, isFulfilled} = this;
-    const requester = requestFile.tags && (requestFile.tags.usernick || requestFile.tags.user) || "";
+    const { requestFile, isFulfilled } = this;
+    const requester =
+      (requestFile.tags &&
+        (requestFile.tags.usernick || requestFile.tags.user)) ||
+      "";
 
     // ── Left column: image preview or placeholder ──────────────────────────
-    this.previewEl = dom("div", {classes: ["requestview-preview"]});
+    this.previewEl = dom("div", { classes: ["requestview-preview"] });
     if (requestFile.meta && requestFile.meta.requestImageDataUrl) {
       this.previewEl.style.backgroundImage = `url(${requestFile.meta.requestImageDataUrl})`;
       this.previewEl.classList.add("has-image");
@@ -368,29 +395,37 @@ export class RequestViewModal extends Modal {
     this.body.appendChild(this.previewEl);
 
     // ── Right column: info + action area ───────────────────────────────────
-    this.rightEl = dom("div", {classes: ["requestview-right"]});
+    this.rightEl = dom("div", { classes: ["requestview-right"] });
     this.body.appendChild(this.rightEl);
 
     // Requester name
     if (requester) {
-      this.rightEl.appendChild(dom("p", {
-        classes: ["requestview-requester"],
-        text: `Requested by: ${requester}`,
-      }));
+      this.rightEl.appendChild(
+        dom("p", {
+          classes: ["requestview-requester"],
+          text: `Requested by: ${requester}`,
+        }),
+      );
     }
 
     // Request text
-    this.rightEl.appendChild(dom("p", {
-      classes: ["requestview-text"],
-      text: requestFile.name,
-    }));
+    this.rightEl.appendChild(
+      dom("p", {
+        classes: ["requestview-text"],
+        text: requestFile.name,
+      }),
+    );
 
     // Reference URL
     const refUrl = requestFile.meta && requestFile.meta.requestUrl;
     if (refUrl) {
       const a = dom("a", {
         classes: ["requestview-refurl"],
-        attrs: {href: refUrl, target: "_blank", rel: "noopener noreferrer nofollow"},
+        attrs: {
+          href: refUrl,
+          target: "_blank",
+          rel: "noopener noreferrer nofollow",
+        },
         text: refUrl.length > 60 ? `${refUrl.slice(0, 57)}…` : refUrl,
       });
       this.rightEl.appendChild(a);
@@ -398,10 +433,12 @@ export class RequestViewModal extends Modal {
 
     // Fulfilled‑by notice
     if (isFulfilled && requestFile.fulfilledByNick) {
-      this.rightEl.appendChild(dom("p", {
-        classes: ["requestview-fulfilled-by"],
-        text: `Fulfilled by: ${requestFile.fulfilledByNick}`,
-      }));
+      this.rightEl.appendChild(
+        dom("p", {
+          classes: ["requestview-fulfilled-by"],
+          text: `Fulfilled by: ${requestFile.fulfilledByNick}`,
+        }),
+      );
     }
 
     if (!isFulfilled) {
@@ -412,7 +449,7 @@ export class RequestViewModal extends Modal {
   _buildUploadZone() {
     this.uploadZoneEl = dom("div", {
       classes: ["requestview-upload-zone"],
-      attrs: {title: "Drop files here or click to choose"},
+      attrs: { title: "Drop files here or click to choose" },
     });
     this.uploadZoneLabelEl = dom("span", {
       classes: ["requestview-upload-label"],
@@ -423,30 +460,41 @@ export class RequestViewModal extends Modal {
     this.rightEl.appendChild(this.uploadZoneEl);
 
     this.filePickerEl = dom("input", {
-      attrs: {type: "file", multiple: true, accept: ACCEPTED_TYPES, style: "display:none"},
+      attrs: {
+        type: "file",
+        multiple: true,
+        accept: ACCEPTED_TYPES,
+        style: "display:none",
+      },
     });
     this.filePickerEl.addEventListener("change", this._onPickFile.bind(this));
     this.rightEl.appendChild(this.filePickerEl);
 
-    this.stagedListEl = dom("ul", {classes: ["requestview-staged-list", "hidden"]});
+    this.stagedListEl = dom("ul", {
+      classes: ["requestview-staged-list", "hidden"],
+    });
     this.rightEl.appendChild(this.stagedListEl);
 
     // Progress bar (hidden until upload starts)
-    this.progressWrapEl = dom("div", {classes: ["requestview-progress-wrap", "hidden"]});
-    this.progressBarEl = dom("div", {classes: ["requestview-progress-bar"]});
+    this.progressWrapEl = dom("div", {
+      classes: ["requestview-progress-wrap", "hidden"],
+    });
+    this.progressBarEl = dom("div", { classes: ["requestview-progress-bar"] });
     this.progressWrapEl.appendChild(this.progressBarEl);
-    this.progressLabelEl = dom("span", {classes: ["requestview-progress-label"]});
+    this.progressLabelEl = dom("span", {
+      classes: ["requestview-progress-label"],
+    });
     this.progressWrapEl.appendChild(this.progressLabelEl);
     this.rightEl.appendChild(this.progressWrapEl);
   }
 
   _makeLifecycleSafe() {
-    const {resolve, reject} = this;
-    this.resolve = v => {
+    const { resolve, reject } = this;
+    this.resolve = (v) => {
       this._uninstallDragDrop();
       resolve(v);
     };
-    this.reject = v => {
+    this.reject = (v) => {
       this._uninstallDragDrop();
       reject(v);
     };
@@ -463,62 +511,79 @@ export class RequestViewModal extends Modal {
     }
     this.dragHandlers = {
       dragenter: this._onDragEnter.bind(this),
-      dragover:  this._onDragOver.bind(this),
+      dragover: this._onDragOver.bind(this),
       dragleave: this._onDragLeave.bind(this),
-      drop:      this._onDrop.bind(this),
+      drop: this._onDrop.bind(this),
     };
-    const opts = {capture: true};
+    const opts = { capture: true };
     addEventListener("dragenter", this.dragHandlers.dragenter, opts);
-    addEventListener("dragover",  this.dragHandlers.dragover, opts);
+    addEventListener("dragover", this.dragHandlers.dragover, opts);
     addEventListener("dragleave", this.dragHandlers.dragleave, opts);
-    addEventListener("drop",      this.dragHandlers.drop, opts);
+    addEventListener("drop", this.dragHandlers.drop, opts);
   }
 
   _uninstallDragDrop() {
     if (!this.dragHandlers) {
       return;
     }
-    const opts = {capture: true};
+    const opts = { capture: true };
     removeEventListener("dragenter", this.dragHandlers.dragenter, opts);
-    removeEventListener("dragover",  this.dragHandlers.dragover, opts);
+    removeEventListener("dragover", this.dragHandlers.dragover, opts);
     removeEventListener("dragleave", this.dragHandlers.dragleave, opts);
-    removeEventListener("drop",      this.dragHandlers.drop, opts);
+    removeEventListener("drop", this.dragHandlers.drop, opts);
     this.dragHandlers = null;
     this.dragDepth = 0;
     this._setDragActive(false);
   }
 
   _hasDragFiles(e) {
-    return e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files");
+    return (
+      e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files")
+    );
   }
 
   _setDragActive(active) {
-    this.uploadZoneEl && this.uploadZoneEl.classList.toggle("dragging", !!active);
+    this.uploadZoneEl &&
+      this.uploadZoneEl.classList.toggle("dragging", !!active);
   }
 
   _onDragEnter(e) {
-    if (!this._hasDragFiles(e)) { return; }
-    e.preventDefault(); e.stopPropagation();
+    if (!this._hasDragFiles(e)) {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
     this.dragDepth++;
     this._setDragActive(true);
   }
 
   _onDragOver(e) {
-    if (!this._hasDragFiles(e)) { return; }
-    e.preventDefault(); e.stopPropagation();
+    if (!this._hasDragFiles(e)) {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
     e.dataTransfer.dropEffect = "copy";
   }
 
   _onDragLeave(e) {
-    if (!this._hasDragFiles(e)) { return; }
-    e.preventDefault(); e.stopPropagation();
+    if (!this._hasDragFiles(e)) {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
     this.dragDepth = Math.max(0, this.dragDepth - 1);
-    if (!this.dragDepth) { this._setDragActive(false); }
+    if (!this.dragDepth) {
+      this._setDragActive(false);
+    }
   }
 
   _onDrop(e) {
-    if (!this._hasDragFiles(e)) { return; }
-    e.preventDefault(); e.stopPropagation();
+    if (!this._hasDragFiles(e)) {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
     this.dragDepth = 0;
     this._setDragActive(false);
     const files = Array.from(e.dataTransfer.files || []);
@@ -536,9 +601,13 @@ export class RequestViewModal extends Modal {
   }
 
   _stageFiles(files) {
-    if (!files.length) { return; }
+    if (!files.length) {
+      return;
+    }
     for (const f of files) {
-      if (!this.stagedFiles.some(s => s.name === f.name && s.size === f.size)) {
+      if (
+        !this.stagedFiles.some((s) => s.name === f.name && s.size === f.size)
+      ) {
         this.stagedFiles.push(f);
       }
     }
@@ -546,7 +615,9 @@ export class RequestViewModal extends Modal {
   }
 
   _renderStagedList() {
-    if (!this.stagedListEl) { return; }
+    if (!this.stagedListEl) {
+      return;
+    }
     this.stagedListEl.textContent = "";
     if (!this.stagedFiles.length) {
       this.stagedListEl.classList.add("hidden");
@@ -554,11 +625,13 @@ export class RequestViewModal extends Modal {
     }
     this.stagedListEl.classList.remove("hidden");
     for (const [i, f] of this.stagedFiles.entries()) {
-      const li = dom("li", {classes: ["requestview-staged-item"]});
-      li.appendChild(dom("span", {classes: ["requestview-staged-name"], text: f.name}));
+      const li = dom("li", { classes: ["requestview-staged-item"] });
+      li.appendChild(
+        dom("span", { classes: ["requestview-staged-name"], text: f.name }),
+      );
       const rm = dom("button", {
         classes: ["requestview-staged-remove"],
-        attrs: {type: "button", title: "Remove"},
+        attrs: { type: "button", title: "Remove" },
         text: "×",
       });
       rm.onclick = () => {
@@ -569,8 +642,7 @@ export class RequestViewModal extends Modal {
       this.stagedListEl.appendChild(li);
     }
     if (this.uploadZoneLabelEl) {
-      this.uploadZoneLabelEl.textContent =
-        `${this.stagedFiles.length} file${this.stagedFiles.length !== 1 ? "s" : ""} ready — drop more or click to add`;
+      this.uploadZoneLabelEl.textContent = `${this.stagedFiles.length} file${this.stagedFiles.length !== 1 ? "s" : ""} ready — drop more or click to add`;
     }
   }
 
@@ -583,18 +655,20 @@ export class RequestViewModal extends Modal {
       return;
     }
     if (button.id === "remove") {
-      this.resolve({action: "remove"});
+      this.resolve({ action: "remove" });
       return;
     }
     if (button.id === "reopen") {
-      this.resolve({action: "reopen"});
+      this.resolve({ action: "reopen" });
       return;
     }
     if (button.id === "fulfill") {
-      if (this._uploading) { return; }
+      if (this._uploading) {
+        return;
+      }
       if (this.stagedFiles.length === 0) {
         // No files — just mark as fulfilled immediately
-        this.resolve({action: "fulfill", files: []});
+        this.resolve({ action: "fulfill", files: [] });
         return;
       }
       // Upload files first
@@ -607,7 +681,7 @@ export class RequestViewModal extends Modal {
   async _doUploads() {
     this._uploading = true;
     // Disable all buttons during upload
-    this.buttons.forEach(b => b.setAttribute("disabled", "disabled"));
+    this.buttons.forEach((b) => b.setAttribute("disabled", "disabled"));
     this.progressWrapEl.classList.remove("hidden");
     this.uploadZoneEl && this.uploadZoneEl.classList.add("hidden");
     this.stagedListEl && this.stagedListEl.classList.add("hidden");
@@ -633,8 +707,7 @@ export class RequestViewModal extends Modal {
         uploadedKeys.push(key);
         done++;
         setProgress(`Uploaded ${done} / ${total}`, done / total);
-      }
-      catch (ex) {
+      } catch (ex) {
         console.error("Failed to upload fulfillment file", file.name, ex);
         failed++;
         done++;
@@ -644,7 +717,7 @@ export class RequestViewModal extends Modal {
     if (failed === total) {
       setProgress("All uploads failed", 0);
       this._uploading = false;
-      this.buttons.forEach(b => b.removeAttribute("disabled"));
+      this.buttons.forEach((b) => b.removeAttribute("disabled"));
       this.progressWrapEl.classList.add("hidden");
       this.uploadZoneEl && this.uploadZoneEl.classList.remove("hidden");
       this.stagedListEl && this.stagedListEl.classList.remove("hidden");
@@ -653,8 +726,8 @@ export class RequestViewModal extends Modal {
 
     setProgress(`Done (${done - failed} uploaded)`, 1);
     // Short delay so the user can see "Done"
-    await new Promise(r => setTimeout(r, 600));
-    this.resolve({action: "fulfill", files: uploadedKeys});
+    await new Promise((r) => setTimeout(r, 600));
+    this.resolve({ action: "fulfill", files: uploadedKeys });
   }
 
   async _uploadFile(file, onprogress) {
@@ -664,16 +737,24 @@ export class RequestViewModal extends Modal {
     // Get upload key
     let keyResult;
     await new Promise((resolve, reject) => {
-      const to = setTimeout(() => reject(new Error("Upload key timeout")), UPLOAD_TIMEOUT_MS);
+      const to = setTimeout(
+        () => reject(new Error("Upload key timeout")),
+        UPLOAD_TIMEOUT_MS,
+      );
       const id = Date.now() + Math.random();
-      registry.socket.makeCall("uploadkey", id).then(d => {
-        clearTimeout(to);
-        resolve(d);
-      }).catch(err => {
-        clearTimeout(to);
-        reject(err);
-      });
-    }).then(d => { keyResult = d; });
+      registry.socket
+        .makeCall("uploadkey", id)
+        .then((d) => {
+          clearTimeout(to);
+          resolve(d);
+        })
+        .catch((err) => {
+          clearTimeout(to);
+          reject(err);
+        });
+    }).then((d) => {
+      keyResult = d;
+    });
 
     if (!keyResult || keyResult.err) {
       throw new Error(keyResult ? keyResult.err : "No upload key");
@@ -681,8 +762,10 @@ export class RequestViewModal extends Modal {
     if (keyResult.wait) {
       throw new Error("Upload queue is full, try again later");
     }
-    const key = typeof keyResult === "string" ? keyResult : (keyResult.key || "");
-    if (!key) { throw new Error("Invalid upload key"); }
+    const key = typeof keyResult === "string" ? keyResult : keyResult.key || "";
+    if (!key) {
+      throw new Error("Invalid upload key");
+    }
 
     const params = new URLSearchParams();
     params.set("name", file.name);
@@ -698,15 +781,20 @@ export class RequestViewModal extends Modal {
       xhr.onload = () => {
         if (xhr.response && xhr.response.err) {
           reject(new Error(xhr.response.err));
-        }
-        else {
+        } else {
           resolve(xhr.response);
         }
       };
       if (onprogress) {
-        xhr.upload.addEventListener("progress", e => {
-          if (e.lengthComputable) { onprogress(e.loaded, e.total); }
-        }, {passive: true});
+        xhr.upload.addEventListener(
+          "progress",
+          (e) => {
+            if (e.lengthComputable) {
+              onprogress(e.loaded, e.total);
+            }
+          },
+          { passive: true },
+        );
       }
       xhr.open("PUT", `/api/upload/${key}?${params.toString()}`);
       xhr.send(file);

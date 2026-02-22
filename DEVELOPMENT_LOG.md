@@ -17,8 +17,6 @@ Implemented the full request status lifecycle — clicking a request now opens a
 - `entries/css/modal.css` — Full `RequestViewModal` layout: two-column grid (preview + right panel), upload zone, staged files list, progress bar, coloured action buttons.
 - `TODO.md` — Marked P0-1 webtoon persistence as done; replaced P0-3 bullet list with detailed spec and implementation checklist.
 
-
-
 **Root cause**: CSS multi-column stretches columns to exactly fill the content-box width. With `#scroller { box-sizing: border-box; width: 30000px; padding-left: HP }`, content-box = `30000 − HP`. For `HP=56, pageWidth=400`: content-box = 29944 px, 75 columns, actual width = 288.75 px (should be 288), actual step = 400.75 px (+0.75 px per page). Two bugs from this one root cause:
 
 1. **Margin drift** (`translateX(−N × pageWidth)` undershoots by `N × 0.75 px`) — visible as growing left margin, shrinking right margin on each page turn.
