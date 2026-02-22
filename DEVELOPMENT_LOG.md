@@ -1,5 +1,33 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - Fix: EPUB opts re-render freezes navigation; remove preview square from RequestViewModal
+
+### Summary
+
+Two bug fixes:
+1. Prev/Next and arrow-key navigation in the EPUB/MOBI reader became permanently unresponsive after opening the font-opts (Aa) dropdown, because `applyOpts` called `_renderChapter` which set `_loaded = false` synchronously and the iframe `load` event (which restores it) hadn't fired yet when the user clicked.
+2. The RequestViewModal (request fulfillment dialog) always rendered an empty/dark square on the left side — the image-preview column (`requestview-preview`) was unconditionally created and appended even when no image was supplied.
+
+### Root causes
+
+**Bug 1:** `BookReader._renderChapter` is async. It sets `this._loaded = false` synchronously before its first `await`. `nextPage()` / `prevPage()` both guard on `if (!this._loaded) return`, so all navigation was blocked from the moment `applyOpts` was called until the new iframe fired `load` + `requestAnimationFrame` (a window of hundreds of ms). Because JS is single-threaded and `_renderChapter` suspends at `await this._getChapter(idx)`, restoring `_loaded` synchronously after the call is safe — it runs before any microtask tick.
+
+**Bug 2:** `RequestViewModal._buildBody()` created, styled, and appended `this.previewEl` unconditionally. The CSS used `grid-template-columns: 11em 1fr`, so the empty div always occupied an 11 em left column.
+
+### Changed files
+
+- **`client/files/reader.js`** — `BookReader.applyOpts`: save `wasLoaded` before `_renderChapter`, restore `this._loaded = wasLoaded` immediately after (synchronously, before first `await` fires).
+- **`client/files/requestmodal.js`** — `RequestViewModal._buildBody()`: remove 8-line `previewEl` creation/append block; update section comment.
+- **`entries/css/modal.css`** — `.modal-requestview .modal-body`: change from `display: grid; grid-template-columns: 11em 1fr` to `display: flex; flex-direction: column`; reduce `min-width` from 34 em to 28 em. `.modal-requestview .requestview-right`: remove `min-height: 11em`.
+
+### Verification
+
+- webpack: `compiled with 4 warnings in 6420 ms`
+- curl `http://127.0.0.1:9090/` → `HTTP/1.1 200 OK`
+- Commit: `3852fbb`
+
+---
+
 ## 2026-02-22 - Docs: Changelog update + AGENTS.md changelog procedure
 
 ### Summary
@@ -10,40 +38,44 @@ Updated `CHANGELOG.md` with all user-facing features and fixes shipped since the
 
 Reviewed all 2026-02-22 entries from the most recent backward until reaching content already represented in `CHANGELOG.md`. The following entries were evaluated:
 
-| Dev Log Entry | Decision |
-|---|---|
-| Fix: EPUB pagination, fulfilled pill, drop zone, modal drag | **Included** (EPUB fix + fulfilled pill are UX-visible) |
-| Fix: A5 box-sizing / name+ext API filters | **Included** (API filters are user-facing; box-sizing is technical root-cause for already-listed pagination fix) |
-| Fix: WebtoonReader saves/restores by page | Omitted — internal correctness fix behind the reading-progress feature, not independently user-visible |
-| Fix: WebtoonReader progress restore — \_restoring guard | Omitted — implementation detail of same progress feature |
-| Fix: \_focusTransitioning guard | Omitted — double-press edge case that only manifested in unusual conditions; below the "would a user notice?" bar |
-| Fix: focus mode no longer hijacks native fullscreen | Omitted — the overall focus-mode feature is already in the changelog; this was a refinement pass |
-| Fix: Comic/Webtoon progress not persisting | **Included** — root cause for reading progress feature; bundled into the progress feature bullet |
-| Feat: Reading Progress Persistence + Webtoon stream-ahead | **Included** — clearly user-visible |
-| Feat: Webtoon Mode for Comic Reader | Already in changelog via existing Webtoon entries |
-| Fix: File List TTL/Size Column Alignment | Omitted — layout micro-fix invisible to most users |
-| Fix: CBZ Phase 2 — RAR support, ComicInfo.xml, Manga pill | Already in changelog |
-| Request Fulfillment Workflow (P0-3) | **Included** — major user-facing feature |
-| All 2026-02-21 and earlier entries | Already represented in CHANGELOG.md v1.1.0 and earlier |
+| Dev Log Entry                                               | Decision                                                                                                          |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Fix: EPUB pagination, fulfilled pill, drop zone, modal drag | **Included** (EPUB fix + fulfilled pill are UX-visible)                                                           |
+| Fix: A5 box-sizing / name+ext API filters                   | **Included** (API filters are user-facing; box-sizing is technical root-cause for already-listed pagination fix)  |
+| Fix: WebtoonReader saves/restores by page                   | Omitted — internal correctness fix behind the reading-progress feature, not independently user-visible            |
+| Fix: WebtoonReader progress restore — \_restoring guard     | Omitted — implementation detail of same progress feature                                                          |
+| Fix: \_focusTransitioning guard                             | Omitted — double-press edge case that only manifested in unusual conditions; below the "would a user notice?" bar |
+| Fix: focus mode no longer hijacks native fullscreen         | Omitted — the overall focus-mode feature is already in the changelog; this was a refinement pass                  |
+| Fix: Comic/Webtoon progress not persisting                  | **Included** — root cause for reading progress feature; bundled into the progress feature bullet                  |
+| Feat: Reading Progress Persistence + Webtoon stream-ahead   | **Included** — clearly user-visible                                                                               |
+| Feat: Webtoon Mode for Comic Reader                         | Already in changelog via existing Webtoon entries                                                                 |
+| Fix: File List TTL/Size Column Alignment                    | Omitted — layout micro-fix invisible to most users                                                                |
+| Fix: CBZ Phase 2 — RAR support, ComicInfo.xml, Manga pill   | Already in changelog                                                                                              |
+| Request Fulfillment Workflow (P0-3)                         | **Included** — major user-facing feature                                                                          |
+| All 2026-02-21 and earlier entries                          | Already represented in CHANGELOG.md v1.1.0 and earlier                                                            |
 
 ### New bullets added to CHANGELOG.md [Unreleased]
 
 **Added:**
+
 - Request Fulfillment Workflow — click a request to open management overlay, upload files to fulfill, fulfilled state transitions automatically, drag-and-drop intercepted correctly
 - Fulfilled Request Pill — grey "Fulfilled" badge replaces strikethrough; title muted to mid-grey
 - Reading Progress Persistence — all reader formats (PDF, EPUB/MOBI, comics, webtoon) save and restore last-read page via localStorage
 - Webtoon stream-ahead loading — moved from 1-at-a-time to 10-page preload buffer with 600 px margin
 
 **Changed:**
+
 - Webtoon stream-ahead (added as Changed entry clarifying preload improvement)
 - API file-listing filters — `name_contains` and `ext` query params on `/api/v1/files` and `/api/v1/downloads`
 
 **Fixed:**
+
 - EPUB/MOBI page navigation after typography changes — rAF deferral of sentinel measurement
 
 ### AGENTS.md changes
 
 Added **Changelog Update Procedure (Mandatory)** section (after the GitHub Release Protocol failure-modes block) covering:
+
 - Pre-writing review procedure (read dev log backward, filter for user-visible items)
 - Writing style requirements (user-directed language, no internal identifiers, root-cause note acceptable only in Fixed)
 - Post-update dev log obligation
