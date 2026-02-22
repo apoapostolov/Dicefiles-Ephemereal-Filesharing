@@ -55,6 +55,7 @@
     "webpack": "^5.76.1",
     "webpack-cli": "^5.0.1",
     "xregexp": "^5.1.0",
+    "yauzl": "^2.10.0",
     "zod": "^3.24.0"
   },
   "optionalDependencies": {

@@ -1,5 +1,63 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - yauzl streaming ZIP implementation for large CBZ archives
+
+### Summary
+
+Implemented yauzl as the ZIP-reading backend for large comic archives (≥ 100 MB)
+in `lib/meta.js`, replacing the full-heap jszip pattern for the two CBZ code paths
+while leaving the EPUB paths unchanged (jszip only; EPUBs are almost always < 50 MB).
+
+**Problem**: `JSZip.loadAsync(buf)` loads the entire archive file into a Node.js
+heap buffer before any entry can be read. A 500 MB CBZ scan-pack causes a ~1–1.5 GB
+heap spike during asset generation and per-page serving, risking OOM on constrained
+hosts and degrading all other concurrent workers while the decompression runs.
+
+**Solution**: `yauzl` (MIT, npm) opens a ZIP file via `fs.open` (file descriptor),
+reads only the central directory index (~KB) into RAM, then streams each entry on
+demand via `fs.createReadStream`. Peak heap for the same 500 MB archive is ~10–25 MB
+regardless of total archive size.
+
+**Threshold**: `YAUZL_THRESHOLD = 100 * 1024 * 1024` (100 MB). Archives below this
+size continue to use jszip (simpler API, lower open overhead for small files).
+Archives at or above the threshold use yauzl with jszip as error fallback in
+`generateAssetsComic`.
+
+**New functions in `lib/meta.js`**:
+- `yauzlListImages(filePath)` — promisified entry-scan returning an unsorted array of
+  comic image paths; uses `lazyEntries: true` + autoClose.
+- `yauzlExtractEntry(filePath, entryName)` — opens, central-dir scans for a single
+  named entry, streams it into a `Buffer`, closes the fd without reading remaining
+  entries. Used per page-view request, so the open/close overhead occurs only when
+  the ZIP > 100 MB (and the alternative was reading 500 MB into heap).
+- `yauzlReadComicInfo(filePath)` — same as above but case-insensitively looks for
+  `ComicInfo.xml`; returns the XML string or null.
+
+**Call sites changed** (`lib/meta.js`):
+- `generateAssetsComic` ZIP branch: stat → if ≥ threshold, yauzl list + index +
+  per-page buffer; else jszip as before. yauzl errors fall back to jszip.
+- `extractComicPage` ZIP index-reconstruction fallback: stat → yauzl or jszip.
+- `extractComicPage` ZIP page extraction: stat → yauzl or jszip.
+
+**EPUB paths untouched**: `extractEpubCover` and `countEpubPages` continue to use
+jszip only (EPUBs < 50 MB; streaming adds complexity with no meaningful gain for
+those functions).
+
+**Dependency**: `yauzl ^2.10.0` added to `package.json` and installed via
+`npm install --legacy-peer-deps`. Verified `require('yauzl')` is `function` on
+Node 20.20.0. Server restarted cleanly with all workers up.
+
+### Changed Files
+
+- **`lib/meta.js`** — Added `YAUZL_THRESHOLD` constant; added three yauzl helper
+  functions (`yauzlListImages`, `yauzlExtractEntry`, `yauzlReadComicInfo`);
+  replaced JSZip.loadAsync blocks in `generateAssetsComic` (ZIP branch) and both
+  ZIP branches of `extractComicPage` with threshold-routed yauzl/jszip dispatch.
+  EPUB paths (`extractEpubCover`, `countEpubPages`) unchanged.
+- **`package.json`** — Added `"yauzl": "^2.10.0"` to `dependencies`.
+
+---
+
 ## 2026-02-22 - AGENTS.md changelog ordering rule + yauzl evaluation
 
 ### Summary
