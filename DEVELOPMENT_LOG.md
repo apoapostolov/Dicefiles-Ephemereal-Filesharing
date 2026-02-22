@@ -1,5 +1,14 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - Fix: EPUB/MOBI column-stretching — margin drift and broken pagination after font change
+
+**Root cause**: CSS multi-column stretches columns to exactly fill the content-box width. With `#scroller { box-sizing: border-box; width: 30000px; padding-left: HP }`, content-box = `30000 − HP`. For `HP=56, pageWidth=400`: content-box = 29944 px, 75 columns, actual width = 288.75 px (should be 288), actual step = 400.75 px (+0.75 px per page). Two bugs from this one root cause:
+
+1. **Margin drift** (`translateX(−N × pageWidth)` undershoots by `N × 0.75 px`) — visible as growing left margin, shrinking right margin on each page turn.
+2. **Broken pagination after font change** — `sentinel.getBoundingClientRect().left` returns `HP + N × actualStep`, not `HP + N × pageWidth`. The formula `floor((sl − HP) / pageWidth)` underestimates page count (often gives 1), so every Next press jumps to the next chapter instead of the next page.
+
+**Fix** (`client/files/reader.js` — `buildSrcdoc`): override `box-sizing: content-box !important` on `#scroller` and set `width: COLS × pageWidth − 2 × HP` (content-box). With `box-sizing: content-box`, padding-left does NOT reduce the content box. The content box = `COLS × pageWidth − 2 × HP`, giving exactly `COLS` columns each of width `pageWidth − 2 × HP = textW`, with zero remainder and an exact step of `pageWidth`. Both bugs eliminated. `COLS = 500` (generous upper bound for pages per chapter).
+
 ## 2026-02-22 - Fix: WebtoonReader saves/restores by page, not pixels; debounced scroll save
 
 **Root cause**: `_pageHeight` was captured from `first.naturalHeight` (the image's intrinsic pixel size, e.g. 2048 px), but CSS renders images at `width:100%; max-width:900px; height:auto`, so the actual displayed height is scaled (e.g. 2048 × 900/1280 = 1440 px). The restore calculation `scrollTop = saved.page × naturalHeight` overshoots by the ratio `imageWidth / containerWidth`, placing the user far past the correct page.
