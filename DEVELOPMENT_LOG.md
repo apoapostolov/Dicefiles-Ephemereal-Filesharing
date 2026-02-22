@@ -1,10 +1,34 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - Docs: Strengthen changelog same-version rule; clean changelog; rename drop label
+
+### Summary
+
+Three changes in one commit:
+1. Strengthened `AGENTS.md` changelog procedure: added explicit rule (step 4) that `Changed` and `Fixed` entries must never describe features first introduced in the same version — all iterative fixes are part of the base implementation. Added matching row to the "What does NOT go in the changelog" reference table.
+2. Cleaned `CHANGELOG.md` — removed 3 `Changed` bullets (Manga/Webtoon pill, Webtoon PageDown/PageUp, Webtoon stream-ahead) and 3 `Fixed` bullets (EPUB typography navigation freeze, "Comic archive has no readable pages", CBZ override) from `[Unreleased]` because those features/bugs were all introduced in the same `[Unreleased]` version. Removed 2 `Fixed` bullets (Links Archive toggle non-functional, Link rows unstyled) from `[1.1.0]` per the same rule (Links Archive debuted in 1.1.0).
+3. Changed the drag-drop image preview label in `RequestModal` from "Drop stuff here" to two-line "Drop Cover / or Image".
+
+### Changed files
+
+- **`AGENTS.md`** — Changelog Update Procedure: insert step 4 (never add Changed/Fixed for same-version features, renumber old step 4 → 5); add row to "What does NOT go in the changelog" table.
+- **`CHANGELOG.md`** — `[Unreleased]` Changed: removed 3 webtoon/comics bullets. `[Unreleased]` Fixed: removed 3 bullets for new-in-`[Unreleased]` features. `[1.1.0]` Fixed: removed 2 Links Archive bullets.
+- **`client/files/requestmodal.js`** — `RequestModal` constructor: `previewTextEl` no longer uses `dom()` `text` option; sets `innerHTML = "Drop Cover<br>or Image"` to produce a two-line label.
+
+### Verification
+
+- webpack: `compiled with 4 warnings in 6493 ms`
+- curl `http://127.0.0.1:9090/` → `HTTP/1.1 200 OK`
+- Commit: `0200a5f`
+
+---
+
 ## 2026-02-22 - Fix: EPUB opts re-render freezes navigation; remove preview square from RequestViewModal
 
 ### Summary
 
 Two bug fixes:
+
 1. Prev/Next and arrow-key navigation in the EPUB/MOBI reader became permanently unresponsive after opening the font-opts (Aa) dropdown, because `applyOpts` called `_renderChapter` which set `_loaded = false` synchronously and the iframe `load` event (which restores it) hadn't fired yet when the user clicked.
 2. The RequestViewModal (request fulfillment dialog) always rendered an empty/dark square on the left side — the image-preview column (`requestview-preview`) was unconditionally created and appended even when no image was supplied.
 
