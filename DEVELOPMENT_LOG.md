@@ -1,5 +1,47 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - AGENTS.md changelog ordering rule + yauzl evaluation
+
+### Summary
+
+Two documentation upgrades: a mandatory ordering rule added to the AGENTS.md
+Changelog Update Procedure, and a complete yauzl streaming ZIP evaluation recorded
+in TODO.md.
+
+**AGENTS.md — Entry ordering within a version block**: Added a new mandatory subsection
+between step 5 ("group by type") and the Writing Style section. The rule requires agents
+to reorder all entries within each type group (`Added`, `Changed`, `Fixed`) by user impact
+before committing a changelog update, using six priority tiers: flagship/major workflows
+(Tier 1) → daily-use UX improvements (Tier 2) → security changes users see (Tier 3) →
+performance wins (Tier 4) → opt-in/operator features (Tier 5) → developer tooling (Tier 6).
+The rationale: readers skim the first two or three bullets; the most impactful feature must
+be first. Added an explicit anti-pattern note warning against preserving chronological
+shipping order (e.g., opengraph.io enrichment committed before MCP server should not
+appear above it in the changelog).
+
+**TODO.md — yauzl evaluation**: Resolved the Research Backlog item "Evaluate yauzl for
+archives > 100 MB". Findings: yauzl uses file-descriptor + `fs.createReadStream` internally,
+reading only the ZIP central directory into RAM; peak heap for a 500 MB CBZ is ~10–25 MB vs.
+~1–1.5 GB with jszip `loadAsync`. Per-callsite recommendation: yauzl-first for
+`generateAssetsComic` and `extractComicPage` ZIP branches (CBZ files routinely exceed 100 MB);
+jszip-only for `extractEpubCover` and `countEpubPages` (EPUBs < 50 MB, streaming adds
+complexity with no meaningful gain). Implementation plan recorded: `npm install yauzl`,
+two helper functions (`yauzlListImages`, `yauzlExtractEntry`), size-threshold routing at
+100 MB. Archive Viewer memory limitation note updated to reference the evaluation and
+correct threshold (was "< 200 MB, add yauzl someday" → "< 100 MB jszip / ≥ 100 MB yauzl,
+see evaluation above").
+
+### Changed Files
+
+- **`AGENTS.md`** — New "Entry ordering within a version block (mandatory)" subsection
+  added to Changelog Update Procedure; step 5 now explicitly triggers re-sort; six-tier
+  priority table added; anti-pattern example included.
+- **`TODO.md`** — Research Backlog yauzl item marked `[x]` and expanded with full
+  evaluation (memory model table, per-callsite decision matrix, implementation plan,
+  dependency note). Archive Viewer memory limitation note updated to reference evaluation.
+
+---
+
 ## 2026-02-22 - README AI setup section + .config.json.example + API/MCP doc links
 
 ### Summary

@@ -288,6 +288,30 @@ When the user requests a changelog update, agents must follow this procedure exa
 3. Discard: internal refactors, build-system tweaks, CSS micro-polishes the user cannot distinguish from the prior state, code comments, and log/doc-only commits. When in doubt, ask: _"Would a user notice if this were absent?"_ If the answer is no, omit it.
 4. **Never add `Changed` or `Fixed` entries for features that were first introduced in the same version.** If a feature debuts in the current version under `Added`, every fix and polish applied to it before release is already part of the base implementation — record none of it in `Changed` or `Fixed`. Only write `Changed` and `Fixed` bullets for regressions, improvements, or changes to features that shipped in a **prior released version**.
 5. Group surviving entries by their natural type: `Added`, `Changed`, `Fixed`, or `Removed`.
+6. **Order entries within each type group by user impact — highest first.** Do not preserve commit or discovery order. Apply the priority tiers below every time you add or revise an entry; re-evaluate the sort of the whole group, not just the new item.
+
+### Entry ordering within a version block (mandatory)
+
+Readers skim the first two or three bullets of any section. The most impactful feature must be first; burying it behind minor additions buries the lede.
+
+**Priority tiers (highest → lowest):**
+
+| Tier | Category | Examples |
+| ---- | -------- | -------- |
+| 1 | **Flagship / major new workflows** | New top-level feature, new integration, new transport protocol | 
+| 2 | **Daily-use UX improvements** | Changes users encounter on every session (upload flow, file list, chat) |
+| 3 | **Security changes with user-visible effect** | Login lockout, permission model change |
+| 4 | **Performance wins users can feel** | Faster load, lower memory, smoother scroll |
+| 5 | **Opt-in / operator-configured features** | Features behind a config key or env var |
+| 6 | **Developer / operator tooling** | MCP server, API additions, admin endpoints |
+
+Rules:
+- Within a single tier, prefer the feature with the wider user audience first.
+- A Tier 1 feature always precedes a Tier 6 feature even if the Tier 6 item was shipped earlier in the release cycle.
+- After adding a new entry, re-read the entire type group and re-sort from scratch — do not assume the existing order is already correct.
+- If two entries feel equal in tier and audience, put the one with more sentences of visible impact first.
+
+**Anti-pattern to avoid:** listing entries in chronological shipping order. The fact that opengraph.io title enrichment was committed before an MCP server endpoint does not mean it belongs above it in the changelog.
 
 ### Writing style requirements
 

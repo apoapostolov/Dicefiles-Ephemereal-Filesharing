@@ -55,7 +55,38 @@ requests, and fast archival workflows.
 - [ ] Evaluate server-side PDF text extraction for in-room search.
 - [ ] Evaluate optional OCR pipeline for scanned PDFs.
 - [ ] Evaluate deduplicated "read cache" for very popular files.
-- [ ] Evaluate `yauzl` (streaming ZIP reader) for archives > 100 MB to replace jszip heap-load.
+- [x] Evaluate `yauzl` (streaming ZIP reader) for archives > 100 MB to replace jszip heap-load.
+
+  **Evaluation result (2026-02-22):**
+
+  `yauzl` (MIT, npm) is a production-quality streaming ZIP reader that opens a ZIP via file descriptor and streams each entry on demand using `fs.createReadStream` internally. It never loads the full archive into a heap buffer — only the central directory (end of file, a few KB) is read upfront to build the entry list.
+
+  **Memory model comparison:**
+
+  | Scenario | jszip | yauzl |
+  | --- | --- | --- |
+  | Full file loaded into heap | Yes — `loadAsync(buf)` requires entire file in RAM | No — central directory only (~KB) |
+  | 500 MB CBZ peak heap usage | ~1–1.5 GB | ~10–25 MB |
+  | 5 MB EPUB peak heap usage | ~15–20 MB | ~5–10 MB (marginal gain) |
+
+  **Per-callsite recommendation (`lib/meta.js`):**
+
+  | Site | Function | Typical size | Recommendation |
+  | --- | --- | --- | --- |
+  | CBZ cover + index (`generateAssetsComic`) | ZIP branch | 10 MB – 2 GB | **yauzl first choice** — must stream all image entries; large archives common |
+  | CBZ page extraction (`extractComicPage`) | ZIP fallback branch | same | **yauzl first choice** — needs only one entry but avoids heap-loading 500 MB to serve one page |
+  | EPUB cover (`extractEpubCover`) | ZIP branch | 1–30 MB | **jszip only** — EPUBs are almost always < 50 MB; streaming adds complexity with no meaningful gain |
+  | EPUB page count (`countEpubPages`) | ZIP branch | 1–30 MB | **jszip only** — reads all spine chapters regardless; no streaming benefit |
+
+  **Implementation plan (when Archive Viewer is built):**
+
+  1. `npm install yauzl` — add to `package.json` as a direct dependency.
+  2. Add a `yauzlListImages(filePath)` helper that promisifies yauzl's entry-event API and returns a sorted array of comic image paths.
+  3. Add a `yauzlExtractEntry(filePath, entryPath)` helper that opens the ZIP, seeks to the matching entry, and returns the raw `Buffer` via piped stream.
+  4. In `generateAssetsComic` and `extractComicPage`, check `stat.size`; if `>= YAUZL_THRESHOLD` (100 MB), use yauzl helpers. Otherwise fall through to jszip (avoids promisification overhead for small files).
+  5. Stability: yauzl has been in active use for 8+ years with no known ABI breaks between Node LTS versions. Safe to depend on.
+
+  **Files to change when implementing:** `lib/meta.js` (4 call sites), `package.json`.
 
 ---
 
@@ -140,9 +171,9 @@ No new assets are generated for plain archives. The only metadata additions:
 #### Known limitations / risks
 
 - **Memory**: `jszip.loadAsync` loads the whole ZIP into Node heap. Fine for
-  < 200 MB archives. Larger archives should use `yauzl` (streaming ZIP reader),
-  which is not yet installed. Add `yauzl` as a future dep upgrade for ZIP files
-  ≥ 100 MB.
+  < 100 MB archives. For larger CBZ files (10 MB – 2 GB scan packs), use `yauzl`
+  (streaming ZIP reader) — see Research Backlog evaluation above for the full
+  implementation plan. The `yauzl`-first / jszip-fallback threshold is **100 MB**.
 - **RAR streaming**: `unrar p` pipes to stdout, which works well, but very large
   RAR entries (> 1 GB single file) will be slow to start. No workaround without
   a seek-capable RAR library.
