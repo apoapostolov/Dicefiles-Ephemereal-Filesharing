@@ -205,7 +205,7 @@ class PDFReader {
 
     // Load saved position BEFORE calling _updateInfo — otherwise _updateInfo
     // would immediately fire onPageChange(0) and overwrite the stored progress.
-    const saved = await loadProgress(this._fileKey);
+    const saved = loadProgress(this._fileKey);
     const startPage =
       saved && saved.page >= 1 && saved.page <= this.totalPages
         ? saved.page
@@ -795,7 +795,7 @@ class BookReader {
       await this._openEpub(url);
     }
     // Restore saved chapter + page
-    const saved = await loadProgress(this._fileKey);
+    const saved = loadProgress(this._fileKey);
     const startChapter =
       saved && saved.chapter >= 0 && saved.chapter < this._total
         ? saved.chapter
@@ -1116,7 +1116,7 @@ class ComicReader {
     this.container.appendChild(this._imgEl);
 
     // Restore saved position
-    const saved = await loadProgress(this._fileKey);
+    const saved = loadProgress(this._fileKey);
     const startPage =
       saved && saved.page >= 0 && saved.page < pages ? saved.page : 0;
     await this._showPage(startPage);
@@ -1233,7 +1233,6 @@ function saveReaderOpts(opts) {
 /**
  * Persist the reading position for `fileKey`.
  * `state` shape: { page: number, chapter?: number }
- * Also syncs to the server when the user is logged in (fire-and-forget).
  */
 function saveProgress(fileKey, state) {
   if (!fileKey) return;
@@ -1242,58 +1241,17 @@ function saveProgress(fileKey, state) {
   } catch (_) {
     // quota / private browsing — ignore
   }
-  // Server sync — only when the user is logged in.
-  if (window.__ACCOUNT__) {
-    fetch(`/api/v1/readprogress/${fileKey}`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(state),
-    }).catch(() => {});
-  }
 }
 
-/**
- * Retrieve previously saved progress.
- * Prefers localStorage (instant, synchronous path).
- * When no local value exists and the user is logged in, fetches from the
- * server and seeds localStorage so the *next* call (or the next reload)
- * returns the correct value immediately.
- * Returns null if no progress is found in either store.
- */
-async function loadProgress(fileKey) {
+/** Retrieve previously saved progress. Returns null if none. */
+function loadProgress(fileKey) {
   if (!fileKey) return null;
-  // Try localStorage first — always fast.
   try {
     const raw = localStorage.getItem(PROGRESS_PREFIX + fileKey);
-    if (raw) return JSON.parse(raw);
+    return raw ? JSON.parse(raw) : null;
   } catch (_) {
-    // ignore parse errors
+    return null;
   }
-  // No local data — if logged in, try the server.
-  if (window.__ACCOUNT__) {
-    try {
-      const res = await fetch(`/api/v1/readprogress/${fileKey}`, {
-        credentials: "include",
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data) {
-          // Seed localStorage so we avoid the server round-trip next time.
-          try {
-            localStorage.setItem(
-              PROGRESS_PREFIX + fileKey,
-              JSON.stringify(data),
-            );
-          } catch (_) {}
-          return data;
-        }
-      }
-    } catch (_) {
-      // Network error — fall through to null.
-    }
-  }
-  return null;
 }
 
 /**
@@ -1438,7 +1396,7 @@ class WebtoonReader {
 
     // Restore saved position BEFORE setting up the visibility tracker so that
     // the tracker does not clobber the newly-restored page with page 0.
-    const saved = await loadProgress(this._fileKey);
+    const saved = loadProgress(this._fileKey);
     if (saved && saved.page > 0 && saved.page < this._totalPages) {
       // Give all unloaded images a provisional min-height equal to the
       // rendered height of page 0 (offsetHeight, same coordinate space as

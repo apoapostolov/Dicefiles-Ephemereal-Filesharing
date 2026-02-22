@@ -4,20 +4,6 @@
 
 ### Added
 
-- **Tabbed user profiles**: The user profile page is now divided into three tabs — **Overview** (profile message and interests), **Achievements** (the full achievement grid), and **Activity** (recent uploads list). Each tab is selectable with a single click; the active tab highlights with an accent underline.
-
-- **Interests / looking-for field**: Users can now fill in a short "Interests" field (up to 200 characters) on their own profile page to share what they collect or are looking for. The text is displayed to all visitors under the Overview tab.
-
-- **Achievement progress bars**: Locked achievements now show an inline percentage and a thin progress bar indicating how close the user is to unlocking them, calculated directly from their current stat vs. the milestone requirement.
-
-- **Activity tab with recent uploads**: The new Activity tab lists the 20 most recent files uploaded by the profile owner (name, type, relative timestamp). Upload history is recorded server-side on every upload: up to 50 entries are kept per account in a Redis sorted set.
-
-- **Server-side reading progress sync**: Reading position (page, chapter) for PDF, EPUB/MOBI, comic, and webtoon files is now persisted to the server (`/api/v1/readprogress/:hash`) in addition to `localStorage`, for logged-in users. After a browser cache wipe, re-opening the file recovers the saved position from the server. Progress continues to save to `localStorage` for instant retrieval; the server is consulted only when no local value exists.
-
-- **Seasonal achievements feature flag**: A new `seasonalAchievements` boolean in the project configuration (default `false`) gates seasonal / event achievements. When enabled, a `computeSeasonalAchievements()` function is called and its results merged into the achievements display. Currently a placeholder; extend in `lib/achievements.js` when seasonal events are ready.
-
-- **Node.js startup version guard**: The server now checks the running Node.js major version at startup and exits with a clear error message if it is below 20. This prevents silent misbehaviour when run under an unexpected runtime.
-
 - **opengraph.io link title enrichment**: The Links Archive now optionally uses [opengraph.io](https://www.opengraph.io/) to resolve link titles. When `opengraphIoKey` is set in the project configuration, titles are fetched via the opengraph.io API (which follows redirects, handles JavaScript-rendered pages, and returns the OG `title` field when present) instead of the built-in HTML `<title>` scraper. Falls back to inline scraping automatically when the API key is unset or when the API call fails, so existing deployments keep working without any configuration change.
 
 - **Sort controls redesigned with icons**: The sort buttons in the file browser (newest / largest / expiring) now display compact inline icons instead of text labels. A lightning bolt indicates newest-first, a descending bar chart indicates largest-first, and an hourglass indicates expiring-soon. The active sort method is always highlighted with an accent background.

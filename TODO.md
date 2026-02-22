@@ -51,4 +51,3 @@ See `docs/archive-viewer.md` for full spec, format support table, and security c
 | P1       | Archive Viewer     |
 | P2       | Profile Completion |
 | P3       | Achievement Polish |
-

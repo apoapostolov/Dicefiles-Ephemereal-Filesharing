@@ -38,13 +38,17 @@ export default class Gallery {
     this.closeEl.addEventListener("click", this.close.bind(this), true);
     this.titleEl.addEventListener("click", this.ontitleclick);
 
-    this.downloadEl.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (this.file && !this.file.isRequest) {
-        this.file.download();
-      }
-    }, true);
+    this.downloadEl.addEventListener(
+      "click",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (this.file && !this.file.isRequest) {
+          this.file.download();
+        }
+      },
+      true,
+    );
 
     this.prevEl.addEventListener("click", this.prev.bind(this), true);
     this.nextEl.addEventListener("click", this.next.bind(this), true);
