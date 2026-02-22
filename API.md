@@ -8,6 +8,29 @@ This spec is written for automation clients (agentic tools, skill builders, MCP 
 - Compatibility alias (same behavior): `/api/automation`
 - Base host: `http://<host>:<port>`
 
+### 1.1 A2A Manifest (Agent‑to‑Agent)
+
+To support Google’s Agent‑to‑Agent protocol, Dicefiles exposes a simple
+self‑describing manifest at `/.well-known/a2a`. Agents can fetch this URL to
+discover the service name, API base, version, and a small list of representative
+endpoints with required scopes. The manifest returns:
+
+```json
+{
+  "ok": true,
+  "service": "Dicefiles",
+  "version": "1.2.0",
+  "baseUrl": "/api/v1",
+  "endpoints": [
+    { "path": "/api/v1/files", "scope": "files:read" },
+    { "path": "/api/v1/rooms", "scope": "rooms:write" },
+    { "path": "/healthz", "scope": null }
+  ]
+}
+```
+
+Agents may ignore `endpoints` or augment them with the full `/api/v1` matrix
+listed later in this document.
 Example:
 
 - `POST /api/v1/auth/login`

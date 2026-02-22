@@ -9,17 +9,20 @@ Unlike general-purpose file hosts, Dicefiles focuses on ephemeral, community-dri
 ## What Makes Dicefiles Different?
 
 ### Self-Hosted & Privacy-First
+
 - You host your own instance - no third-party data collection
 - Chat history is stored locally in browsers, not on servers
 - Minimal logging with clear privacy policies
 - You control your data and who accesses it
 
 ### Built for Hobbyists
+
 - Designed for the specific needs of hobby communities (RPG groups, board gamers, makers)
 - File type previews for common hobby formats (PDFs, images, 3D models)
 - Room-based sharing that feels like a clubhouse or game store table
 
 ### Ephemeral by Design
+
 - Files have configurable expiration times (default: 48 hours)
 - Encourages active sharing rather than permanent file dumps
 - Reduces storage requirements and keeps content fresh
@@ -27,24 +30,28 @@ Unlike general-purpose file hosts, Dicefiles focuses on ephemeral, community-dri
 ## Key Use Cases
 
 ### Roleplaying Game Groups
+
 - Share rulebooks, character sheets, and campaign materials
 - Distribute maps and battle grids
 - Share audio recordings of game sessions
 - Exchange PDFs of supplements and modules
 
 ### Board Game Communities
+
 - Upload rulebooks and errata PDFs
 - Share print-and-play materials
 - Distribute custom game designs
 - Post photos of custom boards and pieces
 
 ### Makers & 3D Printers
+
 - Share STL files for 3D printing
 - Upload GCODE and slicing profiles
 - Exchange project files and modifications
 - Share photos of completed prints
 
 ### Fiction & Creative Writing Groups
+
 - Share manuscripts and draft chapters
 - Distribute character bibles and worldbuilding docs
 - Exchange cover art and illustrations
@@ -76,6 +83,7 @@ See the main [README](README.md) for complete installation and setup instruction
 ## Room Features
 
 ### File Sharing
+
 - **Multiple file uploads**: Share multiple files at once
 - **File previews**: See thumbnails for images, videos, and PDFs
 - **File details**: File size, type, and uploader info
@@ -84,6 +92,7 @@ See the main [README](README.md) for complete installation and setup instruction
 - **Batch downloads**: Download all files or only NEW files with progress feedback
 
 ### Request System
+
 - **Create requests in-room**: Ask others to upload specific content from the room toolbar
 - **Request list integration**: Requests appear directly in file list flow with dedicated styling
 - **Optional reference link**: Attach a URL to a product/page relevant to the request
@@ -91,12 +100,14 @@ See the main [README](README.md) for complete installation and setup instruction
 - **Request filtering**: Filter strip includes a request-only filter for faster browsing
 
 ### Chat System
+
 - **Real-time messaging**: Instant chat with all room participants
 - **User nicknames**: Optional registration to keep your name
 - **Room history**: Chat stored locally in browser for persistence
 - **Emotes and formatting**: Rich text chat with emoji support
 
 ### Moderation
+
 - **Room ownership**: Room owners have moderation tools
 - **Platform moderation**: Global moderators handle rule violations
 - **Report system**: Flag inappropriate content or behavior
@@ -148,7 +159,7 @@ Dicefiles is open source and welcomes contributions! See [CONTRIBUTING.md](CONTR
 
 ## Support & Resources
 
-- **GitHub Repository**: https://github.com/apoapostolov/dicefiles
+- **GitHub Repository**: https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing
 - **X/Twitter**: https://x.com/apoapostolov
 - **Issues**: Report bugs and request features via GitHub Issues
 

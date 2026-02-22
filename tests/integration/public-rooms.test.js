@@ -38,6 +38,23 @@ beforeAll(async () => {
       BASE,
       "— all integration tests SKIPPED\n",
     );
+  } else {
+    // detect whether publicRooms is enabled by looking for room-directory
+    try {
+      const r = await fetch(BASE + "/");
+      const body = await r.text();
+      if (
+        !body.includes('id="room-directory"') &&
+        body.includes("Welcome to Dicefiles")
+      ) {
+        serverUp = false; // treat as skip
+        console.warn(
+          "\n[public-rooms.test.js] publicRooms disabled in server config — tests SKIPPED\n",
+        );
+      }
+    } catch (e) {
+      /* ignore */
+    }
   }
 });
 

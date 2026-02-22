@@ -84,6 +84,20 @@ function ifServer(name, fn) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// A2A discovery manifest
+// ─────────────────────────────────────────────────────────────────────────────
+describe("GET /.well-known/a2a", () => {
+  ifServer("returns JSON with service and baseUrl", async () => {
+    const { status, json } = await get("/.well-known/a2a");
+    expect(status).toBe(200);
+    expect(json).toHaveProperty("ok", true);
+    expect(json).toHaveProperty("service", "Dicefiles");
+    expect(json).toHaveProperty("baseUrl", "/api/v1");
+    expect(Array.isArray(json.endpoints)).toBe(true);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Health endpoint
 // ─────────────────────────────────────────────────────────────────────────────
 describe("GET /healthz", () => {

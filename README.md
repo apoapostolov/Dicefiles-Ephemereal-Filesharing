@@ -262,7 +262,7 @@ Notes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/apoapostolov/dicefiles.git
+git clone https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing.git
 cd dicefiles
 
 # Install dependencies
@@ -371,7 +371,7 @@ Open PowerShell or Command Prompt:
 
 ```powershell
 # Clone the repository
-git clone https://github.com/apoapostolov/dicefiles.git
+git clone https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing.git
 cd dicefiles
 
 # Install dependencies
@@ -525,6 +525,8 @@ If Firejail is not installed, the server logs a warning and falls back to unsand
 ## Automation API
 
 The stable automation API prefix is `/api/v1` (legacy `/api/automation` is kept as a compatibility alias).
+
+Dicefiles is also A2A‑compliant: a discovery manifest is available at `/.well-known/a2a` for Google’s Agent‑to‑Agent protocol and other AI clients. The manifest lists the base URL, service name, version, and a few representative endpoints and scopes; agents may fetch it automatically before interacting with the REST API.
 The complete reference lives in [`API.md`](API.md), structured for agentic tools and skill generation.
 
 For connecting AI clients (Claude Desktop, Cursor, Codex CLI, OpenClaw) via the
