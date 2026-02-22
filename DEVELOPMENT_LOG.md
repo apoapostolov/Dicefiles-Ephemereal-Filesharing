@@ -1,5 +1,10 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - Fix: _focusTransitioning guard prevents double-press fullscreen issue
+
+- `client/files/reader.js` — Added `this._focusTransitioning = false` field to `Reader` constructor (before `Object.seal`). `_toggleFocus()` now returns early if `_focusTransitioning` is true (re-entrancy guard) and sets it `true` before calling `document.documentElement.requestFullscreen()`. The flag is cleared via `setTimeout(..., 300)` after the promise resolves or rejects, ensuring any spurious `fullscreenchange` events fired during the browser's fullscreen transition cannot flip `_focusMode` back to `false` before the transition completes. `_onFullscreenChange` also checks `!this._focusTransitioning` as a second guard layer. This fixes the "two-press" bug where the first press entered native fullscreen but the focus reading CSS was silently removed by a re-entrant toggle triggered by an intermediate `fullscreenchange` event with `fullscreenElement === null`.
+- `static/client.js` — Rebuilt production bundle.
+
 ## 2026-02-22 - Fix: focus mode no longer hijacks native fullscreen; gallery truly hides request tiles
 
 - `client/files/reader.js` — Removed `document.documentElement.requestFullscreen()` from `_toggleFocus()` entry path. The in-app CSS overlay (`body.focus-reading`) is the intended reading experience; calling `requestFullscreen()` was handing control to the browser and breaking the layout. Exiting focus mode still calls `document.exitFullscreen()` when `document.fullscreenElement` is set, so if the user was in native fullscreen (e.g. F11) closing the reading experience will also dismiss it. The `fullscreenchange` sync listener is kept on entry so externally-triggered fullscreen dismissal still syncs state.
