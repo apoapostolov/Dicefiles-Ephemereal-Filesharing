@@ -1,5 +1,10 @@
 # Dicefiles Development Log
 
+## 2026-02-22 — Fix uploader pill URL and activity table base.css border bleed
+
+- `client/files/file.js` — Changed pill click URL from `/user/${account}` to `/u/${account}`. The express route is `/u/:user`; the previous path 404'd.
+- `entries/css/page.css` — Added explicit `border: none` to `.activity-table`, `.activity-table thead th`, and `.activity-row td`. Root cause: `base.css` sets global `table { border: 1px solid }`, `th { border: 1px solid }`, and `td { border: 1px dotted }` which overrode the previous intent of no borders. Now all three elements explicitly cancel those inherited rules.
+
 ## 2026-02-22 — Gallery tile download button, uploader pill navigation, activity table redesign
 
 - `client/files/file.js` — Added `galleryDlEl` (`a.gallery-dl.i-download`) at the end of the file constructor. Button is absolutely positioned top-right of each gallery tile, triggers `this.download()` on click with `stopPropagation` so it never opens the lightbox. Hidden in list mode via CSS.
