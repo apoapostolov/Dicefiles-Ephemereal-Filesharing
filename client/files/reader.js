@@ -1356,6 +1356,7 @@ export default class Reader {
     this._optsOpen = false;
     this._focusMode = false;
     this._focusMouseTimer = null;
+    this._focusTransitioning = false; // true while requestFullscreen is in-flight
     this._onFullscreenChange = null;
 
     // Log which DOM elements were found / missing
@@ -1532,9 +1533,15 @@ export default class Reader {
     };
 
     // Sync focus mode when native browser fullscreen is dismissed externally
-    // (e.g. user presses F11 or OS shortcut to exit fullscreen)
+    // (e.g. user presses Escape or F11 to exit fullscreen).  Guard against the
+    // transition window where fullscreenElement momentarily reads null while the
+    // browser is still completing entry.
     this._onFullscreenChange = () => {
-      if (this._focusMode && !document.fullscreenElement) {
+      if (
+        !this._focusTransitioning &&
+        this._focusMode &&
+        !document.fullscreenElement
+      ) {
         this._toggleFocus();
       }
     };
@@ -1760,33 +1767,42 @@ export default class Reader {
   }
 
   _toggleFocus() {
+    // Guard against re-entrant calls fired by fullscreenchange events that
+    // occur during the browser's own transition animation.
+    if (this._focusTransitioning) return;
+
     this._focusMode = !this._focusMode;
     document.body.classList.toggle("focus-reading", this._focusMode);
+
     if (this._focusMode) {
       document.addEventListener("mousemove", this._onFocusMouseMove);
-      // Fullscreen the #reader element so only reader panel fills the screen.
-      // Attach the fullscreenchange exit-sync listener ONLY after the browser
-      // confirms fullscreen is active (inside the promise resolution).  This
-      // avoids a race where the transition fires fullscreenchange with
-      // fullscreenElement=null first (clearing any previous fullscreen owner),
-      // which would prematurely trip the exit handler and flip _focusMode off.
-      if (this.el && this.el.requestFullscreen) {
-        const req = this.el.requestFullscreen();
-        const onConfirmed = () => {
-          // Attach exit-sync listener only once fullscreen is confirmed.
-          document.addEventListener(
-            "fullscreenchange",
-            this._onFullscreenChange,
-          );
+      // Attach exit-sync listener now; _focusTransitioning blocks it from
+      // acting on any spurious null events during the transition window.
+      document.addEventListener("fullscreenchange", this._onFullscreenChange);
+
+      // Fullscreen the whole document so the OS viewport == full screen.
+      // body.focus-reading already has #reader at position:fixed;inset:0;
+      // z-index:9000, which covers the chat/sidebar in CSS.
+      this._focusTransitioning = true;
+      try {
+        const req = document.documentElement.requestFullscreen();
+        const done = () => {
+          // Small delay lets all transition fullscreenchange events settle
+          // before the exit-sync listener starts trusting its state.
+          setTimeout(() => {
+            this._focusTransitioning = false;
+          }, 300);
         };
         if (req && typeof req.then === "function") {
-          req.then(onConfirmed).catch(() => {});
+          req.then(done).catch(() => {
+            this._focusTransitioning = false;
+          });
         } else {
-          onConfirmed();
+          done();
         }
+      } catch (_) {
+        this._focusTransitioning = false;
       }
-      // Do NOT show bar immediately — bar is hidden on entry and only
-      // revealed when the user moves the mouse.
     } else {
       document.removeEventListener("mousemove", this._onFocusMouseMove);
       document.removeEventListener(
@@ -1795,13 +1811,13 @@ export default class Reader {
       );
       clearTimeout(this._focusMouseTimer);
       document.body.classList.remove("focus-bar-visible");
-      // Exit native fullscreen if still active.
       if (document.fullscreenElement) {
         try {
           document.exitFullscreen();
         } catch (_) {}
       }
     }
+
     if (this.fullscreenEl) {
       this.fullscreenEl.classList.toggle("active", this._focusMode);
     }
