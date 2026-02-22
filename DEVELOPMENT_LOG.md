@@ -1,10 +1,37 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - Fix: Fulfilled pill crashes file constructor before nameEl exists
+
+### Summary
+
+**Critical regression** introduced in commit `aac0b66`: the `File` constructor in `client/files/file.js` attempted to call `this.nameEl.appendChild(this.fulfilledPillEl)` inside the early `if (this.isRequest && isFulfilled)` block — at a point roughly 30 lines before `this.nameEl` is actually assigned. Any room containing at least one fulfilled request threw `TypeError: Cannot read properties of undefined (reading 'appendChild')` on page load, causing the socket to disconnect immediately and the entire file list to fail to render.
+
+### Root cause
+
+The fulfilled pill DOM creation was added in `aac0b66` alongside other request-related changes. It was placed too early in the constructor before `this.nameEl = dom("a", ...)` on the later block. The `this.fulfilledPillEl = null` placeholder that appears after `this.nameEl` was already present for the dynamic update path but was not used as the site for initial creation.
+
+### Fix
+
+Removed the premature pill creation from the early `if (this.isRequest)` block (kept only the class addition), and moved the conditional pill creation to directly after the `this.requestUrlEl = null` line where `this.nameEl` is guaranteed to be set.
+
+### Changed files
+
+- **`client/files/file.js`** — `File` constructor: remove `dom("span", ...)` + `nameEl.appendChild` from before `nameEl` exists; add conditional pill creation in-place at the `fulfilledPillEl = null` initializer.
+
+### Verification
+
+- webpack: `compiled with 4 warnings in 7301 ms`
+- curl `http://127.0.0.1:9090/` → `HTTP/1.1 200 OK`
+- Commit: `eddef41`
+
+---
+
 ## 2026-02-22 - Docs: Strengthen changelog same-version rule; clean changelog; rename drop label
 
 ### Summary
 
 Three changes in one commit:
+
 1. Strengthened `AGENTS.md` changelog procedure: added explicit rule (step 4) that `Changed` and `Fixed` entries must never describe features first introduced in the same version — all iterative fixes are part of the base implementation. Added matching row to the "What does NOT go in the changelog" reference table.
 2. Cleaned `CHANGELOG.md` — removed 3 `Changed` bullets (Manga/Webtoon pill, Webtoon PageDown/PageUp, Webtoon stream-ahead) and 3 `Fixed` bullets (EPUB typography navigation freeze, "Comic archive has no readable pages", CBZ override) from `[Unreleased]` because those features/bugs were all introduced in the same `[Unreleased]` version. Removed 2 `Fixed` bullets (Links Archive toggle non-functional, Link rows unstyled) from `[1.1.0]` per the same rule (Links Archive debuted in 1.1.0).
 3. Changed the drag-drop image preview label in `RequestModal` from "Drop stuff here" to two-line "Drop Cover / or Image".
