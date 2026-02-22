@@ -1,9 +1,14 @@
 "use strict";
 
+// P0.5 — 3.3: Replace url-regex (ReDoS-vulnerable, no fix) with url-regex-safe.
+// The API is identical: calling the function returns a RegExp; we use .source
+// to embed it into the composite splitting regex.
 const SCHEME_REGEX = /^(?:https?|ftp|irc):/;
 const WHITE_REGEX = /^[\r\n]+$/;
-const URL_REGEX = new RegExp(`([\r\n]+|[#@][a-z0-9_-]+|${require("url-regex")().source})`, "ig");
-
+const URL_REGEX = new RegExp(
+  `([\r\n]+|[#@][a-z0-9_-]+|${require("url-regex-safe")({ exact: false }).source})`,
+  "ig",
+);
 
 function normalizeURL(URL, url) {
   if (!url.match(SCHEME_REGEX)) {
@@ -20,7 +25,7 @@ async function mapMessagePart(v, i, rec) {
       return null;
     }
     rec.previousText = true;
-    return {t: "t", v};
+    return { t: "t", v };
   }
   try {
     if (v.startsWith("#")) {
@@ -32,11 +37,11 @@ async function mapMessagePart(v, i, rec) {
         if (r) {
           rec.rooms++;
           rec.previousText = true;
-          return Object.assign({t: "r"}, r);
+          return Object.assign({ t: "r" }, r);
         }
       }
       rec.previousText = true;
-      return {t: "t", v};
+      return { t: "t", v };
     }
     if (v.startsWith("@")) {
       if (rec.files < 5) {
@@ -47,28 +52,27 @@ async function mapMessagePart(v, i, rec) {
         if (f) {
           rec.files++;
           rec.previousText = false;
-          return Object.assign({t: "f"}, f);
+          return Object.assign({ t: "f" }, f);
         }
       }
       rec.previousText = true;
-      return {t: "t", v};
+      return { t: "t", v };
     }
     if (WHITE_REGEX.test(v)) {
       if (!rec.previousText || rec.breaks++ > 1) {
         rec.previousText = true;
-        return {t: "t", v: " "};
+        return { t: "t", v: " " };
       }
       rec.previousText = false;
-      return {t: "b"};
+      return { t: "b" };
     }
     rec.previousText = true;
-    return {t: "u", v: normalizeURL(rec.URL, v)};
-  }
-  catch (ex) {
+    return { t: "u", v: normalizeURL(rec.URL, v) };
+  } catch (ex) {
     console.error(ex);
   }
   rec.previousText = true;
-  return {t: "t", v};
+  return { t: "t", v };
 }
 
 async function toMessage(URL, resolveRoom, resolveFile, msg) {

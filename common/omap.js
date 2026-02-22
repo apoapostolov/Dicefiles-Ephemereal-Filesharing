@@ -26,6 +26,7 @@ class ObservableMap extends Map {
   }
 
   delete(k) {
+    if (!super.has(k)) return false;
     this.emit("predelete", k);
     this.emit(`predelete-${k}`);
     const rv = super.delete(k);

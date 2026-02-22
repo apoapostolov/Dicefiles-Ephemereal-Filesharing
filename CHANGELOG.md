@@ -1,5 +1,45 @@
 # Changelog
 
+## [Unreleased]
+
+## [1.3.0] - 2026-02-22
+
+### Added
+
+- **Per-account login lockout**: failed login attempts against the same account now trigger a configurable cool-down. After 10 failures (default) within a 15-minute window the account is temporarily locked and further attempts are rejected with a clear error. Both thresholds are tunable via `loginAccountFloodTrigger` and `loginAccountFloodDuration` in the project configuration file.
+
+- **Centralized input validation** (`lib/validate.js`): all register, login, and password-change routes now route their inputs through typed validation helpers (`requireString`, `optionalString`, `requireRoomId`, `requireNick`, `validatePassword`). Malformed requests receive explicit 400 responses instead of silent no-ops or server errors.
+
+- **CI security audit** (`.github/workflows/security.yml`): every push and pull request to `main`, as well as a weekly scheduled run, now executes `npm audit --audit-level=high` to surface newly disclosed high-severity vulnerabilities automatically.
+
+- **XSS regression test suite** (`tests/unit/xss.test.js`): covers `<script>` injection, `onerror=` attribute injection, `javascript:` and `data:` URI href patterns in chat rendering, plus full unit tests for all `lib/validate.js` helpers.
+
+- **Memory-hygiene test suite** (`tests/unit/memory-hygiene.test.js`): covers ObservableMap event-lifecycle correctness under 1,000-cycle churn, and automation rate-state size-cap enforcement.
+
+- **Security Posture documentation**: `README.md` now includes a dedicated _Security Posture_ section covering the effective Helmet 7 headers table, default HTTP/HTTPS ports, and Firejail sandboxing behaviour.
+
+### Changed
+
+- **Stronger password requirements**: minimum raised to 12 characters and must include at least one uppercase letter, one lowercase letter, and one digit (previously 10-character minimum with letter + digit rule). Validation is now handled centrally by `lib/validate.js`.
+
+- **Startup secret enforcement in production**: the server now calls `process.exit(1)` during startup when `NODE_ENV=production` and the configured `secret` is weak or matches a known default. In development mode a warning is still printed but startup continues.
+
+- **Helmet upgraded from 3.x to 7.x**: the `HSTS` header is now sent only when `req.secure` (`https:` request); `X-Powered-By` is suppressed; deprecated `xssFilter` and `ieNoOpen` options removed. `Cross-Origin-Opener-Policy`, `Referrer-Policy: no-referrer`, and `X-Content-Type-Options: nosniff` are now active by default.
+
+- **`url-regex` replaced with `url-regex-safe`**: eliminates a ReDoS vulnerability in the URL-detection regex used during chat message rendering. The replacement is API-compatible.
+
+- **Distributed automation rate limiting**: `checkAutomationRateLimit` is now Redis-backed using the same Lua sliding-window script used elsewhere in the server. Per-scope limits are configurable by operators. Falls back gracefully to in-process limiting when Redis is unreachable.
+
+- **Automation rate-state size cap**: the in-process fallback rate-limit map is now capped at 50,000 entries; when the cap is reached a diagnostic warning is emitted and the request is rejected. This prevents unbounded memory growth under adversarial traffic.
+
+- **Firejail sandbox logging**: the server now probes for the Firejail binary during startup and logs its status — `[security] Firejail sandbox: active` or a warning when the binary is not found and sandboxing falls back to direct execution.
+
+### Fixed
+
+- **`request_fulfilled` webhook now fires on status transition**: the webhook was previously only dispatched when an unfulfilled request was deleted. It now also fires when `setStatus("fulfilled")` is called — i.e. when a participant fulfills a request through the UI. The delete path is guarded to prevent double-firing for already-fulfilled items.
+
+- **`BROKER` not imported in automation rate-limit path**: `BROKER.emit()` was called in `lib/httpserver.js` before `BROKER` was ever imported. The module import was missing; this caused a `ReferenceError` (silently masked in single-worker setups where the import-time evaluation path was not reached). Added as part of the distributed rate-limiting work.
+
 ## [1.2.0] - 2026-02-22
 
 ### Added

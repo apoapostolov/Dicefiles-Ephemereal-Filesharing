@@ -60,14 +60,20 @@ module.exports = {
 
   // Default fixed-window API rate limiting for automation routes
   // (`/api/automation/*` and `/api/v1/*`).
+  // P0.5 — 3.6: Limits are Redis-backed across all workers; overrides below.
   automationApiRateLimit: {
     windowMs: 60000,
     max: 180,
   },
 
-  // Optional per-scope rate-limit overrides.
+  // Optional per-scope rate-limit overrides for operator tuning.
   // Keys are scope names (for example: "files:read", "uploads:write", "mod:*")
   // and values are {windowMs, max}.
+  // Example:
+  // automationApiRateLimitByScope: {
+  //   "uploads:write": { windowMs: 60000, max: 30 },
+  //   "mod:*":         { windowMs: 60000, max: 60 },
+  // }
   automationApiRateLimitByScope: {},
 
   // Path to append structured automation API audit logs (JSON lines).
@@ -163,6 +169,11 @@ module.exports = {
   loginFloodTrigger: 5,
   // Number of ms to block login attempts from flooding user
   loginFloodDuration: 900000,
+
+  // Number of failed login attempts per account before per-account lockout
+  loginAccountFloodTrigger: 10,
+  // Number of ms to keep the per-account lockout active
+  loginAccountFloodDuration: 900000,
 
   // Number of created account before considered flooding
   accountFloodTrigger: 3,

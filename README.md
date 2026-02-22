@@ -321,6 +321,29 @@ Configuration files are loaded in this order (last value wins):
 4. `$PWD/.config.js`
 5. `$PWD/.config.json`
 
+### Secret Management
+
+The `secret` config key is used to sign sessions and cookies. **You must change it before deploying to production.**
+
+- If `NODE_ENV=production` and the secret is a known default or shorter than 16 characters, the server will **refuse to start** with a fatal error.
+- In development (any other `NODE_ENV`), a warning is logged instead.
+
+**Generate a strong secret:**
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+**Set it in `.config.json`:**
+
+```json
+{
+  "secret": "your-64-char-random-hex-value-here"
+}
+```
+
+**Secret rotation:** update the `secret` value and restart the server. All existing sessions will be invalidated (users will need to log in again). There is no zero-downtime rotation path at this time.
+
 **Example `.config.json`:**
 
 ```json
@@ -335,28 +358,72 @@ Configuration files are loaded in this order (last value wins):
 
 **Key options:**
 
-| Option                          | Default                     | Description                                                     |
-| ------------------------------- | --------------------------- | --------------------------------------------------------------- |
-| `port`                          | `8080`                      | HTTP listen port                                                |
-| `workers`                       | `CPU + 1`                   | Number of web workers                                           |
-| `secret`                        | `"Dicefiles"`               | Secret for crypto (change in production)                        |
-| `uploads`                       | `"uploads"`                 | Upload directory path                                           |
-| `maxFileSize`                   | `10GB`                      | Max file size in bytes (0 = unlimited)                          |
-| `requireAccounts`               | `false`                     | Require accounts to chat/upload                                 |
-| `roomCreation`                  | `true`                      | Allow room creation                                             |
-| `TTL`                           | `48`                        | Hours before finished downloads expire                          |
-| `downloadMaxConcurrent`         | `3`                         | Max concurrent downloads for room toolbar batch downloads (1-4) |
-| `automationApiKeys`             | `[]`                        | API keys for automation API (supports scoped key objects)       |
-| `automationApiRateLimit`        | `{windowMs,max}`            | Default automation API rate limit (fixed window)                |
-| `automationApiRateLimitByScope` | `{}`                        | Per-scope rate limit overrides for automation API               |
-| `automationAuditLog`            | `"automation.log"`          | JSONL audit log file for automation API calls                   |
-| `observabilityLog`              | `"ops.log"`                 | JSONL lifecycle log for uploads/downloads/requests/previews     |
+| Option                          | Default                     | Description                                                                                    |
+| ------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------- |
+| `port`                          | `8080`                      | HTTP listen port                                                                               |
+| `workers`                       | `CPU + 1`                   | Number of web workers                                                                          |
+| `secret`                        | `"Dicefiles"`               | Secret for crypto (change in production)                                                       |
+| `uploads`                       | `"uploads"`                 | Upload directory path                                                                          |
+| `maxFileSize`                   | `10GB`                      | Max file size in bytes (0 = unlimited)                                                         |
+| `requireAccounts`               | `false`                     | Require accounts to chat/upload                                                                |
+| `roomCreation`                  | `true`                      | Allow room creation                                                                            |
+| `TTL`                           | `48`                        | Hours before finished downloads expire                                                         |
+| `downloadMaxConcurrent`         | `3`                         | Max concurrent downloads for room toolbar batch downloads (1-4)                                |
+| `automationApiKeys`             | `[]`                        | API keys for automation API (supports scoped key objects)                                      |
+| `automationApiRateLimit`        | `{windowMs,max}`            | Default automation API rate limit (fixed window)                                               |
+| `automationApiRateLimitByScope` | `{}`                        | Per-scope rate limit overrides for automation API                                              |
+| `automationAuditLog`            | `"automation.log"`          | JSONL audit log file for automation API calls                                                  |
+| `observabilityLog`              | `"ops.log"`                 | JSONL lifecycle log for uploads/downloads/requests/previews                                    |
 | `allowRequests`                 | `true`                      | Default for new rooms: whether request creation is enabled (room owners can override per room) |
 | `linkCollection`                | `true`                      | Default for new rooms: whether the link archive is enabled (room owners can override per room) |
-| `webhooks`                      | `[]`                        | Outbound webhook targets/events for upload/request lifecycle    |
-| `webhookRetry`                  | `{...}`                     | Webhook retry policy defaults (retries/backoff)                 |
-| `webhookDeadLetterLog`          | `"webhook-dead-letter.log"` | JSONL sink for failed webhook deliveries                        |
-| `jail`                          | `true` (Linux)              | Use firejail for preview commands (always false on Windows)     |
+| `webhooks`                      | `[]`                        | Outbound webhook targets/events for upload/request lifecycle                                   |
+| `webhookRetry`                  | `{...}`                     | Webhook retry policy defaults (retries/backoff)                                                |
+| `webhookDeadLetterLog`          | `"webhook-dead-letter.log"` | JSONL sink for failed webhook deliveries                                                       |
+| `jail`                          | `true` (Linux)              | Use firejail for preview commands (always false on Windows)                                    |
+
+## Security Posture
+
+### HTTP Security Headers (Helmet 7)
+
+Dicefiles uses [Helmet 7](https://helmetjs.github.io/) to set secure HTTP response headers on every request. Key effective headers:
+
+| Header | Value | Notes |
+| --- | --- | --- |
+| `Content-Security-Policy` | `default-src 'self' 'unsafe-inline'` + `script-src ... 'unsafe-eval'` | `unsafe-eval` required for PDF.js PostScript rendering |
+| `Strict-Transport-Security` | `max-age=15552000; includeSubDomains` | Sent **only** when the request arrived over HTTPS (`req.secure`) |
+| `X-Frame-Options` | `SAMEORIGIN` | Prevents clickjacking |
+| `X-Content-Type-Options` | `nosniff` | Prevents MIME-type sniffing |
+| `Referrer-Policy` | `no-referrer` | No referrer leaked to external URLs |
+| `Cross-Origin-Opener-Policy` | `same-origin` | Isolates browsing context |
+
+To verify headers on a live instance:
+
+```bash
+curl -sI https://your-instance/ | grep -i "content-security\|strict-transport\|x-frame\|x-content"
+```
+
+### Ports
+
+| Protocol | Default port | Config key |
+| --- | --- | --- |
+| HTTP | `8080` | `port` |
+| HTTPS | `8443` | `tlsport` |
+
+Change either in `.config.json`. If you run Dicefiles behind a reverse proxy (nginx/caddy), set the proxy to forward to the HTTP port and terminate TLS at the proxy layer.
+
+### Firejail Sandboxing
+
+On Linux, preview-generation commands (`exiftool`, `ffmpeg`, `file`) run inside a [Firejail](https://github.com/netblue30/firejail) sandbox by default (`jail: true`). The server logs the sandbox status at startup:
+
+```
+[security] Firejail sandbox: active (jail=true, binary found)
+```
+
+If Firejail is not installed, the server logs a warning and falls back to unsandboxed execution. To intentionally disable sandboxing (e.g., in Docker or restricted environments):
+
+```json
+{ "jail": false }
+```
 
 ## Automation API
 
