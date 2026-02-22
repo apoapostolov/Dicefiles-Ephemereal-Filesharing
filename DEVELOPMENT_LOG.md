@@ -1,5 +1,11 @@
 # Dicefiles Development Log
 
+## 2026-02-22 — Activity table header alignment and tab panel height cap
+
+- `entries/css/page.css` — Changed `.activity-table thead th` from `text-align: left` to `text-align: center` so all column labels center over their data.
+- `entries/css/page.css` — Added `max-height: 520px; overflow: hidden` to `.profile-tabbed` so the tab area never stretches to fill the viewport when few rows are present.
+- `entries/css/page.css` — Added `max-height: 460px; overflow-y: auto` to `.profile-message`, `.profile-achievements`, and `.profile-activity` so tab content scrolls within the capped container rather than clipping. Added `.profile-activity` to the shared panel border/background rule so it receives the same card appearance as the other tab panels.
+
 ## 2026-02-22 — Fix uploader pill URL and activity table base.css border bleed
 
 - `client/files/file.js` — Changed pill click URL from `/user/${account}` to `/u/${account}`. The express route is `/u/:user`; the previous path 404'd.
