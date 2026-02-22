@@ -24,6 +24,7 @@ Archives at or above the threshold use yauzl with jszip as error fallback in
 `generateAssetsComic`.
 
 **New functions in `lib/meta.js`**:
+
 - `yauzlListImages(filePath)` — promisified entry-scan returning an unsorted array of
   comic image paths; uses `lazyEntries: true` + autoClose.
 - `yauzlExtractEntry(filePath, entryName)` — opens, central-dir scans for a single
@@ -34,6 +35,7 @@ Archives at or above the threshold use yauzl with jszip as error fallback in
   `ComicInfo.xml`; returns the XML string or null.
 
 **Call sites changed** (`lib/meta.js`):
+
 - `generateAssetsComic` ZIP branch: stat → if ≥ threshold, yauzl list + index +
   per-page buffer; else jszip as before. yauzl errors fall back to jszip.
 - `extractComicPage` ZIP index-reconstruction fallback: stat → yauzl or jszip.

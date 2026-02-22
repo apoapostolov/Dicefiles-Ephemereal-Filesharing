@@ -296,16 +296,17 @@ Readers skim the first two or three bullets of any section. The most impactful f
 
 **Priority tiers (highest → lowest):**
 
-| Tier | Category | Examples |
-| ---- | -------- | -------- |
-| 1 | **Flagship / major new workflows** | New top-level feature, new integration, new transport protocol | 
-| 2 | **Daily-use UX improvements** | Changes users encounter on every session (upload flow, file list, chat) |
-| 3 | **Security changes with user-visible effect** | Login lockout, permission model change |
-| 4 | **Performance wins users can feel** | Faster load, lower memory, smoother scroll |
-| 5 | **Opt-in / operator-configured features** | Features behind a config key or env var |
-| 6 | **Developer / operator tooling** | MCP server, API additions, admin endpoints |
+| Tier | Category                                      | Examples                                                                |
+| ---- | --------------------------------------------- | ----------------------------------------------------------------------- |
+| 1    | **Flagship / major new workflows**            | New top-level feature, new integration, new transport protocol          |
+| 2    | **Daily-use UX improvements**                 | Changes users encounter on every session (upload flow, file list, chat) |
+| 3    | **Security changes with user-visible effect** | Login lockout, permission model change                                  |
+| 4    | **Performance wins users can feel**           | Faster load, lower memory, smoother scroll                              |
+| 5    | **Opt-in / operator-configured features**     | Features behind a config key or env var                                 |
+| 6    | **Developer / operator tooling**              | MCP server, API additions, admin endpoints                              |
 
 Rules:
+
 - Within a single tier, prefer the feature with the wider user audience first.
 - A Tier 1 feature always precedes a Tier 6 feature even if the Tier 6 item was shipped earlier in the release cycle.
 - After adding a new entry, re-read the entire type group and re-sort from scratch — do not assume the existing order is already correct.

@@ -63,23 +63,22 @@ requests, and fast archival workflows.
 
   **Memory model comparison:**
 
-  | Scenario | jszip | yauzl |
-  | --- | --- | --- |
+  | Scenario                   | jszip                                              | yauzl                             |
+  | -------------------------- | -------------------------------------------------- | --------------------------------- |
   | Full file loaded into heap | Yes — `loadAsync(buf)` requires entire file in RAM | No — central directory only (~KB) |
-  | 500 MB CBZ peak heap usage | ~1–1.5 GB | ~10–25 MB |
-  | 5 MB EPUB peak heap usage | ~15–20 MB | ~5–10 MB (marginal gain) |
+  | 500 MB CBZ peak heap usage | ~1–1.5 GB                                          | ~10–25 MB                         |
+  | 5 MB EPUB peak heap usage  | ~15–20 MB                                          | ~5–10 MB (marginal gain)          |
 
   **Per-callsite recommendation (`lib/meta.js`):**
 
-  | Site | Function | Typical size | Recommendation |
-  | --- | --- | --- | --- |
-  | CBZ cover + index (`generateAssetsComic`) | ZIP branch | 10 MB – 2 GB | **yauzl first choice** — must stream all image entries; large archives common |
-  | CBZ page extraction (`extractComicPage`) | ZIP fallback branch | same | **yauzl first choice** — needs only one entry but avoids heap-loading 500 MB to serve one page |
-  | EPUB cover (`extractEpubCover`) | ZIP branch | 1–30 MB | **jszip only** — EPUBs are almost always < 50 MB; streaming adds complexity with no meaningful gain |
-  | EPUB page count (`countEpubPages`) | ZIP branch | 1–30 MB | **jszip only** — reads all spine chapters regardless; no streaming benefit |
+  | Site                                      | Function            | Typical size | Recommendation                                                                                      |
+  | ----------------------------------------- | ------------------- | ------------ | --------------------------------------------------------------------------------------------------- |
+  | CBZ cover + index (`generateAssetsComic`) | ZIP branch          | 10 MB – 2 GB | **yauzl first choice** — must stream all image entries; large archives common                       |
+  | CBZ page extraction (`extractComicPage`)  | ZIP fallback branch | same         | **yauzl first choice** — needs only one entry but avoids heap-loading 500 MB to serve one page      |
+  | EPUB cover (`extractEpubCover`)           | ZIP branch          | 1–30 MB      | **jszip only** — EPUBs are almost always < 50 MB; streaming adds complexity with no meaningful gain |
+  | EPUB page count (`countEpubPages`)        | ZIP branch          | 1–30 MB      | **jszip only** — reads all spine chapters regardless; no streaming benefit                          |
 
   **Implementation plan (when Archive Viewer is built):**
-
   1. `npm install yauzl` — add to `package.json` as a direct dependency.
   2. Add a `yauzlListImages(filePath)` helper that promisifies yauzl's entry-event API and returns a sorted array of comic image paths.
   3. Add a `yauzlExtractEntry(filePath, entryPath)` helper that opens the ZIP, seeks to the matching entry, and returns the raw `Buffer` via piped stream.
