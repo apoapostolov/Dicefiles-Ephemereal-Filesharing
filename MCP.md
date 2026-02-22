@@ -24,37 +24,54 @@ From the moment Claude Desktop is pointed at a Dicefiles MCP server:
 
 ## 2. Setup and Configuration
 
-### 2.1 Install and Environment
+### 2.1 Prerequisites
+
+Install the two runtime dependencies into the Dicefiles project once:
 
 ```bash
-# Install the two production dependencies
+cd /path/to/Dicefiles
 npm install @modelcontextprotocol/sdk zod
-
-# Required — the URL of your Dicefiles instance
-export DICEFILES_BASE_URL=http://localhost:9090
-
-# Required — automation API key with at minimum files:read scope
-export DICEFILES_API_KEY=your-api-key-here
 ```
 
-Test that the server starts cleanly:
+Smoke-test the server before wiring it into any client:
 
 ```bash
+DICEFILES_BASE_URL=http://localhost:9090 \
+DICEFILES_API_KEY=your-api-key-here \
 node scripts/mcp-server.js
 # → [dicefiles-mcp] Stdio transport ready. Waiting for MCP client...
-# Press Ctrl-C to exit
+# Ctrl-C to exit
 ```
 
-### 2.2 Claude Desktop Configuration
+Environment variables accepted by the server:
 
-Add an entry to your `claude_desktop_config.json`:
+| Variable             | Default                 | Description                                   |
+| -------------------- | ----------------------- | --------------------------------------------- |
+| `DICEFILES_BASE_URL` | `http://localhost:9090` | Base URL of your Dicefiles instance           |
+| `DICEFILES_API_KEY`  | _(empty)_               | Automation API key — warning printed if unset |
+| `MCP_TRANSPORT`      | `stdio`                 | `stdio` (default) or `http`                   |
+| `MCP_PORT`           | `3001`                  | Listening port when `MCP_TRANSPORT=http`      |
+
+---
+
+### 2.2 Claude Desktop
+
+Config file locations:
+
+| OS      | Path                                                              |
+| ------- | ----------------------------------------------------------------- |
+| macOS   | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json`                     |
+| Linux   | `~/.config/claude/claude_desktop_config.json`                     |
+
+Add a `dicefiles` entry under `mcpServers`:
 
 ```json
 {
   "mcpServers": {
     "dicefiles": {
       "command": "node",
-      "args": ["/absolute/path/to/your/Dicefiles/scripts/mcp-server.js"],
+      "args": ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
       "env": {
         "DICEFILES_BASE_URL": "http://localhost:9090",
         "DICEFILES_API_KEY": "your-api-key-here"
@@ -64,30 +81,232 @@ Add an entry to your `claude_desktop_config.json`:
 }
 ```
 
-Restart Claude Desktop after editing. The 13 Dicefiles tools will appear in the
-assistant's tool list.
+Restart Claude Desktop. All 13 tools appear in the tool picker. Try: _"Use the
+`server_health` tool to check my Dicefiles instance."_
 
-### 2.3 Remote Agent / HTTP Transport
+---
 
-For orchestrators (OpenClaw, AutoGen, LangGraph) that call MCP over HTTP instead of
-spawning a child process:
+### 2.3 VS Code (GitHub Copilot agent mode)
+
+MCP tools are available in **agent mode** only (not standard chat).
+
+**Workspace config** (checked into the repo — recommended for team use):
+
+Create `.vscode/mcp.json` in the project root:
+
+```json
+{
+  "servers": {
+    "dicefiles": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${workspaceFolder}/scripts/mcp-server.js"],
+      "env": {
+        "DICEFILES_BASE_URL": "http://localhost:9090",
+        "DICEFILES_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+**User-global config** (all workspaces — do not commit API keys):
+
+Open `settings.json` (`Ctrl+Shift+P` → _Preferences: Open User Settings (JSON)_) and
+add:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "dicefiles": {
+        "type": "stdio",
+        "command": "node",
+        "args": ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
+        "env": {
+          "DICEFILES_BASE_URL": "http://localhost:9090",
+          "DICEFILES_API_KEY": "your-api-key-here"
+        }
+      }
+    }
+  }
+}
+```
+
+Reload VS Code. Open GitHub Copilot Chat, switch to **Agent** mode, and the Dicefiles
+tools will be listed.
+
+---
+
+### 2.4 Antigravity
+
+1. Open the agent panel and click the **`…`** dropdown at the top right.
+2. Click **MCP store** → **Manage MCP Servers** → **View raw config**.
+3. Edit `mcp_config.json` to add a Dicefiles entry under `mcpServers`:
+
+```json
+{
+  "mcpServers": {
+    "dicefiles": {
+      "command": "node",
+      "args": ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
+      "env": {
+        "DICEFILES_BASE_URL": "http://localhost:9090",
+        "DICEFILES_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+Save and reload. The 13 tools are now available to Antigravity's agent.
+
+---
+
+### 2.5 Cursor
+
+**Global** (`~/.cursor/mcp.json`) or **per-project** (`.cursor/mcp.json` in
+project root):
+
+```json
+{
+  "mcpServers": {
+    "dicefiles": {
+      "command": "node",
+      "args": ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
+      "env": {
+        "DICEFILES_BASE_URL": "http://localhost:9090",
+        "DICEFILES_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+Or add via the UI: **File → Preferences → Cursor Settings → Features → MCP Servers →
+Add new MCP server**.
+
+---
+
+### 2.6 Codex CLI
+
+Codex uses TOML format at `~/.codex/config.toml`. The same file is shared by both the
+CLI and the Codex VS Code extension. **Note: Codex currently supports stdio servers
+only — the HTTP transport below is not compatible.**
+
+```toml
+# ~/.codex/config.toml
+
+[mcp_servers.dicefiles]
+command = "node"
+args    = ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"]
+
+[mcp_servers.dicefiles.env]
+DICEFILES_BASE_URL = "http://localhost:9090"
+DICEFILES_API_KEY  = "your-api-key-here"
+```
+
+> **Important**: The section key must be `mcp_servers` (underscore). Using `mcpServers`
+> or `mcp-servers` silently breaks detection.
+
+Verify inside a Codex session by typing `/mcp` — the `dicefiles` server should appear.
+
+---
+
+### 2.7 OpenCode CLI
+
+OpenCode reads `~/.config/opencode/opencode.json` (global) or
+`opencode.json` / `opencode.jsonc` in the project root (workspace).
+
+Unlike most clients, OpenCode expects `command` as an **array** (program + args
+combined), not separate `command` and `args` fields:
+
+```json
+{
+  "mcp": {
+    "dicefiles": {
+      "type": "local",
+      "command": ["node", "/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
+      "environment": {
+        "DICEFILES_BASE_URL": "http://localhost:9090",
+        "DICEFILES_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+Restart OpenCode after saving. Tools are accessible in the agent session immediately.
+
+---
+
+### 2.8 OpenClaw
+
+OpenClaw supports two integration paths: the **mcporter registry** (for calling tools
+from workflows) and an **agent skill** (for teaching the agent the full Dicefiles
+workflow so it can act autonomously). Use both for the best experience.
+
+#### mcporter (tool registry)
+
+Add Dicefiles to `~/.config/mcporter.json`:
+
+```json
+{
+  "mcpServers": {
+    "dicefiles": {
+      "command": "node",
+      "args": ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
+      "env": {
+        "DICEFILES_BASE_URL": "http://localhost:9090",
+        "DICEFILES_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+Or use the mcporter CLI:
+
+```bash
+mcporter add dicefiles -- node /absolute/path/to/Dicefiles/scripts/mcp-server.js
+# then set env via mcporter env set dicefiles DICEFILES_API_KEY your-key
+```
+
+The tools are now callable from any OpenClaw workflow step.
+
+#### Agent skill (autonomous operation)
+
+For fully autonomous operation — where the agent understands Dicefiles rooms,
+requests, and workflows without being prompted — install the bundled skill:
+
+```bash
+mkdir -p ~/.claude/skills/dicefiles
+cp /path/to/Dicefiles/scripts/openclaw-dicefiles-skill/SKILL.md \
+   ~/.claude/skills/dicefiles/
+```
+
+The skill teaches the agent the full 13-tool inventory, recommended call sequences,
+error handling, and fulfillment loop patterns. See
+`scripts/openclaw-dicefiles-skill/SKILL.md` for the full skill definition.
+
+---
+
+### 2.9 HTTP Transport (remote orchestrators)
+
+For orchestrators that connect over the network (AutoGen, LangGraph, custom agents)
+instead of spawning a local process:
 
 ```bash
 MCP_TRANSPORT=http MCP_PORT=3001 node scripts/mcp-server.js
 # → [dicefiles-mcp] HTTP transport listening at http://0.0.0.0:3001/mcp
 ```
 
-Point your agent at `http://<host>:3001/mcp`. The server speaks the Streamable HTTP
-transport spec (`POST /mcp`).
+Point your orchestrator at `http://<host>:3001/mcp`. The server implements the
+Streamable HTTP MCP transport (`POST /mcp` for JSON-RPC, `GET /mcp` for SSE event
+stream).
 
-Environment variables:
-
-| Variable             | Default                 | Description                         |
-| -------------------- | ----------------------- | ----------------------------------- |
-| `DICEFILES_BASE_URL` | `http://localhost:9090` | Dicefiles instance URL              |
-| `DICEFILES_API_KEY`  | _(empty)_               | API key — missing key triggers warn |
-| `MCP_TRANSPORT`      | `stdio`                 | `stdio` or `http`                   |
-| `MCP_PORT`           | `3001`                  | HTTP port when `MCP_TRANSPORT=http` |
+Protect the port with a reverse proxy (nginx, Caddy) and TLS before exposing it
+beyond localhost.
 
 ---
 

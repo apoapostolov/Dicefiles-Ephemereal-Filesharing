@@ -1,5 +1,56 @@
 # Dicefiles Development Log
 
+## 2026-02-24 - Expand MCP.md with all-client install guides + OpenClaw skill
+
+### Summary
+
+Expanded MCP.md Section 2 (Setup and Configuration) from 3 generic subsections to 9
+client-specific subsections covering every major MCP-capable client. Created a bundled
+OpenClaw agent skill file for autonomous room-management workflows.
+
+**MCP.md — Section 2 rewrite**: Old section 2 covered only Claude Desktop + HTTP
+transport in a single combined block. New section 2 covers 9 distinct clients in
+dedicated subsections with copy-pasteable JSON/TOML configs and client-specific notes.
+
+- 2.1 Prerequisites — `npm install`, smoke-test command, env-var table
+- 2.2 Claude Desktop — OS-specific path table + `mcpServers` JSON
+- 2.3 VS Code — workspace `.vscode/mcp.json` (`"servers"` key, `"type":"stdio"`,
+  `${workspaceFolder}`) + user `settings.json` under `"mcp"` wrapper; agent-mode note
+- 2.4 Antigravity — 3-step UI walkthrough, `mcp_config.json` with `"mcpServers"`
+- 2.5 Cursor — `~/.cursor/mcp.json` (global) / `.cursor/mcp.json` (per-project);
+  Settings UI alternative
+- 2.6 Codex CLI — TOML at `~/.codex/config.toml`, `[mcp_servers.dicefiles]` (underscore
+  mandatory, camelCase silently breaks detection); stdio-only warning; `/mcp` verify step
+- 2.7 OpenCode CLI — `~/.config/opencode/opencode.json`; `"command"` as array
+  (program + args merged); `"environment"` key rather than `"env"`; `"type":"local"`
+- 2.8 OpenClaw — mcporter `~/.config/mcporter.json` + `mcporter add` CLI one-liner;
+  agent skill install via `cp scripts/openclaw-dicefiles-skill/SKILL.md ~/.claude/skills/dicefiles/`
+- 2.9 HTTP Transport — generic orchestrators, `MCP_TRANSPORT=http MCP_PORT=3001`,
+  reverse-proxy note
+
+**OpenClaw skill** (`scripts/openclaw-dicefiles-skill/SKILL.md`): New file. Describes
+the full 13-tool inventory, three standard call sequences (discovery, new-file polling,
+request fulfillment loop), error-handling table (409 claim collision, `ok:false`
+propagation, partial upload failures), startup sequence (health → subscriptions →
+snapshot), and a configuration reference block. Intended to be installed into
+`~/.claude/skills/dicefiles/` so an OpenClaw agent can act autonomously on a Dicefiles
+room without per-session prompting.
+
+**Research findings recorded**:
+- VS Code uses `"servers"` key (not `"mcpServers"`) and requires `"type":"stdio"` field
+- OpenCode `command` is a merged array, not separate `command`+`args`; env key is `"environment"`, not `"env"`
+- Codex silently ignores `mcpServers` / `mcp-servers`; only `mcp_servers` (underscore) works
+- Codex CLI currently supports stdio only; HTTP transport is not compatible
+
+### Changed Files
+
+- **`MCP.md`** — Section 2 replaced entirely with 9-subsection client-specific install guide.
+- **`scripts/openclaw-dicefiles-skill/SKILL.md`** — New file; OpenClaw agent skill for
+  autonomous Dicefiles room automation covering all 13 MCP tools, workflow patterns,
+  and error-handling guidance.
+
+---
+
 ## 2026-02-22 - Comment cleanup, AGENTS.md rule, changelog, UI tweak
 
 ### Summary
