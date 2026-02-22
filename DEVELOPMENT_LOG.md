@@ -1,6 +1,32 @@
 # Dicefiles Development Log
 
-## 2026-02-23 - Feat: Allow-Requests / Link-Collection room toggles; Fulfill Request modal UX; P0.5-3.2 password policy
+## 2026-02-22 - Feat: Preview retry queue; README config docs
+
+### Summary
+
+Two items in one session:
+
+1. **README — new configuration options documented**: Added `allowRequests` and `linkCollection` rows to the Key Options configuration table, pointing readers to the per-room defaults introduced in the previous session.
+
+2. **Preview retry queue** (`lib/previewretry.js`, new module):
+   - When `generateAssets()` fails (e.g. transient GraphicsMagick/ffmpeg/I/O error), the existing code silently dropped the error with `.catch(console.error)`. The upload then had no cover assets permanently.
+   - New module uses a Redis sorted set (`preview:retry`, score = next-attempt-at-ms) as a durable retry queue and a Redis hash (`preview:retry:attempts`) as the attempt counter.
+   - Policy: MAX_RETRIES = 3; delays = 5 min → 15 min → 45 min; exponential back-off.
+   - Multi-worker safety: each claim is guarded by `SET preview:retry:lock:<hash> 1 NX EX 120` — only one worker processes any given hash at a time even in a multi-worker cluster. Since `addAssets` already has an idempotency guard (`assets.has`), a very rare lock race at restart causes harmless duplicate work at worst.
+   - All lazy-requires inside `processDue()` to avoid a circular dependency chain (meta → upload → previewretry → meta → ...).
+   - Timer is `unref()`-ed so it does not block clean process exit.
+   - `lib/upload.js`: on `generateAssets` failure, calls `PREVIEWRETRY.scheduleRetry(hash)` instead of `console.error`.
+   - `lib/httpserver.js`: calls `require('./previewretry').start()` at server init.
+
+### Changed files
+
+- **`README.md`** — Add `allowRequests` and `linkCollection` to the Key Options table.
+- **`lib/previewretry.js`** — New module: retry queue, poller, lock, scheduleRetry, start/stop.
+- **`lib/upload.js`** — On generateAssets failure, schedule retry instead of silent log.
+- **`lib/httpserver.js`** — Start retry poller at HTTP worker init.
+- **`TODO.md`** — Mark "Add retry queue for transient preview failures" completed.
+
+
 
 ### Summary
 
