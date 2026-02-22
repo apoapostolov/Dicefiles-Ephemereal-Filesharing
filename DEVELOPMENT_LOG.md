@@ -1,10 +1,9 @@
 # Dicefiles Development Log
 
-## 2026-02-22 — Activity table header alignment and tab panel height cap
+## 2026-02-22 — Activity table header centering and stretch fix
 
-- `entries/css/page.css` — Changed `.activity-table thead th` from `text-align: left` to `text-align: center` so all column labels center over their data.
-- `entries/css/page.css` — Added `max-height: 520px; overflow: hidden` to `.profile-tabbed` so the tab area never stretches to fill the viewport when few rows are present.
-- `entries/css/page.css` — Added `max-height: 460px; overflow-y: auto` to `.profile-message`, `.profile-achievements`, and `.profile-activity` so tab content scrolls within the capped container rather than clipping. Added `.profile-activity` to the shared panel border/background rule so it receives the same card appearance as the other tab panels.
+- `entries/css/page.css` — Added `align-self: start` to `.profile-tabbed`. Root cause: `#userprofile` is a CSS grid whose items default to `align-items: stretch`, so the tabbed panel was expanding to fill the full row height and pushing the table toward the bottom. `align-self: start` makes the cell shrink-wrap to its content.
+- `entries/css/page.css` — Changed `thead th` `text-align` from `left` to `center` so all column headers are centered.
 
 ## 2026-02-22 — Fix uploader pill URL and activity table base.css border bleed
 
