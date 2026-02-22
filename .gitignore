@@ -15,10 +15,8 @@ uploads/
 /.project
 dump.rdb
 AGENTS.md
-TODO.md
 DEVELOPMENT_LOG.md
-UI_STYLE.md
-
-ACHIEVEMENT_SYSTEM.md
+docs/
+tests/
 server.log
 ops.log

@@ -4,8 +4,8 @@
 module.exports = {
   testEnvironment: "node",
 
-  // Discover all tests under test/
-  testMatch: ["**/test/**/*.test.js"],
+  // Discover all tests under tests/
+  testMatch: ["**/tests/**/*.test.js"],
 
   // Generous timeout for integration tests that hit the live server
   testTimeout: 20000,

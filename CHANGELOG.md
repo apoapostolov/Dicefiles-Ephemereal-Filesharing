@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.2.0] - 2026-02-22
 
 ### Added
 
@@ -47,6 +47,8 @@
 ### Fixed
 
 - **EPUB/MOBI dark text on dark background**: Publisher-embedded colour declarations no longer render as dark-on-dark. All body text is now overridden to light grey (`#e8e8e8`); link colours remain distinct.
+
+- **EPUB cover page blank on first open**: Calibre-generated EPUBs (and many EPUB3 files) use an SVG cover page with `<image xlink:href="cover.jpeg"/>`. The reader now rewrites `xlink:href` and bare `href` attributes on SVG `<image>` elements to blob: URLs, so the cover renders correctly instead of producing a 404.
 
 ## [1.1.0] - 2026-02-21
 

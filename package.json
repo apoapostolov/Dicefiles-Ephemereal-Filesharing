@@ -1,6 +1,6 @@
 {
   "name": "dicefiles",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Ephemereal Filesharing for Hobby Communities",
   "main": "server.js",
   "author": "RealDolos <dolos@cock.li>",
@@ -10,8 +10,8 @@
     "prestart": "webpack --mode=production",
     "restart": "sh ./scripts/restart-server.sh",
     "test": "node ./node_modules/.bin/jest",
-    "test:unit": "node ./node_modules/.bin/jest test/unit test/views",
-    "test:integration": "node ./node_modules/.bin/jest test/integration",
+    "test:unit": "node ./node_modules/.bin/jest tests/unit tests/views",
+    "test:integration": "node ./node_modules/.bin/jest tests/integration",
     "test:coverage": "node ./node_modules/.bin/jest --coverage"
   },
   "dependencies": {
