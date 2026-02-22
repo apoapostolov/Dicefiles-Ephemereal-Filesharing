@@ -1,6 +1,22 @@
 # Dicefiles Development Log
 
-## 2026-02-22 - Feature: Request Workflow Maturity (P0-3)
+## 2026-02-22 - Fix: EPUB pagination, fulfilled pill, drop zone, modal drag
+
+Four bug fixes targeting the EPUB/MOBI reader, request fulfilled styling, the RequestViewModal upload zone, and drag-and-drop interception.
+
+**Root causes & fixes:**
+- `BookReader._renderChapter` measured the CSS multi-column sentinel inside the `load` event handler, which fires before the browser finalises column geometry. Result: `totalPages` always returned 1 after a font-size change, making pagination buttons appear broken. Fix: wrapped the measurement in `requestAnimationFrame`; also added explicit `_loaded = true` fallback so buttons are never permanently silenced.
+- Fulfilled requests showed strikethrough (unwanted). Replaced with a grey `Fulfilled` pill element appended into `.nameEl` alongside the name text. Pill is created/removed on status transitions (constructor + `update()`).
+- `RequestViewModal` upload zone used a plain dashed outline with small text. Redesigned to match the room's dropminder overlay: dark gradient background, thick dashed border, bold "Drop Files Here" heading, sub-caption "or click to choose". Label resets to default text when staged file list empties.
+- `requestModalOpen` only detected `.modal-requestcreate`, so drag events over the open `RequestViewModal` passed through to the room upload handler and/or spawned the full-page drop overlay. Added `.modal-requestview` to the check so all drag/drop paths correctly defer to the modal's own handlers.
+
+**Changed files:**
+- `client/files/reader.js` — `_renderChapter` load handler: add rAF wrapper + error fallback for `_loaded`
+- `client/files/file.js` — add `fulfilledPillEl`; create/remove in constructor and `update()`
+- `client/files/requestmodal.js` — dropminder-style zone markup ("Drop Files Here" + hint); reset label on empty staged list
+- `client/files.js` — `requestModalOpen` now checks for both `.modal-requestcreate` and `.modal-requestview`
+- `entries/css/files.css` — remove strikethrough; add `.request-fulfilled-pill` style
+- `entries/css/modal.css` — new upload zone CSS: dark bg, thick dashed border, large label, hover/drag states
 
 Implemented the full request status lifecycle — clicking a request now opens a management modal, uploaded files can be linked to a request, and fulfilled requests are visually distinct.
 
