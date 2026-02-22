@@ -238,7 +238,8 @@ When the user requests a changelog update, agents must follow this procedure exa
 1. Read `DEVELOPMENT_LOG.md` in full from the most recent entry backward until you reach an entry that is already represented in `CHANGELOG.md`.
 2. Identify every entry that is **user-visible** — features the user can directly interact with, or bugs that would have been noticed during normal use.
 3. Discard: internal refactors, build-system tweaks, CSS micro-polishes the user cannot distinguish from the prior state, code comments, and log/doc-only commits. When in doubt, ask: _"Would a user notice if this were absent?"_ If the answer is no, omit it.
-4. Group surviving entries by their natural type: `Added`, `Changed`, `Fixed`, or `Removed`.
+4. **Never add `Changed` or `Fixed` entries for features that were first introduced in the same version.** If a feature debuts in the current version under `Added`, every fix and polish applied to it before release is already part of the base implementation — record none of it in `Changed` or `Fixed`. Only write `Changed` and `Fixed` bullets for regressions, improvements, or changes to features that shipped in a **prior released version**.
+5. Group surviving entries by their natural type: `Added`, `Changed`, `Fixed`, or `Removed`.
 
 ### Writing style requirements
 
@@ -258,15 +259,16 @@ When the user requests a changelog update, agents must follow this procedure exa
 
 ### What does NOT go in the changelog
 
-| Category | Example | Decision |
-|---|---|---|
-| Build / infra | webpack config change, Node version pin | Omit |
-| CSS micro-polish | 2 px alignment tweak | Omit unless user-visible |
-| Dependency sync only | `package.json` version bump matching already-logged dep change | Omit |
-| Log / gitignore | `server.log` added to `.gitignore` | Omit |
-| AGENTS.md updates | New agent rules or procedures | Omit |
-| README edits | Corrected a badge URL | Omit |
-| Bug invisible to user | Internal Redis key format fixed | Omit |
-| **Major feature** | Request Fulfillment Workflow | **Include** |
-| **UX-visible bug fix** | EPUB pagination broke after font-size change | **Include** |
-| **Visible state change** | Fulfilled requests show a pill badge instead of strikethrough | **Include** |
+| Category                 | Example                                                        | Decision                 |
+| ------------------------ | -------------------------------------------------------------- | ------------------------ |
+| Build / infra            | webpack config change, Node version pin                        | Omit                     |
+| CSS micro-polish         | 2 px alignment tweak                                           | Omit unless user-visible |
+| Dependency sync only     | `package.json` version bump matching already-logged dep change | Omit                     |
+| Log / gitignore          | `server.log` added to `.gitignore`                             | Omit                     |
+| AGENTS.md updates        | New agent rules or procedures                                  | Omit                     |
+| README edits             | Corrected a badge URL                                          | Omit                     |
+| Bug invisible to user    | Internal Redis key format fixed                                | Omit                     |
+| Fix/change to same-version feature | EPUB options-panel navigation fix shipped in same version as typography options panel | Omit — fold into the base `Added` description or omit entirely |
+| **Major feature**        | Request Fulfillment Workflow                                   | **Include**              |
+| **UX-visible bug fix**   | EPUB pagination broke after font-size change                   | **Include**              |
+| **Visible state change** | Fulfilled requests show a pill badge instead of strikethrough  | **Include**              |

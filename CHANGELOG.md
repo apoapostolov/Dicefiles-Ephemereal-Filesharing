@@ -24,22 +24,12 @@
 
 ### Changed
 
-- **Manga/Webtoon as a pill**: The two view-mode buttons are now a single segmented pill (`#reader-view-pill`) placed to the left of the download button.
-
-- **Webtoon PageDown / PageUp**: In webtoon mode PageDown/PageUp scroll by exactly one full page height rather than jumping to the next chapter.
-
-- **Webtoon stream-ahead loading**: The webtoon lazy-loader now preloads the next 10 pages as each image enters the viewport (previously one at a time), with a 600 px scroll margin. This eliminates the blank-image flash during fast continuous scrolling.
-
 - **API file-listing filters**: `GET /api/v1/files` and `GET /api/v1/downloads` accept new `name_contains` (case-insensitive substring match) and `ext` (comma-separated extension list) query parameters, combinable with existing `type`, `scope`, and `since` filters.
 
 - Switched to serving a full `/favicon` directory of multiple icon sizes and manifest; updated templates and CSS to point at new paths.
 
 ### Fixed
 
-- **EPUB/MOBI page navigation after typography changes**: Adjusting font size, line spacing, or margins in the reader options panel previously caused Left/Right arrow navigation to stop working for the remainder of the session. Root cause: the CSS multi-column geometry sentinel was measured inside the iframe `load` event before the browser had resolved column widths, so `totalPages` was always computed as 1. Fixed by deferring the measurement to a `requestAnimationFrame` callback so layout is fully settled before the page count is taken.
-
-- **"Comic archive has no readable pages"** for the Batman Dark Designs .cbz — on-demand index rebuild now kicks in automatically.
-- **CBZ override** — `.cbz` files with internal RAR containers were stored as `meta.type = "RAR"` and rejected by the reader API. Extension now always wins over detected container format.
 - **EPUB/MOBI dark text on dark background**: Publisher-embedded colour declarations no longer render as dark-on-dark. All body text is now overridden to light grey (`#e8e8e8`); link colours remain distinct.
 
 ## [1.1.0] - 2026-02-21
@@ -64,8 +54,6 @@
 
 - Gallery overlay retained the previous file's cover image when navigating to a file that has no cover. The image element is now replaced wholesale with a fresh `<img>` to clear all cached source state.
 - Asset/preview generation gracefully degrades when helper binaries (GraphicsMagick, ffmpeg, etc.) are missing. Missing tooling simply causes no previews or covers; there is no crash.
-- Links Archive toggle button was non-functional due to a CSS specificity conflict: `#files.listmode { display: block !important }` overrode `.hidden { display: none !important }`. Fixed by scoping the rule to `:not(.hidden)`.
-- Link rows in the archive were unstyled; the element class names now match the existing file row CSS (`.name`, `.name-text`, `.file-new-pill`, `.tags`, `.tag`, `.detail`).
 - PDF (and all file) serving returned HTTP 403 Forbidden after a workspace cleanup wiped the uploads directory. Stale deduplication entries in Redis caused the server to discard a freshly-uploaded file and attempt to stream the deleted one. Fix: verify the physical file exists before reusing a dedup entry; re-upload and regenerate metadata/thumbnails when stale. Additionally, ENOENT stream errors in the serve handler now yield 404 Not Found instead of 403.
 
 ## [1.0.0] - 2026-02-17

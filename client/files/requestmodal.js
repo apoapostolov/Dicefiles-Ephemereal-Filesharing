@@ -38,8 +38,8 @@ export default class RequestModal extends Modal {
     });
     this.previewTextEl = dom("div", {
       classes: ["request-image-drop-text"],
-      text: "Drop stuff here",
     });
+    this.previewTextEl.innerHTML = "Drop Cover<br>or Image";
     this.previewEl.appendChild(this.previewTextEl);
     this.previewEl.addEventListener("click", this.onpick.bind(this));
     this.body.appendChild(this.previewEl);
