@@ -40,7 +40,7 @@ export default class Gallery {
 
     this.downloadEl.addEventListener(
       "click",
-      (e) => {
+      e => {
         e.preventDefault();
         e.stopPropagation();
         if (this.file && !this.file.isRequest) {
@@ -76,7 +76,7 @@ export default class Gallery {
 
   onreadnow(e) {
     nukeEvent(e);
-    const file = this.file;
+    const {file} = this;
     this.close();
     this.reader.open(file);
   }
@@ -116,7 +116,8 @@ export default class Gallery {
 
     if (e.deltaY > 0) {
       this.next();
-    } else {
+    }
+    else {
       this.prev();
     }
   }
@@ -218,7 +219,7 @@ export default class Gallery {
       const sx = img.naturalWidth - sw;
       const sy = 0;
       ctx.drawImage(img, sx, sy, sw, sh, 0, 0, size, size);
-      const data = ctx.getImageData(0, 0, size, size).data;
+      const {data} = ctx.getImageData(0, 0, size, size);
       let brightness = 0;
       const pixels = size * size;
       for (let i = 0; i < data.length; i += 4) {
@@ -229,7 +230,8 @@ export default class Gallery {
       const dark = brightness < 140;
       this.downloadEl.classList.toggle("dl-light", dark);
       this.downloadEl.classList.toggle("dl-dark", !dark);
-    } catch (_) {
+    }
+    catch (_) {
       // Cross-origin or unavailable — default to light icon on dark gallery bg
       this.downloadEl.classList.add("dl-light");
       this.downloadEl.classList.remove("dl-dark");
@@ -272,7 +274,8 @@ export default class Gallery {
         img.setAttribute("sizes", info.sizes);
       }
       img.src = info.img;
-    } else if (info.video) {
+    }
+    else if (info.video) {
       const video = document.createElement("video");
       video.id = this.imgEl.id;
       video.src = info.video;
@@ -291,7 +294,8 @@ export default class Gallery {
         this.downloadEl.classList.add("dl-light");
         this.downloadEl.classList.remove("dl-dark");
       };
-    } else {
+    }
+    else {
       // No cover image (e.g. EPUB/MOBI without embedded cover) —
       // cancel the loader.png placeholder and replace imgEl with a
       // clean empty element so the previous file's cover does not persist.
@@ -321,7 +325,8 @@ export default class Gallery {
     u.hash = `#${file.key}`;
     if (document.location.hash) {
       history.replaceState(null, "", u.href);
-    } else {
+    }
+    else {
       history.pushState(null, "", u.href);
     }
 

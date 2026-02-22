@@ -44,7 +44,8 @@ function master() {
     if (process.env.NODE_ENV === "production") {
       console.error(`[security] FATAL: ${msg}`);
       process.exit(1);
-    } else {
+    }
+    else {
       console.warn(`[security] WARN: ${msg}`);
     }
   }
@@ -58,15 +59,17 @@ function master() {
       console.log(
         "[security] Firejail sandbox: active (jail=true, binary found)",
       );
-    } catch (_e) {
+    }
+    catch (_e) {
       console.warn(
         "[security] Firejail sandbox: DISABLED — jail=true in config but the " +
           "'firejail' binary was not found on PATH. " +
           "Preview commands will run without sandboxing. " +
-          'Install firejail or set { "jail": false } to suppress this warning.',
+          "Install firejail or set { \"jail\": false } to suppress this warning.",
       );
     }
-  } else {
+  }
+  else {
     console.log("[security] Firejail sandbox: disabled (jail=false)");
   }
 
@@ -91,15 +94,18 @@ function master() {
     console.log(
       `Point your browser to https://0.0.0.0:${_tlsport}/ (HTTP on ${_port})`,
     );
-  } else {
+  }
+  else {
     console.log(`Point your browser to http://0.0.0.0:${_port}/`);
   }
 }
 
 if (cluster.isMaster) {
   master();
-} else if (process.env[EXPIRATION_WORKER]) {
+}
+else if (process.env[EXPIRATION_WORKER]) {
   require("./lib/expiration");
-} else {
+}
+else {
   require("./lib/httpserver");
 }

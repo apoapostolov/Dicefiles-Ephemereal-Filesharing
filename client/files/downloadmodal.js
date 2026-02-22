@@ -1,7 +1,7 @@
 "use strict";
 
 import Modal from "../modal";
-import {dom} from "../util";
+import { dom } from "../util";
 
 export default class DownloadBatchModal extends Modal {
   constructor(title, total, options = {}) {
@@ -44,17 +44,19 @@ export default class DownloadBatchModal extends Modal {
       text: "",
     });
 
-    this.optionsEl = dom("div", {classes: ["download-options"]});
+    this.optionsEl = dom("div", { classes: ["download-options"] });
     const skipLabel = dom("label", {
-      classes: ["download-option", "download-option-skip"]
+      classes: ["download-option", "download-option-skip"],
     });
     this.skipExistingEl = dom("input", {
-      attrs: {type: "checkbox"},
+      attrs: { type: "checkbox" },
     });
     this.skipExistingEl.checked = defaultSkipExisting;
-    this.skipExistingEl.addEventListener("change", () => this.notifyOptionsChange());
+    this.skipExistingEl.addEventListener("change", () =>
+      this.notifyOptionsChange(),
+    );
     skipLabel.appendChild(this.skipExistingEl);
-    skipLabel.appendChild(dom("span", {text: "Skip existing filenames"}));
+    skipLabel.appendChild(dom("span", { text: "Skip existing filenames" }));
     this.optionsEl.appendChild(skipLabel);
 
     this.controlsEl = dom("div", {
@@ -75,11 +77,17 @@ export default class DownloadBatchModal extends Modal {
       },
       classes: ["download-retry-input"],
     });
-    this.retryInputEl.addEventListener("input", () => this.notifyOptionsChange());
-    this.retryInputEl.addEventListener("wheel", e => {
-      e.preventDefault();
-      this.retryInputEl.blur();
-    }, {passive: false});
+    this.retryInputEl.addEventListener("input", () =>
+      this.notifyOptionsChange(),
+    );
+    this.retryInputEl.addEventListener(
+      "wheel",
+      e => {
+        e.preventDefault();
+        this.retryInputEl.blur();
+      },
+      { passive: false },
+    );
     this.retryInfoEl.appendChild(this.retryInputEl);
     this.controlsEl.appendChild(this.retryInfoEl);
 
@@ -97,11 +105,17 @@ export default class DownloadBatchModal extends Modal {
       },
       classes: ["download-retry-input", "download-concurrent-input"],
     });
-    this.concurrentInputEl.addEventListener("input", () => this.notifyOptionsChange());
-    this.concurrentInputEl.addEventListener("wheel", e => {
-      e.preventDefault();
-      this.concurrentInputEl.blur();
-    }, {passive: false});
+    this.concurrentInputEl.addEventListener("input", () =>
+      this.notifyOptionsChange(),
+    );
+    this.concurrentInputEl.addEventListener(
+      "wheel",
+      e => {
+        e.preventDefault();
+        this.concurrentInputEl.blur();
+      },
+      { passive: false },
+    );
     this.concurrentInfoEl.appendChild(this.concurrentInputEl);
     this.controlsEl.appendChild(this.concurrentInfoEl);
     this.optionsEl.appendChild(this.controlsEl);
@@ -147,7 +161,7 @@ export default class DownloadBatchModal extends Modal {
     super.dismiss();
   }
 
-  async onclick(button, e) {
+  onclick(button, e) {
     e.preventDefault();
     e.stopPropagation();
     if (button.id === "start") {
@@ -202,7 +216,9 @@ export default class DownloadBatchModal extends Modal {
     if (this.retryInputEl) {
       this.retryInputEl.value = this.maxRetries.toString();
     }
-    const concurrent = Number(this.concurrentInputEl && this.concurrentInputEl.value);
+    const concurrent = Number(
+      this.concurrentInputEl && this.concurrentInputEl.value,
+    );
     this.maxConcurrent = Number.isFinite(concurrent) ?
       Math.max(1, Math.min(4, Math.floor(concurrent))) :
       4;
@@ -237,10 +253,11 @@ export default class DownloadBatchModal extends Modal {
 
   update(done, failed, skipped = 0) {
     const finished = done + failed + skipped;
-    const percent = this.total ? Math.floor((finished / this.total) * 100) : 100;
+    const percent = this.total ?
+      Math.floor((finished / this.total) * 100) :
+      100;
     this.progressBarEl.style.width = `${percent}%`;
-    this.statusEl.textContent =
-      `Downloaded ${done}/${this.total} (${failed} failed, ${skipped} skipped)`;
+    this.statusEl.textContent = `Downloaded ${done}/${this.total} (${failed} failed, ${skipped} skipped)`;
   }
 
   upsertFileStatus(fileName, status, attempt = 1, detail = "") {
@@ -250,16 +267,28 @@ export default class DownloadBatchModal extends Modal {
     const key = `${fileName}`;
     let row = this.fileRows.get(key);
     if (!row) {
-      row = dom("li", {classes: ["download-report-item"]});
-      const nameEl = dom("span", {classes: ["download-report-name"], text: fileName});
-      const statusEl = dom("span", {classes: ["download-report-state"], text: ""});
+      row = dom("li", { classes: ["download-report-item"] });
+      const nameEl = dom("span", {
+        classes: ["download-report-name"],
+        text: fileName,
+      });
+      const statusEl = dom("span", {
+        classes: ["download-report-state"],
+        text: "",
+      });
       row.appendChild(nameEl);
       row.appendChild(statusEl);
       this.fileRows.set(key, row);
       this.reportListEl.appendChild(row);
     }
     const statusEl = row.lastElementChild;
-    row.classList.remove("is-success", "is-failed", "is-skipped", "is-retrying", "is-running");
+    row.classList.remove(
+      "is-success",
+      "is-failed",
+      "is-skipped",
+      "is-retrying",
+      "is-running",
+    );
     row.classList.add(`is-${status}`);
     const attemptInfo = attempt > 1 ? ` (attempt ${attempt})` : "";
     statusEl.textContent = `${status}${attemptInfo}${detail ? ` - ${detail}` : ""}`;
@@ -267,14 +296,15 @@ export default class DownloadBatchModal extends Modal {
 
   finish(done, failed, skipped, cancelled, report = null) {
     this.update(done, failed, skipped);
-    this.currentEl.textContent = cancelled ? "Cancelled by user." : "Completed.";
+    this.currentEl.textContent = cancelled ?
+      "Cancelled by user." :
+      "Completed.";
     this.statusEl.textContent = cancelled ?
       `Cancelled: ${done}/${this.total} downloaded (${failed} failed, ${skipped} skipped)` :
       `Finished: ${done}/${this.total} downloaded (${failed} failed, ${skipped} skipped)`;
 
     if (report) {
-      this.reportSummaryEl.textContent =
-        `Report: ${report.success.length} success, ${report.failed.length} failed, ${report.skipped.length} skipped.`;
+      this.reportSummaryEl.textContent = `Report: ${report.success.length} success, ${report.failed.length} failed, ${report.skipped.length} skipped.`;
     }
 
     if (this.startBtn) {

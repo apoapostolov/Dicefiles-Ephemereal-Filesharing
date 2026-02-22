@@ -14,14 +14,14 @@ import Upload from "./files/upload";
 import registry from "./registry";
 import Scroller from "./scroller";
 import {
-    PromisePool,
-    debounce,
-    dom,
-    idle,
-    iter,
-    naturalCaseSort,
-    riter,
-    sort,
+  PromisePool,
+  debounce,
+  dom,
+  idle,
+  iter,
+  naturalCaseSort,
+  riter,
+  sort,
 } from "./util";
 
 const ROBOCOPFILES =
@@ -121,7 +121,7 @@ export default new (class Files extends EventEmitter {
     addEventListener("dragleave", this.ondragleave, true);
     addEventListener("mouseout", this.ondragleave, true);
 
-    this.filterButtons.forEach((e) => {
+    this.filterButtons.forEach(e => {
       e.addEventListener("click", this.onfilterbutton, true);
       e.addEventListener("contextmenu", this.onfilterbutton, true);
     });
@@ -148,12 +148,12 @@ export default new (class Files extends EventEmitter {
       passive: true,
     });
 
-    document
-      .querySelector("#selectall")
-      .addEventListener("click", this.selectAll.bind(this));
-    document
-      .querySelector("#clearselection")
-      .addEventListener("click", this.clearSelection.bind(this));
+    document.
+      querySelector("#selectall").
+      addEventListener("click", this.selectAll.bind(this));
+    document.
+      querySelector("#clearselection").
+      addEventListener("click", this.clearSelection.bind(this));
     this.downloadNewEl.addEventListener("click", this.downloadNew.bind(this));
     this.downloadAllEl.addEventListener("click", this.downloadAll.bind(this));
     this.createRequestEl.addEventListener(
@@ -222,9 +222,9 @@ export default new (class Files extends EventEmitter {
   }
 
   get visible() {
-    return Array.from(document.querySelectorAll(".file:not(.upload)"))
-      .map((e) => this.elmap.get(e))
-      .filter((e) => e);
+    return Array.from(document.querySelectorAll(".file:not(.upload)")).
+      map(e => this.elmap.get(e)).
+      filter(e => e);
   }
 
   init() {
@@ -287,7 +287,8 @@ export default new (class Files extends EventEmitter {
       const parsed = JSON.parse(raw);
       const v = Number(parsed && parsed.lastSeenServerTime);
       this.newSinceServerTime = Number.isFinite(v) && v > 0 ? v : fallback;
-    } catch (ex) {
+    }
+    catch (ex) {
       this.newSinceServerTime = fallback;
     }
   }
@@ -300,7 +301,8 @@ export default new (class Files extends EventEmitter {
           lastSeenServerTime: registry.roomie.toServerTime(Date.now()),
         }),
       );
-    } catch (ex) {
+    }
+    catch (ex) {
       // ignored
     }
   }
@@ -316,17 +318,18 @@ export default new (class Files extends EventEmitter {
   }
 
   persistViewMode() {
-    const value = this.linksMode
-      ? "links"
-      : this.galleryMode
-        ? "gallery"
-        : "list";
+    const value = this.linksMode ?
+      "links" :
+      this.galleryMode ?
+        "gallery" :
+        "list";
     try {
       if (this.viewModeKey) {
         localStorage.setItem(this.viewModeKey, value);
       }
       localStorage.setItem(VIEW_MODE_GLOBAL_KEY, value);
-    } catch (ex) {
+    }
+    catch (ex) {
       // ignored
     }
   }
@@ -338,7 +341,8 @@ export default new (class Files extends EventEmitter {
       if (mode !== "gallery" && mode !== "list" && mode !== "links") {
         mode = localStorage.getItem(VIEW_MODE_GLOBAL_KEY);
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       mode = null;
     }
     if (mode !== "gallery" && mode !== "list" && mode !== "links") {
@@ -349,7 +353,8 @@ export default new (class Files extends EventEmitter {
       // Links mode restore is deferred to after links.init() runs
       // We store the intent and apply after init
       this._pendingLinksRestore = true;
-    } else {
+    }
+    else {
       this.applyViewMode(mode === "gallery", false);
     }
   }
@@ -396,15 +401,16 @@ export default new (class Files extends EventEmitter {
       e.preventDefault();
       e.stopPropagation();
       const { tag, tagValue } = el.dataset;
-      let val = /[\s'"]/.test(tagValue)
-        ? `'${tagValue.replace(/'/g, "\\'")}'`
-        : tagValue;
+      let val = /[\s'"]/.test(tagValue) ?
+        `'${tagValue.replace(/'/g, "\\'")}'` :
+        tagValue;
       if (val === "true") {
         val = "";
       }
       if (e.button || e.shiftKey) {
         this.filter.value = `${this.filter.value} -${tag}:${val}`.trim();
-      } else {
+      }
+      else {
         this.filter.value = `${tag}:${val}`.trim();
       }
       this.doFilter();
@@ -427,16 +433,18 @@ export default new (class Files extends EventEmitter {
       const { filterButtons: btns } = this;
       if (e.button) {
         const anyEnabled = btns.some(
-          (e) => e !== btn && !e.classList.contains("disabled"),
+          e => e !== btn && !e.classList.contains("disabled"),
         );
-        btns.forEach((e) => {
+        btns.forEach(e => {
           e.classList[e === btn || !anyEnabled ? "remove" : "add"]("disabled");
         });
-      } else {
+      }
+      else {
         const act = btn.classList.contains("disabled") ? "remove" : "add";
         btn.classList[act]("disabled");
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error(ex);
     }
     this.doFilter();
@@ -447,7 +455,7 @@ export default new (class Files extends EventEmitter {
   }
 
   clearFilter() {
-    this.filterButtons.forEach((e) => e.classList.remove("disabled"));
+    this.filterButtons.forEach(e => e.classList.remove("disabled"));
     this.filter.value = "";
 
     this.doFilter();
@@ -475,14 +483,16 @@ export default new (class Files extends EventEmitter {
     let result;
     if (filterFunc === filesfilter.NONE) {
       result = [];
-    } else if (filterFunc) {
+    }
+    else if (filterFunc) {
       result = files.filter(filterFunc);
-    } else {
+    }
+    else {
       result = files;
     }
     if (this.showingNewOnly) {
       result = result.filter(
-        (f) => Number(f.uploaded) > this.newSinceServerTime,
+        f => Number(f.uploaded) > this.newSinceServerTime,
       );
     }
     return result;
@@ -492,7 +502,7 @@ export default new (class Files extends EventEmitter {
     const files = this.filtered(this.files);
     if (!files || !files.length) {
       return APOOL.schedule(null, () => {
-        this.visible.forEach((e) => e.el.parentElement.removeChild(e.el));
+        this.visible.forEach(e => e.el.parentElement.removeChild(e.el));
       });
     }
 
@@ -501,7 +511,7 @@ export default new (class Files extends EventEmitter {
     // Remove now hidden
     let diff = false;
     const remove = [];
-    visible.forEach((e) => {
+    visible.forEach(e => {
       if (fileset.has(e)) {
         return;
       }
@@ -536,7 +546,8 @@ export default new (class Files extends EventEmitter {
   updateStatus() {
     if (!this.files.length) {
       this.filterStatus.classList.add("hidden");
-    } else {
+    }
+    else {
       const text = `${this.visible.length} of ${this.files.length} files`;
       if (this.filterStatus.textContent !== text) {
         this.filterStatus.textContent = text;
@@ -550,18 +561,19 @@ export default new (class Files extends EventEmitter {
 
     if (!this.newFiles) {
       this.newStatus.classList.add("hidden");
-    } else {
+    }
+    else {
       this.newStatus.classList.remove("hidden");
     }
     this.updateDownloadButtons();
   }
 
   get allDownloadable() {
-    return this.files.filter((f) => !f.expired && !(f.meta && f.meta.request));
+    return this.files.filter(f => !f.expired && !(f.meta && f.meta.request));
   }
 
   get newDownloadable() {
-    return this.allDownloadable.filter((f) =>
+    return this.allDownloadable.filter(f =>
       f.el.classList.contains("is-new"),
     );
   }
@@ -594,17 +606,17 @@ export default new (class Files extends EventEmitter {
       const modal = new RequestModal();
       const payload = await registry.roomie.showModal(modal);
       const text =
-        typeof payload === "string"
-          ? payload.trim()
-          : ((payload && payload.text) || "").trim();
+        typeof payload === "string" ?
+          payload.trim() :
+          ((payload && payload.text) || "").trim();
       const requestUrl =
-        payload && typeof payload === "object"
-          ? (payload.url || "").trim()
-          : "";
+        payload && typeof payload === "object" ?
+          (payload.url || "").trim() :
+          "";
       const requestImage =
-        payload && typeof payload === "object"
-          ? (payload.requestImage || "").trim()
-          : "";
+        payload && typeof payload === "object" ?
+          (payload.requestImage || "").trim() :
+          "";
       if (!text) {
         return;
       }
@@ -620,7 +632,7 @@ export default new (class Files extends EventEmitter {
             url: requestUrl,
             requestImage,
           },
-          (rv) => {
+          rv => {
             clearTimeout(timeout);
             resolve(rv || {});
           },
@@ -629,7 +641,8 @@ export default new (class Files extends EventEmitter {
       if (ack.err) {
         throw new Error(ack.err);
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       if (!ex || ex.message === "cancelled") {
         return;
       }
@@ -647,7 +660,8 @@ export default new (class Files extends EventEmitter {
       let result;
       try {
         result = await registry.roomie.showModal(modal);
-      } catch (ex) {
+      }
+      catch (ex) {
         if (!ex || ex.message === "cancelled") {
           return;
         }
@@ -659,11 +673,11 @@ export default new (class Files extends EventEmitter {
       const { action } = result;
       if (action === "remove" || action === "fulfill" || action === "reopen") {
         const status =
-          action === "reopen"
-            ? "open"
-            : action === "remove"
-              ? "removed"
-              : "fulfilled";
+          action === "reopen" ?
+            "open" :
+            action === "remove" ?
+              "removed" :
+              "fulfilled";
         const ack = await new Promise((resolve, reject) => {
           const timeout = setTimeout(
             () => reject(new Error("Request timeout")),
@@ -672,7 +686,7 @@ export default new (class Files extends EventEmitter {
           registry.socket.emit(
             "requeststatus",
             { key: fileInst.key, status },
-            (rv) => {
+            rv => {
               clearTimeout(timeout);
               resolve(rv || {});
             },
@@ -682,7 +696,8 @@ export default new (class Files extends EventEmitter {
           throw new Error(ack.err);
         }
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       if (!ex || ex.message === "cancelled") {
         return;
       }
@@ -700,7 +715,8 @@ export default new (class Files extends EventEmitter {
       }
       const parsed = JSON.parse(raw);
       return parsed && typeof parsed === "object" ? parsed : fallback;
-    } catch (ex) {
+    }
+    catch (ex) {
       return fallback;
     }
   }
@@ -708,7 +724,8 @@ export default new (class Files extends EventEmitter {
   writeLocalJSON(key, value) {
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch (ex) {
+    }
+    catch (ex) {
       // ignored
     }
   }
@@ -745,7 +762,7 @@ export default new (class Files extends EventEmitter {
     }
     const data = this.readLocalJSON(this.downloadedNamesKey, { names: [] });
     this.downloadedNameSet = new Set(
-      (data.names || []).map((e) => e.toString().toLowerCase()),
+      (data.names || []).map(e => e.toString().toLowerCase()),
     );
     return this.downloadedNameSet;
   }
@@ -780,7 +797,7 @@ export default new (class Files extends EventEmitter {
         1,
         Math.min(4, Number(options.maxConcurrent) || 4),
       ),
-      remainingKeys: files.map((f) => f.key),
+      remainingKeys: files.map(f => f.key),
       createdAt: Date.now(),
       started: false,
     };
@@ -805,7 +822,8 @@ export default new (class Files extends EventEmitter {
   clearBatchQueue() {
     try {
       localStorage.removeItem(this.batchQueueKey);
-    } catch (ex) {
+    }
+    catch (ex) {
       // ignored
     }
   }
@@ -827,9 +845,9 @@ export default new (class Files extends EventEmitter {
       this.clearBatchQueue();
       return;
     }
-    const files = queue.remainingKeys
-      .map((key) => this.filemap.get(key))
-      .filter((f) => f && !f.expired && !(f.meta && f.meta.request));
+    const files = queue.remainingKeys.
+      map(key => this.filemap.get(key)).
+      filter(f => f && !f.expired && !(f.meta && f.meta.request));
     if (!files.length) {
       this.clearBatchQueue();
       return;
@@ -860,7 +878,7 @@ export default new (class Files extends EventEmitter {
       skipExisting: queueState.skipExisting,
       retries: queueState.maxRetries,
       concurrent: queueState.maxConcurrent,
-      onOptionsChange: (values) => {
+      onOptionsChange: values => {
         this.saveDownloadPrefs(values);
         queueState.skipExisting = !!values.skipExisting;
         queueState.maxRetries = Math.max(
@@ -893,7 +911,8 @@ export default new (class Files extends EventEmitter {
       );
       this.saveDownloadPrefs(values);
       this.persistBatchQueue(queueState);
-    } catch (ex) {
+    }
+    catch (ex) {
       // Cancelled before start
       modal.cancelRequested = true;
       this.clearBatchQueue();
@@ -936,12 +955,12 @@ export default new (class Files extends EventEmitter {
       total,
     );
 
-    const removeRemaining = (key) => {
+    const removeRemaining = key => {
       if (!queueState || !Array.isArray(queueState.remainingKeys)) {
         return;
       }
       queueState.remainingKeys = queueState.remainingKeys.filter(
-        (k) => k !== key,
+        k => k !== key,
       );
       this.persistBatchQueue(queueState);
     };
@@ -988,7 +1007,8 @@ export default new (class Files extends EventEmitter {
             this.markFilenameDownloaded(file.name);
             modal.upsertFileStatus(file.name, "success", attempt);
             break;
-          } catch (ex) {
+          }
+          catch (ex) {
             lastErr = ex;
             if (attempt < maxAttempts) {
               modal.upsertFileStatus(
@@ -1043,7 +1063,8 @@ export default new (class Files extends EventEmitter {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-    } finally {
+    }
+    finally {
       setTimeout(() => URL.revokeObjectURL(url), 2500);
     }
   }
@@ -1055,12 +1076,14 @@ export default new (class Files extends EventEmitter {
       let entries = [];
       if (this.ubutton.webkitEntries && this.ubutton.webkitEntries.length) {
         entries = Array.from(this.ubutton.webkitEntries);
-      } else {
+      }
+      else {
         files = Array.from(this.ubutton.files);
       }
       this.ubutton.parentElement.reset();
       this.queueUploads(entries, files);
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error("failed to handle button upload", ex);
     }
   }
@@ -1172,7 +1195,8 @@ export default new (class Files extends EventEmitter {
       }
       console.log(entries, files);
       this.queueUploads(entries, files);
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error("failed to handle drop", ex);
     }
   }
@@ -1182,7 +1206,8 @@ export default new (class Files extends EventEmitter {
       if (entry.isFile) {
         try {
           files.push(await this.toFile(entry));
-        } catch (ex) {
+        }
+        catch (ex) {
           console.error("failed to get file for entry", entry);
         }
         continue;
@@ -1190,7 +1215,8 @@ export default new (class Files extends EventEmitter {
       if (entry.isDirectory) {
         try {
           await this.readDir(entry, files);
-        } catch (ex) {
+        }
+        catch (ex) {
           console.error("failed to read directory", entry);
         }
         continue;
@@ -1201,8 +1227,8 @@ export default new (class Files extends EventEmitter {
 
   async readDir(entry, files) {
     const reader = entry.createReader();
-    await new Promise((resolve) => {
-      reader.readEntries(async (entries) => {
+    await new Promise(resolve => {
+      reader.readEntries(async entries => {
         await this.processEntries(entries, files);
         resolve();
       });
@@ -1217,18 +1243,19 @@ export default new (class Files extends EventEmitter {
     try {
       await registry.init();
       await this.processEntries(entries, files);
-      sort(files, (f) => f.name, naturalCaseSort).reverse();
-      const uploads = files
-        .filter((f) => !ROBOCOPFILES.test(f.name))
-        .map((f) => new Upload(this, f));
+      sort(files, f => f.name, naturalCaseSort).reverse();
+      const uploads = files.
+        filter(f => !ROBOCOPFILES.test(f.name)).
+        map(f => new Upload(this, f));
       if (!uploads.length) {
         return;
       }
-      uploads.forEach((u) => this.uploadOne(u));
+      uploads.forEach(u => this.uploadOne(u));
       await this.addUploadElements(uploads);
       this.adjustEmpty();
       uploads[0].el.scrollIntoView(false);
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error(ex);
     }
   }
@@ -1257,8 +1284,8 @@ export default new (class Files extends EventEmitter {
       if (replace) {
         await this.clear();
       }
-      const files = data.files
-        .filter((f) => {
+      const files = data.files.
+        filter(f => {
           const existing = this.filemap.get(f.key);
           if (!existing) {
             return true;
@@ -1269,8 +1296,8 @@ export default new (class Files extends EventEmitter {
             }),
           );
           return false;
-        })
-        .map((f) => {
+        }).
+        map(f => {
           f = Object.assign({}, f, { isNew: this.isFileNew(f) });
           f = new File(this, f);
           if (f.expired) {
@@ -1280,8 +1307,8 @@ export default new (class Files extends EventEmitter {
           this.emit("file-added", f, replace);
           this.emit(`file-added-${f.key}`, f, replace);
           return f;
-        })
-        .filter((e) => e);
+        }).
+        filter(e => e);
       if (files.length) {
         await this.addFileElements(files);
       }
@@ -1331,10 +1358,11 @@ export default new (class Files extends EventEmitter {
   }
 
   clear() {
-    Array.from(this.el.querySelectorAll(".file:not(.upload)")).forEach((f) => {
+    Array.from(this.el.querySelectorAll(".file:not(.upload)")).forEach(f => {
       try {
         this.el.removeChild(f);
-      } catch (ex) {
+      }
+      catch (ex) {
         // ignored
       }
     });
@@ -1347,7 +1375,8 @@ export default new (class Files extends EventEmitter {
   adjustEmpty(forceOn) {
     if (!forceOn && this.el.childElementCount) {
       document.body.classList.remove("empty");
-    } else {
+    }
+    else {
       document.body.classList.add("empty");
     }
   }
@@ -1387,7 +1416,7 @@ export default new (class Files extends EventEmitter {
   }
 
   normalizeListRows() {
-    this.visible.forEach((f) => {
+    this.visible.forEach(f => {
       f.el.style.width = "100%";
       f.el.style.maxWidth = "100%";
       f.el.style.flex = "0 0 auto";
@@ -1396,7 +1425,7 @@ export default new (class Files extends EventEmitter {
       f.el.style.removeProperty("height");
     });
     if (!this.fileStyleLocked) {
-      const first = this.visible[0];
+      const [first] = this.visible;
       if (first) {
         this.setFileStyle(first);
       }
@@ -1405,13 +1434,14 @@ export default new (class Files extends EventEmitter {
 
   insertFilesIntoDOM(files, remove) {
     if (remove) {
-      remove.forEach((el) => el.parentElement.removeChild(el));
+      remove.forEach(el => el.parentElement.removeChild(el));
     }
     let head = this.el.querySelector(".file:not(.upload)");
     for (const f of this.filtered(files)) {
       if (head) {
         this.el.insertBefore(f.el, head);
-      } else {
+      }
+      else {
         this.el.appendChild(f.el);
         this.setFileStyle(f);
       }
@@ -1428,13 +1458,15 @@ export default new (class Files extends EventEmitter {
       // XXX not restore save
       if (!this.files.length) {
         this.files = files;
-        this.filemap = new Map(this.files.map((f) => [f.key, f]));
-      } else {
+        this.filemap = new Map(this.files.map(f => [f.key, f]));
+      }
+      else {
         this.files.push(...files);
         if (files.length > 5) {
-          this.filemap = new Map(this.files.map((f) => [f.key, f]));
-        } else {
-          files.forEach((e) => this.filemap.set(e.key, e));
+          this.filemap = new Map(this.files.map(f => [f.key, f]));
+        }
+        else {
+          files.forEach(e => this.filemap.set(e.key, e));
         }
       }
       this.adjustEmpty();
@@ -1457,7 +1489,8 @@ export default new (class Files extends EventEmitter {
       if (this.pendingNotificationHighlightKey) {
         this.highlightFromNotification(this.pendingNotificationHighlightKey);
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error(ex);
     }
   }
@@ -1474,7 +1507,8 @@ export default new (class Files extends EventEmitter {
     this.pendingNotificationHighlightKey = null;
     try {
       file.el.scrollIntoView({ block: "center", behavior: "smooth" });
-    } catch (ex) {
+    }
+    catch (ex) {
       file.el.scrollIntoView(false);
     }
     file.el.classList.add("notification-focus");
@@ -1493,11 +1527,13 @@ export default new (class Files extends EventEmitter {
     }
     const [head] = visible;
     if (this.sortMode === "largest") {
-      sort(visible, (e) => e.size || 0).reverse();
-    } else if (this.sortMode === "expiring") {
-      sort(visible, (e) => Number(e.expires) || Infinity);
-    } else {
-      sort(visible, (e) => e.uploaded).reverse(); // newest (default)
+      sort(visible, e => e.size || 0).reverse();
+    }
+    else if (this.sortMode === "expiring") {
+      sort(visible, e => Number(e.expires) || Infinity);
+    }
+    else {
+      sort(visible, e => e.uploaded).reverse(); // newest (default)
     }
     let idx = 0;
     const { el } = this;
@@ -1523,7 +1559,8 @@ export default new (class Files extends EventEmitter {
       if (saved && SORT_MODES.includes(saved)) {
         this.sortMode = saved;
       }
-    } catch (_) {}
+    }
+    catch (_) { /* no-op */ }
     this.updateSortButtons();
   }
 
@@ -1536,7 +1573,8 @@ export default new (class Files extends EventEmitter {
       if (this.sortModeKey) {
         localStorage.setItem(this.sortModeKey, mode);
       }
-    } catch (_) {}
+    }
+    catch (_) { /* no-op */ }
     this.updateSortButtons();
     this.sortFiles();
   }
@@ -1577,7 +1615,8 @@ export default new (class Files extends EventEmitter {
     }
     try {
       return JSON.parse(localStorage.getItem(this.presetsKey) || "[]");
-    } catch (_) {
+    }
+    catch (_) {
       return [];
     }
   }
@@ -1588,7 +1627,8 @@ export default new (class Files extends EventEmitter {
     }
     try {
       localStorage.setItem(this.presetsKey, JSON.stringify(presets));
-    } catch (_) {}
+    }
+    catch (_) { /* no-op */ }
   }
 
   onPresetSave() {
@@ -1599,12 +1639,12 @@ export default new (class Files extends EventEmitter {
     const trimmed = name.trim();
     const buttonState = {};
     if (this.filterButtons) {
-      this.filterButtons.forEach((b) => {
+      this.filterButtons.forEach(b => {
         buttonState[b.id.replace(/^filter-/, "")] =
           !b.classList.contains("disabled");
       });
     }
-    const presets = this.loadPresets().filter((p) => p.name !== trimmed);
+    const presets = this.loadPresets().filter(p => p.name !== trimmed);
     presets.push({
       name: trimmed,
       query: this.filter ? this.filter.value : "",
@@ -1619,7 +1659,7 @@ export default new (class Files extends EventEmitter {
       this.filter.value = preset.query || "";
     }
     if (this.filterButtons && preset.buttons) {
-      this.filterButtons.forEach((b) => {
+      this.filterButtons.forEach(b => {
         const key = b.id.replace(/^filter-/, "");
         b.classList.toggle("disabled", !preset.buttons[key]);
       });
@@ -1628,7 +1668,7 @@ export default new (class Files extends EventEmitter {
   }
 
   deletePreset(name) {
-    const presets = this.loadPresets().filter((p) => p.name !== name);
+    const presets = this.loadPresets().filter(p => p.name !== name);
     this._savePresets(presets);
     this.renderPresets();
   }
@@ -1648,7 +1688,7 @@ export default new (class Files extends EventEmitter {
       const del = document.createElement("button");
       del.className = "preset-pill-del i-clear";
       del.title = `Delete "${preset.name}"`;
-      del.addEventListener("click", (e) => {
+      del.addEventListener("click", e => {
         e.stopPropagation();
         this.deletePreset(preset.name);
       });
@@ -1690,7 +1730,8 @@ export default new (class Files extends EventEmitter {
           this.files.splice(this.files.indexOf(f), 1);
         }
       }
-    } finally {
+    }
+    finally {
       this.adjustEmpty();
       this.delayedUpdateStatus();
     }
@@ -1701,15 +1742,16 @@ export default new (class Files extends EventEmitter {
       for (const u of uploads) {
         this.el.insertBefore(u.el, this.el.firstChild);
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error(ex);
     }
   }
 
   get selection() {
-    return Array.from(document.querySelectorAll(".file.selected"))
-      .map((e) => this.elmap.get(e))
-      .filter((e) => e);
+    return Array.from(document.querySelectorAll(".file.selected")).
+      map(e => this.elmap.get(e)).
+      filter(e => e);
   }
 
   select(file, e) {
@@ -1721,7 +1763,8 @@ export default new (class Files extends EventEmitter {
       if (!this.selectionStart) {
         [this.selectionStart] = visible;
         startIdx = 0;
-      } else {
+      }
+      else {
         startIdx = visible.indexOf(this.selectionStart);
         if (startIdx < 0) {
           [this.selectionStart] = visible;
@@ -1733,30 +1776,33 @@ export default new (class Files extends EventEmitter {
         [startIdx, endIdx] = [endIdx, startIdx];
       }
       this._clearSelection();
-      visible
-        .slice(startIdx, endIdx + 1)
-        .forEach((e) => e.el.classList.add("selected"));
-    } else if (ctrl || meta) {
+      visible.
+        slice(startIdx, endIdx + 1).
+        forEach(e => e.el.classList.add("selected"));
+    }
+    else if (ctrl || meta) {
       file.el.classList.toggle("selected");
-    } else {
+    }
+    else {
       const already = file.el.classList.contains("selected");
       this._clearSelection();
       if (!already) {
         file.el.classList.add("selected");
         this.selectionStart = file;
-      } else {
+      }
+      else {
         this.selectionStart = null;
       }
     }
   }
 
   _clearSelection() {
-    this.selection.forEach((e) => e.el.classList.remove("selected"));
+    this.selection.forEach(e => e.el.classList.remove("selected"));
   }
 
   selectAll() {
     this.selectionStart = null;
-    this.visible.forEach((f) => f.el.classList.add("selected"));
+    this.visible.forEach(f => f.el.classList.add("selected"));
   }
 
   clearSelection() {
@@ -1779,7 +1825,7 @@ export default new (class Files extends EventEmitter {
   trashFiles(files) {
     registry.socket.emit(
       "trash",
-      files.map((e) => e.key).filter((e) => e),
+      files.map(e => e.key).filter(e => e),
     );
   }
 
@@ -1792,7 +1838,7 @@ export default new (class Files extends EventEmitter {
     if (!selection.length) {
       return subjects;
     }
-    selection.forEach((f) => {
+    selection.forEach(f => {
       if (f.ip) {
         subjects.ips.push(f.ip);
       }
@@ -1816,7 +1862,7 @@ export default new (class Files extends EventEmitter {
   }
 
   blacklist() {
-    const selected = this.selection.map((e) => e.key);
+    const selected = this.selection.map(e => e.key);
     if (!selected.length) {
       return;
     }
@@ -1824,9 +1870,9 @@ export default new (class Files extends EventEmitter {
   }
 
   whitelist() {
-    const selected = this.selection
-      .filter((e) => e.tagsMap.has("hidden"))
-      .map((e) => e.key);
+    const selected = this.selection.
+      filter(e => e.tagsMap.has("hidden")).
+      map(e => e.key);
     if (!selected.length) {
       return;
     }
@@ -1837,7 +1883,7 @@ export default new (class Files extends EventEmitter {
     const ips = new Set(subjects.ips);
     const accounts = new Set(subjects.accounts);
     const a = accounts.size > 0;
-    const purges = this.files.filter((f) => {
+    const purges = this.files.filter(f => {
       return ips.has(f.ip) || (a && f.meta && accounts.has(f.meta.account));
     });
     this.trashFiles(purges);
@@ -1847,8 +1893,12 @@ export default new (class Files extends EventEmitter {
     // Deactivate links mode if we're switching back to file view
     if (this.linksMode) {
       this.linksMode = false;
-      if (registry.links) registry.links.hide();
-      if (this.linkModeEl) this.linkModeEl.classList.remove("active");
+      if (registry.links) {
+        registry.links.hide();
+      }
+      if (this.linkModeEl) {
+        this.linkModeEl.classList.remove("active");
+      }
       this.el.classList.remove("hidden");
     }
 
@@ -1858,16 +1908,17 @@ export default new (class Files extends EventEmitter {
       this.el.classList.remove("listmode");
       this.nailOnEl.classList.add("active");
       this.el.classList.add("gallerymode");
-      this.visible.forEach((f) => {
+      this.visible.forEach(f => {
         f.el.style.removeProperty("width");
         f.el.style.removeProperty("max-width");
         f.el.style.removeProperty("flex");
       });
 
       APOOL.schedule(null, () =>
-        this.visible.forEach((f) => f.adjustPreview()),
+        this.visible.forEach(f => f.adjustPreview()),
       );
-    } else {
+    }
+    else {
       this.nailOffEl.classList.add("active");
       this.el.classList.add("listmode");
       this.nailOnEl.classList.remove("active");
@@ -1886,13 +1937,18 @@ export default new (class Files extends EventEmitter {
     if (this.linksMode) {
       // Toggle off — restore previous list/gallery state
       this.linksMode = false;
-      if (registry.links) registry.links.hide();
-      if (this.linkModeEl) this.linkModeEl.classList.remove("active");
+      if (registry.links) {
+        registry.links.hide();
+      }
+      if (this.linkModeEl) {
+        this.linkModeEl.classList.remove("active");
+      }
       this.el.classList.remove("hidden");
       // Restore correct nail active state
       if (this.galleryMode) {
         this.nailOnEl.classList.add("active");
-      } else {
+      }
+      else {
         this.nailOffEl.classList.add("active");
       }
       this.persistViewMode();
@@ -1903,8 +1959,12 @@ export default new (class Files extends EventEmitter {
     this.nailOnEl.classList.remove("active");
     this.linksMode = true;
     this.el.classList.add("hidden");
-    if (registry.links) registry.links.show();
-    if (this.linkModeEl) this.linkModeEl.classList.add("active");
+    if (registry.links) {
+      registry.links.show();
+    }
+    if (this.linkModeEl) {
+      this.linkModeEl.classList.add("active");
+    }
     this.persistViewMode();
   }
 

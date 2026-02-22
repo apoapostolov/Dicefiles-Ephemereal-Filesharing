@@ -1,16 +1,18 @@
 "use strict";
 
 import message from "../common/message";
-import {xregexp} from "./lazy";
+import { xregexp } from "./lazy";
 
 export function dom(type, options) {
-  const {attrs = {}, text = "", classes = []} = options || {};
+  const { attrs = {}, text = "", classes = [] } = options || {};
   const el = document.createElement(type);
   for (const [an, av] of Object.entries(attrs)) {
     el.setAttribute(an, av);
   }
   if (Array.isArray(classes) && classes.length) {
-    const normalized = classes.filter(c => typeof c === "string" && c.trim().length);
+    const normalized = classes.filter(
+      c => typeof c === "string" && c.trim().length,
+    );
     if (normalized.length) {
       el.classList.add(...normalized);
     }
@@ -83,17 +85,12 @@ export class Rect {
   }
 }
 
-const TYPES = Object.freeze(new Set([
-  "video",
-  "audio",
-  "image",
-  "document",
-  "archive",
-  "file",
-]));
+const TYPES = Object.freeze(
+  new Set(["video", "audio", "image", "document", "archive", "file"]),
+);
 
 export function toType(type) {
-  return TYPES.has(type) && type || "file";
+  return (TYPES.has(type) && type) || "file";
 }
 
 export async function validateUsername(nick) {
@@ -119,11 +116,13 @@ export function formToJSON(data) {
 }
 
 export function openInNew(href) {
-  const link = dom("a", {attrs: {
-    style: "display: none;",
-    href,
-    target: "_blank",
-  }});
+  const link = dom("a", {
+    attrs: {
+      style: "display: none;",
+      href,
+      target: "_blank",
+    },
+  });
   document.body.appendChild(link);
   try {
     link.click();
@@ -135,7 +134,7 @@ export function openInNew(href) {
 
 export function idle(fn, timeout) {
   if (!window.requestIdleCallback) {
-    return function(...args) {
+    return function (...args) {
       try {
         return Promise.resolve(fn.apply(this, args));
       }
@@ -148,7 +147,7 @@ export function idle(fn, timeout) {
   return function idleWrapped(...args) {
     const self = this;
     return new Promise((resolve, reject) => {
-      const wrapped = function() {
+      const wrapped = function () {
         try {
           resolve(fn.apply(self, args));
         }
@@ -157,7 +156,7 @@ export function idle(fn, timeout) {
         }
       };
       if (timeout) {
-        requestIdleCallback(wrapped, {timeout});
+        requestIdleCallback(wrapped, { timeout });
       }
       else {
         requestIdleCallback(wrapped);
@@ -167,7 +166,7 @@ export function idle(fn, timeout) {
 }
 
 function resolveRoom(v) {
-  return {v};
+  return { v };
 }
 
 function resolveFile(v) {
@@ -176,13 +175,17 @@ function resolveFile(v) {
     name: "Some file",
     type: "file",
     href: `/g/${v}`,
-    client: true
+    client: true,
   };
 }
 
 export const normalizeURL = message.normalizeURL.bind(null, URL);
 export const toMessage = message.toMessage.bind(
-  null, URL, resolveRoom, resolveFile);
+  null,
+  URL,
+  resolveRoom,
+  resolveFile,
+);
 
 export function roleToIcon(role) {
   switch (role) {

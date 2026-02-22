@@ -1,7 +1,9 @@
 "use strict";
 
 export async function xregexp(...args) {
-  return new (await import(
+  const { default: XRegExp } = await import(
     /* webpackChunkName: "xregexp", webpackPrefetch: true */
-    "xregexp")).default(...args);
+    "xregexp"
+  );
+  return new XRegExp(...args);
 }

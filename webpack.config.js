@@ -12,7 +12,8 @@ const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 function readJSON(file, fallback = {}) {
   try {
     return JSON.parse(fs.readFileSync(file, "utf8"));
-  } catch (ex) {
+  }
+  catch (ex) {
     return fallback;
   }
 }
@@ -37,12 +38,13 @@ const mergedGifProviders = mergeProviders(baseGifProviders, localGifProviders);
 
 class HashPlugin {
   apply(compiler) {
-    compiler.hooks.emit.tap("HashPlugin", (compilation) => {
+    compiler.hooks.emit.tap("HashPlugin", compilation => {
       const d = crypto.createHmac("sha224", "dicefiles");
       for (const a of Object.values(compilation.assets)) {
         try {
           d.update(a.source());
-        } catch (ex) {
+        }
+        catch (ex) {
           console.error(ex);
         }
       }
@@ -57,12 +59,12 @@ module.exports = {
   mode: "development",
   context: path.join(__dirname, "entries"),
   entry: {
-    client: "./main.js",
-    register: "./register.js",
-    account: "./account.js",
-    user: "./user.js",
-    sortable: "./sortable.js",
-    style: "./css/style.css",
+    "client": "./main.js",
+    "register": "./register.js",
+    "account": "./account.js",
+    "user": "./user.js",
+    "sortable": "./sortable.js",
+    "style": "./css/style.css",
     // PDF.js web worker — served at /pdf.worker.js, referenced by reader.js
     "pdf.worker": "../node_modules/pdfjs-dist/build/pdf.worker.entry.js",
   },

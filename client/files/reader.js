@@ -23,13 +23,14 @@ import { dom, nukeEvent } from "../util";
 // whenever the build changes (pdf.worker.js is served immutable/30-day cached
 // and Chrome applies the worker script's own cached response headers as its
 // CSP context — stale cache = stale CSP without 'unsafe-eval').
-const PDF_WORKER_SRC = "/pdf.worker.js?v=" + (window.__CV__ || "1");
+const PDF_WORKER_SRC = `/pdf.worker.js?v=${window.__CV__ || "1"}`;
 
 // ── debug helpers ─────────────────────────────────────────────────────────────
 
 function dbg(label, ...args) {
   console.log(`[Reader] ${label}`, ...args);
 }
+
 function dbgErr(label, err) {
   console.error(`[Reader] ${label}`, err);
 }
@@ -41,9 +42,9 @@ function dbgShow(container, text, isError = false) {
   }
   const el = document.createElement("div");
   el.style.cssText =
-    "font:12px/1.6 monospace;padding:4px 10px;color:" +
-    (isError ? "#f87171" : "#94a3b8") +
-    ";white-space:pre-wrap;word-break:break-all;";
+    `font:12px/1.6 monospace;padding:4px 10px;color:${
+      isError ? "#f87171" : "#94a3b8"
+    };white-space:pre-wrap;word-break:break-all;`;
   el.textContent = text;
   container.appendChild(el);
 }
@@ -115,7 +116,8 @@ class PDFReader {
         this.container,
         `pdfjs-dist loaded, getDocument=${typeof pdfjsLib.getDocument}`,
       );
-    } catch (ex) {
+    }
+    catch (ex) {
       dbgErr("pdfjs-dist import failed", ex);
       dbgShow(
         this.container,
@@ -138,7 +140,8 @@ class PDFReader {
         disableStream: false,
         rangeChunkSize: 65536,
       }).promise;
-    } catch (ex) {
+    }
+    catch (ex) {
       dbgErr("getDocument failed", ex);
       dbgShow(
         this.container,
@@ -194,7 +197,8 @@ class PDFReader {
         this.container,
         `Scale (A5): ${this.scale.toFixed(3)} (displayW=${pageDisplayW}px, h=${this._pageHeight}px)`,
       );
-    } else {
+    }
+    else {
       dbg("WARN: container has zero width, using fallback scale", this.scale);
       dbgShow(
         this.container,
@@ -207,9 +211,9 @@ class PDFReader {
     // would immediately fire onPageChange(0) and overwrite the stored progress.
     const saved = loadProgress(this._fileKey);
     const startPage =
-      saved && saved.page >= 1 && saved.page <= this.totalPages
-        ? saved.page
-        : 1;
+      saved && saved.page >= 1 && saved.page <= this.totalPages ?
+        saved.page :
+        1;
     this._updateInfo(startPage, this.totalPages);
     this._buildPagePlaceholders(startPage);
     this._setupObserver();
@@ -220,7 +224,9 @@ class PDFReader {
       this.infoEl.textContent = total ? `Page ${current} / ${total}` : "";
     }
     saveProgress(this._fileKey, { page: current });
-    if (this.onPageChange) this.onPageChange(current);
+    if (this.onPageChange) {
+      this.onPageChange(current);
+    }
   }
 
   _buildPagePlaceholders(startPage = 0) {
@@ -260,7 +266,7 @@ class PDFReader {
     );
 
     this.observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             const pageNum = parseInt(entry.target.dataset.page, 10);
@@ -332,7 +338,8 @@ class PDFReader {
 
       // Scroll-tracking: which page is visible
       this._trackVisible(wrapperEl, pageNum);
-    } catch (ex) {
+    }
+    catch (ex) {
       dbgErr(`_renderPage page ${pageNum} failed`, ex);
       // Show the error on the page placeholder itself
       wrapperEl.textContent = "";
@@ -424,10 +431,13 @@ class PDFReader {
  */
 function epubResolve(basePath, relative) {
   const rel = (relative || "").split(/[?#]/)[0];
-  if (!rel || /^(data:|blob:|https?:|\/\/)/i.test(rel)) return relative;
+  if (!rel || /^(data:|blob:|https?:|\/\/)/i.test(rel)) {
+    return relative;
+  }
   try {
-    return new URL(rel, "epub://x/" + basePath).pathname.slice(1);
-  } catch {
+    return new URL(rel, `epub://x/${basePath}`).pathname.slice(1);
+  }
+  catch {
     return basePath + rel;
   }
 }
@@ -438,7 +448,9 @@ function zipFile(zip, p) {
 
 async function zipToBlob(zip, p, mime) {
   const f = zipFile(zip, p);
-  if (!f) return null;
+  if (!f) {
+    return null;
+  }
   const data = await f.async("arraybuffer");
   return URL.createObjectURL(
     new Blob([data], { type: mime || "application/octet-stream" }),
@@ -457,6 +469,7 @@ const EXT_MIME = {
   woff: "font/woff",
   woff2: "font/woff2",
 };
+
 function extMime(p) {
   return (
     EXT_MIME[(p || "").split(".").pop().toLowerCase()] ||
@@ -466,21 +479,27 @@ function extMime(p) {
 
 async function parseEpubChapters(zip) {
   const blobUrls = [];
-  const track = (u) => {
-    if (u) blobUrls.push(u);
+  const track = u => {
+    if (u) {
+      blobUrls.push(u);
+    }
     return u;
   };
 
   // container.xml → OPF path
   const cf = zipFile(zip, "META-INF/container.xml");
-  if (!cf) throw new Error("Not a valid EPUB: missing META-INF/container.xml");
+  if (!cf) {
+    throw new Error("Not a valid EPUB: missing META-INF/container.xml");
+  }
   const containerXml = await cf.async("string");
   const opfPathM = containerXml.match(/full-path="([^"]+)"/i);
-  if (!opfPathM) throw new Error("EPUB container.xml missing full-path");
+  if (!opfPathM) {
+    throw new Error("EPUB container.xml missing full-path");
+  }
   const opfPath = decodeURIComponent(opfPathM[1]);
-  const opfBase = opfPath.includes("/")
-    ? opfPath.slice(0, opfPath.lastIndexOf("/") + 1)
-    : "";
+  const opfBase = opfPath.includes("/") ?
+    opfPath.slice(0, opfPath.lastIndexOf("/") + 1) :
+    "";
 
   // Parse OPF
   const opfXml = await (zipFile(zip, opfPath) || { async: () => "" }).async(
@@ -504,55 +523,70 @@ async function parseEpubChapters(zip) {
   const spineIds = [];
   for (const m of opfXml.matchAll(/<itemref\s[^>]+>/gi)) {
     const idrefM = m[0].match(/\bidref="([^"]+)"/i);
-    if (idrefM) spineIds.push(idrefM[1]);
+    if (idrefM) {
+      spineIds.push(idrefM[1]);
+    }
   }
 
   const chapters = [];
   for (const id of spineIds) {
     const item = manifest[id];
-    if (!item) continue;
+    if (!item) {
+      continue;
+    }
     const htmlFile = zipFile(zip, item.href);
-    if (!htmlFile) continue;
+    if (!htmlFile) {
+      continue;
+    }
     const htmlStr = await htmlFile.async("string");
-    const chapterBase = item.href.includes("/")
-      ? item.href.slice(0, item.href.lastIndexOf("/") + 1)
-      : "";
+    const chapterBase = item.href.includes("/") ?
+      item.href.slice(0, item.href.lastIndexOf("/") + 1) :
+      "";
 
     // Collect + blob-ify CSS links
     const cssUrls = [];
     for (const lm of htmlStr.matchAll(/<link([^>]+)>/gi)) {
       const tag = lm[1];
-      if (!/rel=["']?stylesheet["']?/i.test(tag)) continue;
+      if (!/rel=["']?stylesheet["']?/i.test(tag)) {
+        continue;
+      }
       const hrefM =
         tag.match(/href="([^"]+)"/i) || tag.match(/href='([^']+)'/i);
-      if (!hrefM) continue;
+      if (!hrefM) {
+        continue;
+      }
       const cssPath = epubResolve(
         chapterBase,
         decodeURIComponent(hrefM[1].split(/[?#]/)[0]),
       );
       const cssFile = zipFile(zip, cssPath);
-      if (!cssFile) continue;
+      if (!cssFile) {
+        continue;
+      }
       let cssText = await cssFile.async("string");
-      const cssBase = cssPath.includes("/")
-        ? cssPath.slice(0, cssPath.lastIndexOf("/") + 1)
-        : "";
+      const cssBase = cssPath.includes("/") ?
+        cssPath.slice(0, cssPath.lastIndexOf("/") + 1) :
+        "";
       // Replace url() references in CSS
       const urlRefs = [
         ...cssText.matchAll(/url\(\s*["']?([^)"'\s]+)["']?\s*\)/g),
       ].reverse();
       for (const um of urlRefs) {
         const ref = um[1];
-        if (/^(data:|blob:|https?:)/i.test(ref)) continue;
+        if (/^(data:|blob:|https?:)/i.test(ref)) {
+          continue;
+        }
         const resPath = epubResolve(
           cssBase,
           decodeURIComponent(ref.split(/[?#]/)[0]),
         );
         const bu = track(await zipToBlob(zip, resPath, extMime(resPath)));
-        if (bu)
+        if (bu) {
           cssText =
-            cssText.slice(0, um.index) +
-            `url("${bu}")` +
-            cssText.slice(um.index + um[0].length);
+            `${cssText.slice(0, um.index)
+            }url("${bu}")${
+              cssText.slice(um.index + um[0].length)}`;
+        }
       }
       const cssUrl = URL.createObjectURL(
         new Blob([cssText], { type: "text/css" }),
@@ -569,17 +603,20 @@ async function parseEpubChapters(zip) {
     const replaceAttr = async (attrName, matches) => {
       for (const sm of matches) {
         const ref = sm[1];
-        if (/^(data:|blob:|https?:)/i.test(ref)) continue;
+        if (/^(data:|blob:|https?:)/i.test(ref)) {
+          continue;
+        }
         const imgPath = epubResolve(
           chapterBase,
           decodeURIComponent(ref.split(/[?#]/)[0]),
         );
         const bu = track(await zipToBlob(zip, imgPath, extMime(imgPath)));
-        if (bu)
+        if (bu) {
           body =
-            body.slice(0, sm.index) +
-            `${attrName}="${bu}"` +
-            body.slice(sm.index + sm[0].length);
+            `${body.slice(0, sm.index)
+            }${attrName}="${bu}"${
+              body.slice(sm.index + sm[0].length)}`;
+        }
       }
     };
 
@@ -597,9 +634,9 @@ async function parseEpubChapters(zip) {
     // 3. Replace href="..." on SVG <image> elements (EPUB3 without xlink prefix).
     //    Guard: only rewrite href when it belongs to an <image> tag so we don't
     //    accidentally blow up anchor links.
-    const hrefMatches = [...body.matchAll(/(<image\b[^>]*)\bhref="([^"]+)"/gi)]
-      .reverse()
-      .map((m) => {
+    const hrefMatches = [...body.matchAll(/(<image\b[^>]*)\bhref="([^"]+)"/gi)].
+      reverse().
+      map(m => {
         // Build a synthetic match object compatible with replaceAttr:
         // index must point to the start of href="..." within `body`.
         const hrefStart = m.index + m[1].length;
@@ -656,11 +693,11 @@ function buildSrcdoc(html, cssUrls, pageWidth, pageHeight, opts) {
   const textW = pageWidth - 2 * HP; // text column width
   const colH = pageHeight - 2 * VP; // column / usable height
   const fontFamily = FONT_FAMILIES[o.fontFamily] || FONT_FAMILIES.georgia;
-  const fontSize = (o.fontSize || 1.05) + "em";
+  const fontSize = `${o.fontSize || 1.05}em`;
   const lineHeight = o.lineSpacing || 1.75;
-  const linkTags = cssUrls
-    .map((h) => `<link rel="stylesheet" href="${h}">`)
-    .join("\n");
+  const linkTags = cssUrls.
+    map(h => `<link rel="stylesheet" href="${h}">`).
+    join("\n");
 
   // ── Column-stretching fix ─────────────────────────────────────────────────
   // CSS multi-column distributes the container's content-box width evenly
@@ -770,12 +807,14 @@ class BookReader {
         // Container wider than A5 → height is the constraint
         this._pageHeight = cH;
         this._pageWidth = Math.floor(cH * A5);
-      } else {
+      }
+      else {
         // Container taller than A5 → width is the constraint
         this._pageWidth = cW;
         this._pageHeight = Math.floor(cW / A5);
       }
-    } else {
+    }
+    else {
       this._pageWidth = 420;
       this._pageHeight = 595;
     }
@@ -791,15 +830,16 @@ class BookReader {
     this._computePageSize();
     if (type === "mobi") {
       await this._openMobi(url);
-    } else {
+    }
+    else {
       await this._openEpub(url);
     }
     // Restore saved chapter + page
     const saved = loadProgress(this._fileKey);
     const startChapter =
-      saved && saved.chapter >= 0 && saved.chapter < this._total
-        ? saved.chapter
-        : 0;
+      saved && saved.chapter >= 0 && saved.chapter < this._total ?
+        saved.chapter :
+        0;
     const startPage = saved && saved.page >= 0 ? saved.page : 0;
     await this._renderChapter(startChapter, startPage);
   }
@@ -807,7 +847,9 @@ class BookReader {
   async _openMobi(url) {
     const { initMobiFile } = await import("@lingo-reader/mobi-parser");
     const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP ${response.status} fetching MOBI`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} fetching MOBI`);
+    }
     this._parser = await initMobiFile(response, "");
     this._mobiSpine = this._parser.getSpine();
     this._total = this._mobiSpine.length;
@@ -817,7 +859,9 @@ class BookReader {
   async _openEpub(url) {
     const JSZip = (await import("jszip")).default;
     const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP ${response.status} fetching EPUB`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} fetching EPUB`);
+    }
     const buffer = await response.arrayBuffer();
     const zip = await JSZip.loadAsync(buffer);
     const { chapters, blobUrls } = await parseEpubChapters(zip);
@@ -830,8 +874,10 @@ class BookReader {
   async _getChapter(idx) {
     if (this._type === "mobi") {
       const ch = await this._parser.loadChapter(this._mobiSpine[idx].id);
-      if (!ch) return { html: "<p>(chapter unavailable)</p>", css: [] };
-      return { html: ch.html, css: (ch.css || []).map((c) => c.href) };
+      if (!ch) {
+        return { html: "<p>(chapter unavailable)</p>", css: [] };
+      }
+      return { html: ch.html, css: (ch.css || []).map(c => c.href) };
     }
     return (
       this._chapters[idx] || { html: "<p>(chapter unavailable)</p>", css: [] }
@@ -843,7 +889,9 @@ class BookReader {
    * @param {number} startAtPage  0 = first page; -1 = last page (going backwards)
    */
   async _renderChapter(idx, startAtPage = 0) {
-    if (idx < 0 || idx >= this._total) return;
+    if (idx < 0 || idx >= this._total) {
+      return;
+    }
     this._currentIdx = idx;
     this._pageInChapter = 0;
     this._totalPagesInChapter = 1;
@@ -854,18 +902,22 @@ class BookReader {
     this._iframe = null;
 
     const iframe = dom("iframe", { classes: ["reader-book-iframe"] });
-    iframe.style.width = this._pageWidth + "px";
-    iframe.style.height = this._pageHeight + "px";
+    iframe.style.width = `${this._pageWidth}px`;
+    iframe.style.height = `${this._pageHeight}px`;
     this._iframe = iframe;
 
     iframe.addEventListener("load", () => {
-      if (this._destroyed || this._iframe !== iframe) return;
+      if (this._destroyed || this._iframe !== iframe) {
+        return;
+      }
       // Defer the sentinel measurement by one animation frame so the browser
       // finishes computing CSS multi-column layout before we read geometry.
       // Without this, getBoundingClientRect() can return 0 on the first load
       // after a font-size change, making totalPages = 1 and breaking pagination.
       requestAnimationFrame(() => {
-        if (this._destroyed || this._iframe !== iframe) return;
+        if (this._destroyed || this._iframe !== iframe) {
+          return;
+        }
         try {
           const doc = iframe.contentDocument;
           if (!doc || !doc.body) {
@@ -913,13 +965,14 @@ class BookReader {
                 Math.floor((sl - HP) / this._pageWidth) + 1,
               );
             }
-          } catch (_) {}
+          }
+          catch (_) { /* no-op */ }
 
           this._totalPagesInChapter = totalPages;
           const target =
-            startAtPage < 0
-              ? totalPages - 1
-              : Math.min(startAtPage, totalPages - 1);
+            startAtPage < 0 ?
+              totalPages - 1 :
+              Math.min(startAtPage, totalPages - 1);
           this._pageInChapter = target;
           if (target > 0) {
             scroller.style.transform = `translateX(${-target * this._pageWidth}px)`;
@@ -929,7 +982,8 @@ class BookReader {
           dbg(
             `Chapter ${idx + 1}: ${totalPages} pages (sentinel-based, HP=${HP})`,
           );
-        } catch (ex) {
+        }
+        catch (ex) {
           dbgErr("iframe rAF measure", ex);
           // Ensure buttons are always functional even if measurement throws.
           this._totalPagesInChapter = 1;
@@ -951,15 +1005,20 @@ class BookReader {
   }
 
   _scrollToPage(pageIdx) {
-    if (!this._iframe || !this._loaded) return;
+    if (!this._iframe || !this._loaded) {
+      return;
+    }
     try {
       const scroller =
         this._iframe.contentDocument &&
         this._iframe.contentDocument.getElementById("scroller");
-      if (!scroller) return;
+      if (!scroller) {
+        return;
+      }
       scroller.style.transform =
         pageIdx === 0 ? "" : `translateX(${-pageIdx * this._pageWidth}px)`;
-    } catch (ex) {
+    }
+    catch (ex) {
       dbgErr("_scrollToPage", ex);
     }
   }
@@ -983,12 +1042,16 @@ class BookReader {
     // _totalPagesInChapter once the new layout has settled.
     const wasLoaded = this._loaded;
     this._renderChapter(this._currentIdx, 0);
-    if (wasLoaded) this._loaded = true;
+    if (wasLoaded) {
+      this._loaded = true;
+    }
   }
 
   /** Navigate one page forward; wraps to next chapter at chapter end. */
   nextPage() {
-    if (!this._loaded) return;
+    if (!this._loaded) {
+      return;
+    }
     const newPage = this._pageInChapter + 1;
     if (newPage >= this._totalPagesInChapter) {
       if (this._currentIdx < this._total - 1) {
@@ -1003,7 +1066,9 @@ class BookReader {
 
   /** Navigate one page back; wraps to prev chapter (last page) at chapter start. */
   prevPage() {
-    if (!this._loaded) return;
+    if (!this._loaded) {
+      return;
+    }
     const newPage = this._pageInChapter - 1;
     if (newPage < 0) {
       if (this._currentIdx > 0) {
@@ -1018,13 +1083,16 @@ class BookReader {
 
   /** Jump to the next chapter (first page). */
   nextChapter() {
-    if (this._currentIdx < this._total - 1)
+    if (this._currentIdx < this._total - 1) {
       this._renderChapter(this._currentIdx + 1, 0);
+    }
   }
 
   /** Jump to the previous chapter (first page). */
   prevChapter() {
-    if (this._currentIdx > 0) this._renderChapter(this._currentIdx - 1, 0);
+    if (this._currentIdx > 0) {
+      this._renderChapter(this._currentIdx - 1, 0);
+    }
   }
 
   _updateInfo() {
@@ -1035,7 +1103,9 @@ class BookReader {
       chapter: this._currentIdx,
       page: this._pageInChapter,
     });
-    if (this.onPageChange) this.onPageChange(this._currentIdx);
+    if (this.onPageChange) {
+      this.onPageChange(this._currentIdx);
+    }
   }
 
   destroy() {
@@ -1044,7 +1114,9 @@ class BookReader {
       this._parser.destroy();
       this._parser = null;
     }
-    for (const u of this._blobUrls) URL.revokeObjectURL(u);
+    for (const u of this._blobUrls) {
+      URL.revokeObjectURL(u);
+    }
     this._blobUrls = [];
     this._chapters = [];
     this._mobiSpine = [];
@@ -1122,13 +1194,17 @@ class ComicReader {
     await this._showPage(startPage);
   }
 
-  async _showPage(n) {
-    if (this._destroyed) return;
+  _showPage(n) {
+    if (this._destroyed) {
+      return;
+    }
     const clamped = Math.max(0, Math.min(n, this._totalPages - 1));
     this._currentPage = clamped;
     this._updateInfo();
     saveProgress(this._fileKey, { page: clamped });
-    if (this.onPageChange) this.onPageChange(clamped);
+    if (this.onPageChange) {
+      this.onPageChange(clamped);
+    }
 
     if (this._imgEl) {
       this._imgEl.src = `/api/v1/comic/${this._key}/page/${clamped}`;
@@ -1147,17 +1223,17 @@ class ComicReader {
 
   /** Advance by one "reading unit" (respects manga RTL mode). */
   nextPage() {
-    const next = this._mangaMode
-      ? this._currentPage - 1
-      : this._currentPage + 1;
+    const next = this._mangaMode ?
+      this._currentPage - 1 :
+      this._currentPage + 1;
     this._showPage(next);
   }
 
   /** Go back by one "reading unit" (respects manga RTL mode). */
   prevPage() {
-    const prev = this._mangaMode
-      ? this._currentPage + 1
-      : this._currentPage - 1;
+    const prev = this._mangaMode ?
+      this._currentPage + 1 :
+      this._currentPage - 1;
     this._showPage(prev);
   }
 
@@ -1201,10 +1277,10 @@ const READER_OPTS_DEFAULTS = {
 };
 
 const FONT_FAMILIES = {
-  georgia: 'Georgia,"Times New Roman",serif',
-  bookerly: '"Bookerly","Palatino Linotype","Palatino","Book Antiqua",serif',
+  georgia: "Georgia,\"Times New Roman\",serif",
+  bookerly: "\"Bookerly\",\"Palatino Linotype\",\"Palatino\",\"Book Antiqua\",serif",
   helvetica: "Helvetica,Arial,sans-serif",
-  dyslexic: 'OpenDyslexic,"Comic Sans MS",cursive',
+  dyslexic: "OpenDyslexic,\"Comic Sans MS\",cursive",
 };
 
 /** Load persisted reader options, falling back to defaults. */
@@ -1215,7 +1291,8 @@ function loadReaderOpts() {
       const parsed = JSON.parse(raw);
       return { ...READER_OPTS_DEFAULTS, ...parsed };
     }
-  } catch (_) {
+  }
+  catch (_) {
     // ignore
   }
   return { ...READER_OPTS_DEFAULTS };
@@ -1225,7 +1302,8 @@ function loadReaderOpts() {
 function saveReaderOpts(opts) {
   try {
     localStorage.setItem(READER_OPTS_KEY, JSON.stringify(opts));
-  } catch (_) {
+  }
+  catch (_) {
     // ignore
   }
 }
@@ -1235,21 +1313,27 @@ function saveReaderOpts(opts) {
  * `state` shape: { page: number, chapter?: number }
  */
 function saveProgress(fileKey, state) {
-  if (!fileKey) return;
+  if (!fileKey) {
+    return;
+  }
   try {
     localStorage.setItem(PROGRESS_PREFIX + fileKey, JSON.stringify(state));
-  } catch (_) {
+  }
+  catch (_) {
     // quota / private browsing — ignore
   }
 }
 
 /** Retrieve previously saved progress. Returns null if none. */
 function loadProgress(fileKey) {
-  if (!fileKey) return null;
+  if (!fileKey) {
+    return null;
+  }
   try {
     const raw = localStorage.getItem(PROGRESS_PREFIX + fileKey);
     return raw ? JSON.parse(raw) : null;
-  } catch (_) {
+  }
+  catch (_) {
     return null;
   }
 }
@@ -1270,8 +1354,11 @@ export function flushStaleProgress(liveKeys) {
         }
       }
     }
-    for (const k of toRemove) localStorage.removeItem(k);
-  } catch (_) {
+    for (const k of toRemove) {
+      localStorage.removeItem(k);
+    }
+  }
+  catch (_) {
     // ignore
   }
 }
@@ -1313,18 +1400,22 @@ class WebtoonReader {
     this._key = WebtoonReader._keyFromFile(file);
     this._fileKey = file.key || this._key;
     dbg("WebtoonReader.open() key =", this._key);
-    if (!this._key)
+    if (!this._key) {
       throw new Error("Cannot determine upload key from file href");
+    }
 
     dbgShow(this.container, `Loading webtoon: ${file.name}`);
 
     const resp = await fetch(`/api/v1/comic/${this._key}/index`);
-    if (!resp.ok)
+    if (!resp.ok) {
       throw new Error(`Comic index fetch failed: HTTP ${resp.status}`);
+    }
     const { pages } = await resp.json();
     this._totalPages = pages;
     dbg("WebtoonReader: pages =", pages);
-    if (pages === 0) throw new Error("Comic archive has no readable pages");
+    if (pages === 0) {
+      throw new Error("Comic archive has no readable pages");
+    }
 
     this.container.textContent = "";
     this._stripEl = dom("div", { classes: ["reader-webtoon-strip"] });
@@ -1345,7 +1436,7 @@ class WebtoonReader {
     // renders after applying CSS (width:100%; max-width:900px; height:auto).
     // Using naturalHeight for scrollTop calculations overshoots by the scale factor
     // (imageWidth/containerWidth), sending the user to a completely wrong position.
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
       const first = this._imgEls[0];
       first.onload = () => {
         // offsetHeight is the rendered CSS height — the correct unit for scrollTop
@@ -1368,8 +1459,10 @@ class WebtoonReader {
     // Lazy-load remaining pages via IntersectionObserver.
     // When a page enters the viewport, also eagerly load the next 10 pages so
     // reading feels continuous (streaming effect).
-    const loadPage = (n) => {
-      if (n < 0 || n >= this._imgEls.length) return;
+    const loadPage = n => {
+      if (n < 0 || n >= this._imgEls.length) {
+        return;
+      }
       const img = this._imgEls[n];
       if (!img.getAttribute("data-loaded")) {
         img.setAttribute("data-loaded", "1");
@@ -1378,13 +1471,17 @@ class WebtoonReader {
     };
 
     this._observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
+          if (!entry.isIntersecting) {
+            continue;
+          }
           const n = parseInt(entry.target.dataset.page, 10);
           loadPage(n);
           // Stream-ahead: preload the next 10 pages
-          for (let ahead = 1; ahead <= 10; ahead++) loadPage(n + ahead);
+          for (let ahead = 1; ahead <= 10; ahead++) {
+            loadPage(n + ahead);
+          }
         }
       },
       { root: this.container, rootMargin: "600px 0px 600px 0px", threshold: 0 },
@@ -1405,7 +1502,7 @@ class WebtoonReader {
       // browser's scroll-anchoring logic keeps the viewport stable.
       for (const img of this._imgEls) {
         if (!img.getAttribute("data-loaded")) {
-          img.style.minHeight = this._pageHeight + "px";
+          img.style.minHeight = `${this._pageHeight}px`;
           img.addEventListener(
             "load",
             () => {
@@ -1427,8 +1524,9 @@ class WebtoonReader {
       this._restoring = true;
       requestAnimationFrame(() => {
         const target = this._imgEls[saved.page];
-        if (target)
+        if (target) {
           target.scrollIntoView({ behavior: "instant", block: "start" });
+        }
         requestAnimationFrame(() => {
           this._restoring = false;
         });
@@ -1439,7 +1537,9 @@ class WebtoonReader {
     // Saves the current visible page 300 ms after the user stops scrolling.
     // Covers: mousewheel, touch-drag, scrollbar use, keyboard arrows, etc.
     this._onContainerScroll = () => {
-      if (this._restoring) return;
+      if (this._restoring) {
+        return;
+      }
       clearTimeout(this._scrollSaveTimer);
       this._scrollSaveTimer = setTimeout(() => {
         saveProgress(this._fileKey, { page: this._visiblePage });
@@ -1452,7 +1552,7 @@ class WebtoonReader {
     // Separate visibility tracker: update page counter + persist progress.
     // Reads _restoring so the initial position restore cannot be overwritten.
     const visTracker = new IntersectionObserver(
-      (entries) => {
+      entries => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             this._visiblePage = parseInt(entry.target.dataset.page, 10);
@@ -1460,13 +1560,17 @@ class WebtoonReader {
             if (!this._restoring) {
               saveProgress(this._fileKey, { page: this._visiblePage });
             }
-            if (this.onPageChange) this.onPageChange(this._visiblePage);
+            if (this.onPageChange) {
+              this.onPageChange(this._visiblePage);
+            }
           }
         }
       },
       { root: this.container, rootMargin: "0px", threshold: 0.4 },
     );
-    for (const img of this._imgEls) visTracker.observe(img);
+    for (const img of this._imgEls) {
+      visTracker.observe(img);
+    }
 
     this._updateInfo();
   }
@@ -1591,11 +1695,14 @@ export default class Reader {
         try {
           localStorage.setItem("reader_manga", this._mangaMode ? "1" : "0");
           localStorage.setItem("reader_webtoon", "0");
-        } catch (_) {
+        }
+        catch (_) {
           // ignore private-browsing quota errors
         }
         this.mangaEl.classList.toggle("active", this._mangaMode);
-        if (this.webtoonEl) this.webtoonEl.classList.remove("active");
+        if (this.webtoonEl) {
+          this.webtoonEl.classList.remove("active");
+        }
         // Re-open the current comic in the new mode
         if (this.file && this._readerType === "comic") {
           this._openComicRenderer();
@@ -1605,15 +1712,20 @@ export default class Reader {
     if (this.webtoonEl) {
       this.webtoonEl.addEventListener("click", () => {
         this._webtoonMode = !this._webtoonMode;
-        if (this._webtoonMode) this._mangaMode = false;
+        if (this._webtoonMode) {
+          this._mangaMode = false;
+        }
         try {
           localStorage.setItem("reader_webtoon", this._webtoonMode ? "1" : "0");
           localStorage.setItem("reader_manga", "0");
-        } catch (_) {
+        }
+        catch (_) {
           // ignore private-browsing quota errors
         }
         this.webtoonEl.classList.toggle("active", this._webtoonMode);
-        if (this.mangaEl) this.mangaEl.classList.remove("active");
+        if (this.mangaEl) {
+          this.mangaEl.classList.remove("active");
+        }
         // Re-open the current comic in the new mode
         if (this.file && this._readerType === "comic") {
           this._openComicRenderer();
@@ -1627,15 +1739,15 @@ export default class Reader {
 
     // Reader options modal
     if (this.readerOptsEl && this.readerOptsModalEl) {
-      this.readerOptsEl.addEventListener("click", (e) => {
+      this.readerOptsEl.addEventListener("click", e => {
         e.stopPropagation();
         this._toggleOptsModal();
       });
 
       // Font family buttons
-      this.readerOptsModalEl
-        .querySelectorAll(".rom-font-btn")
-        .forEach((btn) => {
+      this.readerOptsModalEl.
+        querySelectorAll(".rom-font-btn").
+        forEach(btn => {
           btn.addEventListener("click", () => {
             const fontFamily = btn.dataset.font;
             this._applyReaderOpt({ fontFamily });
@@ -1650,7 +1762,7 @@ export default class Reader {
       if (sizeDecEl) {
         sizeDecEl.addEventListener("click", () => {
           const cur = loadReaderOpts().fontSize;
-          const idx = SIZES.findIndex((s) => Math.abs(s - cur) < 0.01);
+          const idx = SIZES.findIndex(s => Math.abs(s - cur) < 0.01);
           const next = SIZES[Math.max(0, idx < 0 ? SIZES.length - 1 : idx - 1)];
           this._applyReaderOpt({ fontSize: next });
           this._updateOptsUI();
@@ -1659,7 +1771,7 @@ export default class Reader {
       if (sizeIncEl) {
         sizeIncEl.addEventListener("click", () => {
           const cur = loadReaderOpts().fontSize;
-          const idx = SIZES.findIndex((s) => Math.abs(s - cur) < 0.01);
+          const idx = SIZES.findIndex(s => Math.abs(s - cur) < 0.01);
           const next = SIZES[Math.min(SIZES.length - 1, idx < 0 ? 0 : idx + 1)];
           this._applyReaderOpt({ fontSize: next });
           this._updateOptsUI();
@@ -1667,9 +1779,9 @@ export default class Reader {
       }
 
       // Line spacing buttons
-      this.readerOptsModalEl
-        .querySelectorAll("#rom-spacing-row .rom-choice-btn")
-        .forEach((btn) => {
+      this.readerOptsModalEl.
+        querySelectorAll("#rom-spacing-row .rom-choice-btn").
+        forEach(btn => {
           btn.addEventListener("click", () => {
             this._applyReaderOpt({
               lineSpacing: parseFloat(btn.dataset.spacing),
@@ -1679,9 +1791,9 @@ export default class Reader {
         });
 
       // Margin buttons
-      this.readerOptsModalEl
-        .querySelectorAll("#rom-margin-row .rom-choice-btn")
-        .forEach((btn) => {
+      this.readerOptsModalEl.
+        querySelectorAll("#rom-margin-row .rom-choice-btn").
+        forEach(btn => {
           btn.addEventListener("click", () => {
             this._applyReaderOpt({ margin: parseInt(btn.dataset.margin, 10) });
             this._updateOptsUI();
@@ -1689,7 +1801,7 @@ export default class Reader {
         });
 
       // Close modal when clicking outside
-      document.addEventListener("click", (e) => {
+      document.addEventListener("click", e => {
         if (
           this._optsOpen &&
           !this.readerOptsModalEl.contains(e.target) &&
@@ -1702,7 +1814,9 @@ export default class Reader {
 
     // Focus-mode overlay mouse-move handler — show bar, fade after 2 s
     this._onFocusMouseMove = () => {
-      if (!this._focusMode) return;
+      if (!this._focusMode) {
+        return;
+      }
       document.body.classList.add("focus-bar-visible");
       clearTimeout(this._focusMouseTimer);
       this._focusMouseTimer = setTimeout(() => {
@@ -1831,16 +1945,19 @@ export default class Reader {
       if (isPdf) {
         this._renderer = new PDFReader(this.contentEl, this.infoEl);
         await this._renderer.open(file.url, file.key);
-      } else if (isComic) {
+      }
+      else if (isComic) {
         await this._openComicRenderer();
-      } else {
+      }
+      else {
         this._renderer = new BookReader(this.contentEl, this.infoEl);
         await this._renderer.open(file.url, rtype, file.key);
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       dbgErr("Reader open error", ex);
       if (this.infoEl) {
-        this.infoEl.textContent = "Failed to load — " + (ex.message || ex);
+        this.infoEl.textContent = `Failed to load — ${ex.message || ex}`;
       }
       if (this.contentEl) {
         dbgShow(this.contentEl, `OPEN ERROR: ${ex.message || ex}`, true);
@@ -1859,11 +1976,14 @@ export default class Reader {
       this._renderer.destroy();
       this._renderer = null;
     }
-    if (!this.file) return;
+    if (!this.file) {
+      return;
+    }
     if (this._webtoonMode) {
       this._renderer = new WebtoonReader(this.contentEl, this.infoEl);
       await this._renderer.open(this.file);
-    } else {
+    }
+    else {
       this._renderer = new ComicReader(this.contentEl, this.infoEl);
       this._renderer.setMangaMode(this._mangaMode);
       await this._renderer.open(this.file);
@@ -1873,24 +1993,33 @@ export default class Reader {
   _toggleOptsModal() {
     if (this._optsOpen) {
       this._closeOptsModal();
-    } else {
+    }
+    else {
       this._openOptsModal();
     }
   }
 
   _openOptsModal() {
-    if (!this.readerOptsModalEl) return;
+    if (!this.readerOptsModalEl) {
+      return;
+    }
     this._optsOpen = true;
     this._updateOptsUI();
     this.readerOptsModalEl.classList.remove("hidden");
-    if (this.readerOptsEl) this.readerOptsEl.classList.add("active");
+    if (this.readerOptsEl) {
+      this.readerOptsEl.classList.add("active");
+    }
   }
 
   _closeOptsModal() {
-    if (!this.readerOptsModalEl) return;
+    if (!this.readerOptsModalEl) {
+      return;
+    }
     this._optsOpen = false;
     this.readerOptsModalEl.classList.add("hidden");
-    if (this.readerOptsEl) this.readerOptsEl.classList.remove("active");
+    if (this.readerOptsEl) {
+      this.readerOptsEl.classList.remove("active");
+    }
   }
 
   /**
@@ -1909,24 +2038,26 @@ export default class Reader {
 
   /** Sync the active states in the opts modal UI to current persisted opts. */
   _updateOptsUI() {
-    if (!this.readerOptsModalEl) return;
+    if (!this.readerOptsModalEl) {
+      return;
+    }
     const opts = loadReaderOpts();
 
     // Font family
-    this.readerOptsModalEl.querySelectorAll(".rom-font-btn").forEach((btn) => {
+    this.readerOptsModalEl.querySelectorAll(".rom-font-btn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.font === opts.fontFamily);
     });
 
     // Font size display
     const sizeValEl = this.readerOptsModalEl.querySelector("#rom-size-val");
     if (sizeValEl) {
-      sizeValEl.textContent = Math.round(opts.fontSize * 100) + "%";
+      sizeValEl.textContent = `${Math.round(opts.fontSize * 100)}%`;
     }
 
     // Line spacing
-    this.readerOptsModalEl
-      .querySelectorAll("#rom-spacing-row .rom-choice-btn")
-      .forEach((btn) => {
+    this.readerOptsModalEl.
+      querySelectorAll("#rom-spacing-row .rom-choice-btn").
+      forEach(btn => {
         btn.classList.toggle(
           "active",
           Math.abs(parseFloat(btn.dataset.spacing) - opts.lineSpacing) < 0.01,
@@ -1934,9 +2065,9 @@ export default class Reader {
       });
 
     // Margins
-    this.readerOptsModalEl
-      .querySelectorAll("#rom-margin-row .rom-choice-btn")
-      .forEach((btn) => {
+    this.readerOptsModalEl.
+      querySelectorAll("#rom-margin-row .rom-choice-btn").
+      forEach(btn => {
         btn.classList.toggle(
           "active",
           parseInt(btn.dataset.margin, 10) === opts.margin,
@@ -1947,7 +2078,9 @@ export default class Reader {
   _toggleFocus() {
     // Guard against re-entrant calls fired by fullscreenchange events that
     // occur during the browser's own transition animation.
-    if (this._focusTransitioning) return;
+    if (this._focusTransitioning) {
+      return;
+    }
 
     this._focusMode = !this._focusMode;
     document.body.classList.toggle("focus-reading", this._focusMode);
@@ -1975,13 +2108,16 @@ export default class Reader {
           req.then(done).catch(() => {
             this._focusTransitioning = false;
           });
-        } else {
+        }
+        else {
           done();
         }
-      } catch (_) {
+      }
+      catch (_) {
         this._focusTransitioning = false;
       }
-    } else {
+    }
+    else {
       document.removeEventListener("mousemove", this._onFocusMouseMove);
       document.removeEventListener(
         "fullscreenchange",
@@ -1992,7 +2128,8 @@ export default class Reader {
       if (document.fullscreenElement) {
         try {
           document.exitFullscreen();
-        } catch (_) {}
+        }
+        catch (_) { /* no-op */ }
       }
     }
 
@@ -2007,7 +2144,9 @@ export default class Reader {
       this._renderer = null;
     }
     // Exit focus mode if active
-    if (this._focusMode) this._toggleFocus();
+    if (this._focusMode) {
+      this._toggleFocus();
+    }
     // Close opts modal if open
     this._closeOptsModal();
     this.file = null;
@@ -2020,7 +2159,8 @@ export default class Reader {
   _paginatePage(dir) {
     if (this._renderer instanceof BookReader) {
       this._bookPage(dir);
-    } else if (
+    }
+    else if (
       this._renderer instanceof ComicReader ||
       this._renderer instanceof WebtoonReader
     ) {
@@ -2037,8 +2177,12 @@ export default class Reader {
   /** Navigate one page within the current chapter (or wrap to adjacent chapter). */
   _bookPage(dir) {
     if (this._renderer instanceof BookReader) {
-      if (dir === "prev") this._renderer.prevPage();
-      else this._renderer.nextPage();
+      if (dir === "prev") {
+        this._renderer.prevPage();
+      }
+      else {
+        this._renderer.nextPage();
+      }
     }
   }
 
@@ -2048,16 +2192,24 @@ export default class Reader {
       this._renderer instanceof ComicReader ||
       this._renderer instanceof WebtoonReader
     ) {
-      if (dir === "prev") this._renderer.prevPage();
-      else this._renderer.nextPage();
+      if (dir === "prev") {
+        this._renderer.prevPage();
+      }
+      else {
+        this._renderer.nextPage();
+      }
     }
   }
 
   /** Jump to the previous or next chapter. */
   _bookChapter(dir) {
     if (this._renderer instanceof BookReader) {
-      if (dir === "prev") this._renderer.prevChapter();
-      else this._renderer.nextChapter();
+      if (dir === "prev") {
+        this._renderer.prevChapter();
+      }
+      else {
+        this._renderer.nextChapter();
+      }
     }
   }
 
@@ -2065,7 +2217,8 @@ export default class Reader {
     if (this._renderer instanceof PDFReader) {
       if (dir === "prev") {
         this._renderer.prevPage();
-      } else {
+      }
+      else {
         this._renderer.nextPage();
       }
     }
@@ -2080,35 +2233,54 @@ export default class Reader {
       }
       this.close();
       nukeEvent(e);
-    } else if (e.key === "ArrowLeft") {
+    }
+    else if (e.key === "ArrowLeft") {
       // Left arrow: previous page (PDF/comic) or previous page within chapter (book)
-      if (this._readerType === "pdf") this._pdf("prev");
-      else if (this._readerType === "comic") this._comicPage("prev");
-      else this._bookPage("prev");
+      if (this._readerType === "pdf") {
+        this._pdf("prev");
+      }
+      else if (this._readerType === "comic") {
+        this._comicPage("prev");
+      }
+      else {
+        this._bookPage("prev");
+      }
       nukeEvent(e);
-    } else if (e.key === "ArrowRight") {
+    }
+    else if (e.key === "ArrowRight") {
       // Right arrow: next page (PDF/comic) or next page within chapter (book)
-      if (this._readerType === "pdf") this._pdf("next");
-      else if (this._readerType === "comic") this._comicPage("next");
-      else this._bookPage("next");
+      if (this._readerType === "pdf") {
+        this._pdf("next");
+      }
+      else if (this._readerType === "comic") {
+        this._comicPage("next");
+      }
+      else {
+        this._bookPage("next");
+      }
       nukeEvent(e);
-    } else if (e.key === "ArrowUp") {
+    }
+    else if (e.key === "ArrowUp") {
       if (this._readerType === "pdf") {
         this._pdf("prev");
         nukeEvent(e);
-      } else if (this._readerType === "comic" && this._webtoonMode) {
+      }
+      else if (this._readerType === "comic" && this._webtoonMode) {
         this._comicPage("prev");
         nukeEvent(e);
       }
-    } else if (e.key === "ArrowDown") {
+    }
+    else if (e.key === "ArrowDown") {
       if (this._readerType === "pdf") {
         this._pdf("next");
         nukeEvent(e);
-      } else if (this._readerType === "comic" && this._webtoonMode) {
+      }
+      else if (this._readerType === "comic" && this._webtoonMode) {
         this._comicPage("next");
         nukeEvent(e);
       }
-    } else if (e.key === "PageUp") {
+    }
+    else if (e.key === "PageUp") {
       if (this._readerType === "comic" && this._webtoonMode) {
         // PageUp in webtoon = scroll back one full page height
         if (this._renderer instanceof WebtoonReader) {
@@ -2118,11 +2290,13 @@ export default class Reader {
           });
         }
         nukeEvent(e);
-      } else if (this._readerType !== "pdf") {
+      }
+      else if (this._readerType !== "pdf") {
         this._bookChapter("prev");
         nukeEvent(e);
       }
-    } else if (e.key === "PageDown") {
+    }
+    else if (e.key === "PageDown") {
       if (this._readerType === "comic" && this._webtoonMode) {
         // PageDown in webtoon = scroll forward one full page height
         if (this._renderer instanceof WebtoonReader) {
@@ -2132,11 +2306,13 @@ export default class Reader {
           });
         }
         nukeEvent(e);
-      } else if (this._readerType !== "pdf") {
+      }
+      else if (this._readerType !== "pdf") {
         this._bookChapter("next");
         nukeEvent(e);
       }
-    } else if (e.key === "f" || e.key === "F") {
+    }
+    else if (e.key === "f" || e.key === "F") {
       this._toggleFocus();
       nukeEvent(e);
     }

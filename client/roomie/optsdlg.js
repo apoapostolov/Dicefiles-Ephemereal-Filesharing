@@ -69,7 +69,8 @@ export class OptionsModal extends Modal {
       );
       await this.owner.showModal(usersDlg);
       this[users] = usersDlg.users;
-    } catch (ex) {
+    }
+    catch (ex) {
       if (ex) {
         console.error(ex);
       }
@@ -79,7 +80,8 @@ export class OptionsModal extends Modal {
   oninviteonly() {
     if (this.inviteonly.checked) {
       this.el.elements.invitees.classList.remove("hidden");
-    } else {
+    }
+    else {
       this.el.elements.invitees.classList.add("hidden");
     }
   }
@@ -169,7 +171,8 @@ will NOT be aborted, and they also retain their chat histories.`,
         await socket.makeCall("setconfig", "owners", this.owners);
       }
       return true;
-    } catch (ex) {
+    }
+    catch (ex) {
       await this.owner.showMessage(ex.message || ex, "Error", "i-error");
     }
     return false;

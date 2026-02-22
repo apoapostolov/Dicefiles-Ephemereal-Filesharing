@@ -2,6 +2,12 @@
 
 import EventEmitter from "events";
 import localforage from "localforage";
+import { APOOL } from "./animationpool";
+import File from "./file";
+import UserTooltip from "./messages/usertooltip";
+import registry from "./registry";
+import Scroller from "./scroller";
+import Tooltip from "./tooltip";
 import {
   debounce,
   dom,
@@ -11,20 +17,14 @@ import {
   toMessage,
   toType,
 } from "./util";
-import {APOOL} from "./animationpool";
-import registry from "./registry";
-import Tooltip from "./tooltip";
-import UserTooltip from "./messages/usertooltip";
-import File from "./file";
-import Scroller from "./scroller";
 
-const DATE_FORMAT_SHORT = (function() {
+const DATE_FORMAT_SHORT = (function () {
 try {
   return new Intl.DateTimeFormat("en-US", {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-    hourCycle: "h23"
+    hourCycle: "h23",
   });
 }
 catch (ex) {
@@ -38,12 +38,14 @@ catch (ex) {
 })();
 const DATE_FORMAT_LONG = new Intl.DateTimeFormat("eu");
 
-export default new class Messages extends EventEmitter {
+export default new (class Messages extends EventEmitter {
   constructor() {
     super();
     this.el = document.querySelector("#messages");
     this.scroller = new Scroller(
-      this.el, document.querySelector("#chat-scroller"));
+      this.el,
+      document.querySelector("#chat-scroller"),
+    );
     this.endMarker = document.querySelector("#endmarker");
     this.msgs = [];
     this.els = [];
@@ -52,7 +54,7 @@ export default new class Messages extends EventEmitter {
     this.users = new Map();
     this.flushing = null;
     this.store = localforage.createInstance({
-      storeName: "msgs"
+      storeName: "msgs",
     });
     this._save = debounce(this._save.bind(this));
     this.flush = APOOL.wrap(this.flush);
@@ -69,7 +71,7 @@ export default new class Messages extends EventEmitter {
       const options = {
         root: this.el,
         rootMargin: "0px",
-        threshold: 0.95
+        threshold: 0.95,
       };
 
       this.interectionObserver = new IntersectionObserver(entries => {
@@ -82,7 +84,9 @@ export default new class Messages extends EventEmitter {
             continue;
           }
           this.interectionObserver.unobserve(e.target);
-          const {dataset: {id}} = e.target;
+          const {
+            dataset: { id },
+          } = e.target;
           if (!id) {
             continue;
           }
@@ -99,10 +103,10 @@ export default new class Messages extends EventEmitter {
       }, options);
     }
     catch (ex) {
-      this.intersectionObserver = new class {
-        observe() { }
-        unobserve() { }
-      }();
+      this.intersectionObserver = new (class {
+        observe() {}
+        unobserve() {}
+      })();
     }
 
     Object.seal(this);
@@ -111,7 +115,9 @@ export default new class Messages extends EventEmitter {
   init() {
     registry.socket.on("message", this.add.bind(this));
     registry.socket.on(
-      "removeMessages", APOOL.wrap(this.onremovemessages.bind(this)));
+      "removeMessages",
+      APOOL.wrap(this.onremovemessages.bind(this)),
+    );
 
     registry.splitter.on("adjusted", () => {
       this.scrollEnd();
@@ -126,7 +132,7 @@ export default new class Messages extends EventEmitter {
         volatile: true,
         role: "system",
         user: "Error",
-        msg: e
+        msg: e,
       });
     });
     registry.chatbox.on("warn", e => {
@@ -134,7 +140,7 @@ export default new class Messages extends EventEmitter {
         volatile: true,
         role: "system",
         user: "Warning",
-        msg: e
+        msg: e,
       });
     });
 
@@ -147,27 +153,41 @@ export default new class Messages extends EventEmitter {
         role: "system",
         user: "Warning",
         msg: await toMessage(
-          "This room was disabled by a moderator!\nYou cannot post or upload!"),
+          "This room was disabled by a moderator!\nYou cannot post or upload!",
+        ),
       });
     });
 
-    this.endMarker.addEventListener("click", () => {
-      this.scrollEnd();
-    }, { passive: true });
-    this.el.addEventListener("scroll", () => {
-      if (this.isScrollEnd) {
-        this.hideEndMarker();
-      }
-    }, { passive: true });
+    this.endMarker.addEventListener(
+      "click",
+      () => {
+        this.scrollEnd();
+      },
+      { passive: true },
+    );
+    this.el.addEventListener(
+      "scroll",
+      () => {
+        if (this.isScrollEnd) {
+          this.hideEndMarker();
+        }
+      },
+      { passive: true },
+    );
 
     registry.roomie.on("hidden", this.onhidden.bind(this));
 
-    addEventListener("resize", debounce(() => {
-      this.scrollEnd();
-    }, 500), { passive: true });
+    addEventListener(
+      "resize",
+      debounce(() => {
+        this.scrollEnd();
+      }, 500),
+      { passive: true },
+    );
 
-    this._waitConfig = new Promise(
-      r => registry.config.once("change-historySize", r));
+    this._waitConfig = new Promise(r =>
+      registry.config.once("change-historySize", r),
+    );
   }
 
   async completeFile(f) {
@@ -231,7 +251,7 @@ export default new class Messages extends EventEmitter {
   }
 
   async onuserenter(e) {
-    const {profile, owner} = e.target.dataset;
+    const { profile, owner } = e.target.dataset;
     if (!profile) {
       return;
     }
@@ -291,8 +311,7 @@ export default new class Messages extends EventEmitter {
     while (this.msgs.length > historySize) {
       this.msgs.shift();
     }
-    await this.store.setItem(registry.roomid, this.msgs).
-      catch(console.error);
+    await this.store.setItem(registry.roomid, this.msgs).catch(console.error);
   }
 
   _add(m) {
@@ -351,7 +370,7 @@ export default new class Messages extends EventEmitter {
       ucls.push(m.role);
     }
 
-    const e = dom("div", {classes: ["msgcontainer", ...ucls]});
+    const e = dom("div", { classes: ["msgcontainer", ...ucls] });
     if (m.role) {
       e.dataset.role = m.role;
     }
@@ -384,44 +403,53 @@ export default new class Messages extends EventEmitter {
             target: "_blank",
             rel: "nofollow",
           },
-          text: m.user
+          text: m.user,
         });
         user.dataset.profile = profile;
         user.dataset.owner = m.owner;
-        user.addEventListener(
-          "mouseenter", this.onuserenter, { passive: true });
+        user.addEventListener("mouseenter", this.onuserenter, {
+          passive: true,
+        });
       }
       else {
         user = dom("span", {
           classes: ucls,
-          text: m.user
+          text: m.user,
         });
       }
 
       if (!m.owner && m.role) {
-        user.insertBefore(dom("span", {
-          classes: ["role", roleToIcon(m.role)],
-          attrs: {title: roleToStatus(m.role)},
-        }), user.firstChild);
+        user.insertBefore(
+          dom("span", {
+            classes: ["role", roleToIcon(m.role)],
+            attrs: { title: roleToStatus(m.role) },
+          }),
+          user.firstChild,
+        );
       }
       if (m.owner) {
-        user.insertBefore(dom("span", {
-          classes: ["i-owner"],
-          attrs: {title: "Room Owner"},
-        }), user.firstChild);
+        user.insertBefore(
+          dom("span", {
+            classes: ["i-owner"],
+            attrs: { title: "Room Owner" },
+          }),
+          user.firstChild,
+        );
       }
       const ts = dom("span", {
-        attrs: {title: DATE_FORMAT_LONG.format(m.date)},
+        attrs: { title: DATE_FORMAT_LONG.format(m.date) },
         classes: ["time"],
-        text: d
+        text: d,
       });
       user.insertBefore(ts, user.firstChild);
 
       if (m.ip) {
-        user.appendChild(dom("span", {
-          classes: ["tag-ip"],
-          text: ` (${m.ip})`
-        }));
+        user.appendChild(
+          dom("span", {
+            classes: ["tag-ip"],
+            text: ` (${m.ip})`,
+          }),
+        );
       }
       if (!m.me) {
         user.appendChild(document.createTextNode(":"));
@@ -441,26 +469,27 @@ export default new class Messages extends EventEmitter {
     }
 
     const msg = dom("span", {
-      classes: ["msg"]
+      classes: ["msg"],
     });
     if (!Array.isArray(m.msg)) {
-      m.msg = [{t: "t", v: m.msg}];
+      m.msg = [{ t: "t", v: m.msg }];
     }
     this.addMessageParts(msg, m.msg);
     e.appendChild(msg);
 
     if (m.channel) {
-      e.appendChild(dom("span", {
-        classes: ["channel"],
-        text: ` (${m.channel})`
-      }));
+      e.appendChild(
+        dom("span", {
+          classes: ["channel"],
+          text: ` (${m.channel})`,
+        }),
+      );
     }
 
     e.dataset.id = m.id;
 
     return [e, msg];
   }
-
 
   add(m) {
     if (this.restoring) {
@@ -472,16 +501,19 @@ export default new class Messages extends EventEmitter {
     const shouldForceScroll = !!msg.querySelector(".chatgif-wrap");
     this.queue.push(e);
     if (notify) {
-      registry.roomie.displayNotification({
-        user: m.user,
-        msg: msg.textContent
-      }).catch(console.error);
+      registry.roomie.
+        displayNotification({
+          user: m.user,
+          msg: msg.textContent,
+        }).
+        catch(console.error);
     }
     if (!this.flushing) {
       this.flushing = this.flush();
     }
     if (shouldForceScroll) {
-      Promise.resolve(this.flushing).then(() => this.scrollEnd()).
+      Promise.resolve(this.flushing).
+        then(() => this.scrollEnd()).
         catch(console.error);
       const mediaEls = e.querySelectorAll(".chatgif");
       mediaEls.forEach(media => {
@@ -491,13 +523,13 @@ export default new class Messages extends EventEmitter {
             setTimeout(forceScroll, 0);
           }
           else {
-            media.addEventListener("load", forceScroll, {once: true});
-            media.addEventListener("error", forceScroll, {once: true});
+            media.addEventListener("load", forceScroll, { once: true });
+            media.addEventListener("error", forceScroll, { once: true });
           }
           return;
         }
-        media.addEventListener("loadeddata", forceScroll, {once: true});
-        media.addEventListener("canplay", forceScroll, {once: true});
+        media.addEventListener("loadeddata", forceScroll, { once: true });
+        media.addEventListener("canplay", forceScroll, { once: true });
       });
     }
   }
@@ -520,7 +552,7 @@ export default new class Messages extends EventEmitter {
             rel: "nofollow",
             href: url.href,
           },
-          text: info.name
+          text: info.name,
         });
         const icon = dom("span", {
           classes: ["icon", `i-${toType(info.type)}`],
@@ -528,17 +560,19 @@ export default new class Messages extends EventEmitter {
         file.insertBefore(icon, file.firstChild);
         this.files.set(file, info);
         if (info.client) {
-          this.completeFile(file).then(f => {
-            if (!f || f.unknown) {
-              return;
-            }
-            icon.className = `icon  i-${toType(f.type)}`;
-            file.href = f.url;
-            file.lastChild.textContent = f.name;
-          }).catch(console.error);
+          this.completeFile(file).
+            then(f => {
+              if (!f || f.unknown) {
+                return;
+              }
+              icon.className = `icon  i-${toType(f.type)}`;
+              file.href = f.url;
+              file.lastChild.textContent = f.name;
+            }).
+            catch(console.error);
         }
         file.addEventListener("mouseenter", this.onfileenter, {
-          passive: true
+          passive: true,
         });
         file.addEventListener("click", this.onfileclick);
         msg.appendChild(file);
@@ -548,7 +582,7 @@ export default new class Messages extends EventEmitter {
       case "u": {
         const embed = this.toGifEmbed(p.v);
         if (embed) {
-          const mediaWrap = dom("span", {classes: ["chatgif-wrap"]});
+          const mediaWrap = dom("span", { classes: ["chatgif-wrap"] });
           let media;
           if (embed.type === "video") {
             media = dom("video", {
@@ -593,7 +627,7 @@ export default new class Messages extends EventEmitter {
       case "p": {
         const a = dom("span", {
           classes: ["u", p.r],
-          text: p.v
+          text: p.v,
         });
         msg.appendChild(a);
         break;
@@ -614,7 +648,7 @@ export default new class Messages extends EventEmitter {
 
       case "raw": {
         if (typeof p.h === "string") {
-          const node = dom("span", {classes: ["raw"]});
+          const node = dom("span", { classes: ["raw"] });
           node.innerHTML = p.h;
           msg.appendChild(node);
         }
@@ -636,6 +670,7 @@ export default new class Messages extends EventEmitter {
       const u = new URL(url);
       const host = u.hostname.toLowerCase().replace(/^www\./, "");
       const path = u.pathname;
+      // eslint-disable-next-line prefer-destructuring
       const ext = (path.match(/\.(gif|webm|mp4)$/i) || [])[1];
 
       if (ext) {
@@ -646,7 +681,7 @@ export default new class Messages extends EventEmitter {
       }
 
       if (host === "i.giphy.com" || host === "media.giphy.com") {
-        return {type: "image", src: u.href};
+        return { type: "image", src: u.href };
       }
 
       if (host.endsWith("giphy.com")) {
@@ -663,10 +698,10 @@ export default new class Messages extends EventEmitter {
 
       if (host === "media.tenor.com" || host === "c.tenor.com") {
         if (/\.gif$/i.test(path)) {
-          return {type: "image", src: u.href};
+          return { type: "image", src: u.href };
         }
         if (/\.(mp4|webm)$/i.test(path)) {
-          return {type: "video", src: u.href};
+          return { type: "video", src: u.href };
         }
       }
     }
@@ -697,10 +732,12 @@ export default new class Messages extends EventEmitter {
           notify: false,
           user: "System",
           role: "system",
-          msg: [{
-            t: "t",
-            v: "Message removed"
-          }]
+          msg: [
+            {
+              t: "t",
+              v: "Message removed",
+            },
+          ],
         });
         delete m.channel;
       }
@@ -732,18 +769,18 @@ export default new class Messages extends EventEmitter {
   }
 
   get isScrollEnd() {
-    const {el} = this;
-    const end = el.scrollHeight -
-          el.clientHeight -
-          el.scrollTop;
-    return (end < 16);
+    const { el } = this;
+    const end = el.scrollHeight - el.clientHeight - el.scrollTop;
+    return end < 16;
   }
 
   flush() {
-    const {el} = this;
+    const { el } = this;
     const end = this.isScrollEnd;
     for (const e of this.queue) {
-      const {dataset: {seen, id, volatile}} = e;
+      const {
+        dataset: { seen, id, volatile },
+      } = e;
       this.els.push(e);
       if (seen !== "true" && id && volatile !== "true") {
         this.interectionObserver.observe(e);
@@ -775,7 +812,7 @@ export default new class Messages extends EventEmitter {
   }
 
   showMOTD() {
-    const {motd} = registry.roomie;
+    const { motd } = registry.roomie;
     if (!motd || !motd.length) {
       return;
     }
@@ -783,7 +820,7 @@ export default new class Messages extends EventEmitter {
       volatile: true,
       role: "system",
       user: "MOTD",
-      msg: motd
+      msg: motd,
     });
   }
 
@@ -808,7 +845,7 @@ export default new class Messages extends EventEmitter {
       try {
         e.preventDefault();
         e.stopPropagation();
-        const i = dom("input", {attrs: {type: "text"}});
+        const i = dom("input", { attrs: { type: "text" } });
         i.value = u.href;
         copy.appendChild(i);
         i.select();
@@ -827,7 +864,8 @@ export default new class Messages extends EventEmitter {
     const renameBtn = tpl.querySelector(".welcome_namebtn");
 
     const canRename = () =>
-      registry.chatbox.role === "mod" || document.body.classList.contains("owner");
+      registry.chatbox.role === "mod" ||
+      document.body.classList.contains("owner");
     const needsCustomName = () => !registry.config.get("roomnamecustom");
     const syncRenameUi = () => {
       const show = !!renameWrap && canRename() && needsCustomName();
@@ -850,7 +888,9 @@ export default new class Messages extends EventEmitter {
         }
         const name = (renameInput.value || "").trim();
         if (name.length < 3 || name.length > 20) {
-          this.addSystemMessage("Room name must be between 3 and 20 characters.");
+          this.addSystemMessage(
+            "Room name must be between 3 and 20 characters.",
+          );
           return;
         }
         renameBtn.setAttribute("disabled", "disabled");
@@ -879,9 +919,7 @@ export default new class Messages extends EventEmitter {
       notify: false,
       role: "system",
       user: "System",
-      msg: [
-        {t: "raw", h: root}
-      ]
+      msg: [{ t: "raw", h: root }],
     });
   }
 
@@ -890,13 +928,13 @@ export default new class Messages extends EventEmitter {
       volatile: true,
       user: "System",
       role: "system",
-      msg
+      msg,
     });
   }
 
   async restore() {
     const stored = await this.store.getItem(registry.roomid);
-    const {restoring} = this;
+    const { restoring } = this;
     this.restoring = null;
     if (registry.config.has("name")) {
       this.addWelcome();
@@ -909,7 +947,7 @@ export default new class Messages extends EventEmitter {
       stored.forEach(this.add.bind(this));
     }
     this.add({
-      msg: [{t: "raw", h: dom("div", {classes: ["hr"]})}],
+      msg: [{ t: "raw", h: dom("div", { classes: ["hr"] }) }],
       raw: true,
       volatile: true,
       highlight: false,
@@ -922,4 +960,4 @@ export default new class Messages extends EventEmitter {
       this.flushing.then(() => this.setLastMessageMarker());
     }
   }
-}();
+})();

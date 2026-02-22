@@ -1,20 +1,15 @@
 "use strict";
 
-import Removable from "../removable";
+import { APOOL } from "../animationpool";
 import registry from "../registry";
-import {
-  dom,
-  toPrettyDuration,
-  toPrettyETA,
-  toPrettySize,
-} from "../util";
-import {APOOL} from "../animationpool";
+import Removable from "../removable";
+import { dom, toPrettyDuration, toPrettyETA, toPrettySize } from "../util";
 
 // eslint-disable-next-line
 const PER = new Intl.NumberFormat(undefined, {
   style: "percent",
   minimumFractionDigits: 1,
-  maximumFractionDigits: 1
+  maximumFractionDigits: 1,
 });
 
 let IDS = 0;
@@ -30,7 +25,7 @@ export default class Upload extends Removable {
     this.aborted = false;
     this.id = ++IDS;
 
-    this.el = dom("div", {classes: ["file", "upload"]});
+    this.el = dom("div", { classes: ["file", "upload"] });
 
     this.iconEl = dom("span", {
       classes: ["icon", "i-wait"],
@@ -39,59 +34,68 @@ export default class Upload extends Removable {
 
     this.abortEl = dom("span", {
       classes: ["icon", "abort", "i-clear"],
-      attrs: {title: "Cancel Upload"},
+      attrs: { title: "Cancel Upload" },
     });
     this.el.appendChild(this.abortEl);
     this.abortEl.onclick = this.abort.bind(this);
 
-    this.nameEl = dom("span", {classes: ["name"], text: this.file.name});
+    this.nameEl = dom("span", { classes: ["name"], text: this.file.name });
     this.el.appendChild(this.nameEl);
 
-    this.progressEl = dom("span", {classes: ["detail-progress"]});
+    this.progressEl = dom("span", { classes: ["detail-progress"] });
     this.el.appendChild(this.progressEl);
 
-    this.detailEl = dom("span", {classes: ["detail"]});
+    this.detailEl = dom("span", { classes: ["detail"] });
     this.el.appendChild(this.detailEl);
 
     this.sizeEl = dom("span", {
       classes: ["size"],
-      text: toPrettySize(this.file.size)
+      text: toPrettySize(this.file.size),
     });
     this.detailEl.appendChild(this.sizeEl);
   }
 
   getKey() {
-    const {socket} = registry;
+    const { socket } = registry;
     let inlineTO = null;
     const getter = (resolve, reject) => {
-      socket.makeCall("uploadkey", this.id).then(d => {
-        if (inlineTO) {
-          clearInterval(inlineTO);
-          inlineTO = null;
-        }
-        if (!d.wait) {
-          resolve(d);
-          return;
-        }
-
-        const updateDuration = dur => this.sizeEl.textContent = `Waiting (${toPrettyDuration(dur)})`;
-        resolve(new Promise((iresolve, ireject) => {
-          let dur = registry.roomie.diffTimes(d.wait);
-          if (dur <= 0) {
-            getter(iresolve, ireject);
+      socket.
+        makeCall("uploadkey", this.id).
+        then(d => {
+          if (inlineTO) {
+            clearInterval(inlineTO);
+            inlineTO = null;
+          }
+          if (!d.wait) {
+            resolve(d);
             return;
           }
-          updateDuration(dur);
-          inlineTO = setInterval(() => {
-            dur -= 1000;
-            updateDuration(dur);
-          }, 1000);
-          setTimeout(() => {
-            getter(iresolve, ireject);
-          }, Math.min(dur, 20000));
-        }));
-        return;
-      }).catch(reject);
+
+          const updateDuration = dur =>
+            (this.sizeEl.textContent = `Waiting (${toPrettyDuration(dur)})`);
+          resolve(
+            new Promise((iresolve, ireject) => {
+              let dur = registry.roomie.diffTimes(d.wait);
+              if (dur <= 0) {
+                getter(iresolve, ireject);
+                return;
+              }
+              updateDuration(dur);
+              inlineTO = setInterval(() => {
+                dur -= 1000;
+                updateDuration(dur);
+              }, 1000);
+              setTimeout(
+                () => {
+                  getter(iresolve, ireject);
+                },
+                Math.min(dur, 20000),
+              );
+            }),
+          );
+          return;
+        }).
+        catch(reject);
     };
     const rv = new Promise(getter);
     (rv.finally || rv.catch).call(rv, () => {
@@ -103,7 +107,7 @@ export default class Upload extends Removable {
   }
 
   queryOffset() {
-    const {socket} = registry;
+    const { socket } = registry;
     return socket.makeCall("queryoffset", this.key);
   }
 
@@ -128,7 +132,7 @@ export default class Upload extends Removable {
     params.set("offset", this.offset);
     params.set("now", Date.now());
     try {
-      const req = this.req = new XMLHttpRequest();
+      const req = (this.req = new XMLHttpRequest());
       return await new Promise((resolve, reject) => {
         req.onerror = () => {
           console.error("onerror");
@@ -146,19 +150,27 @@ export default class Upload extends Removable {
         let last = Date.now();
         let bytes = 0;
         let rate = 0;
-        req.upload.addEventListener("progress", e => {
-          const now = Date.now();
-          const diff = Date.now() - last;
-          if (diff > 1000 || !rate) {
-            const cur = (e.loaded - bytes) / diff * 1000;
-            bytes = e.loaded;
-            rate = cur * 0.3 + rate * 0.7;
-            last = now;
-          }
-          this.setProgress(this.offset + e.loaded, this.offset + e.total, rate);
-        }, { passive: true });
+        req.upload.addEventListener(
+          "progress",
+          e => {
+            const now = Date.now();
+            const diff = Date.now() - last;
+            if (diff > 1000 || !rate) {
+              const cur = ((e.loaded - bytes) / diff) * 1000;
+              bytes = e.loaded;
+              rate = cur * 0.3 + rate * 0.7;
+              last = now;
+            }
+            this.setProgress(
+              this.offset + e.loaded,
+              this.offset + e.total,
+              rate,
+            );
+          },
+          { passive: true },
+        );
         req.open("PUT", `/api/upload/${this.key}?${params.toString()}`);
-        let {file} = this;
+        let { file } = this;
         if (this.offset) {
           file = file.slice(this.offset);
         }
@@ -171,9 +183,9 @@ export default class Upload extends Removable {
   }
 
   setProgress(current, total, rate) {
-    const p = (current / total);
+    const p = current / total;
     if (p !== 1) {
-      const eta = toPrettyETA((total - current) / rate * 1.01);
+      const eta = toPrettyETA(((total - current) / rate) * 1.01);
       rate = `${toPrettySize(rate)}/s`;
       this.progressEl.textContent = `ETA: ${eta} — ${PER.format(p)}`;
       this.sizeEl.textContent = `${toPrettySize(current)}/${toPrettySize(total)} — ${rate}`;
@@ -187,7 +199,11 @@ export default class Upload extends Removable {
 
   setIcon(cls) {
     this.iconEl.classList.remove(
-      "i-wait", "i-upload", "i-upload-done", "i-error");
+      "i-wait",
+      "i-upload",
+      "i-upload-done",
+      "i-error",
+    );
     this.iconEl.classList.add(cls);
   }
 
@@ -196,8 +212,13 @@ export default class Upload extends Removable {
       return;
     }
     await registry.init();
-    if (!registry.chatbox || typeof registry.chatbox.ensureNick !== "function") {
-      throw new Error("Client initialization incomplete. Please refresh and retry.");
+    if (
+      !registry.chatbox ||
+      typeof registry.chatbox.ensureNick !== "function"
+    ) {
+      throw new Error(
+        "Client initialization incomplete. Please refresh and retry.",
+      );
     }
     if (!registry.socket || typeof registry.socket.makeCall !== "function") {
       throw new Error("Connection is not ready yet. Please retry.");
@@ -207,7 +228,10 @@ export default class Upload extends Removable {
     try {
       const maxFileSize = registry.config.get("maxFileSize");
       if (maxFileSize && this.file.size && this.file.size > maxFileSize) {
-        throw Object.assign(new Error(`File is too large, limit is ${toPrettySize(maxFileSize)}`), {code: 5});
+        throw Object.assign(
+          new Error(`File is too large, limit is ${toPrettySize(maxFileSize)}`),
+          { code: 5 },
+        );
       }
       for (let i = 0; i <= 25; ++i) {
         if (!this.key) {
@@ -256,7 +280,7 @@ export default class Upload extends Removable {
         volatile: true,
         user: "Error",
         role: "system",
-        msg: `Upload of "${this.file.name}" failed: ${ex.message || ex.toString()}`
+        msg: `Upload of "${this.file.name}" failed: ${ex.message || ex.toString()}`,
       });
       setTimeout(() => this.remove(), 5000);
     }

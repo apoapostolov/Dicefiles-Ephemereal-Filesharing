@@ -68,7 +68,8 @@ async function mapMessagePart(v, i, rec) {
     }
     rec.previousText = true;
     return { t: "u", v: normalizeURL(rec.URL, v) };
-  } catch (ex) {
+  }
+  catch (ex) {
     console.error(ex);
   }
   rec.previousText = true;

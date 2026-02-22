@@ -72,7 +72,8 @@ export default new (class Links extends EventEmitter {
       const parsed = JSON.parse(raw);
       const v = Number(parsed && parsed.lastSeenServerTime);
       this.newSinceServerTime = Number.isFinite(v) && v > 0 ? v : fallback;
-    } catch (ex) {
+    }
+    catch (ex) {
       this.newSinceServerTime = fallback;
     }
   }
@@ -85,7 +86,8 @@ export default new (class Links extends EventEmitter {
           lastSeenServerTime: registry.roomie.toServerTime(Date.now()),
         }),
       );
-    } catch (ex) {
+    }
+    catch (ex) {
       // ignored
     }
   }
@@ -127,11 +129,17 @@ export default new (class Links extends EventEmitter {
 
   formatAge(ms) {
     const secs = Math.floor(ms / 1000);
-    if (secs < 60) return `${secs}s`;
+    if (secs < 60) {
+      return `${secs}s`;
+    }
     const mins = Math.floor(secs / 60);
-    if (mins < 60) return `${mins}m`;
+    if (mins < 60) {
+      return `${mins}m`;
+    }
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h`;
+    if (hours < 24) {
+      return `${hours}h`;
+    }
     const days = Math.floor(hours / 24);
     return `${days}d`;
   }
@@ -205,7 +213,7 @@ export default new (class Links extends EventEmitter {
       this.links = [];
       this.linkmap.clear();
       // Remove only .file rows, preserving the #links-header element
-      Array.from(this.el.querySelectorAll(".file")).forEach((el) =>
+      Array.from(this.el.querySelectorAll(".file")).forEach(el =>
         el.remove(),
       );
     }
@@ -229,11 +237,15 @@ export default new (class Links extends EventEmitter {
   onlinksdeleted(ids) {
     for (const id of ids) {
       const link = this.linkmap.get(id);
-      if (!link) continue;
+      if (!link) {
+        continue;
+      }
 
       this.linkmap.delete(id);
       const idx = this.links.indexOf(link);
-      if (idx >= 0) this.links.splice(idx, 1);
+      if (idx >= 0) {
+        this.links.splice(idx, 1);
+      }
 
       const el = this.elmap.get(link);
       if (el && el.parentNode) {
@@ -245,7 +257,9 @@ export default new (class Links extends EventEmitter {
   onlinksupdated(links) {
     for (const link of links) {
       const existing = this.linkmap.get(link.id);
-      if (!existing) continue;
+      if (!existing) {
+        continue;
+      }
 
       Object.assign(existing, link);
       const el = this.elmap.get(existing);
