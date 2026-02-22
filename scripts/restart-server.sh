@@ -2,15 +2,15 @@
 set -euo pipefail
 
 # Canonical restart helper for Dicefiles (use inside a persistent PTY such as tmux/screen)
-# - Enforces explicit Node 18 binary for build/start (per AGENTS.md)
+# - Enforces explicit Node 20 binary for build/start (per AGENTS.md)
 # - Runs the server in the foreground so the operator can monitor logs
 # - For background use, redirect output to ./server.log from the caller (see note below)
 
-NODE_BIN="/home/apoapostolov/.nvm/versions/node/v18.20.8/bin/node"
+NODE_BIN="/home/apoapostolov/.nvm/versions/node/v20.20.0/bin/node"
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT_DIR"
 
-echo "[dicefiles] verifying shell node (may be different from required Node 18):"
+echo "[dicefiles] verifying shell node (may be different from required Node 20):"
 node -v || true
 echo "[dicefiles] using explicit Node binary: $NODE_BIN"
 $NODE_BIN -v

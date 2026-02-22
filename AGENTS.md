@@ -2,17 +2,17 @@
 
 ## Runtime Requirement
 
-Use Node.js 18 for this project runtime in this workspace.
+Use Node.js 20 for this project runtime in this workspace.
 
-- Required path: `/home/apoapostolov/.nvm/versions/node/v18.20.8/bin/node`
-- Always use the explicit Node 18 binary path for build/start/test commands.
+- Required path: `/home/apoapostolov/.nvm/versions/node/v20.20.0/bin/node`
+- Always use the explicit Node 20 binary path for build/start/test commands.
 
 ## Agent Rule
 
 If an automated agent (Codex/Claude/etc.) is working in this repo, it must:
 
 1. Check current `node -v` first.
-2. If current shell Node is not 18, run commands with the explicit Node 18 path above.
+2. If current shell Node is not 20, run commands with the explicit Node 20 path above.
 3. Never start/restart Dicefiles with Bun or a different Node major.
 
 ## Strict Server Startup Procedure (Mandatory)
@@ -22,11 +22,11 @@ Use this exact sequence every time:
 1. Verify node in shell:
    - `node -v`
 2. Build client bundle:
-   - `/home/apoapostolov/.nvm/versions/node/v18.20.8/bin/node ./node_modules/webpack-cli/bin/cli.js --mode=production`
+   - `/home/apoapostolov/.nvm/versions/node/v20.20.0/bin/node ./node_modules/webpack-cli/bin/cli.js --mode=production`
 3. **Check if server is already running before touching it:**
    - `ss -ltnp | grep 9090`
    - `curl -sI http://127.0.0.1:9090/ | head -1`
-   - If already running and you only need a restart after a build: `fuser -k 9090/tcp 2>/dev/null; sleep 1 && /home/apoapostolov/.nvm/versions/node/v18.20.8/bin/node server.js >> server.log 2>&1 &`
+   - If already running and you only need a restart after a build: `fuser -k 9090/tcp 2>/dev/null; sleep 1 && /home/apoapostolov/.nvm/versions/node/v20.20.0/bin/node server.js >> server.log 2>&1 &`
    - If not running at all: same start command as above.
 4. Verify server is actually up:
    - `curl -I http://127.0.0.1:9090/`
@@ -35,13 +35,13 @@ Use this exact sequence every time:
 
 ### Forbidden Startup Patterns
 
-- `node server.js` without the explicit Node 18 path
+- `node server.js` without the explicit Node 20 path
 - `bun run --bun dist/server.js`
 - Starting from other projects/paths like `server/server.js`
 
 ## Failure Modes We Hit (Do Not Repeat)
 
-- Shell default Node can be a different major (for example `v25.x`), which caused inconsistent runtime behavior. Always force the explicit Node 18 binary path.
+- Shell default Node can be a different major (for example `v25.x`), which caused inconsistent runtime behavior. Always force the explicit Node 20 binary path.
 - A different service instance (`server/server.js` from another project path) and Bun runtime (`bun run --bun dist/server.js`) were running and caused confusion about which app answered requests.
 - Detached `nohup` starts were unreliable in this environment and repeatedly resulted in a dead service; use a persistent PTY session for `node server.js`.
 - "Built successfully" does not mean "server is running": always verify with both `curl -I http://127.0.0.1:9090/` and `ss -ltnp | grep 9090`.
@@ -73,7 +73,7 @@ The Dicefiles Node.js server (port 9090) also runs in the **shared background** 
 - Always check `ss -ltnp | grep 9090` **before** killing or restarting the server.
 - Only restart when you have just rebuilt the client bundle and a restart is necessary to serve the new assets.
 - Do not start a second instance: if `ss` shows port 9090 occupied and `curl -sI http://127.0.0.1:9090/` returns `200 OK`, the server is healthy — skip the restart.
-- If you must restart: `fuser -k 9090/tcp 2>/dev/null; sleep 1 && /home/apoapostolov/.nvm/versions/node/v18.20.8/bin/node server.js >> server.log 2>&1 &`
+- If you must restart: `fuser -k 9090/tcp 2>/dev/null; sleep 1 && /home/apoapostolov/.nvm/versions/node/v20.20.0/bin/node server.js >> server.log 2>&1 &`
 
 ## Temporary Usage Cleanup (Playtesting)
 

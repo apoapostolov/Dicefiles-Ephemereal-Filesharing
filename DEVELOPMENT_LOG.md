@@ -1,5 +1,24 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - Migrate runtime baseline from Node 18 to Node 20
+
+### Changes
+
+- **`AGENTS.md`** — Updated runtime requirement from Node 18 → Node 20 throughout: version pin, required binary path (`v20.20.0`), agent rule check, all command snippets in Strict Server Startup Procedure, Forbidden Startup Patterns, Failure Modes, and Shared Dicefiles Server Policy.
+- **`scripts/restart-server.sh`** — Updated `NODE_BIN` to `/home/apoapostolov/.nvm/versions/node/v20.20.0/bin/node` and updated the echo message from "Node 18" to "Node 20".
+- **`.github/workflows/ci.yml`** — Step name and `node-version` updated from `18` → `20`.
+- **`.github/workflows/lint.yml`** — `node-version` updated from `18` → `20`.
+- **`.github/workflows/release.yml`** — Step name and `node-version` updated from `18` → `20`.
+- **`.github/workflows/security.yml`** — Step name and `node-version` updated from `18` → `20`.
+- **`.github/workflows/compat.yml`** — Matrix updated from `[18, 20, 22]` → `[20, 22]`; Node 18 removed as it reached EOL April 2025.
+- **`.vscode/settings.json`** — Auto-approve terminal pattern updated from `v18.20.8` → `v20.20.0` for both the webpack build and server start commands.
+
+### Server restart
+
+Previous server process (pid 753701) was running under `v18.20.8/bin/node`. Killed and restarted under `v20.20.0/bin/node` with a fresh production webpack build. Verified `HTTP/1.1 200 OK` on port 9090.
+
+---
+
 ## 2026-02-22 - P1.5 archive-only cleanup, TODO hygiene rule, Node 20 compatibility confirmed
 
 ### Changes

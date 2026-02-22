@@ -14,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        node: [18, 20, 22] # test on three LTS versions in parallel
+        node: [20, 22] # test on supported LTS versions; Node 18 reached EOL April 2025
       fail-fast: false # show results for all versions, not just the first failure
 
     steps:
