@@ -495,20 +495,51 @@ Persisted state:
 
 ---
 
-## 12. File & Room Management Endpoints (v1.1)
+## 12. File Management Endpoints (v1.1)
+
+These endpoints let agents read and write individual file metadata, making Dicefiles
+a full two-way mirror between your AI pipeline and the room.
 
 ### 12.1 Get single file metadata
 
 - `GET /api/v1/file/:key`
 - Scope: `files:read`
-- Returns the same JSON shape as a single object from `/api/v1/files`.
+- Returns the full JSON shape for a single upload including all tags, meta, and asset info.
 
 ```json
 {
   "ok": true,
-  "file": { "key": "abc123", "name": "book.pdf", "type": "document", ... }
+  "file": {
+    "key": "abc123",
+    "name": "Neuromancer.epub",
+    "type": "document",
+    "size": 524288,
+    "uploaded": 1739870000000,
+    "expires": 1740130000000,
+    "href": "/g/abc123",
+    "tags": { "author": "William Gibson", "genre": "Cyberpunk" },
+    "meta": { "ai_caption": "A noir sci-fi novel set in cyberspace." }
+  }
 }
 ```
+
+> **What this enables**
+>
+> Perfect for agents that drill into a single file after spotting its key in a webhook
+> event or room poll. Your book-indexer sees `"Neuromancer.epub"` appear in the upload
+> webhook — it calls this endpoint to read the full tag set before deciding whether to
+> enrich it. An OpenClaw workflow step can check whether `meta.ai_caption` is already
+> populated and skip the expensive vision-model call if so, saving tokens.
+>
+> ```js
+> // Agent: check before enriching
+> const { file } = await api("GET", `/file/${key}`);
+> if (file.meta?.ai_caption) return; // already enriched, skip
+> const caption = await llm.describe(file.href);
+> await api("PATCH", `/file/${key}`, { meta: { ai_caption: caption } });
+> ```
+
+---
 
 ### 12.2 Update file metadata
 
@@ -519,78 +550,177 @@ Persisted state:
 ```json
 {
   "meta": {
-    "description": "A helpful description",
-    "ai_caption": "AI-generated one-liner",
-    "ocr_text_preview": "First 500 chars of OCR text"
+    "description": "A short human-readable synopsis of the file.",
+    "ai_caption": "One-line AI-generated summary.",
+    "ocr_text_preview": "First ~500 characters extracted by OCR."
   },
   "tags": {
-    "title": "Book Title",
-    "author": "Author Name",
-    "genre": "Fantasy",
+    "title": "Neuromancer",
+    "author": "William Gibson",
+    "genre": "Cyberpunk",
     "language": "en",
-    "series": "Series Name"
+    "series": "Sprawl Trilogy"
   }
 }
 ```
 
-Only the allow-listed keys above are accepted. Unknown keys are silently dropped.
+Only the fields listed above are accepted; unknown keys are silently dropped.
 
 ```json
 { "ok": true, "key": "abc123", "hash": "sha512hex" }
 ```
+
+> **What this enables**
+>
+> This is the enrichment endpoint — the closed loop that makes Dicefiles act as a
+> living, AI-curated library. After uploading a PDF your agent can:
+>
+> 1. Run it through an OCR pipeline → PATCH writes `ocr_text_preview`
+> 2. Send the cover thumbnail to a vision model → PATCH writes `ai_caption`
+> 3. Query a book-catalog API (Google Books, Open Library) → PATCH writes
+>    `author`, `series`, `genre` tags
+>
+> Browser users see all of this data appear in the gallery card immediately, with
+> zero manual tagging effort.
+>
+> Requires a separate `files:write`-scoped key so enrichment bots can't delete
+> files and upload bots can't rewrite metadata. Scopes compose cleanly.
+
+---
 
 ### 12.3 Upload agent-provided cover image
 
 - `POST /api/v1/file/:key/asset/cover`
 - Scope: `files:write`
-- Body: raw JPEG bytes (`Content-Type: image/jpeg`, max 5 MB)
-- The image is validated with `sharp`, encoded as JPEG at quality 85, and stored as the file's `.cover.jpg` asset, replacing any existing one.
+- Body: raw JPEG bytes
+- Headers: `Content-Type: image/jpeg` (required), max 5 MB
+- The image is validated and re-encoded at quality 85, then stored as the
+  file's `.cover.jpg` asset, replacing any existing thumbnail.
 
 ```json
 { "ok": true, "key": "abc123", "hash": "sha512hex" }
 ```
 
+> **What this enables**
+>
+> For file types where the standard thumbnail pipeline draws a blank — plain text
+> files, 3D model packs, structured data, raw binaries — your agent can generate
+> a cover and push it here. The gallery shows a real thumbnail immediately.
+>
+> A typical flow: agent uploads a zip of `.stl` files → calls DALL-E/SDXL with
+> the file description → POSTs the resulting JPEG here. Everyone else in the room
+> instantly sees a nice preview instead of a blank archive icon.
+>
+> Also great for request-fulfillment bots: before fulfilling a book request,
+> fetch the cover image from Open Library's Covers API and post it here so the
+> room shelf looks polished.
+>
+> ```bash
+> # Fetch cover from Open Library, push to Dicefiles
+> curl -sL "https://covers.openlibrary.org/b/isbn/9780441569595-L.jpg" \
+>   | curl -X POST "$BASE/api/v1/file/$KEY/asset/cover" \
+>     -H "Authorization: Bearer $AGENT_KEY" \
+>     -H "Content-Type: image/jpeg" \
+>     --data-binary @-
+> ```
+
 ---
 
 ## 13. Room Interaction Endpoints (v1.1)
+
+Agents can participate in the room — reading stats and posting status messages — so
+users always know what's happening without leaving the chat window.
 
 ### 13.1 Post agent chat message
 
 - `POST /api/v1/room/:id/chat`
 - Scope: `rooms:write`
+- Session: required (agent must be logged in)
 - Body:
 
 ```json
-{ "msg": "Hello from the agent.", "nick": "AgentBot" }
+{
+  "text": "Found it! Uploading Player's Handbook 5e now...",
+  "nick": "BookBot",
+  "replyTo": "optional-message-id"
+}
 ```
 
-`nick` defaults to `"Agent"` if omitted.
+`nick` defaults to the logged-in username if omitted. `replyTo` is optional threading.
 
 ```json
 { "ok": true }
 ```
 
+> **What this enables**
+>
+> Your agent can talk back to the room — real two-way interaction instead of silent
+> background processing. A request-fulfillment bot can post:
+>
+> - `"On it — searching 4 catalogs..."` as soon as it claims a request
+> - `"Done ✓ — expires in 72 h."` after a successful upload
+> - `"Came up empty across all sources. Anyone have a direct link?"` on failure
+>
+> This is what separates a polished agentic workflow from a mysterious background
+> process. OpenClaw orchestrators can use the chat channel as a progress bus:
+> long-running multi-step pipelines post status at each stage so room members can
+> follow along in real time.
+>
+> ```js
+> // Agent lifecycle messages
+> await chat(roomid, "BookBot", "📥 Claiming request...");
+> await api("POST", `/requests/${reqKey}/claim`);
+> const result = await searchAndUpload(request);
+> await chat(
+>   roomid,
+>   "BookBot",
+>   result.ok
+>     ? `✅ Uploaded — ${result.href}`
+>     : `❌ Not found after 3 catalog searches.`,
+> );
+> ```
+
+---
+
 ### 13.2 Room snapshot
 
 - `GET /api/v1/room/:id/snapshot`
 - Scope: `files:read`
-- Returns aggregate statistics for the room.
 
 ```json
 {
   "ok": true,
   "roomid": "AbCdEf1234",
   "fileCount": 42,
-  "totalBytes": 104857600,
-  "openRequestCount": 3,
-  "uniqueUploaders": 5,
+  "totalBytes": 3145728000,
+  "openRequestCount": 7,
+  "uniqueUploaders": 12,
   "oldestExpiry": 1750000000000
 }
 ```
 
+> **What this enables**
+>
+> Build a nightly digest bot that posts a human-readable room summary to Discord:
+> `"#books: 42 files (3.1 GB), 7 open requests, 12 contributors. Oldest file
+expires Mar 15."` No need to page through file lists — one call returns the
+> aggregate.
+>
+> Monitoring agents can alert when `openRequestCount` climbs above a threshold
+> (community demand exceeding supply), or when `oldestExpiry` is approaching so
+> someone can bump TTLs before content disappears.
+>
+> An MCP tool wrapping this endpoint is a perfect `get_room_stats` capability for
+> a conversational assistant: user asks "what's in the books room?" and the agent
+> answers in one sentence from a single API call.
+
 ---
 
 ## 14. Server Observability Endpoints (v1.1)
+
+These endpoints are for ops agents and monitoring bots, not end-users.
+Both require `admin:read` scope — issue a dedicated key, keep it off your general
+automation boxes.
 
 ### 14.1 Metrics snapshot
 
@@ -613,6 +743,32 @@ Only the allow-listed keys above are accepted. Unknown keys are silently dropped
 }
 ```
 
+> **What this enables**
+>
+> Plug this into Grafana, Datadog, or a simple Prometheus scraper. Every counter
+> here corresponds to something meaningful to your community:
+>
+> - `uploadsCreated / downloadsServed` → activity health
+> - `previewFailures` → thumbnail pipeline alerts
+> - `requestsFulfilled / requestsCreated` → how well agents are keeping up
+>   with demand
+>
+> A dead-simple monitoring agent polls every 60 seconds and Slacks you if
+> `previewFailures` spikes or `uptimeSec` resets (server restarted unexpectedly).
+>
+> MCP clients can call this as a `check_server_health` tool at the start of any
+> long ingestion workflow — no point claiming 20 requests if the server is sick.
+>
+> ```python
+> # SimpleBot health pre-flight
+> metrics = await dicefiles.metrics()
+> if metrics["previewFailures"] > metrics_baseline["previewFailures"] + 10:
+>     alert("Preview pipeline degraded — pausing uploads")
+>     return
+> ```
+
+---
+
 ### 14.2 Paginated audit log
 
 - `GET /api/v1/audit`
@@ -627,19 +783,37 @@ Only the allow-listed keys above are accepted. Unknown keys are silently dropped
   "ok": true,
   "count": 25,
   "entries": [
-    { "at": "2025-01-01T00:00:00.000Z", "key": "...", "scope": "files:read", ... }
+    {
+      "at": "2026-02-22T14:00:00.000Z",
+      "keyId": "uploader-bot",
+      "scope": "uploads:write",
+      "path": "/api/v1/batch-upload",
+      "ip": "1.2.3.4"
+    }
   ]
 }
 ```
+
+> **What this enables**
+>
+> Feed a rolling audit window to an LLM: `"Here are the last 200 API events —
+summarize any unusual patterns."` Or build a simple rule: if more than 5
+> `files:delete` events appear within an hour from an unfamiliar key, fire an
+> alert.
+>
+> Compliance workflows can pull the full log every night, store it in cold
+> storage, and query it later. `since` + `limit` makes it easy to pick up
+> exactly where you left off without re-reading old entries.
 
 ---
 
 ## 15. Batch Upload (v1.1)
 
-### 15.1 Fetch-and-ingest URLs
+### 15.1 Fetch-and-ingest from URL list
 
 - `POST /api/v1/batch-upload`
 - Scope: `uploads:write`
+- Session: required
 - Body:
 
 ```json
@@ -652,59 +826,139 @@ Only the allow-listed keys above are accepted. Unknown keys are silently dropped
 }
 ```
 
-- Max 20 items per call, max 100 MB per file, 60 s fetch timeout per URL.
+- Max 20 items per call; max 100 MB per file; 60 s fetch timeout per URL.
 - `name` defaults to the last URL path segment.
-- `roomid` may also be specified per item (overrides the root `roomid`).
+- `roomid` can also be specified per item (overrides the top-level value).
 
 ```json
 {
   "ok": true,
   "results": [
-    { "ok": true, "url": "https://example.com/book.pdf", "key": "abc123", "href": "/g/abc123" },
-    { "ok": false, "url": "https://example.com/cover.jpg", "error": "fetch failed: 404" }
+    {
+      "ok": true,
+      "url": "https://example.com/book.pdf",
+      "key": "abc123",
+      "href": "/g/abc123"
+    },
+    {
+      "ok": false,
+      "url": "https://example.com/cover.jpg",
+      "error": "fetch failed: 404"
+    }
   ]
 }
 ```
+
+> **What this enables**
+>
+> This is the "grab it for me" endpoint. A user drops a list of URLs into a room
+> request and your agent resolves them all server-side — no streaming gigabytes
+> through the agent's own connection.
+>
+> A Discord bot can accept `!upload https://... https://...` and fire a single API
+> call. An OpenClaw workflow looks like:
+> `[web_search for results] → [pick top 5] → [batch_upload to room]` — three
+> steps, no custom download code.
+>
+> The 100 MB/file and 60-second timeout caps prevent accidentally ingesting huge
+> archives. Per-item `ok/error` in the response means partial success is handled
+> cleanly — log the failures, report the wins.
+>
+> ```js
+> // Discord bot handler
+> const urls = message.content.match(/https?:\/\/\S+/g) || [];
+> if (!urls.length) return;
+> const { results } = await api("POST", "/batch-upload", {
+>   roomid: ROOM,
+>   items: urls.slice(0, 20).map((url) => ({ url })),
+> });
+> const ok = results.filter((r) => r.ok).map((r) => r.href);
+> const fail = results.filter((r) => !r.ok).length;
+> reply(`Uploaded ${ok.length} files${fail ? ` (${fail} failed)` : ""}`);
+> ```
 
 ---
 
 ## 16. Request Claiming (v1.1)
 
-Agents can claim an open request to signal they are fulfilling it, preventing duplicate work.
+Claiming prevents multiple agents from racing to fulfill the same request and
+uploading duplicate files.
 
 ### 16.1 Claim a request
 
 - `POST /api/v1/requests/:key/claim`
 - Scope: `requests:write`
+- Session: required
 - Body (optional):
 
 ```json
 { "ttlMs": 300000 }
 ```
 
-`ttlMs` is the claim TTL in milliseconds (min 5 s, max 1 h, default 5 min). The claim auto-releases after the TTL if not released manually.
+`ttlMs` is the claim TTL in milliseconds (min 5 s, max 1 h, default 5 min).
+The claim auto-releases after the TTL, so a crashed agent doesn't lock out others.
 
 ```json
-{ "ok": true, "key": "req_abc", "claimedUntil": 1750000300000 }
+{ "ok": true, "key": "req_abc123", "claimedUntil": 1740000300000 }
 ```
 
-Returns `409` if already claimed by a different key.
+Returns `409` if the request is already claimed by a different agent.
+
+---
 
 ### 16.2 Release a claim
 
 - `DELETE /api/v1/requests/:key/claim`
 - Scope: `requests:write`
-- Returns `403` if the claim belongs to a different agent.
+- Session: required
+
+Returns `403` if the claim belongs to a different agent.
 
 ```json
 { "ok": true }
 ```
 
+> **What claiming enables overall**
+>
+> This is coordination infrastructure for multi-agent deployments. Running a PDF
+> bot and an EPUB bot in parallel against the same room? They both poll for open
+> requests. The first to `POST /claim` wins that request; the other skips it.
+>
+> TTL auto-release is safety-net plumbing: if your bot crashes mid-search, the
+> claim expires after 5 minutes and any other agent can pick the request up. No
+> manual intervention needed.
+>
+> `DELETE /claim` is for clean early release: your agent searched three catalogs,
+> came up empty, and wants to give up immediately rather than waiting for the
+> timeout. Another agent with a different data source can try right away.
+>
+> ```js
+> // Standard claim-work-fulfill loop
+> for (const req of openRequests) {
+>   const claim = await api("POST", `/requests/${req.key}/claim`, {
+>     ttlMs: 600000,
+>   });
+>   if (!claim.ok) continue; // already claimed, skip
+>   try {
+>     const file = await searchAndDownload(req);
+>     if (!file) {
+>       await api("DELETE", `/requests/${req.key}/claim`); // release immediately
+>       continue;
+>     }
+>     await uploadAndFulfill(file, req.key);
+>   } catch (err) {
+>     await api("DELETE", `/requests/${req.key}/claim`).catch(() => {});
+>     throw err;
+>   }
+> }
+> ```
+
 ---
 
 ## 17. Agent Subscriptions (v1.1)
 
-Named server-side filter presets. Save upload matching criteria; retrieve them to know what to watch for.
+Named server-side filter presets stored per API key in Redis. Save what you want to
+watch for; retrieve it on restart; clean up when you're done.
 
 ### 17.1 Save a subscription
 
@@ -714,20 +968,23 @@ Named server-side filter presets. Save upload matching criteria; retrieve them t
 
 ```json
 {
-  "name": "new-pdfs",
+  "name": "new-books",
   "room": "AbCdEf1234",
-  "ext": [".pdf", ".epub"],
+  "ext": [".pdf", ".epub", ".mobi"],
   "name_contains": "fantasy",
   "max_size_mb": 50,
   "type": "document"
 }
 ```
 
-All filter fields except `name` are optional. Overwrites an existing subscription with the same `name` for this API key.
+All filter fields except `name` are optional. Overwrites an existing subscription
+with the same `name` for this API key.
 
 ```json
-{ "ok": true, "name": "new-pdfs" }
+{ "ok": true, "subscription": { "name": "new-books", ... } }
 ```
+
+---
 
 ### 17.2 List subscriptions
 
@@ -738,67 +995,193 @@ All filter fields except `name` are optional. Overwrites an existing subscriptio
 {
   "ok": true,
   "subscriptions": [
-    { "name": "new-pdfs", "room": "AbCdEf1234", "ext": [".pdf", ".epub"], ... }
+    {
+      "name": "new-books",
+      "room": "AbCdEf1234",
+      "ext": [".pdf", ".epub"],
+      "createdAt": "..."
+    }
   ]
 }
 ```
+
+---
 
 ### 17.3 Delete a subscription
 
 - `DELETE /api/v1/agent/subscriptions/:name`
 - Scope: `files:read`
-- Returns `404` if the subscription does not exist.
+
+Returns `404` if not found.
 
 ```json
 { "ok": true }
 ```
 
+> **What subscriptions enable**
+>
+> Server-side filter presets that survive agent restarts. Your book-bot registers
+> its interests once at startup and GETs them back after every restart — no
+> hardcoded filter logic scattered across your config files.
+>
+> Multiple bots with different API keys maintain independent subscription sets on
+> the same server. An "images" bot watches `.jpg,.png,.webp`; a "books" bot watches
+> `.pdf,.epub,.mobi`. They never step on each other.
+>
+> An admin agent can list all subscriptions before a planned migration to understand
+> what clients are watching. A management UI can expose subscription CRUD to
+> non-technical users: `"What should the bot download automatically?"`.
+>
+> Right now subscriptions are storage only — your agent reads them back and uses
+> them as filter parameters in its polling loop. A future enhancement could route
+> webhook events server-side to only fire for matching files.
+
 ---
 
 ## 18. Request Hints (v1.1)
 
-The `POST /api/v1/requests` endpoint now accepts an optional `hints` object alongside the free-text `text` field:
+The `POST /api/v1/requests` endpoint accepts an optional `hints` object alongside
+the free-text `text` field:
 
 ```json
 {
   "roomid": "AbCdEf1234",
-  "text": "Please upload the Player's Handbook 5e",
+  "text": "Please upload the 2023 IPCC climate report",
   "hints": {
     "type": "document",
-    "keywords": ["D&D", "Player's Handbook"],
+    "keywords": ["IPCC", "climate", "2023"],
     "max_size_mb": 50
   }
 }
 ```
 
-Agents can filter `GET /api/v1/files?type=requests` results by `meta.hints` to find requests matching their capabilities.
+Agents that poll `GET /api/v1/files?type=requests` receive the full request object
+including `meta.hints`, and can match against it programmatically.
+
+> **What hints enable**
+>
+> Hints bridge the gap between human free-text and machine-parseable intent.
+> `"Please upload the 2023 IPCC climate report"` is ambiguous to a regex. But
+> `hints.keywords = ["IPCC", "2023"]` + `hints.type = "document"` is trivial to
+> match against a catalog API's structured search.
+>
+> Your orchestrator can have a light NLP pre-processing step that extracts hints
+> from the request text and re-writes the request with them populated. Future
+> agents that poll for requests can then filter `meta.hints.type === "document"`
+> to find only requests they're capable of fulfilling — an image bot ignores PDF
+> requests, a book-catalog bot ignores image requests.
 
 ---
 
-## 19. Updated Endpoint Matrix (v1.1)
+## 19. MCP Server Integration
 
-| Method   | Path                                  | Scope            | Session Required |
-| -------- | ------------------------------------- | ---------------- | ---------------- |
-| `POST`   | `/api/v1/auth/login`                  | `auth:login`     | No               |
-| `POST`   | `/api/v1/auth/logout`                 | `auth:logout`    | Yes              |
-| `POST`   | `/api/v1/rooms`                       | `rooms:write`    | Yes              |
-| `POST`   | `/api/v1/requests`                    | `requests:write` | Yes              |
-| `POST`   | `/api/v1/uploads/key`                 | `uploads:write`  | Yes              |
-| `GET`    | `/api/v1/uploads/:key/offset`         | `uploads:write`  | Yes              |
-| `PUT`    | `/api/v1/uploads/:key`                | `uploads:write`  | Yes              |
-| `GET`    | `/api/v1/files`                       | `files:read`     | Optional         |
-| `GET`    | `/api/v1/downloads`                   | `files:read`     | Optional         |
-| `POST`   | `/api/v1/files/delete`                | `files:delete`   | Yes              |
-| `GET`    | `/api/v1/file/:key`                   | `files:read`     | No               |
-| `PATCH`  | `/api/v1/file/:key`                   | `files:write`    | No               |
-| `POST`   | `/api/v1/file/:key/asset/cover`       | `files:write`    | No               |
-| `POST`   | `/api/v1/room/:id/chat`               | `rooms:write`    | No               |
-| `GET`    | `/api/v1/room/:id/snapshot`           | `files:read`     | No               |
-| `GET`    | `/api/v1/metrics`                     | `admin:read`     | No               |
-| `GET`    | `/api/v1/audit`                       | `admin:read`     | No               |
-| `POST`   | `/api/v1/batch-upload`                | `uploads:write`  | No               |
-| `POST`   | `/api/v1/requests/:key/claim`         | `requests:write` | No               |
-| `DELETE` | `/api/v1/requests/:key/claim`         | `requests:write` | No               |
-| `POST`   | `/api/v1/agent/subscriptions`         | `files:read`     | No               |
-| `GET`    | `/api/v1/agent/subscriptions`         | `files:read`     | No               |
-| `DELETE` | `/api/v1/agent/subscriptions/:name`   | `files:read`     | No               |
+> **Quick answer on MCP:** Dicefiles is _almost_ an MCP server — it has exactly
+> the right HTTP API. The missing piece is a thin wrapper that speaks the
+> Model Context Protocol JSON-RPC dialect that Claude Desktop, Cursor, Continue,
+> and other MCP clients understand. That wrapper is a ~300-line Node.js script
+> that proxies MCP tool calls into Dicefiles REST calls. See `docs/mcp.md` for
+> the full design and setup guide.
+
+### 19.1 What MCP means here
+
+[Model Context Protocol](https://modelcontextprotocol.io/) (Anthropic open standard)
+defines a JSON-RPC 2.0 protocol over stdio or HTTP/SSE that lets AI clients
+(Claude Desktop, Cursor IDE, Continue.dev, any agent using the MCP SDK) call
+named **tools** with typed inputs.
+
+Dicefiles **does not** speak this protocol natively — it speaks HTTP REST. But you
+can run a tiny MCP server script alongside Dicefiles that wraps every REST endpoint
+as an MCP tool. Local clients connect via stdio; remote agents connect via HTTP.
+
+### 19.2 The `dicefiles-mcp` wrapper (scoped for implementation)
+
+The wrapper lives at `scripts/mcp-server.js` in the repo. Configure with two env vars:
+
+```bash
+DICEFILES_BASE_URL=http://localhost:9090
+DICEFILES_API_KEY=your-agent-key-here
+node scripts/mcp-server.js  # stdio mode for Claude Desktop / local agents
+```
+
+### 19.3 Exposed MCP tools
+
+| Tool name               | Maps to                                | Scope needed     |
+| ----------------------- | -------------------------------------- | ---------------- |
+| `list_files`            | `GET /api/v1/files`                    | `files:read`     |
+| `get_file`              | `GET /api/v1/file/:key`                | `files:read`     |
+| `get_room_snapshot`     | `GET /api/v1/room/:id/snapshot`        | `files:read`     |
+| `download_file`         | Proxies `GET /g/:key` → returns base64 | `files:read`     |
+| `upload_file_from_urls` | `POST /api/v1/batch-upload`            | `uploads:write`  |
+| `create_request`        | `POST /api/v1/requests`                | `requests:write` |
+| `claim_request`         | `POST /api/v1/requests/:key/claim`     | `requests:write` |
+| `release_request`       | `DELETE /api/v1/requests/:key/claim`   | `requests:write` |
+| `update_file_metadata`  | `PATCH /api/v1/file/:key`              | `files:write`    |
+| `post_room_chat`        | `POST /api/v1/room/:id/chat`           | `rooms:write`    |
+| `save_subscription`     | `POST /api/v1/agent/subscriptions`     | `files:read`     |
+| `list_subscriptions`    | `GET /api/v1/agent/subscriptions`      | `files:read`     |
+| `server_health`         | `GET /healthz`                         | none             |
+
+### 19.4 Claude Desktop integration example
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "dicefiles": {
+      "command": "node",
+      "args": ["/path/to/Dicefiles/scripts/mcp-server.js"],
+      "env": {
+        "DICEFILES_BASE_URL": "http://localhost:9090",
+        "DICEFILES_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+After restarting Claude Desktop, Claude can directly answer questions like:
+`"What's in the books room?"`, `"Upload these 3 URLs to the media room"`,
+`"Are there any open requests for PDFs?"`.
+
+### 19.5 Remote agent / HTTP transport
+
+For non-local agents, the MCP wrapper can also run in StreamableHTTP mode
+(HTTP + SSE transport), making Dicefiles accessible to remote orchestrators
+like OpenClaw, AutoGen, or CrewAI that support the MCP remote-server spec.
+
+```bash
+MCP_TRANSPORT=http MCP_PORT=3001 node scripts/mcp-server.js
+```
+
+See `docs/mcp.md` for the full specification, security model, and deployment guide.
+
+---
+
+## 20. Complete Endpoint Matrix (v1.0 + v1.1)
+
+| Method   | Path                                | Scope            | Session Required | Version |
+| -------- | ----------------------------------- | ---------------- | ---------------- | ------- |
+| `POST`   | `/api/v1/auth/login`                | `auth:login`     | No               | v1.0    |
+| `POST`   | `/api/v1/auth/logout`               | `auth:logout`    | Yes              | v1.0    |
+| `POST`   | `/api/v1/rooms`                     | `rooms:write`    | Yes              | v1.0    |
+| `POST`   | `/api/v1/requests`                  | `requests:write` | Yes              | v1.0    |
+| `POST`   | `/api/v1/uploads/key`               | `uploads:write`  | Yes              | v1.0    |
+| `GET`    | `/api/v1/uploads/:key/offset`       | `uploads:write`  | Yes              | v1.0    |
+| `PUT`    | `/api/v1/uploads/:key`              | `uploads:write`  | Yes              | v1.0    |
+| `GET`    | `/api/v1/files`                     | `files:read`     | Optional         | v1.0    |
+| `GET`    | `/api/v1/downloads`                 | `files:read`     | Optional         | v1.0    |
+| `POST`   | `/api/v1/files/delete`              | `files:delete`   | Yes              | v1.0    |
+| `GET`    | `/api/v1/file/:key`                 | `files:read`     | No               | v1.1    |
+| `PATCH`  | `/api/v1/file/:key`                 | `files:write`    | No               | v1.1    |
+| `POST`   | `/api/v1/file/:key/asset/cover`     | `files:write`    | No               | v1.1    |
+| `POST`   | `/api/v1/room/:id/chat`             | `rooms:write`    | Yes              | v1.1    |
+| `GET`    | `/api/v1/room/:id/snapshot`         | `files:read`     | No               | v1.1    |
+| `GET`    | `/api/v1/metrics`                   | `admin:read`     | No               | v1.1    |
+| `GET`    | `/api/v1/audit`                     | `admin:read`     | No               | v1.1    |
+| `POST`   | `/api/v1/batch-upload`              | `uploads:write`  | Yes              | v1.1    |
+| `POST`   | `/api/v1/requests/:key/claim`       | `requests:write` | Yes              | v1.1    |
+| `DELETE` | `/api/v1/requests/:key/claim`       | `requests:write` | Yes              | v1.1    |
+| `POST`   | `/api/v1/agent/subscriptions`       | `files:read`     | No               | v1.1    |
+| `GET`    | `/api/v1/agent/subscriptions`       | `files:read`     | No               | v1.1    |
+| `DELETE` | `/api/v1/agent/subscriptions/:name` | `files:read`     | No               | v1.1    |

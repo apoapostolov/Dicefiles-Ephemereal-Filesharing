@@ -7,64 +7,21 @@ Last updated: 2026-02-22
 Build Dicefiles into the best lightweight collaboration room for ephemeral files,
 requests, and fast archival workflows.
 
-## P0 — Complete
-
-### Request Workflow — Open Filter
-
-The last outstanding item from the request workflow feature:
-
-- [ ] None.
-
----
-
-## P1 — Collaboration Features
-
-### Smart Collections and Saved Filters
-
-- [ ] Save filter presets per user (e.g. "Books", "Images", "Requests").
-- [ ] Add one-click "Only NEW since last visit" view.
-- [ ] Add optional sort presets (newest, largest, expiring soon).
-
----
-
 ## P2 — AI Automation Infrastructure
 
-Based on `docs/ai_automation.md`. Server-side building blocks that unlock agent
-integration. Polling, webhooks, upload, and request-fulfillment APIs are already
-implemented — these are the gaps.
+### MCP Server Wrapper
 
-### Server API Gaps
-
-- [ ] `GET /api/v1/file/:hash` — single-file metadata lookup (agents need a point
-      query; the only current read path is the full-list scan).
-- [ ] `PATCH /api/v1/file/:hash` — post-upload metadata update: tags, description,
-      `ai_caption`, `ocr_text_preview`. Requires a separate `files:write` API scope
-      distinct from upload scope to prevent over-privileged keys.
-- [ ] `POST /api/v1/file/:hash/asset/cover` — accept a JPEG from an agent as the
-      file's cover thumbnail; served through the existing gallery thumbnail pipeline.
-- [ ] `POST /api/v1/room/:id/chat` — agents post a chat message (`text`, `nick`,
-      optional `replyTo`). Enables conversational agent integration.
-- [ ] `GET /api/v1/room/:id/snapshot` — compact room summary: file count, total bytes,
-      open requests, unique uploaders, oldest expiry.
-- [ ] `GET /api/v1/metrics` — Prometheus text-format (or JSON) metrics export from the
-      counters already tracked in `lib/observability.js`.
-- [ ] `GET /api/v1/audit` — paginated JSON audit log (uploads, deletes, rate-limit
-      hits, auth failures) with `since` and `limit` params; `admin:read` scope required.
-
-### Upload and Ingestion
-
-- [ ] `POST /api/v1/batch-upload` — accept a JSON array of `{url, name, roomid}`
-      objects; server fetches each URL with size cap and timeout, stores as normal uploads.
-- [ ] Structured request hints — extend request creation to accept a `hints` object
-      (`{type, keywords, max_size_mb}`) alongside free text for agent pattern-matching.
-
-### Workflow and Coordination
-
-- [ ] Agent request claiming — `claimedBy` field with TTL auto-release; visible in the
-      request UI while the agent processes it.
-- [ ] `POST /api/v1/agent/subscriptions` — save named server-side filter presets;
-      server evaluates at upload time and routes only matching webhook events to each
-      subscriber.
+- [ ] `scripts/mcp-server.js` — thin Node.js MCP server wrapping all v1.1 REST
+      endpoints as tools. See `docs/mcp.md` for the full implementation guide, tool
+      definitions, Claude Desktop config, and deployment instructions.
+      Transport: stdio (Claude Desktop / Cursor / local) and HTTP/SSE (OpenClaw, AutoGen, CrewAI).
+      Dep to add: `npm install @modelcontextprotocol/sdk`.
+      Tools: `list_files`, `get_file`, `get_room_snapshot`, `download_file`,
+      `upload_file_from_urls`, `create_request`, `claim_request`, `release_request`,
+      `update_file_metadata`, `post_room_chat`, `save_subscription`, `list_subscriptions`,
+      `server_health` (13 total).
+- [ ] `tests/unit/mcp-tools.test.js` — unit tests for each MCP tool handler using
+      mocked `fetch` responses.
 
 ---
 
@@ -198,8 +155,6 @@ No new assets are generated for plain archives. The only metadata additions:
 
 ## Execution Order
 
-1. Open requests filter (P0 — final item completing the request workflow).
+1. MCP server wrapper (P2 — enables AI orchestrators to use Dicefiles via Claude Desktop and remote agents).
 2. Archive Viewer (P1.5 — ZIP + RAR listing and per-file extraction).
-3. AI Automation server API gaps (P2 — start with the high-value endpoints).
-4. Smart Collections (P1).
-5. Profile and achievement polish (P3).
+3. Profile and achievement polish (P3).

@@ -1,10 +1,53 @@
 # Dicefiles Development Log
 
-## 2026-02-22 - P1 Smart Collections + P2 AI Automation Infrastructure
+## 2026-02-22 - API documentation enrichment, MCP guide, automation tests
+
+### Summary
+
+Follow-up documentation and testing pass for the P2 AI Automation Infrastructure
+shipped in the previous session.
+
+- **API.md** fully rewritten from section 12 onward: rich use-case prose ("What this
+  enables") added to every v1.1 endpoint, an MCP integration section (§19), and a
+  complete version-tagged endpoint matrix (§20). Also fixed a documentation bug where
+  the chat endpoint body field was documented as `msg` instead of the actual `text`.
+- **docs/mcp.md** (new) — comprehensive MCP integration guide: MCP clarification,
+  Claude Desktop config, 13 tool definitions with input schemas, reference implementation
+  sketch for `scripts/mcp-server.js`, security model, and agentic workflow examples.
+- **docs/ai_automation.md** — all proposal items that were implemented in the P2 session
+  are now marked `[implemented]`. Priority table updated. New Section 11 added with MCP
+  wrapper summary and quick-start snippet.
+- **TODO.md** — removed completed P0, P1, and P2 sections per hygiene rules.
+  Added new P2 MCP Server Wrapper scoping with 2 actionable checkboxes.
+  Execution Order updated to match remaining work.
+- **tests/integration/automation-v1.1.test.js** (new) — 37-test integration suite
+  covering all 13 v1.1 endpoints across 3 categories: auth boundary (13 tests),
+  structural/schema validation (live), and AI workflow simulations (pre-flight health
+  check pattern, polling loop, room context tool, subscription round-trip, agent chat,
+  batch upload validation, request claiming). Runs without API key for auth tests;
+  live tests activate when `DICEFILES_TEST_API_KEY` + `DICEFILES_TEST_ROOMID` are set.
+
+### Changed Files
+
+- **`API.md`** — Replaced sections 12-20 content with rich use-case prose, fixed
+  `text` field name in §13.1 chat endpoint (was incorrectly documented as `msg`),
+  added §19 MCP integration, added §20 complete endpoint matrix with Version column.
+  Removed duplicate bare-bones sections that were left over from the previous session.
+- **`docs/mcp.md`** (new) — Complete MCP wrapper design guide.
+- **`docs/ai_automation.md`** — Marked all implemented proposals `[implemented]`,
+  updated priority table, added MCP section (§11).
+- **`TODO.md`** — Removed P0, P1 Smart Collections, P2 Server API Gaps, P2 Upload and
+  Ingestion, P2 Workflow and Coordination sections (all fully implemented). Added P2
+  MCP Server Wrapper section. Updated Execution Order.
+- **`tests/integration/automation-v1.1.test.js`** (new) — 37-test automation v1.1
+  integration and workflow simulation suite.
+
+
 
 ### Summary
 
 Implements two major feature groups from TODO.md:
+
 - **P1 Smart Collections / Saved Filters** — per-room filter presets, sort modes (newest/size/expiring), and a "show new only" toggle
 - **P2 AI Automation Infrastructure** — 13 new server-side REST endpoints covering file metadata management, room interaction, observability, batch upload, request claiming, and agent subscriptions
 
@@ -28,8 +71,6 @@ Implements two major feature groups from TODO.md:
 - **`views/room.ejs`** — Added `#show-new-btn` button (near `#new-status`), a `#sort-pill` with three `.btn` divs (`#sort-newest`, `#sort-largest`, `#sort-expiring`), and a `#presets-row` nav below `#tools` containing `#presets-list` + `#preset-save`.
 - **`entries/css/room.css`** — Added CSS for `.sort-pill` (3-button sort pill with active state), `#show-new-btn` (opacity + accent color when active), `#presets-row`, `#presets-list`, `.preset-pill`, and `.preset-pill-del`.
 - **`API.md`** — Added Sections 12–19 documenting all new v1.1 endpoints, including request hints extension, and an updated full endpoint matrix.
-
-
 
 ### Changes
 

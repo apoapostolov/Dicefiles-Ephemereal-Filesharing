@@ -116,13 +116,11 @@ Persist the high-water mark and a local manifest of already-downloaded hashes to
 SQLite or JSON file. On agent restart, replay missed events since the last persisted
 timestamp. This prevents gaps when the agent is offline briefly.
 
-### Proposed: filter presets saved server-side **\[proposal\]**
+### Agent subscription presets **\[implemented\]**
 
-Add a `/api/v1/agent/subscriptions` endpoint where agents can register named filter presets
-(e.g., `{"room": "books", "ext": ["pdf","epub"], "maxSize": 209715200}`). The server
-evaluates filters at upload time and delivers only matching events to webhook subscribers,
-reducing agent-side noise. Tags and metadata fields (author, series) could also be
-filter dimensions.
+`POST/GET/DELETE /api/v1/agent/subscriptions` — save named filter presets per API key.
+Agents register their interests at startup and retrieve them on restart, eliminating
+hardcoded filter config. See API.md §17.
 
 ---
 
@@ -141,12 +139,11 @@ curl -X PUT "$BASE/api/v1/upload?roomid=media&name=report.pdf" \
 
 The response includes `{ key, href, expires }`.
 
-### Proposed: multi-file upload from URL list **\[proposal\]**
+### Multi-file upload from URL list **\[implemented\]**
 
-Add a `/api/v1/batch-upload` endpoint that accepts a JSON array of `{url, name, roomid}`
-objects. The server fetches each URL server-side (with a timeout and size cap) and
-stores them as normal uploads. Useful when an agent wants to mirror a list of resources
-without streaming every byte through the agent host.
+`POST /api/v1/batch-upload` — JSON array of `{url, name, roomid}` objects. The server
+fetches each URL with a 100 MB cap and 60-second timeout. Max 20 items per call.
+Returns per-item `ok/error`. See API.md §15.
 
 ### Proposed: upload from clipboard / base64 **\[proposal\]**
 
@@ -160,14 +157,9 @@ agents or browser extensions can upload without a dedicated multipart form layer
 **Goal**: An agent adds or updates tags, descriptions, and structured metadata on existing
 files after upload (e.g., OCR-derived text, AI-generated caption, archive index).
 
-### Current state
+### Metadata PATCH API **\[implemented\]**
 
-`tags` and `meta` fields are written at upload time via query parameters and are
-read-only afterward. There is no update API today.
-
-### Proposed: PATCH /api/v1/file/:hash **\[proposal\]**
-
-Add a `PATCH /api/v1/file/:hash` endpoint accepting:
+`PATCH /api/v1/file/:key` accepts:
 
 ```json
 {
@@ -180,22 +172,12 @@ Add a `PATCH /api/v1/file/:hash` endpoint accepting:
 }
 ```
 
-Scoped API key requirement: `files:write`. Separate scope from upload (`files:upload`)
-so read-only or upload-only keys cannot modify existing metadata.
+Scoped API key requirement: `files:write`. See API.md §12.2.
 
-### Proposed: AI-generated thumbnails **\[proposal\]**
+### AI-generated cover images **\[implemented\]**
 
-For file types where the standard cover pipeline produces no thumbnail (e.g., text files,
-structured data, 3D models), allow an agent to POST a `cover.jpg` asset:
-
-```
-POST /api/v1/file/:hash/asset/cover
-Content-Type: image/jpeg
-[binary body]
-```
-
-The server stores it as the `.cover.jpg` asset and serves it through the standard gallery
-thumbnail pipeline.
+`POST /api/v1/file/:key/asset/cover` — raw JPEG body (max 5 MB). The server validates
+with sharp, encodes at quality 85, and replaces the existing thumbnail. See API.md §12.3.
 
 ---
 
@@ -214,13 +196,13 @@ find a matching resource.
 Webhook `request_created` fires for new requests; `request_fulfilled` fires when one is
 resolved — subscribe to both for a complete event log.
 
-### Proposed: agent declaration on request **\[proposal\]**
+### Agent request claiming **\[implemented\]**
 
-Allow agents to "claim" a request, setting a `claimedBy: "<agent-id>"` field that is
-visible in the UI while the agent works on it (similar to a Jira "in-progress" state). A
-claim TTL (e.g., 5 minutes) auto-releases if the agent fails to fulfill.
+`POST /api/v1/requests/:key/claim` — single-agent lock with auto-release TTL (default 5 min).
+`DELETE /api/v1/requests/:key/claim` — release early. Returns `409` if already claimed
+by another agent. See API.md §16.
 
-### Proposed: structured request schema **\[proposal\]**
+### Structured request hints **\[implemented\]**
 
 Extend request creation to accept structured fields (beyond free text) that agents can
 match more reliably:
@@ -291,21 +273,11 @@ Useful for agents that generate a human-readable digest of what's in a room.
 | Fulfill request       | Upload with `fulfillsRequest` query param                        |
 | Post a chat message   | Not in API yet — proposal below                                  |
 
-### Proposed: POST /api/v1/room/:id/chat **\[proposal\]**
+### Agent chat messages **\[implemented\]**
 
-Agents that participate in the room conversation can call:
-
-```json
-POST /api/v1/room/:id/chat
-{
-  "text": "I found 3 new PDFs matching your request. They are now uploaded.",
-  "nick": "BookBot",
-  "replyTo": "<message-id>"        // optional threading
-}
-```
-
-This enables true two-way interaction: the user types in the room, the agent listens
-(via polling or webhook), processes the command, acts on the API, and replies in chat.
+`POST /api/v1/room/:id/chat` — body: `{ text, nick, replyTo }`. Agents appear in the
+room chat with a distinct `role:"agent"` badge. Enables two-way interaction: user
+requests in chat, agent acts on the API, agent replies with results. See API.md §13.1.
 
 ---
 
@@ -320,26 +292,15 @@ curl http://your-instance/healthz
 # → {"ok":true,"redis":"ok","storage":"ok","uptime_s":3600,...}
 ```
 
-### Proposed: structured metrics export **\[proposal\]**
+### Metrics endpoint **\[implemented\]**
 
-Add `GET /api/v1/metrics` (Prometheus text format or JSON) exposing counters already
-tracked by `lib/observability.js`:
+`GET /api/v1/metrics` (`admin:read`) — JSON counters from `lib/observability.js`.
+See API.md §14.1.
 
-```
-dicefiles_uploads_total 1423
-dicefiles_bytes_total 42949672960
-dicefiles_downloads_total 7841
-dicefiles_preview_failures_total 3
-dicefiles_active_connections 14
-```
+### Audit log **\[implemented\]**
 
-An agent (or a standard Prometheus scraper) can ingest these and alert on anomalies.
-
-### Proposed: audit log streaming **\[proposal\]**
-
-`GET /api/v1/audit?since=<ts>&limit=100` returns a paginated JSON log of scoped API
-events (uploads, deletes, rate-limit hits, failed auth attempts). Useful for a
-compliance agent that monitors for unusual patterns.
+`GET /api/v1/audit?since=<iso>&limit=<n>` (`admin:read`) — paginated JSON lines of
+automation API events, newest first. See API.md §14.2.
 
 ---
 
@@ -384,13 +345,37 @@ compliance agent that monitors for unusual patterns.
 | Auto-download with filters       | Low        | High   | Implementable now |
 | Agent-triggered upload           | Low        | High   | Implemented       |
 | Request fulfillment automation   | Medium     | High   | Implemented       |
-| Metadata PATCH API               | Medium     | High   | Proposal          |
-| Chat API for agents              | Medium     | Medium | Proposal          |
-| Structured request hints         | Low        | Medium | Proposal          |
-| Filter presets saved server-side | Medium     | Medium | Proposal          |
-| Batch upload from URL list       | Medium     | Medium | Proposal          |
-| Metrics endpoint (Prometheus)    | Low        | Medium | Proposal          |
-| Audit log API                    | Medium     | Low    | Proposal          |
-| Agent request claiming           | Medium     | Low    | Proposal          |
-| AI-generated thumbnails          | Medium     | Low    | Proposal          |
+| Metadata PATCH API               | Medium     | High   | Implemented       |
+| Chat API for agents              | Medium     | Medium | Implemented       |
+| Structured request hints         | Low        | Medium | Implemented       |
+| Filter presets saved server-side | Medium     | Medium | Implemented       |
+| Batch upload from URL list       | Medium     | Medium | Implemented       |
+| Metrics endpoint (JSON)          | Low        | Medium | Implemented       |
+| Audit log API                    | Medium     | Low    | Implemented       |
+| Agent request claiming           | Medium     | Low    | Implemented       |
+| AI-generated thumbnails          | Medium     | Low    | Implemented       |
+| MCP server wrapper               | Medium     | High   | Scoped (P2)       |
 | Content policy webhook agent     | High       | Low    | Proposal          |
+
+---
+
+## 11 — MCP Integration
+
+See `docs/mcp.md` for the complete design and implementation guide.
+
+In brief: Dicefiles doesn't natively speak Model Context Protocol — it speaks HTTP REST.
+A thin `scripts/mcp-server.js` wrapper (~300 lines, using `@modelcontextprotocol/sdk`)
+translates MCP tool calls into Dicefiles API calls. Clients (Claude Desktop, Cursor,
+OpenClaw, etc.) connect via stdio (local) or HTTP/SSE (remote).
+
+All the v1.1 API endpoints implemented in the P2 phase map directly to MCP tools:
+`list_files`, `get_file`, `get_room_snapshot`, `upload_file_from_urls`,
+`create_request`, `claim_request`, `update_file_metadata`, `post_room_chat`,
+`server_health`, and more.
+
+```bash
+# Quick start: Claude Desktop integration
+export DICEFILES_BASE_URL=http://localhost:9090
+export DICEFILES_API_KEY=your-key
+node scripts/mcp-server.js  # expose to Claude Desktop via stdio
+```
