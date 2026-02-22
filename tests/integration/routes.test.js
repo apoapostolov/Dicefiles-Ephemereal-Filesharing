@@ -114,7 +114,11 @@ describe("GET /", () => {
   ifServer("returns HTML with expected structure", async () => {
     const { body } = await get("/");
     expect(body).toContain("<body");
-    expect(body).toContain("Welcome to Dicefiles");
+    // Home page shows either the welcome text (publicRooms disabled) or the
+    // room directory card grid (publicRooms enabled). Both share the footer.
+    const hasWelcome = body.includes("Welcome to Dicefiles");
+    const hasDirectory = body.includes("room-cards") || body.includes("room-card");
+    expect(hasWelcome || hasDirectory).toBe(true);
     expect(body).toContain("</footer>");
   });
 

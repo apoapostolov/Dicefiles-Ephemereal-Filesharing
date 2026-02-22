@@ -16,7 +16,8 @@
 
 const BASE = "http://127.0.0.1:9090";
 
-// Resolve the API key: prefer env var, fall back to first key in .config.json
+// Resolve the API key: prefer env var, then find a key in .config.json that
+// has admin:config / admin:rooms / admin:* / mod:* / * scope.
 function resolveApiKey() {
   if (process.env.DICEFILES_TEST_KEY) {
     return process.env.DICEFILES_TEST_KEY;
@@ -29,6 +30,16 @@ function resolveApiKey() {
     );
     const keys = cfg.automationApiKeys || [];
     if (!keys.length) return null;
+    // Prefer a key that explicitly carries admin or wildcard scopes.
+    const adminScopes = new Set(["*", "admin:*", "admin:config", "admin:rooms", "mod:*"]);
+    for (const entry of keys) {
+      if (typeof entry === "string") return entry; // legacy = full access
+      const scopes = entry.scopes || [];
+      if (scopes.some((s) => adminScopes.has(s))) {
+        return entry.key || null;
+      }
+    }
+    // Fall back to the first key.
     const first = keys[0];
     return typeof first === "string" ? first : first.key || null;
   } catch {
