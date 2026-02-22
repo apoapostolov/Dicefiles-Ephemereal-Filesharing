@@ -1764,19 +1764,29 @@ export default class Reader {
     document.body.classList.toggle("focus-reading", this._focusMode);
     if (this._focusMode) {
       document.addEventListener("mousemove", this._onFocusMouseMove);
-      // Sync when native fullscreen is dismissed externally (Escape, F11, OS).
-      document.addEventListener("fullscreenchange", this._onFullscreenChange);
-      // Fullscreen the #reader element itself so only the reader panel
-      // (content + header bar) fills the screen — not the whole page with chat.
-      try {
-        if (this.el && this.el.requestFullscreen) {
-          this.el.requestFullscreen();
+      // Fullscreen the #reader element so only reader panel fills the screen.
+      // Attach the fullscreenchange exit-sync listener ONLY after the browser
+      // confirms fullscreen is active (inside the promise resolution).  This
+      // avoids a race where the transition fires fullscreenchange with
+      // fullscreenElement=null first (clearing any previous fullscreen owner),
+      // which would prematurely trip the exit handler and flip _focusMode off.
+      if (this.el && this.el.requestFullscreen) {
+        const req = this.el.requestFullscreen();
+        const onConfirmed = () => {
+          // Attach exit-sync listener only once fullscreen is confirmed.
+          document.addEventListener(
+            "fullscreenchange",
+            this._onFullscreenChange,
+          );
+        };
+        if (req && typeof req.then === "function") {
+          req.then(onConfirmed).catch(() => {});
+        } else {
+          onConfirmed();
         }
-      } catch (_) {
-        // Unsupported context — in-app overlay still works.
       }
-      // Show bar briefly on entry
-      this._onFocusMouseMove();
+      // Do NOT show bar immediately — bar is hidden on entry and only
+      // revealed when the user moves the mouse.
     } else {
       document.removeEventListener("mousemove", this._onFocusMouseMove);
       document.removeEventListener(
