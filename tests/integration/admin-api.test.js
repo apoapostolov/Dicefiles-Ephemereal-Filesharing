@@ -31,7 +31,13 @@ function resolveApiKey() {
     const keys = cfg.automationApiKeys || [];
     if (!keys.length) return null;
     // Prefer a key that explicitly carries admin or wildcard scopes.
-    const adminScopes = new Set(["*", "admin:*", "admin:config", "admin:rooms", "mod:*"]);
+    const adminScopes = new Set([
+      "*",
+      "admin:*",
+      "admin:config",
+      "admin:rooms",
+      "mod:*",
+    ]);
     for (const entry of keys) {
       if (typeof entry === "string") return entry; // legacy = full access
       const scopes = entry.scopes || [];

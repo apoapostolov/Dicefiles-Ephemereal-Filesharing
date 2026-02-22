@@ -10,9 +10,16 @@ Last updated: 2026-02-22
 
 ---
 
-## P3 — Achievement Polish
+## P3 — CB7 Comic Support
 
-- [ ] Seasonal / limited-time achievements behind feature flag (`SEASONAL_ACHIEVEMENTS=1` env var)
+CB7 (7z-based) comic archives are currently blocked in the archive viewer. Add server-side support for CB7 comics, mirroring CBR implementation.
+
+- [x] Install `p7zip-full` on server (`sudo apt install p7zip-full`)
+- [x] `lib/meta.js` — Add CB7 detection and 7z command integration for file listing (`7z l`) and extraction (`7z e`)
+- [x] `lib/meta.js` — Extend comic indexing to handle CB7 archives, including ComicInfo.xml parsing and cover thumbnail generation
+- [x] `lib/httpserver.js` — Ensure `/api/v1/comic/:key/*` endpoints work with CB7 (pages listing and extraction)
+- [x] Tests — Add CB7 comic test cases to `tests/integration/routes.test.js` and unit tests in `tests/unit/`
+- [x] Documentation — Update `docs/archive-viewer.md` format support table to mark CB7 as supported
 
 ---
 
@@ -50,4 +57,5 @@ See `docs/archive-viewer.md` for full spec, format support table, and security c
 | -------- | ------------------ |
 | P2       | Profile Completion |
 | P3       | Archive Viewer     |
+| P3       | CB7 Comic Support  |
 | P3       | Achievement Polish |

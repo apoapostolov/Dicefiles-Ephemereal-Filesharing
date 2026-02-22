@@ -1,6 +1,20 @@
-# Dicefiles Development Log
+## 2026-02-22 — CB7 comic support epic documented
 
-## 2026-02-22 — MOTD left-bar removed; admin config and room-management API (v1.2)
+- `TODO.md`: Added new "P3 — CB7 Comic Support" section with 6 subtasks covering server-side 7z integration, comic indexing extension, API endpoint updates, tests, and documentation. Updated the Execution Order table to include the new section.
+
+## 2026-02-22 — CB7 comic support implemented
+
+**CB7 comic support added**
+
+- Installed `p7zip-full` on server for 7z command access.
+- `lib/meta.js`: Added `P7ZIP_BIN` constant; extended `detectComicContainer()` to detect 7z magic bytes (`37 7A BC AF 27 1C`); added `sevenZListImages()`, `sevenZExtractFile()`, `sevenZReadComicInfo()` functions for 7z archive handling; updated `generateAssetsComic()` and `extractComicPage()` to support `container === "7z"`; added "CB7" to `COMIC_TYPES` set; updated `getMetaData()` to set `meta.type = "CB7"` for `.cb7` extensions; exposed new functions in `module.exports`.
+- `docs/archive-viewer.md`: Updated format support table to mark CB7 as supported with `spawn 7z l` and `spawn 7z e -so`; removed note about 7z being blocked.
+- `tests/unit/comics.test.js`: Added test for 7z magic byte detection; added "generateAssets — CB7" test suite with mocked helpers; added "extractComicPage — 7z" test with mocked extraction.
+- All unit tests pass (25/25); CB7 support mirrors CBR implementation for consistency.
+
+## 2026-02-22 — CB7 documentation updated
+
+- `README.md`: Added CB7 Comic Support to Features list with graceful fallback note; added `p7zip-full` to Linux install instructions with fallback explanation; added 7-Zip to Windows optional tools.
 
 **MOTD CSS: left-bar stripe removed**
 

@@ -13,10 +13,10 @@ extracting the whole archive locally.
 | `.zip` / `.cbz`                                      | `jszip` (pure JS, already installed)                   | `jszip`               | none                          |
 | `.rar` / `.cbr`                                      | spawn `unrar lb` (installed at `/usr/bin/unrar` v7.00) | spawn `unrar p -inul` | none                          |
 | `.tar` / `.tar.gz` / `.tar.bz2` / `.cbz` (tarballed) | spawn `tar tf` (GNU tar 1.35 installed)                | spawn `tar xOf`       | none                          |
-| `.7z` / `.cb7`                                       | none without binary                                    | none                  | `sudo apt install p7zip-full` |
+| `.7z` / `.cb7`                                       | spawn `7z l` (installed via `p7zip-full`)              | spawn `7z e -so`      | `sudo apt install p7zip-full` |
 
-**7z is the only blocked format.** ZIP, RAR, TAR all work with tools already on
-the system. 7z support is deferred until operator installs `p7zip-full`.
+**7z support added for CB7 comics.** ZIP, RAR, TAR all work with tools already on
+the system.
 
 ## New Server Endpoints
 

@@ -140,6 +140,15 @@ describe("detectComicContainer", () => {
     expect(meta.detectComicContainer(f)).toBe("rar");
   });
 
+  test("detects 7z by magic bytes (37 7A BC AF 27 1C)", () => {
+    const f = path.join(tmpDir, `7z-${Date.now()}.bin`);
+    fs.writeFileSync(
+      f,
+      Buffer.from([0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c, 0x00, 0x00]),
+    );
+    expect(meta.detectComicContainer(f)).toBe("7z");
+  });
+
   test("returns null for unknown file", () => {
     const f = path.join(tmpDir, `unk-${Date.now()}.bin`);
     fs.writeFileSync(f, Buffer.from([0x00, 0x00, 0x00, 0x00]));
@@ -327,8 +336,68 @@ describe("generateAssets — CBR", () => {
 });
 
 // ---------------------------------------------------------------------------
-// extractComicPage — ZIP
+// generateAssets — CB7 (mocked 7z helpers via module.exports)
 // ---------------------------------------------------------------------------
+
+describe("generateAssets — CB7", () => {
+  test("produces page index, count, title, and cover asset using mocked helpers", async () => {
+    const tmp7z = path.join(tmpDir, `test-${Date.now()}.7z`);
+    // Write 7z magic so detectComicContainer returns "7z"
+    fs.writeFileSync(tmp7z, Buffer.from([0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c]));
+
+    const dummyImg = await makeTinyPng();
+
+    jest
+      .spyOn(meta, "sevenZListImages")
+      .mockResolvedValue(["cover.png", "page2.png"]);
+    jest
+      .spyOn(meta, "sevenZReadComicInfo")
+      .mockResolvedValue(
+        `<?xml version="1.0"?><ComicInfo><Title>7z Comic</Title></ComicInfo>`,
+      );
+    jest.spyOn(meta, "sevenZExtractFile").mockResolvedValue(dummyImg);
+
+    const storage = {
+      full: tmp7z,
+      mime: "application/octet-stream",
+      meta: { type: "CB7" },
+      tags: {},
+      addAssets: jest.fn(),
+    };
+
+    await meta.generateAssets(storage);
+
+    expect(meta.sevenZListImages).toHaveBeenCalledWith(tmp7z);
+    expect(meta.sevenZReadComicInfo).toHaveBeenCalledWith(tmp7z);
+    expect(storage.meta.pages).toBe("2");
+    expect(storage.meta.comic_index).toBe("cover.png\npage2.png");
+    expect(storage.meta.comic_title).toBe("7z Comic");
+    expect(storage.addAssets).toHaveBeenCalled();
+    const [assets] = storage.addAssets.mock.calls[0];
+    expect(assets.length).toBe(1);
+    expect(assets[0].ext).toBe(".cover.jpg");
+  });
+
+  test("returns early and calls addAssets([]) when 7zListImages returns empty list", async () => {
+    const tmp7z = path.join(tmpDir, `empty-${Date.now()}.7z`);
+    fs.writeFileSync(tmp7z, Buffer.from([0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c]));
+
+    jest.spyOn(meta, "sevenZListImages").mockResolvedValue([]);
+    jest.spyOn(meta, "sevenZReadComicInfo").mockResolvedValue(null);
+
+    const storage = {
+      full: tmp7z,
+      mime: "application/octet-stream",
+      meta: { type: "CB7" },
+      tags: {},
+      addAssets: jest.fn(),
+    };
+
+    await meta.generateAssets(storage);
+
+    expect(storage.addAssets).toHaveBeenCalledWith([]);
+  });
+});
 
 describe("extractComicPage — ZIP", () => {
   test("returns a JPEG buffer for a valid page index", async () => {
@@ -399,8 +468,32 @@ describe("extractComicPage — RAR", () => {
 });
 
 // ---------------------------------------------------------------------------
-// ensureComicAssets
+// extractComicPage — 7z (mocked helpers)
 // ---------------------------------------------------------------------------
+
+describe("extractComicPage — 7z", () => {
+  test("returns JPEG buffer when helpers return valid data", async () => {
+    const tmp7z = path.join(tmpDir, `page-${Date.now()}.7z`);
+    fs.writeFileSync(tmp7z, Buffer.from([0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c]));
+    const dummyImg = await makeTinyPng();
+
+    // Simulate a pre-indexed storage (as if generateAssets already ran)
+    const storage = {
+      full: tmp7z,
+      mime: "application/octet-stream",
+      meta: { type: "CB7", comic_index: "cover.png\npage2.png" },
+      tags: {},
+      addAssets: jest.fn(),
+    };
+
+    jest.spyOn(meta, "sevenZExtractFile").mockResolvedValue(dummyImg);
+
+    const page = await meta.extractComicPage(storage, 0);
+    expect(meta.sevenZExtractFile).toHaveBeenCalledWith(tmp7z, "cover.png");
+    expect(Buffer.isBuffer(page)).toBe(true);
+    expect(page.length).toBeGreaterThan(0);
+  });
+});
 
 describe("ensureComicAssets", () => {
   test("skips asset generation when comic_index already exists", async () => {

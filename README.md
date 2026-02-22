@@ -35,6 +35,7 @@ Dicefiles is a self-hosted, open-source file sharing platform for hobby communit
 - Per-user downloaded-bytes tracking shown on profile (`Total Downloaded`)
 - **Public Room Directory** — when `publicRooms` is enabled in the server config, the home page becomes a card-grid directory of all registered rooms sorted by file count. Each card shows the room name, MOTD (if set), and live stats (file count, user count). Disabled by default.
 - **Room Pruning** — when `roomPruning` is enabled (on by default), rooms that have received no new file or chat activity within `roomPruningDays` days (default 21) are automatically and permanently deleted. Activity is tracked on every upload and every chat message.
+- **CB7 Comic Support** — CB7 (7z-based) comic archives are supported alongside CBZ and CBR. Requires `p7zip-full` for server-side extraction; falls back gracefully if not installed (no crash, comics just won't have previews or reading).
 
 ## User-Facing Room Features
 
@@ -246,9 +247,9 @@ For reliable file previews (especially PDFs), install:
 
 ```bash
 sudo apt update
-sudo apt install -y exiftool ffmpeg graphicsmagick ghostscript
+sudo apt install -y exiftool ffmpeg graphicsmagick ghostscript p7zip-full
 
-*If you cannot install some of these utilities, the server will still run. “Preview” assets simply won’t be generated and your gallery will fall back to the generic file icon — there are no crashes.*
+*If you cannot install some of these utilities, the server will still run. "Preview" assets simply won't be generated and your gallery will fall back to the generic file icon — there are no crashes. CB7 comic support requires `p7zip-full`; without it, CB7 files upload successfully but lack previews and reading capabilities.*
 ```
 
 Notes:
@@ -358,6 +359,10 @@ yarn --version
 # GraphicsMagick: https://sourceforge.net/projects/graphicsmagick/files/graphicsmagick-binaries/
 # ImageMagick: https://imagemagick.org/script/download.php#windows
 # Ghostscript: https://ghostscript.com/releases/gsdnld.html
+
+# Install 7-Zip (for CB7 comic support)
+# Download from https://www.7-zip.org/
+# Extract and add bin folder to PATH
 ```
 
 #### 2. Clone and Install
