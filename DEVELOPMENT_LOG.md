@@ -37,8 +37,6 @@ Four areas delivered in one session:
 - **`client/files.js`** — Add `updateCapabilityButtons()` method; call it in `init()` and on every `config` socket event.
 - **`lib/user.js`** — Strengthen password check in `create()` (10 chars, letter + digit). Apply same check in `changePassword()`.
 
-
-
 ### Summary
 
 Three areas touched in one session:

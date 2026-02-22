@@ -1,25 +1,37 @@
 "use strict";
 
-import registry from "../registry";
 import Modal from "../modal";
-import {UsersModal} from "./usersdlg";
+import registry from "../registry";
+import { UsersModal } from "./usersdlg";
 
 export class OptionsModal extends Modal {
   constructor(owner) {
-    super("optsdlg", "Room Options", {
-      text: "Change",
-      default: true,
-    }, {
-      text: "Cancel",
-      cancel: true,
-    });
+    super(
+      "optsdlg",
+      "Room Options",
+      {
+        text: "Change",
+        default: true,
+      },
+      {
+        text: "Cancel",
+        cancel: true,
+      },
+    );
     this.owner = owner;
     this.body.innerHTML = document.querySelector("#roomopts-tmpl").innerHTML;
     const fields = [
-      "owners", "invitees",
-      "name", "motd",
-      "inviteonly", "adult", "allowrequests", "linkcollection",
-      "disabled", "disablereports", "ttl",
+      "owners",
+      "invitees",
+      "name",
+      "motd",
+      "inviteonly",
+      "adult",
+      "allowrequests",
+      "linkcollection",
+      "disabled",
+      "disablereports",
+      "ttl",
     ];
     for (const f of fields) {
       this[f] = this.el.elements[f];
@@ -29,7 +41,7 @@ export class OptionsModal extends Modal {
     this.invitees.addEventListener("click", this.oninvitees.bind(this));
     this.inviteonly.addEventListener("change", this.oninviteonly.bind(this));
 
-    const {config: c} = registry;
+    const { config: c } = registry;
     this.name.value = c.get("roomname");
     this.motd.value = c.get("rawmotd") || "";
     this.inviteonly.checked = !!c.get("inviteonly");
@@ -49,11 +61,15 @@ export class OptionsModal extends Modal {
     try {
       const list = this[users] || registry.config.get(users) || [];
       const usersDlg = new UsersModal(
-        this.owner, title, description, list, warnSelf);
+        this.owner,
+        title,
+        description,
+        list,
+        warnSelf,
+      );
       await this.owner.showModal(usersDlg);
       this[users] = usersDlg.users;
-    }
-    catch (ex) {
+    } catch (ex) {
       if (ex) {
         console.error(ex);
       }
@@ -63,8 +79,7 @@ export class OptionsModal extends Modal {
   oninviteonly() {
     if (this.inviteonly.checked) {
       this.el.elements.invitees.classList.remove("hidden");
-    }
-    else {
+    } else {
       this.el.elements.invitees.classList.add("hidden");
     }
   }
@@ -77,7 +92,8 @@ Room owners can manage room options, just like yourself.
 They can also add and remove room owners (including you), so be
 very careful who you add.`,
       "owners",
-      true);
+      true,
+    );
   }
 
   async oninvitees() {
@@ -88,21 +104,22 @@ Only invited users and room owners can join this room.
 Once you remove a user, they will be kicked!
 However, if they started any downloads before being kicked, those downloads
 will NOT be aborted, and they also retain their chat histories.`,
-      "invitees");
+      "invitees",
+    );
   }
 
   async validate() {
     try {
-      const {socket, config: c} = registry;
-      const {value: name} = this.name;
-      const {value: motd} = this.motd;
-      let {value: ttl} = this.ttl;
-      const {checked: inviteonly} = this.inviteonly;
-      const {checked: adult} = this.adult;
-      const {checked: allowRequests} = this.allowrequests;
-      const {checked: linkCollection} = this.linkcollection;
-      const {checked: disabled} = this.disabled;
-      const {checked: disableReports} = this.disablereports;
+      const { socket, config: c } = registry;
+      const { value: name } = this.name;
+      const { value: motd } = this.motd;
+      let { value: ttl } = this.ttl;
+      const { checked: inviteonly } = this.inviteonly;
+      const { checked: adult } = this.adult;
+      const { checked: allowRequests } = this.allowrequests;
+      const { checked: linkCollection } = this.linkcollection;
+      const { checked: disabled } = this.disabled;
+      const { checked: disableReports } = this.disablereports;
 
       ttl = parseInt(ttl, 10);
       if (ttl.toString() !== this.ttl.value) {
@@ -152,12 +169,8 @@ will NOT be aborted, and they also retain their chat histories.`,
         await socket.makeCall("setconfig", "owners", this.owners);
       }
       return true;
-    }
-    catch (ex) {
-      await this.owner.showMessage(
-        ex.message || ex,
-        "Error",
-        "i-error");
+    } catch (ex) {
+      await this.owner.showMessage(ex.message || ex, "Error", "i-error");
     }
     return false;
   }

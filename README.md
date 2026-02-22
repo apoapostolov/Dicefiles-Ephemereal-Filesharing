@@ -351,6 +351,8 @@ Configuration files are loaded in this order (last value wins):
 | `automationApiRateLimitByScope` | `{}`                        | Per-scope rate limit overrides for automation API               |
 | `automationAuditLog`            | `"automation.log"`          | JSONL audit log file for automation API calls                   |
 | `observabilityLog`              | `"ops.log"`                 | JSONL lifecycle log for uploads/downloads/requests/previews     |
+| `allowRequests`                 | `true`                      | Default for new rooms: whether request creation is enabled (room owners can override per room) |
+| `linkCollection`                | `true`                      | Default for new rooms: whether the link archive is enabled (room owners can override per room) |
 | `webhooks`                      | `[]`                        | Outbound webhook targets/events for upload/request lifecycle    |
 | `webhookRetry`                  | `{...}`                     | Webhook retry policy defaults (retries/backoff)                 |
 | `webhookDeadLetterLog`          | `"webhook-dead-letter.log"` | JSONL sink for failed webhook deliveries                        |
