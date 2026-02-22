@@ -564,21 +564,50 @@ async function parseEpubChapters(zip) {
     // Extract body HTML and replace image src with blob: URLs
     const bodyM = htmlStr.match(/<body[^>]*>([\s\S]*)<\/body>/i);
     let body = bodyM ? bodyM[1] : htmlStr;
-    const srcMatches = [...body.matchAll(/\bsrc="([^"]+)"/g)].reverse();
-    for (const sm of srcMatches) {
-      const ref = sm[1];
-      if (/^(data:|blob:|https?:)/i.test(ref)) continue;
-      const imgPath = epubResolve(
-        chapterBase,
-        decodeURIComponent(ref.split(/[?#]/)[0]),
-      );
-      const bu = track(await zipToBlob(zip, imgPath, extMime(imgPath)));
-      if (bu)
-        body =
-          body.slice(0, sm.index) +
-          `src="${bu}"` +
-          body.slice(sm.index + sm[0].length);
-    }
+
+    // Helper: replace one attribute match with a blob: URL
+    const replaceAttr = async (attrName, matches) => {
+      for (const sm of matches) {
+        const ref = sm[1];
+        if (/^(data:|blob:|https?:)/i.test(ref)) continue;
+        const imgPath = epubResolve(
+          chapterBase,
+          decodeURIComponent(ref.split(/[?#]/)[0]),
+        );
+        const bu = track(await zipToBlob(zip, imgPath, extMime(imgPath)));
+        if (bu)
+          body =
+            body.slice(0, sm.index) +
+            `${attrName}="${bu}"` +
+            body.slice(sm.index + sm[0].length);
+      }
+    };
+
+    // 1. Replace src="..." (HTML <img>, <video>, etc.) — process in reverse
+    //    to preserve string indices across replacements.
+    await replaceAttr("src", [...body.matchAll(/\bsrc="([^"]+)"/g)].reverse());
+
+    // 2. Replace xlink:href="..." on SVG <image> elements — Calibre EPUB covers
+    //    and many EPUB3 files use <image xlink:href="cover.jpeg" …/>.
+    await replaceAttr(
+      "xlink:href",
+      [...body.matchAll(/\bxlink:href="([^"]+)"/g)].reverse(),
+    );
+
+    // 3. Replace href="..." on SVG <image> elements (EPUB3 without xlink prefix).
+    //    Guard: only rewrite href when it belongs to an <image> tag so we don't
+    //    accidentally blow up anchor links.
+    const hrefMatches = [...body.matchAll(/(<image\b[^>]*)\bhref="([^"]+)"/gi)]
+      .reverse()
+      .map((m) => {
+        // Build a synthetic match object compatible with replaceAttr:
+        // index must point to the start of href="..." within `body`.
+        const hrefStart = m.index + m[1].length;
+        return Object.assign([`href="${m[2]}"`, m[2]], {
+          index: hrefStart,
+        });
+      });
+    await replaceAttr("href", hrefMatches);
 
     chapters.push({ html: body, css: cssUrls });
   }

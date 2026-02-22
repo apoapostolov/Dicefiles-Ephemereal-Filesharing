@@ -1,5 +1,47 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - Fix: EPUB cover page not rendering in reader
+
+### Root cause
+
+Calibre-generated EPUBs (and many other EPUB3 files) use a `titlepage.xhtml`
+as the first spine chapter, whose `<body>` contains an SVG element like:
+
+```html
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" …>
+  <image xlink:href="cover.jpeg" … />
+</svg>
+```
+
+`parseEpubChapters` in `client/files/reader.js` replaced `src="..."` image
+references with `blob:` URLs but did **not** handle `xlink:href` (or plain
+`href`) on SVG `<image>` elements. The raw path (`cover.jpeg`) was left
+unchanged in the iframe `srcdoc`, so the browser resolved it relative to the
+current page URL `/r/roomname` → `GET /r/cover.jpeg 404`.
+
+### Fix
+
+Added two additional replacement passes inside `parseEpubChapters`, processed
+in reverse-index order (same as the existing `src=` pass to preserve string
+offsets):
+
+1. **`xlink:href="..."`** — matches all occurrences globally; handles
+   Calibre/EPUB2-style cover pages like the one confirmed in test EPUB
+   `HCH-zfOVTQDZvvgPL5wC`.
+2. **`href="..."` on `<image>` tags only** — matches EPUB3 files that use
+   the SVG `href` attribute directly (no `xlink:` prefix). Anchor `<a href>`
+   links are excluded because the regex anchors on `<image\b`.
+
+Both passes reuse the same `replaceAttr` helper and the existing `epubResolve`
+/ `zipToBlob` / `extMime` pipeline.
+
+### Changed files
+
+- `client/files/reader.js` — extended `parseEpubChapters` to rewrite
+  `xlink:href` and SVG `<image href>` attributes alongside `src` attributes
+
+---
+
 ## 2026-02-22 - Chore: Full test suite for v1.2.0 release
 
 ### Summary
