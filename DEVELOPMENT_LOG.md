@@ -1,5 +1,17 @@
 # Dicefiles Development Log
 
+## 2026-02-22 — Profile Overview: About Me + Looking For, FA icons CSP fix, achievement count badge
+
+**Root cause (FA icons):** The Content Security Policy in `lib/httpserver.js` had `style-src-elem 'self' 'unsafe-inline' blob:` and no `font-src` directive — neither of which allowed `cdnjs.cloudflare.com`. The browser silently blocked the Font Awesome stylesheet and webfonts, so all FA `<i>` elements rendered as blank boxes.
+
+**Changes:**
+- `lib/httpserver.js` — Added `https://cdnjs.cloudflare.com` to `style-src-elem`; added `font-src 'self' data: https://cdnjs.cloudflare.com` directive.
+- `lib/user.js` — Added `"looking"` to `ADOPT_OFILTER`; added 2000-char length guard for the new field in `adopt()`.
+- `lib/httpserver.js` — Added `info.lookingHtml = renderMarkdown(user.looking || "")` to the profile render.
+- `views/user.ejs` — Replaced single Profile Message textarea with two labelled fields: "About Me" (smaller) and "What I'm Looking For" (taller), sharing one Save button. Rendered view shows `<h4>` labels above each markdown block, only when non-empty. Achievement tab badge now shows `X / Y` instead of just the unlocked count.
+- `entries/css/page.css` — `.profile-message-fields` flex-column with 0.75rem gap; labels styled smaller/muted; About Me textarea fixed at 80px, Looking For at 160px; `.profile-message-view` and `.profile-message-block h4` for the rendered read-only view.
+- `entries/user.js` — Form submit sends both `message` and `looking` fields.
+
 ## 2026-02-22 — Fix profile tabs breaking grid layout
 
 **Root cause:** The tab nav was inserted as a free-floating grid item inside `#userprofile` (a single-column CSS grid), and the two tab panel divs used `display: contents` to pass their children through to the parent grid. This desynced the tab nav from its content sections, causing the nav to appear detached in the lower area while the stats and message sections reordered unpredictably.
@@ -7,6 +19,7 @@
 **Fix:** Consolidated the tab nav + `.profile-message` + `.profile-achievements` into a single `.profile-tabbed` wrapper div — one grid cell. Tab state is now driven by a `.tab-achievements` class on `#userprofile` itself, with CSS show/hide rules. No `display: contents` anywhere.
 
 **Changed files:**
+
 - `views/user.ejs` — Removed `profile-panel` wrapper divs; introduced `<div class="profile-tabbed">` wrapping the nav + message + achievements sections.
 - `entries/css/page.css` — Removed `display: contents` / `.hidden` rules for panels; added `.profile-tabbed` flex-column container; added `#userprofile.tab-achievements .profile-message { display: none }` and `#userprofile.tab-achievements .profile-achievements { display: block }`.
 - `entries/user.js` — Tab click handler now toggles `.tab-<name>` class on `#userprofile` instead of `.hidden` on individual panel divs.
@@ -31,8 +44,8 @@ a Node.js 20+ startup guard, and cleaned up the TODO completely.
 - `views/user.ejs` — Added FA 6.7.2 CDN `<link>` tag; added `<nav class="profile-tabs">`
   bar with Overview and Achievements buttons (Achievements shows unlocked-count badge);
   wrapped `profile-stats` + `profile-message` sections in `<div class="profile-panel"
-  data-panel="overview">`; wrapped `profile-achievements` in `<div class="profile-panel
-  hidden" data-panel="achievements">`; switched achievement icon span from `i-*` custom
+data-panel="overview">`; wrapped `profile-achievements` in `<div class="profile-panel
+hidden" data-panel="achievements">`; switched achievement icon span from `i-*` custom
   font to `<i class="...fa...">` child element; added progress bar div + percentage
   label for locked achievements; removed `if (info.canEditMessage)` guard around the
   user.js `<script>` tag so tab switching loads for all visitors.
