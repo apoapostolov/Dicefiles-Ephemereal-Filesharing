@@ -90,11 +90,11 @@ export default class RequestModal extends Modal {
 
   _makeLifecycleSafe() {
     const { resolve, reject } = this;
-    this.resolve = v => {
+    this.resolve = (v) => {
       this.uninstallDragDrop();
       resolve(v);
     };
-    this.reject = v => {
+    this.reject = (v) => {
       this.uninstallDragDrop();
       reject(v);
     };
@@ -246,8 +246,7 @@ export default class RequestModal extends Modal {
       this.previewEl.style.backgroundImage = `url(${dataUrl})`;
       this.previewEl.classList.add("has-image");
       this.previewTextEl.textContent = "Image ready";
-    }
-    catch (ex) {
+    } catch (ex) {
       this.imageDataUrl = "";
       this.previewEl.style.backgroundImage = "";
       this.previewEl.classList.remove("has-image");
@@ -298,8 +297,7 @@ export default class RequestModal extends Modal {
         throw new Error("Image is too detailed, please use a smaller one");
       }
       return out;
-    }
-    catch (ex) {
+    } catch (ex) {
       if (
         typeof sourceUrl === "string" &&
         sourceUrl.startsWith("data:image/") &&
@@ -342,19 +340,19 @@ export class RequestViewModal extends Modal {
     const status = requestFile.status || "open";
     const isFulfilled = status === "fulfilled";
 
-    const primaryBtn = isFulfilled ?
-      {
-        id: "reopen",
-        text: "Reopen",
-        default: !isMod,
-        cls: "modal-button-reopen",
-      } :
-      {
-        id: "fulfill",
-        text: "Fulfill",
-        default: true,
-        cls: "modal-button-fulfill",
-      };
+    const primaryBtn = isFulfilled
+      ? {
+          id: "reopen",
+          text: "Reopen",
+          default: !isMod,
+          cls: "modal-button-reopen",
+        }
+      : {
+          id: "fulfill",
+          text: "Fulfill",
+          default: true,
+          cls: "modal-button-fulfill",
+        };
 
     const buttons = [primaryBtn];
     if (isMod) {
@@ -491,11 +489,11 @@ export class RequestViewModal extends Modal {
 
   _makeLifecycleSafe() {
     const { resolve, reject } = this;
-    this.resolve = v => {
+    this.resolve = (v) => {
       this._uninstallDragDrop();
       resolve(v);
     };
-    this.reject = v => {
+    this.reject = (v) => {
       this._uninstallDragDrop();
       reject(v);
     };
@@ -607,7 +605,7 @@ export class RequestViewModal extends Modal {
     }
     for (const f of files) {
       if (
-        !this.stagedFiles.some(s => s.name === f.name && s.size === f.size)
+        !this.stagedFiles.some((s) => s.name === f.name && s.size === f.size)
       ) {
         this.stagedFiles.push(f);
       }
@@ -685,7 +683,7 @@ export class RequestViewModal extends Modal {
   async _doUploads() {
     this._uploading = true;
     // Disable all buttons during upload
-    this.buttons.forEach(b => b.setAttribute("disabled", "disabled"));
+    this.buttons.forEach((b) => b.setAttribute("disabled", "disabled"));
     this.progressWrapEl.classList.remove("hidden");
     this.uploadZoneEl && this.uploadZoneEl.classList.add("hidden");
     this.stagedListEl && this.stagedListEl.classList.add("hidden");
@@ -711,8 +709,7 @@ export class RequestViewModal extends Modal {
         uploadedKeys.push(key);
         done++;
         setProgress(`Uploaded ${done} / ${total}`, done / total);
-      }
-      catch (ex) {
+      } catch (ex) {
         console.error("Failed to upload fulfillment file", file.name, ex);
         failed++;
         done++;
@@ -722,7 +719,7 @@ export class RequestViewModal extends Modal {
     if (failed === total) {
       setProgress("All uploads failed", 0);
       this._uploading = false;
-      this.buttons.forEach(b => b.removeAttribute("disabled"));
+      this.buttons.forEach((b) => b.removeAttribute("disabled"));
       this.progressWrapEl.classList.add("hidden");
       this.uploadZoneEl && this.uploadZoneEl.classList.remove("hidden");
       this.stagedListEl && this.stagedListEl.classList.remove("hidden");
@@ -731,7 +728,7 @@ export class RequestViewModal extends Modal {
 
     setProgress(`Done (${done - failed} uploaded)`, 1);
     // Short delay so the user can see "Done"
-    await new Promise(r => setTimeout(r, 600));
+    await new Promise((r) => setTimeout(r, 600));
     this.resolve({ action: "fulfill", files: uploadedKeys });
   }
 
@@ -747,17 +744,17 @@ export class RequestViewModal extends Modal {
         UPLOAD_TIMEOUT_MS,
       );
       const id = Date.now() + Math.random();
-      registry.socket.
-        makeCall("uploadkey", id).
-        then(d => {
+      registry.socket
+        .makeCall("uploadkey", id)
+        .then((d) => {
           clearTimeout(to);
           resolve(d);
-        }).
-        catch(err => {
+        })
+        .catch((err) => {
           clearTimeout(to);
           reject(err);
         });
-    }).then(d => {
+    }).then((d) => {
       keyResult = d;
     });
 
@@ -786,15 +783,14 @@ export class RequestViewModal extends Modal {
       xhr.onload = () => {
         if (xhr.response && xhr.response.err) {
           reject(new Error(xhr.response.err));
-        }
-        else {
+        } else {
           resolve(xhr.response);
         }
       };
       if (onprogress) {
         xhr.upload.addEventListener(
           "progress",
-          e => {
+          (e) => {
             if (e.lengthComputable) {
               onprogress(e.loaded, e.total);
             }

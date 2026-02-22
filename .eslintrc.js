@@ -13,7 +13,7 @@ module.exports = {
   rules: {
     "max-len": 0,
     "max-depth": ["error", 7],
-    "curly": ["error", "all"],
+    curly: ["error", "all"],
     "brace-style": ["error", "stroustrup"],
     "no-console": 0,
     "no-unused-vars": [
@@ -23,7 +23,7 @@ module.exports = {
         varsIgnorePattern: "^_+|^dummy",
       },
     ],
-    "indent": [
+    indent: [
       "error",
       2,
       {
@@ -60,7 +60,7 @@ module.exports = {
     "consistent-return": 0,
     "dot-location": ["error", "object"],
     "dot-notation": "error",
-    "eqeqeq": ["error", "smart"],
+    eqeqeq: ["error", "smart"],
     "no-else-return": "error",
     "no-eval": "error",
     "no-floating-decimal": "error",
@@ -72,7 +72,7 @@ module.exports = {
     "no-useless-call": "error",
     "no-useless-concat": "error",
     "no-with": "error",
-    "radix": "error",
+    radix: "error",
     "require-await": "error",
     "block-spacing": "error",
     "eol-last": ["error", "always"],
@@ -82,7 +82,7 @@ module.exports = {
     "func-name-matching": "error",
     "func-call-spacing": ["error", "never"],
     "computed-property-spacing": ["error", "never"],
-    "yoda": "error",
+    yoda: "error",
     "no-undefined": 0,
     "new-cap": "error",
     "new-parens": "error",
@@ -94,8 +94,8 @@ module.exports = {
     "padded-blocks": ["error", "never"],
     "quote-props": ["error", "consistent-as-needed"],
     "linebreak-style": ["error", "unix"],
-    "quotes": ["error", "double"],
-    "semi": ["error", "always"],
+    quotes: ["error", "double"],
+    semi: ["error", "always"],
     "semi-spacing": "error",
     "semi-style": ["error", "last"],
     "space-before-blocks": "error",

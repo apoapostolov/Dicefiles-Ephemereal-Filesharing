@@ -5,6 +5,7 @@
 Root cause: `.eslintrc.js` set `ecmaVersion: 8` (ES2017), which caused the parser to reject object spread (`...`), optional chaining (`?.`), numeric separators (`1_000`), and dynamic `import()` — all ES2018–2021 features already used throughout the codebase. Once the parse errors were masking ~600 auto-fixable style violations, those ran fine after a first `--fix` pass, leaving 19 genuine code issues plus rule-configuration problems.
 
 **Config changes (`.eslintrc.js`):**
+
 - `ecmaVersion: 8` → `2022`; added `es2020: true` env (enables `globalThis`)
 - `max-len`: disabled (per operator request)
 - `valid-jsdoc`: disabled (generated noise on large files with no public API)
@@ -16,6 +17,7 @@ Root cause: `.eslintrc.js` set `ecmaVersion: 8` (ES2017), which caused the parse
 - Removed duplicate `func-call-spacing` key
 
 **Code fixes:**
+
 - `lib/request.js` — removed duplicate `hints`/`claimedBy`/`claimedUntil` keys
 - `lib/links.js` — removed unused `redis` and `OBS` imports; removed spurious `async` from `resolveByOpengraphIo`, `resolveByHtmlTitle`, `remove()`
 - `lib/meta.js` — removed spurious `async` from `rarExtractFile`, `ensureComicAssets`
@@ -31,8 +33,6 @@ Root cause: `.eslintrc.js` set `ecmaVersion: 8` (ES2017), which caused the parse
 - `client/files/reader.js` — added `/* no-op */` to 2 empty catches; removed spurious `async` from `_showPage`
 - `client/lazy.js` — restructured `xregexp` to use `const { default: XRegExp }` destructure instead of `new (...).default()` to avoid `new-cap` false positive
 - `entries/user.js` — converted `function setStatus` declaration inside `if` block to `const setStatus = (...) =>` arrow expression to satisfy `no-inner-declarations`
-
-
 
 - `views/user.ejs` — Fixed two `info.activity !== null` guards to use loose `!= null` (catches both `null` and `undefined`). The test fixture in `tests/views/render.test.js` does not set `activity` at all, so the strict `!== null` guard didn't catch `undefined` and `info.activity.length` threw a TypeError. Root cause: template was written expecting only `null`/array but the view-render test supplies a minimal fixture without the key. 324/324 tests now pass.
 - `CHANGELOG.md` — Added four new `[Unreleased]` entries: Latest Activity tab (Added), Per-tile gallery download button (Added), Uploader pill opens profile page (Changed), File type icon always downloads (Changed). Re-sorted Added and Changed sections by user-impact tier per AGENTS.md rules. Entries considered and deliberately omitted: internal CSS micro-polish commits (activity table centering, align-self fixes), git metadata changes, DEVELOPMENT_LOG updates.

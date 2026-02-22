@@ -70,7 +70,7 @@ export default new (class Registry {
       }
       this._inited = true;
       return this;
-    })().catch(ex => {
+    })().catch((ex) => {
       this._inited = false;
       this._initPromise = null;
       throw ex;

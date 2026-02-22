@@ -31,9 +31,9 @@ export default class DownloadBatchModal extends Modal {
     const retries = Number(options.retries);
     this.maxRetries = Number.isFinite(retries) ? Math.max(0, retries) : 2;
     const concurrent = Number(options.concurrent);
-    this.maxConcurrent = Number.isFinite(concurrent) ?
-      Math.max(1, Math.min(4, Math.floor(concurrent))) :
-      4;
+    this.maxConcurrent = Number.isFinite(concurrent)
+      ? Math.max(1, Math.min(4, Math.floor(concurrent)))
+      : 4;
 
     this.statusEl = dom("div", {
       classes: ["download-status"],
@@ -82,7 +82,7 @@ export default class DownloadBatchModal extends Modal {
     );
     this.retryInputEl.addEventListener(
       "wheel",
-      e => {
+      (e) => {
         e.preventDefault();
         this.retryInputEl.blur();
       },
@@ -110,7 +110,7 @@ export default class DownloadBatchModal extends Modal {
     );
     this.concurrentInputEl.addEventListener(
       "wheel",
-      e => {
+      (e) => {
         e.preventDefault();
         this.concurrentInputEl.blur();
       },
@@ -210,18 +210,18 @@ export default class DownloadBatchModal extends Modal {
 
   notifyOptionsChange() {
     const retries = Number(this.retryInputEl && this.retryInputEl.value);
-    this.maxRetries = Number.isFinite(retries) ?
-      Math.max(0, Math.min(5, Math.floor(retries))) :
-      2;
+    this.maxRetries = Number.isFinite(retries)
+      ? Math.max(0, Math.min(5, Math.floor(retries)))
+      : 2;
     if (this.retryInputEl) {
       this.retryInputEl.value = this.maxRetries.toString();
     }
     const concurrent = Number(
       this.concurrentInputEl && this.concurrentInputEl.value,
     );
-    this.maxConcurrent = Number.isFinite(concurrent) ?
-      Math.max(1, Math.min(4, Math.floor(concurrent))) :
-      4;
+    this.maxConcurrent = Number.isFinite(concurrent)
+      ? Math.max(1, Math.min(4, Math.floor(concurrent)))
+      : 4;
     if (this.concurrentInputEl) {
       this.concurrentInputEl.value = this.maxConcurrent.toString();
     }
@@ -253,9 +253,9 @@ export default class DownloadBatchModal extends Modal {
 
   update(done, failed, skipped = 0) {
     const finished = done + failed + skipped;
-    const percent = this.total ?
-      Math.floor((finished / this.total) * 100) :
-      100;
+    const percent = this.total
+      ? Math.floor((finished / this.total) * 100)
+      : 100;
     this.progressBarEl.style.width = `${percent}%`;
     this.statusEl.textContent = `Downloaded ${done}/${this.total} (${failed} failed, ${skipped} skipped)`;
   }
@@ -296,12 +296,12 @@ export default class DownloadBatchModal extends Modal {
 
   finish(done, failed, skipped, cancelled, report = null) {
     this.update(done, failed, skipped);
-    this.currentEl.textContent = cancelled ?
-      "Cancelled by user." :
-      "Completed.";
-    this.statusEl.textContent = cancelled ?
-      `Cancelled: ${done}/${this.total} downloaded (${failed} failed, ${skipped} skipped)` :
-      `Finished: ${done}/${this.total} downloaded (${failed} failed, ${skipped} skipped)`;
+    this.currentEl.textContent = cancelled
+      ? "Cancelled by user."
+      : "Completed.";
+    this.statusEl.textContent = cancelled
+      ? `Cancelled: ${done}/${this.total} downloaded (${failed} failed, ${skipped} skipped)`
+      : `Finished: ${done}/${this.total} downloaded (${failed} failed, ${skipped} skipped)`;
 
     if (report) {
       this.reportSummaryEl.textContent = `Report: ${report.success.length} success, ${report.failed.length} failed, ${report.skipped.length} skipped.`;
