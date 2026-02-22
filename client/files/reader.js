@@ -1201,7 +1201,7 @@ class WebtoonReader {
     this.infoEl = infoEl;
     this._key = null;
     this._totalPages = 0;
-    this._pageHeight = 0; // natural rendered height of a single page (px)
+    this._pageHeight = 0; // CSS-rendered height of a single page (px) — NOT naturalHeight
     this._destroyed = false;
     this._stripEl = null;
     this._imgEls = [];
@@ -1209,6 +1209,8 @@ class WebtoonReader {
     this._visiblePage = 0; // 0-indexed page currently most visible
     this._fileKey = null;
     this._restoring = false; // true during initial position restore — blocks visTracker saves
+    this._scrollSaveTimer = null; // debounce timer for scroll-stop progress save
+    this._onContainerScroll = null; // stored so we can remove it in destroy()
     this.onPageChange = null; // callback(page) — set by Reader
   }
 
@@ -1249,11 +1251,17 @@ class WebtoonReader {
       this._imgEls.push(img);
     }
 
-    // Load first page eagerly to measure natural height, then lazy-load rest.
+    // Load first page eagerly to measure CSS-rendered height, then lazy-load rest.
+    // IMPORTANT: use offsetHeight, NOT naturalHeight.  naturalHeight is the image's
+    // intrinsic pixel size (e.g. 2048 px); offsetHeight is what the browser actually
+    // renders after applying CSS (width:100%; max-width:900px; height:auto).
+    // Using naturalHeight for scrollTop calculations overshoots by the scale factor
+    // (imageWidth/containerWidth), sending the user to a completely wrong position.
     await new Promise((resolve) => {
       const first = this._imgEls[0];
       first.onload = () => {
-        this._pageHeight = first.naturalHeight || first.offsetHeight || 1400;
+        // offsetHeight is the rendered CSS height — the correct unit for scrollTop
+        this._pageHeight = first.offsetHeight || first.naturalHeight || 1400;
         resolve();
       };
       first.onerror = () => resolve();
@@ -1261,7 +1269,7 @@ class WebtoonReader {
       first.setAttribute("data-loaded", "1");
     });
 
-    // Estimate natural page height from outerWidth if onload height is 0
+    // Fallback if offsetHeight is still 0 (layout not yet committed)
     if (!this._pageHeight) {
       this._pageHeight = Math.round(
         (this._imgEls[0].offsetWidth || this.container.clientWidth || 800) *
@@ -1302,10 +1310,20 @@ class WebtoonReader {
     // the tracker does not clobber the newly-restored page with page 0.
     const saved = loadProgress(this._fileKey);
     if (saved && saved.page > 0 && saved.page < this._totalPages) {
-      // Give unloaded images a provisional min-height so the pixel-based
-      // scroll target is accurate even before images have loaded.
+      // Give all unloaded images a provisional min-height equal to the
+      // rendered height of page 0 (offsetHeight, same coordinate space as
+      // scrollTop).  scrollIntoView then lands exactly on the right page.
+      // Each image clears its own min-height once it actually loads so the
+      // browser's scroll-anchoring logic keeps the viewport stable.
       for (const img of this._imgEls) {
-        img.style.minHeight = this._pageHeight + "px";
+        if (!img.getAttribute("data-loaded")) {
+          img.style.minHeight = this._pageHeight + "px";
+          img.addEventListener(
+            "load",
+            () => { img.style.minHeight = ""; },
+            { once: true },
+          );
+        }
       }
       // Pre-load frames around the target page so they render quickly.
       for (
@@ -1315,19 +1333,26 @@ class WebtoonReader {
       ) {
         loadPage(i);
       }
-      // Pixel-based scroll: reliable even when images haven't loaded yet.
-      // scrollIntoView on zero-height images always ends at y=0.
+      // scrollIntoView is the reliable path when placeholder heights are set.
       this._restoring = true;
       requestAnimationFrame(() => {
-        this.container.scrollTop = saved.page * this._pageHeight;
-        // Give the browser one more frame to settle, then allow visTracker saves.
-        requestAnimationFrame(() => {
-          // Remove provisional min-heights now that the real images are loading.
-          for (const img of this._imgEls) img.style.minHeight = "";
-          this._restoring = false;
-        });
+        const target = this._imgEls[saved.page];
+        if (target) target.scrollIntoView({ behavior: "instant", block: "start" });
+        requestAnimationFrame(() => { this._restoring = false; });
       });
     }
+
+    // ── Debounced scroll-stop save ─────────────────────────────────────────
+    // Saves the current visible page 300 ms after the user stops scrolling.
+    // Covers: mousewheel, touch-drag, scrollbar use, keyboard arrows, etc.
+    this._onContainerScroll = () => {
+      if (this._restoring) return;
+      clearTimeout(this._scrollSaveTimer);
+      this._scrollSaveTimer = setTimeout(() => {
+        saveProgress(this._fileKey, { page: this._visiblePage });
+      }, 300);
+    };
+    this.container.addEventListener("scroll", this._onContainerScroll, { passive: true });
 
     // Separate visibility tracker: update page counter + persist progress.
     // Reads _restoring so the initial position restore cannot be overwritten.
@@ -1351,16 +1376,20 @@ class WebtoonReader {
     this._updateInfo();
   }
 
-  /** Scroll the container down by 25% of one natural page height. */
+  /** Scroll the container down by one step; save progress immediately. */
   nextPage() {
     const step = Math.round(this._pageHeight * 0.25);
     this.container.scrollBy({ top: step, behavior: "smooth" });
+    // Save current page instantly so the user never loses more than one
+    // press worth of progress (debounced scroll save will also fire).
+    saveProgress(this._fileKey, { page: this._visiblePage });
   }
 
-  /** Scroll the container up by 25% of one natural page height. */
+  /** Scroll the container up by one step; save progress immediately. */
   prevPage() {
     const step = Math.round(this._pageHeight * 0.25);
     this.container.scrollBy({ top: -step, behavior: "smooth" });
+    saveProgress(this._fileKey, { page: this._visiblePage });
   }
 
   _updateInfo() {
@@ -1375,6 +1404,12 @@ class WebtoonReader {
       this._observer.disconnect();
       this._observer = null;
     }
+    if (this._onContainerScroll) {
+      this.container.removeEventListener("scroll", this._onContainerScroll);
+      this._onContainerScroll = null;
+    }
+    clearTimeout(this._scrollSaveTimer);
+    this._scrollSaveTimer = null;
     this._imgEls = [];
     this._stripEl = null;
     this.container.textContent = "";
