@@ -1,5 +1,12 @@
 # Dicefiles Development Log
 
+## 2026-02-22 — Room directory: card grid redesign + MOTD column
+
+- `lib/room/index.js` (`Room.list()`): added `motd: config.get("rawmotd") || ""` to the room object so the raw MOTD text is included in the room list payload and cached with the rest.
+- `views/index.ejs`: replaced the old `<table class="room-list">` layout with a `<div class="room-cards">` card grid. Each card (`<a class="room-card">`) contains the room name, an optional MOTD excerpt (`room-card-motd`; omitted entirely when no MOTD is set), and stat pills for file count and online user count. The "online" pill uses the `rc-stat-live` class for a green accent. Empty state moved to `#room-directory-empty` with centered styling.
+- `entries/css/page.css`: removed all `.room-list` table rules; added card-grid styles — `display: grid; repeat(auto-fill, minmax(256px, 1fr))` layout, `border-radius: 14px` cards on `var(--surface-1)`, hover lift (`translateY(-2px)`) with deeper shadow, 2-line `-webkit-line-clamp` truncation for MOTD, pill stats with green accent for "online" (`var(--role-user-fg)`), and centered empty-state block.
+- `tests/integration/public-rooms.test.js`: updated all 8 integration tests to assert the new card-grid HTML (`room-cards`, `room-card-name`, `rc-stat`, `room-card-motd`) instead of the old table classes (`room-list`, `<td>`).
+
 ## 2026-02-22 — Public room directory + room pruning
 
 Two new operator-configurable features implemented end-to-end.

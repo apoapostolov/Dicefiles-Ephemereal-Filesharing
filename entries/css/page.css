@@ -677,51 +677,104 @@ body#page {
   padding-left: 2ex;
 }
 
-/* Public room directory */
+/* Public room directory — card grid */
 #room-directory {
-  max-width: 860px;
-}
-
-#room-directory h2 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-}
-
-.room-list {
+  max-width: 1100px;
   width: 100%;
-  border-collapse: collapse;
+  margin: 0 auto;
+  padding: 2rem;
+  box-sizing: border-box;
 }
 
-.room-list th,
-.room-list td {
-  padding: 0.55rem 0.9rem;
-  text-align: left;
-  border-bottom: 1px solid var(--hairline);
+#room-directory .rd-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0 0 1.4rem;
 }
 
-.room-list th {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted, rgba(255, 255, 255, 0.5));
-  background: rgba(255, 255, 255, 0.03);
+.room-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(256px, 1fr));
+  gap: 0.85rem;
 }
 
-.room-list td:nth-child(2),
-.room-list td:nth-child(3),
-.room-list th:nth-child(2),
-.room-list th:nth-child(3) {
-  text-align: right;
+.room-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.1rem 1.25rem 0.9rem;
+  border-radius: 14px;
+  background: var(--surface-1);
+  text-decoration: none;
+  color: var(--text-fg);
+  transition:
+    background 0.12s ease,
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.room-card:hover {
+  background: var(--surface-2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.38);
+  color: var(--text-fg);
+}
+
+.room-card-name {
+  font-size: 1rem;
+  font-weight: 600;
   white-space: nowrap;
-  width: 7ex;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.room-list tbody tr:hover {
-  background: rgba(255, 255, 255, 0.04);
+.room-card-motd {
+  font-size: 0.8rem;
+  color: var(--dark-fg);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+  margin-bottom: 0.3rem;
 }
 
-.room-list a {
-  font-weight: 500;
+.room-card-stats {
+  display: flex;
+  gap: 0.45rem;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.rc-stat {
+  font-size: 0.73rem;
+  color: var(--dark-fg);
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 999px;
+  padding: 0.18rem 0.62rem;
+  white-space: nowrap;
+}
+
+.rc-stat-live {
+  color: var(--role-user-fg);
+  background: rgba(35, 209, 111, 0.1);
+}
+
+/* Empty directory state */
+#room-directory-empty {
+  max-width: 480px;
+  margin: 4rem auto;
+  padding: 0 2rem;
+  text-align: center;
+}
+
+#room-directory-empty h2 {
+  margin-bottom: 0.5rem;
+}
+
+#room-directory-empty p {
+  color: var(--dark-fg);
 }
 
 #modlog {

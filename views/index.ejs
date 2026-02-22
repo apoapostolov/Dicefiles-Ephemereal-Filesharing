@@ -6,28 +6,26 @@
   </nav>
   <% if (locals.publicRooms && locals.rooms && rooms.length > 0) { %>
   <article id="room-directory">
-    <h2>Rooms</h2>
-    <table class="room-list">
-      <thead>
-        <tr>
-          <th>Room</th>
-          <th>Files</th>
-          <th>Users online</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% for (const room of rooms) { %>
-        <tr>
-          <td><a href="/r/<%= room.roomid %>"><%= room.name || room.roomid %></a></td>
-          <td><%= room.files %></td>
-          <td><%= room.users %></td>
-        </tr>
+    <h2 class="rd-title">Rooms</h2>
+    <div class="room-cards">
+      <% for (const room of rooms) { %>
+      <a href="/r/<%= room.roomid %>" class="room-card">
+        <div class="room-card-name"><%= room.name || room.roomid %></div>
+        <% if (room.motd) { %>
+        <div class="room-card-motd"><%= room.motd %></div>
         <% } %>
-      </tbody>
-    </table>
+        <div class="room-card-stats">
+          <span class="rc-stat"><%= room.files %> files</span>
+          <% if (room.users > 0) { %>
+          <span class="rc-stat rc-stat-live"><%= room.users %> online</span>
+          <% } %>
+        </div>
+      </a>
+      <% } %>
+    </div>
   </article>
   <% } else if (locals.publicRooms && locals.rooms && rooms.length === 0) { %>
-  <article>
+  <article id="room-directory-empty">
     <h2>No rooms yet</h2>
     <p>Be the first — <a href="/new">create a room</a> to start sharing.</p>
   </article>

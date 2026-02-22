@@ -62,68 +62,78 @@ describe("GET / — public room directory", () => {
     "renders the room-directory article when publicRooms is enabled",
     async () => {
       const { body } = await get("/");
-      // The server is started with publicRooms: true in .config.json.
-      // The template emits a <article id="room-directory"> block.
       expect(body).toContain('id="room-directory"');
     },
   );
 
-  ifServer("renders the room-list table", async () => {
-    const { body } = await get("/");
-    expect(body).toContain('class="room-list"');
-  });
-
-  ifServer("room rows link to /r/<roomid>", async () => {
-    const { body } = await get("/");
-    // Every room link must start with /r/
-    const linkMatches = [...body.matchAll(/href="(\/r\/[^"]+)"/g)];
-    // At least one room link should exist if there are any rooms.
-    // If the server has no rooms at all the "No rooms yet" path is shown instead —
-    // that case is covered by a separate assertion.
-    if (
-      body.includes('id="room-directory"') &&
-      !body.includes("No rooms yet")
-    ) {
-      expect(linkMatches.length).toBeGreaterThan(0);
-      for (const [, href] of linkMatches) {
-        expect(href).toMatch(/^\/r\/[A-Za-z0-9_-]+$/);
-      }
-    }
-  });
-
-  ifServer("shows 'No rooms yet' message when directory is empty", async () => {
-    // This branch only fires when publicRooms is true AND rooms array is empty.
-    // We assert the page includes one of the two expected branches — either has
-    // rooms (room-directory) or is empty (No rooms yet).
-    const { body } = await get("/");
-    const hasDirectory = body.includes('id="room-directory"');
-    const hasEmpty = body.includes("No rooms yet");
-    const hasWelcome = body.includes("Welcome to Dicefiles");
-    // Exactly one of the three branches should be rendered
-    expect(hasDirectory || hasEmpty || hasWelcome).toBe(true);
-  });
-
-  ifServer(
-    "HTML includes the room-list CSS class so styles apply",
-    async () => {
-      const { body } = await get("/");
-      // Either the table is present or the page is in fallback welcome mode —
-      // either way, no broken markup.
-      expect(body).not.toContain("SyntaxError");
-      expect(body).not.toContain("Error:");
-    },
-  );
-
-  ifServer("room rows include file count and user count columns", async () => {
+  ifServer("renders the card grid container", async () => {
     const { body } = await get("/");
     if (
       !body.includes('id="room-directory"') ||
       body.includes("No rooms yet")
     ) {
-      return; // no rooms — skip column check
+      return;
     }
-    // Three columns per row (name, files, users) — at least 3 cells expected
-    const tdMatches = [...body.matchAll(/<td>/g)];
-    expect(tdMatches.length).toBeGreaterThanOrEqual(3);
+    expect(body).toContain('class="room-cards"');
+  });
+
+  ifServer("room cards link to /r/<roomid>", async () => {
+    const { body } = await get("/");
+    if (
+      !body.includes('id="room-directory"') ||
+      body.includes("No rooms yet")
+    ) {
+      return;
+    }
+    const linkMatches = [...body.matchAll(/href="(\/r\/[^"]+)"/g)];
+    expect(linkMatches.length).toBeGreaterThan(0);
+    for (const [, href] of linkMatches) {
+      expect(href).toMatch(/^\/r\/[A-Za-z0-9_-]+$/);
+    }
+  });
+
+  ifServer("each card has a room name and stat pills", async () => {
+    const { body } = await get("/");
+    if (
+      !body.includes('id="room-directory"') ||
+      body.includes("No rooms yet")
+    ) {
+      return;
+    }
+    expect(body).toContain('class="room-card-name"');
+    expect(body).toContain('class="rc-stat"');
+  });
+
+  ifServer("MOTD is rendered inside card when set", async () => {
+    const { body } = await get("/");
+    if (
+      !body.includes('id="room-directory"') ||
+      body.includes("No rooms yet")
+    ) {
+      return;
+    }
+    // If any room has a motd the div must appear. If no room has a motd
+    // the div is simply absent — both outcomes are valid.
+    if (body.includes('class="room-card-motd"')) {
+      // Must be inside a .room-card
+      const motdIdx = body.indexOf('class="room-card-motd"');
+      const cardIdx = body.lastIndexOf('class="room-card"', motdIdx);
+      expect(cardIdx).toBeGreaterThan(-1);
+      expect(cardIdx).toBeLessThan(motdIdx);
+    }
+  });
+
+  ifServer("shows 'No rooms yet' message when directory is empty", async () => {
+    const { body } = await get("/");
+    const hasDirectory = body.includes('id="room-directory"');
+    const hasEmpty = body.includes("No rooms yet");
+    const hasWelcome = body.includes("Welcome to Dicefiles");
+    expect(hasDirectory || hasEmpty || hasWelcome).toBe(true);
+  });
+
+  ifServer("page contains no server-side errors", async () => {
+    const { body } = await get("/");
+    expect(body).not.toContain("SyntaxError");
+    expect(body).not.toContain("Error:");
   });
 });
