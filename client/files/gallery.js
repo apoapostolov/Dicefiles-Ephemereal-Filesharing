@@ -10,6 +10,7 @@ export default class Gallery {
     this.el = document.querySelector("#gallery");
     this.imgEl = document.querySelector("#gallery_img");
     this.closeEl = document.querySelector("#gallery_close");
+    this.downloadEl = document.querySelector("#gallery_download");
     this.titleEl = document.querySelector("#gallery_title");
     this.infoEl = document.querySelector("#gallery_info");
     this.prevEl = document.querySelector("#gallery_prev");
@@ -36,6 +37,14 @@ export default class Gallery {
     this.el.addEventListener("click", this.onclose.bind(this), true);
     this.closeEl.addEventListener("click", this.close.bind(this), true);
     this.titleEl.addEventListener("click", this.ontitleclick);
+
+    this.downloadEl.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (this.file && !this.file.isRequest) {
+        this.file.download();
+      }
+    }, true);
 
     this.prevEl.addEventListener("click", this.prev.bind(this), true);
     this.nextEl.addEventListener("click", this.next.bind(this), true);
@@ -124,6 +133,9 @@ export default class Gallery {
       capture: true,
     });
 
+    // Reset download button color state
+    this.downloadEl.classList.remove("dl-light", "dl-dark");
+
     // Turn off gallery mode and garbage collect
     this.el.parentElement.classList.remove("gallery");
     this.imgEl.src = "";
@@ -189,6 +201,37 @@ export default class Gallery {
     this.el.classList.add("aux");
   }
 
+  applyDownloadColor(img) {
+    try {
+      const canvas = document.createElement("canvas");
+      const size = 40;
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      // Sample top-right corner of the image
+      const sw = Math.min(img.naturalWidth, 80);
+      const sh = Math.min(img.naturalHeight, 80);
+      const sx = img.naturalWidth - sw;
+      const sy = 0;
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, size, size);
+      const data = ctx.getImageData(0, 0, size, size).data;
+      let brightness = 0;
+      const pixels = size * size;
+      for (let i = 0; i < data.length; i += 4) {
+        brightness +=
+          0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      }
+      brightness /= pixels;
+      const dark = brightness < 140;
+      this.downloadEl.classList.toggle("dl-light", dark);
+      this.downloadEl.classList.toggle("dl-dark", !dark);
+    } catch (_) {
+      // Cross-origin or unavailable — default to light icon on dark gallery bg
+      this.downloadEl.classList.add("dl-light");
+      this.downloadEl.classList.remove("dl-dark");
+    }
+  }
+
   open(file) {
     const info = file.getGalleryInfo();
     if (!info) {
@@ -218,6 +261,7 @@ export default class Gallery {
         this.imgEl.parentElement.replaceChild(img, this.imgEl);
         this.imgEl = img;
         this.imgEl.addEventListener("click", this.onimgclick);
+        this.applyDownloadColor(img);
       };
       if (info.srcset && info.sizes) {
         img.setAttribute("srcset", info.srcset);
@@ -239,6 +283,9 @@ export default class Gallery {
         this.imgEl = video;
         this.imgEl.addEventListener("click", this.onimgclick);
         video.play();
+        // Default to light icon on dark gallery background for videos
+        this.downloadEl.classList.add("dl-light");
+        this.downloadEl.classList.remove("dl-dark");
       };
     } else {
       // No cover image (e.g. EPUB/MOBI without embedded cover) —
@@ -249,6 +296,9 @@ export default class Gallery {
       blank.id = this.imgEl.id;
       this.imgEl.parentElement.replaceChild(blank, this.imgEl);
       this.imgEl = blank;
+      // Default to light icon for no-cover documents
+      this.downloadEl.classList.add("dl-light");
+      this.downloadEl.classList.remove("dl-dark");
     }
 
     // Set up additional info elements straight away

@@ -116,3 +116,37 @@
 .aux #gallery_info {
   margin-bottom: 4ex;
 }
+
+#gallery_download {
+  position: absolute;
+  top: 1em;
+  right: 4.8em; /* sits just left of the close button */
+  z-index: 2001;
+  opacity: 0;
+  transition: 0.3s opacity ease-in;
+  font-size: 1.4em;
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0.2em 0.3em;
+}
+
+.aux #gallery_download {
+  opacity: 1;
+}
+
+#gallery_download.dl-light {
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+#gallery_download.dl-dark {
+  color: rgba(20, 20, 20, 0.9);
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.5);
+}
+
+#gallery_download:hover {
+  opacity: 1 !important;
+}

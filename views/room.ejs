@@ -299,6 +299,7 @@
     <img id="gallery_img" alt="" src="/loader.png" />
     <span id="gallery_title" class="gallery_text">title</span>
     <a id="gallery_close" class="i-clear"></a>
+    <a id="gallery_download" class="i-download" title="Download file"></a>
     <a id="gallery_prev" class="gallery_prevnext i-prev"></a>
     <a id="gallery_next" class="gallery_prevnext i-next"></a>
     <span id="gallery_info" class="gallery_text">shrekt kek</span>
@@ -716,7 +717,6 @@
 
   <script>
     window.__CV__ = "<%- v %>";
-    window.__ACCOUNT__ = "<%- (user && user.account) || '' %>";
   </script>
   <script src="/client.js?v=<%=v%>"></script>
 </body>

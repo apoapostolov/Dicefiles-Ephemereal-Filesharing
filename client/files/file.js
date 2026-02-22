@@ -371,6 +371,12 @@ export default class File extends BaseFile {
       tag.dataset.tagLabel = label;
       if (tn === "usernick" && this.meta && this.meta.account) {
         tag.classList.add("tag-user");
+        const account = this.meta.account;
+        tag.addEventListener("click", (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          window.open(`/user/${account}`, "_blank");
+        });
       }
       this.tagsEl.appendChild(tag);
     }
@@ -454,12 +460,14 @@ export default class File extends BaseFile {
   }
 
   oniconclick(e) {
-    const { classList } = document.body;
-    if (!classList.contains("mod") && !classList.contains("owner")) {
-      return;
-    }
     nukeEvent(e);
-    this.owner.select(this, e);
+    const { classList } = document.body;
+    if (classList.contains("mod") || classList.contains("owner")) {
+      this.owner.select(this, e);
+    }
+    if (!this.isRequest) {
+      this.download();
+    }
   }
 
   buildMetadataSnippet() {
