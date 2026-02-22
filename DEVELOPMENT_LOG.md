@@ -9,12 +9,13 @@ Two user-facing improvements to help new operators and AI agents get started qui
 **README.md — AI-Assisted Setup section**: Added a new section immediately before
 "Quick Start" containing a complete, copy-pasteable six-step prompt that any MCP-capable
 agent (OpenClaw, Claude, Codex, Cursor) can execute to:
-  1. Clone and `npm install`
-  2. Copy `.config.json.example` → `.config.json` and fill required secrets
-  3. Build webpack bundle and start the server with a health verification step
-  4. Wire the MCP server into the agent's config file (with format reference to MCP.md)
-  5. Smoke-test the MCP stdio transport
-  6. Install the OpenClaw skill to `~/.claude/skills/dicefiles/`
+
+1. Clone and `npm install`
+2. Copy `.config.json.example` → `.config.json` and fill required secrets
+3. Build webpack bundle and start the server with a health verification step
+4. Wire the MCP server into the agent's config file (with format reference to MCP.md)
+5. Smoke-test the MCP stdio transport
+6. Install the OpenClaw skill to `~/.claude/skills/dicefiles/`
 
 **README.md — Documentation table**: Replaced the flat bullet list with a table that
 includes `API.md` and `MCP.md` with one-sentence descriptions of purpose, so users
@@ -45,8 +46,6 @@ before copying to .config.json."
 - **`.config.json.example`** — New file: annotated JSONC configuration reference.
 
 ---
-
-
 
 ### Summary
 

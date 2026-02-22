@@ -11,7 +11,7 @@ requests, and fast archival workflows.
 
 ### MCP Server Wrapper
 
-- [ ] `scripts/mcp-server.js` — thin Node.js MCP server wrapping all v1.1 REST
+- [x] `scripts/mcp-server.js` — thin Node.js MCP server wrapping all v1.1 REST
       endpoints as tools. See `docs/mcp.md` for the full implementation guide, tool
       definitions, Claude Desktop config, and deployment instructions.
       Transport: stdio (Claude Desktop / Cursor / local) and HTTP/SSE (OpenClaw, AutoGen, CrewAI).
@@ -20,7 +20,7 @@ requests, and fast archival workflows.
       `upload_file_from_urls`, `create_request`, `claim_request`, `release_request`,
       `update_file_metadata`, `post_room_chat`, `save_subscription`, `list_subscriptions`,
       `server_health` (13 total).
-- [ ] `tests/unit/mcp-tools.test.js` — unit tests for each MCP tool handler using
+- [x] `tests/unit/mcp-tools.test.js` — unit tests for each MCP tool handler using
       mocked `fetch` responses.
 
 ---

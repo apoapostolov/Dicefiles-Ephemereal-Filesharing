@@ -14,40 +14,59 @@
  */
 
 // ── Mock @modelcontextprotocol/sdk before any require() ──────────────────────
-jest.mock("@modelcontextprotocol/sdk/server/mcp.js", () => ({
-  McpServer: class MockMcpServer {
-    constructor(meta) {
-      this.meta = meta;
-    }
-    tool(name, desc, schema, handler) {
-      // captured by mock server in registerTools tests
-    }
-    connect() {
-      return Promise.resolve();
-    }
-  },
-}), { virtual: true });
+jest.mock(
+  "@modelcontextprotocol/sdk/server/mcp.js",
+  () => ({
+    McpServer: class MockMcpServer {
+      constructor(meta) {
+        this.meta = meta;
+      }
+      tool(name, desc, schema, handler) {
+        // captured by mock server in registerTools tests
+      }
+      connect() {
+        return Promise.resolve();
+      }
+    },
+  }),
+  { virtual: true },
+);
 
-jest.mock("@modelcontextprotocol/sdk/server/stdio.js", () => ({
-  StdioServerTransport: class MockStdio {},
-}), { virtual: true });
+jest.mock(
+  "@modelcontextprotocol/sdk/server/stdio.js",
+  () => ({
+    StdioServerTransport: class MockStdio {},
+  }),
+  { virtual: true },
+);
 
 // ── Mock zod — schemas are only used at registration time, not in handlers ──
-jest.mock("zod", () => {
-  const chain = () => {
-    const o = { optional: () => o, min: () => o, max: () => o, url: () => o, describe: () => o, default: () => o };
-    return o;
-  };
-  return {
-    z: {
-      string: chain,
-      number: chain,
-      array: () => chain(),
-      object: () => chain(),
-      enum: () => chain(),
-    },
-  };
-}, { virtual: true });
+jest.mock(
+  "zod",
+  () => {
+    const chain = () => {
+      const o = {
+        optional: () => o,
+        min: () => o,
+        max: () => o,
+        url: () => o,
+        describe: () => o,
+        default: () => o,
+      };
+      return o;
+    };
+    return {
+      z: {
+        string: chain,
+        number: chain,
+        array: () => chain(),
+        object: () => chain(),
+        enum: () => chain(),
+      },
+    };
+  },
+  { virtual: true },
+);
 
 // ── Set env before loading module ─────────────────────────────────────────────
 process.env.DICEFILES_BASE_URL = "http://test.dicefiles.local";
@@ -380,7 +399,8 @@ describe("download_file", () => {
       headers: {
         get: (name) => {
           if (name === "content-type") return "text/plain";
-          if (name === "content-disposition") return 'attachment; filename="hello.txt"';
+          if (name === "content-disposition")
+            return 'attachment; filename="hello.txt"';
           return null;
         },
       },
