@@ -1,6 +1,52 @@
 # Dicefiles Development Log
 
-## 2026-02-22 - Fix show-new-btn active icon color; add opengraph.io link enrichment
+## 2026-02-22 - README AI setup section + .config.json.example + API/MCP doc links
+
+### Summary
+
+Two user-facing improvements to help new operators and AI agents get started quickly.
+
+**README.md — AI-Assisted Setup section**: Added a new section immediately before
+"Quick Start" containing a complete, copy-pasteable six-step prompt that any MCP-capable
+agent (OpenClaw, Claude, Codex, Cursor) can execute to:
+  1. Clone and `npm install`
+  2. Copy `.config.json.example` → `.config.json` and fill required secrets
+  3. Build webpack bundle and start the server with a health verification step
+  4. Wire the MCP server into the agent's config file (with format reference to MCP.md)
+  5. Smoke-test the MCP stdio transport
+  6. Install the OpenClaw skill to `~/.claude/skills/dicefiles/`
+
+**README.md — Documentation table**: Replaced the flat bullet list with a table that
+includes `API.md` and `MCP.md` with one-sentence descriptions of purpose, so users
+know which document to reach for.
+
+**README.md — Automation API section**: Added a paragraph pointing to `MCP.md` for
+AI clients that want tool-based access rather than raw HTTP calls.
+
+**README.md — Quick Start configure step**: Both Linux/macOS and Windows sections now
+say "Copy `.config.json.example` and edit it" instead of showing an inline JSON
+snippet, keeping the docs in sync with the example file.
+
+**.config.json.example**: New annotated JSONC reference file. Covers every operator-
+relevant config key with inline comments explaining purpose, units, examples, and
+cross-references. Sections: Identity, Security (secret generation command included),
+Network (port + TLS toggle), Storage (uploads dir + maxFileSize), Automation API
+(key schema, all scopes, references to API.md and MCP.md), Optional External Services
+(opengraphIoKey), Rooms, File Expiry, Webhooks (event list), Logging, Preview Tooling,
+and Flood Control. Includes JSONC warning at the top: "Remove all // comment lines
+before copying to .config.json."
+
+### Changed Files
+
+- **`README.md`** — Documentation section converted to table with API.md + MCP.md rows;
+  new "AI-Assisted Setup (OpenClaw)" section before Quick Start; configure step in both
+  OS tracks updated to reference `.config.json.example`; Automation API section links
+  to MCP.md.
+- **`.config.json.example`** — New file: annotated JSONC configuration reference.
+
+---
+
+
 
 ### Summary
 
@@ -15,6 +61,7 @@ output is deterministic (white icon, matching all other active filter buttons). 
 rebuilt — confirmed `color:var(--text-fg)` in new `static/style.css`.
 
 **opengraph.io link enrichment** (`lib/links.js`):
+
 - The original `resolveTitle(url)` function fetched the raw HTML of each posted URL
   and parsed the `<title>` tag — cheap but fragile on JS-rendered pages and redirected
   URLs.
@@ -51,8 +98,6 @@ rebuilt — confirmed `color:var(--text-fg)` in new `static/style.css`.
 - **`CHANGELOG.md`** — Added opengraph.io feature entry under `[Unreleased] → Added`.
 
 ---
-
-
 
 ### Summary
 

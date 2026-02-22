@@ -1,0 +1,238 @@
+{
+  // ============================================================
+  // Dicefiles – Annotated Configuration Example
+  // ============================================================
+  // This file uses JSONC format (JSON with comments).
+  //
+  // HOW TO USE:
+  //   1. Copy this file:  cp .config.json.example .config.json
+  //   2. Remove ALL comment lines (lines starting with //) —
+  //      standard JSON parsers do not allow comments.
+  //   3. Fill in your values and save.
+  //
+  // Only include keys you want to override. Everything else
+  // falls back to defaults.js automatically.
+  //
+  // Config loading order (last value wins):
+  //   1. defaults.js  (built-in, do not edit)
+  //   2. ~/.config/dicefiles.json  (user-level override)
+  //   3. .config.json  (this file, project-level)
+  // ============================================================
+
+  // ----------------------------------------------------------
+  // IDENTITY
+  // ----------------------------------------------------------
+
+  // Name shown in the browser title bar and room headers.
+  "name": "My Dicefiles",
+
+  // Tagline shown on the landing page below the site name.
+  "motto": "Ephemereal Filesharing for Hobby Communities",
+
+  // ----------------------------------------------------------
+  // SECURITY  (required in production)
+  // ----------------------------------------------------------
+
+  // Secret used to sign session cookies and tokens.
+  // MUST be a long, random, unique string in production.
+  // The server refuses to start in production with the default value.
+  //
+  // Generate one:
+  //   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+  //
+  // Then paste the output here (64 hex chars):
+  "secret": "REPLACE_WITH_64_RANDOM_HEX_CHARS",
+
+  // ----------------------------------------------------------
+  // NETWORK
+  // ----------------------------------------------------------
+
+  // HTTP port the server listens on. Default: 8080.
+  "port": 9090,
+
+  // --- TLS (optional, only if NOT behind a reverse proxy) ---
+  // If you run behind nginx/Caddy/Traefik, leave tls: false and
+  // let the proxy handle TLS.
+  //
+  // "tls": false,
+  // "tlsport": 8443,
+  // "tlsonly": false,     // set true to reject plain HTTP
+  // "tlskey": "/etc/ssl/private/server.key",
+  // "tlscert": "/etc/ssl/certs/server.crt",
+
+  // Trust X-Forwarded-For when behind a reverse proxy.
+  // Set to true only if a trusted proxy is in front.
+  // "considerProxyForwardedForHeaders": false,
+
+  // ----------------------------------------------------------
+  // STORAGE
+  // ----------------------------------------------------------
+
+  // Directory where uploaded files are stored.
+  // Use an absolute path for clarity.  Default: "uploads" (relative).
+  "uploads": "uploads",
+
+  // Maximum file size in bytes.  Default: 10 GB.
+  // 0 = unlimited (not recommended on a public server).
+  // Examples:
+  //   1 GB  = 1073741824
+  //   5 GB  = 5368709120
+  //   10 GB = 10737418240
+  "maxFileSize": 5368709120,
+
+  // ----------------------------------------------------------
+  // AUTOMATION API  (AI agents / scripts)
+  // ----------------------------------------------------------
+  // Leave automationApiKeys empty to disable all /api/v1 routes.
+  //
+  // Each key object has:
+  //   id     – human-readable name for audit logs
+  //   key    – bearer token (keep secret; use a long random string)
+  //   scopes – list of permissions granted to this key
+  //
+  // Available scopes:
+  //   files:read        – list/get/download files and rooms
+  //   files:write       – update file metadata and tags
+  //   files:delete      – delete files (moderator-level)
+  //   uploads:write     – upload files (batch URL ingest)
+  //   requests:write    – create/claim/release/fulfill requests
+  //   rooms:write       – post room chat messages
+  //   mod:*             – full moderation access
+  //
+  // Full API reference: API.md
+  // MCP server for AI clients: MCP.md
+  "automationApiKeys": [
+    {
+      "id": "agent-full",
+      "key": "REPLACE_WITH_LONG_RANDOM_SECRET",
+      "scopes": [
+        "files:read",
+        "files:write",
+        "uploads:write",
+        "requests:write",
+        "rooms:write"
+      ]
+    }
+    // Add more keys as needed, for example a read-only monitoring key:
+    // {
+    //   "id": "monitor",
+    //   "key": "REPLACE_WITH_ANOTHER_LONG_RANDOM_SECRET",
+    //   "scopes": ["files:read"]
+    // }
+  ],
+
+  // Default rate limit for all automation API routes.
+  // "automationApiRateLimit": { "windowMs": 60000, "max": 180 },
+
+  // Per-scope rate limit overrides (uncomment and tune as needed).
+  // "automationApiRateLimitByScope": {
+  //   "uploads:write": { "windowMs": 60000, "max": 30 }
+  // },
+
+  // ----------------------------------------------------------
+  // OPTIONAL EXTERNAL SERVICES
+  // ----------------------------------------------------------
+
+  // opengraph.io API key for enriched link-title resolution in the Links Archive.
+  // Without this key, titles are scraped from the raw HTML <title> tag.
+  // With this key, the opengraph.io API is tried first (better accuracy on
+  // JS-rendered pages and redirected URLs); falls back to HTML scraping on failure.
+  // Free tier: 100 requests/day  |  Sign up: https://www.opengraph.io/
+  // "opengraphIoKey": "",
+
+  // ----------------------------------------------------------
+  // ROOMS  (per-room feature defaults)
+  // ----------------------------------------------------------
+
+  // Allow users to create rooms.  Default: true.
+  // "roomCreation": true,
+
+  // Require a registered account to create rooms.  Default: false.
+  // "roomCreationRequiresAccount": false,
+
+  // Require a registered account to chat and upload.  Default: false.
+  // "requireAccounts": false,
+
+  // Default for new rooms: enable the request-creation feature.
+  // Room owners can toggle this per room in Room Options.  Default: true.
+  // "allowRequests": true,
+
+  // Default for new rooms: enable the Links Archive (URLs shared in chat
+  // are automatically captured).  Room owners can disable per room.  Default: true.
+  // "linkCollection": true,
+
+  // ----------------------------------------------------------
+  // FILE EXPIRY
+  // ----------------------------------------------------------
+
+  // Hours before a completed download expires and is garbage-collected.
+  // Mods can override this per room.  Default: 48.
+  // "TTL": 48,
+
+  // ----------------------------------------------------------
+  // WEBHOOKS  (outbound events → external services)
+  // ----------------------------------------------------------
+  // Leave as empty array to disable.
+  //
+  // Available events:
+  //   file_uploaded, file_deleted
+  //   request_created, request_fulfilled
+  //   download_served
+  //
+  // "webhooks": [
+  //   {
+  //     "id": "my-ops-bot",
+  //     "url": "https://example.org/hooks/dicefiles",
+  //     "secret": "REPLACE_WITH_WEBHOOK_SIGNING_SECRET",
+  //     "events": ["file_uploaded", "request_created", "request_fulfilled"],
+  //     "retries": 3,
+  //     "timeoutMs": 7000
+  //   }
+  // ],
+
+  // ----------------------------------------------------------
+  // LOGGING
+  // ----------------------------------------------------------
+
+  // Path for JSONL automation API audit log.  Default: "automation.log".
+  // "automationAuditLog": "automation.log",
+
+  // Path for JSONL lifecycle log (uploads/downloads/previews).  Default: "ops.log".
+  // "observabilityLog": "ops.log",
+
+  // Moderation action log.  Default: "mod.log".
+  // "modlog": "mod.log",
+
+  // ----------------------------------------------------------
+  // PREVIEW TOOLING
+  // ----------------------------------------------------------
+
+  // Run preview-generation commands inside a Firejail sandbox.
+  // Automatically true on Linux if firejail is installed; always false on Windows.
+  // Set to false in Docker or other constrained environments.
+  "jail": false
+
+  // Paths to external tools used for cover/preview generation.
+  // Only needed if the binaries are not on PATH.
+  // "exiftool": "exiftool",
+  // "ffmpeg": "ffmpeg",
+  // "filetool": "file",
+
+  // Concurrency limits for background preview/metadata workers.
+  // "maxAssetsProcesses": 2,
+  // "maxMetaProcesses": 5,
+
+  // ----------------------------------------------------------
+  // FLOOD CONTROL  (uncomment to tune)
+  // ----------------------------------------------------------
+  // "chatFloodTrigger": 5,           // messages before flood kick
+  // "chatFloodDuration": 10000,      // ms block duration
+  // "uploadFloodTrigger": 60,        // uploads per window
+  // "uploadFloodDuration": 60000,
+  // "loginFloodTrigger": 5,          // login attempts before IP block
+  // "loginFloodDuration": 900000,    // 15 min
+  // "loginAccountFloodTrigger": 10,  // per-account failed logins before lockout
+  // "loginAccountFloodDuration": 900000,
+  // "accountFloodTrigger": 3,        // registrations per window
+  // "accountFloodDuration": 21600000 // 6 hours
+}

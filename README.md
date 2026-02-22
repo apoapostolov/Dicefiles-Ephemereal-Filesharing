@@ -107,9 +107,100 @@ The PDF.js web worker is built as a separate webpack entry (`pdf.worker.js`) and
 
 ## Documentation
 
-- **[INTRODUCTION.md](INTRODUCTION.md)** - Complete guide to Dicefiles, use cases, and getting started
-- **[CHANGELOG.md](CHANGELOG.md)** - Version history and release notes
-- **[API.md](API.md)** - Automation API reference for agentic clients (OpenClaw / skills.sh style)
+| Document                           | Purpose                                                                                                                                                                                       |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [INTRODUCTION.md](INTRODUCTION.md) | Complete guide to Dicefiles, use cases, and getting started                                                                                                                                   |
+| [CHANGELOG.md](CHANGELOG.md)       | Version history and release notes                                                                                                                                                             |
+| [API.md](API.md)                   | REST Automation API reference — all `/api/v1` endpoints, authentication, scopes, rate limits, and webhook events. Start here to build bots, scripts, or integrations against a live instance. |
+| [MCP.md](MCP.md)                   | Model Context Protocol server reference — setup for Claude Desktop, VS Code, Cursor, Codex CLI, OpenCode CLI, and OpenClaw. Covers all 13 MCP tools and worked multi-step workflow examples.  |
+
+---
+
+## AI-Assisted Setup (OpenClaw)
+
+If you are an AI agent (OpenClaw, Claude, Codex, or any MCP-capable orchestrator), paste the
+prompt below to automate the full Dicefiles installation, MCP server wiring, and skill
+registration in one shot.
+
+> **For humans:** skip to [Quick Start](#quick-start-choose-your-os) for the manual
+> step-by-step instructions.
+
+````
+You are setting up Dicefiles on this machine. Work through these steps in order:
+
+## 1 — Clone and install
+```bash
+git clone https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing.git Dicefiles
+cd Dicefiles
+npm install
+```
+
+## 2 — Generate a config
+Create `.config.json` from the provided example:
+```bash
+cp .config.json.example .config.json
+```
+Open `.config.json` and:
+- Replace `"secret"` with 64 random hex characters (run:
+  `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`)
+- Set `"name"` and `"motto"` to taste.
+- Set `"port"` (default 9090)
+- Add at least one automation API key under `"automationApiKeys"` with scopes
+  `["files:read","uploads:write","requests:write","rooms:write"]`.
+  Keep the key value in your secrets manager.
+
+## 3 — Build and start
+```bash
+node ./node_modules/webpack-cli/bin/cli.js --mode=production
+node server.js &
+curl -sI http://127.0.0.1:$(node -e "const c=require('./.config.json');console.log(c.port||9090)")/ | head -1
+```
+Confirm `HTTP/1.1 200` before proceeding.
+
+## 4 — Install the MCP server (stdio)
+Add the following entry to your MCP client config (`~/.config/mcporter.json`,
+`~/.cursor/mcp.json`, `~/.codex/config.toml`, etc. — see `MCP.md` § 2 for
+client-specific formats):
+
+```json
+{
+  "mcpServers": {
+    "dicefiles": {
+      "command": "node",
+      "args": ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
+      "env": {
+        "DICEFILES_BASE_URL": "http://localhost:9090",
+        "DICEFILES_API_KEY": "<your-automation-key-from-step-2>"
+      }
+    }
+  }
+}
+```
+
+Smoke-test:
+```bash
+DICEFILES_BASE_URL=http://localhost:9090 \
+DICEFILES_API_KEY=<your-key> \
+node scripts/mcp-server.js
+# → [dicefiles-mcp] Stdio transport ready. Waiting for MCP client...
+```
+
+## 5 — Install the OpenClaw agent skill
+```bash
+mkdir -p ~/.claude/skills/dicefiles
+cp /absolute/path/to/Dicefiles/scripts/openclaw-dicefiles-skill/SKILL.md \
+   ~/.claude/skills/dicefiles/
+```
+The skill teaches OpenClaw the full 13-tool inventory, startup sequence, and
+fulfillment loop. Full skill definition: `scripts/openclaw-dicefiles-skill/SKILL.md`.
+
+## 6 — Verify
+- Restart your MCP client and confirm `dicefiles` appears in its tool list.
+- Ask the agent: "Use the server_health tool to check my Dicefiles instance."
+- Expected: Redis OK, storage OK, uptime counter > 0.
+````
+
+---
 
 ## Quick Start (Choose Your OS)
 
@@ -180,17 +271,15 @@ yarn prestart
 
 #### 3. Configure
 
-Create a `.config.json` file in the Dicefiles directory:
+Copy the annotated example and edit it:
 
-```json
-{
-  "name": "My File Share",
-  "motto": "Share freely",
-  "port": 9090,
-  "maxFileSize": 5368709120,
-  "jail": false
-}
+```bash
+cp .config.json.example .config.json
 ```
+
+At minimum set `"secret"` to a long random string and choose a `"port"`. See
+[Configuration](#configuration) below or the inline comments in `.config.json.example`
+for a full description of every option.
 
 #### 4. Start the Server
 
@@ -287,17 +376,14 @@ yarn prestart
 
 #### 3. Configure
 
-Create `.config.json` in the Dicefiles directory:
+Copy the annotated example and edit it:
 
-```json
-{
-  "name": "My File Share",
-  "motto": "Share freely",
-  "port": 9090,
-  "maxFileSize": 5368709120,
-  "jail": false
-}
+```powershell
+copy .config.json.example .config.json
 ```
+
+At minimum set `"secret"` and choose a `"port"`. See the inline comments in
+`.config.json.example` or the [Configuration](#configuration) section below.
 
 **Note:** `jail` is always disabled on Windows (firejail is Linux-only).
 
@@ -358,29 +444,29 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 **Key options:**
 
-| Option                          | Default                     | Description                                                                                    |
-| ------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------- |
-| `port`                          | `8080`                      | HTTP listen port                                                                               |
-| `workers`                       | `CPU + 1`                   | Number of web workers                                                                          |
-| `secret`                        | `"Dicefiles"`               | Secret for crypto (change in production)                                                       |
-| `uploads`                       | `"uploads"`                 | Upload directory path                                                                          |
-| `maxFileSize`                   | `10GB`                      | Max file size in bytes (0 = unlimited)                                                         |
-| `requireAccounts`               | `false`                     | Require accounts to chat/upload                                                                |
-| `roomCreation`                  | `true`                      | Allow room creation                                                                            |
-| `TTL`                           | `48`                        | Hours before finished downloads expire                                                         |
-| `downloadMaxConcurrent`         | `3`                         | Max concurrent downloads for room toolbar batch downloads (1-4)                                |
-| `automationApiKeys`             | `[]`                        | API keys for automation API (supports scoped key objects)                                      |
-| `automationApiRateLimit`        | `{windowMs,max}`            | Default automation API rate limit (fixed window)                                               |
-| `automationApiRateLimitByScope` | `{}`                        | Per-scope rate limit overrides for automation API                                              |
-| `automationAuditLog`            | `"automation.log"`          | JSONL audit log file for automation API calls                                                  |
-| `observabilityLog`              | `"ops.log"`                 | JSONL lifecycle log for uploads/downloads/requests/previews                                    |
-| `allowRequests`                 | `true`                      | Default for new rooms: whether request creation is enabled (room owners can override per room) |
-| `linkCollection`                | `true`                      | Default for new rooms: whether the link archive is enabled (room owners can override per room) |
+| Option                          | Default                     | Description                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `port`                          | `8080`                      | HTTP listen port                                                                                                                                                                                                                                                                                                                                                                                         |
+| `workers`                       | `CPU + 1`                   | Number of web workers                                                                                                                                                                                                                                                                                                                                                                                    |
+| `secret`                        | `"Dicefiles"`               | Secret for crypto (change in production)                                                                                                                                                                                                                                                                                                                                                                 |
+| `uploads`                       | `"uploads"`                 | Upload directory path                                                                                                                                                                                                                                                                                                                                                                                    |
+| `maxFileSize`                   | `10GB`                      | Max file size in bytes (0 = unlimited)                                                                                                                                                                                                                                                                                                                                                                   |
+| `requireAccounts`               | `false`                     | Require accounts to chat/upload                                                                                                                                                                                                                                                                                                                                                                          |
+| `roomCreation`                  | `true`                      | Allow room creation                                                                                                                                                                                                                                                                                                                                                                                      |
+| `TTL`                           | `48`                        | Hours before finished downloads expire                                                                                                                                                                                                                                                                                                                                                                   |
+| `downloadMaxConcurrent`         | `3`                         | Max concurrent downloads for room toolbar batch downloads (1-4)                                                                                                                                                                                                                                                                                                                                          |
+| `automationApiKeys`             | `[]`                        | API keys for automation API (supports scoped key objects)                                                                                                                                                                                                                                                                                                                                                |
+| `automationApiRateLimit`        | `{windowMs,max}`            | Default automation API rate limit (fixed window)                                                                                                                                                                                                                                                                                                                                                         |
+| `automationApiRateLimitByScope` | `{}`                        | Per-scope rate limit overrides for automation API                                                                                                                                                                                                                                                                                                                                                        |
+| `automationAuditLog`            | `"automation.log"`          | JSONL audit log file for automation API calls                                                                                                                                                                                                                                                                                                                                                            |
+| `observabilityLog`              | `"ops.log"`                 | JSONL lifecycle log for uploads/downloads/requests/previews                                                                                                                                                                                                                                                                                                                                              |
+| `allowRequests`                 | `true`                      | Default for new rooms: whether request creation is enabled (room owners can override per room)                                                                                                                                                                                                                                                                                                           |
+| `linkCollection`                | `true`                      | Default for new rooms: whether the link archive is enabled (room owners can override per room)                                                                                                                                                                                                                                                                                                           |
 | `opengraphIoKey`                | `""`                        | **Optional.** API key for [opengraph.io](https://www.opengraph.io/) enriched link-title resolution. When set, chat-link titles in the Links Archive are fetched via the opengraph.io API (follows redirects, handles JS-rendered pages, returns OG `title`). Falls back to inline HTML `<title>` scraping when unset or on API failure. Free tier: 100 req/day. Get a key at `https://www.opengraph.io/` |
-| `webhooks`                      | `[]`                        | Outbound webhook targets/events for upload/request lifecycle                                   |
-| `webhookRetry`                  | `{...}`                     | Webhook retry policy defaults (retries/backoff)                                                |
-| `webhookDeadLetterLog`          | `"webhook-dead-letter.log"` | JSONL sink for failed webhook deliveries                                                       |
-| `jail`                          | `true` (Linux)              | Use firejail for preview commands (always false on Windows)                                    |
+| `webhooks`                      | `[]`                        | Outbound webhook targets/events for upload/request lifecycle                                                                                                                                                                                                                                                                                                                                             |
+| `webhookRetry`                  | `{...}`                     | Webhook retry policy defaults (retries/backoff)                                                                                                                                                                                                                                                                                                                                                          |
+| `webhookDeadLetterLog`          | `"webhook-dead-letter.log"` | JSONL sink for failed webhook deliveries                                                                                                                                                                                                                                                                                                                                                                 |
+| `jail`                          | `true` (Linux)              | Use firejail for preview commands (always false on Windows)                                                                                                                                                                                                                                                                                                                                              |
 
 ## Security Posture
 
@@ -388,14 +474,14 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 Dicefiles uses [Helmet 7](https://helmetjs.github.io/) to set secure HTTP response headers on every request. Key effective headers:
 
-| Header | Value | Notes |
-| --- | --- | --- |
-| `Content-Security-Policy` | `default-src 'self' 'unsafe-inline'` + `script-src ... 'unsafe-eval'` | `unsafe-eval` required for PDF.js PostScript rendering |
-| `Strict-Transport-Security` | `max-age=15552000; includeSubDomains` | Sent **only** when the request arrived over HTTPS (`req.secure`) |
-| `X-Frame-Options` | `SAMEORIGIN` | Prevents clickjacking |
-| `X-Content-Type-Options` | `nosniff` | Prevents MIME-type sniffing |
-| `Referrer-Policy` | `no-referrer` | No referrer leaked to external URLs |
-| `Cross-Origin-Opener-Policy` | `same-origin` | Isolates browsing context |
+| Header                       | Value                                                                 | Notes                                                            |
+| ---------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `Content-Security-Policy`    | `default-src 'self' 'unsafe-inline'` + `script-src ... 'unsafe-eval'` | `unsafe-eval` required for PDF.js PostScript rendering           |
+| `Strict-Transport-Security`  | `max-age=15552000; includeSubDomains`                                 | Sent **only** when the request arrived over HTTPS (`req.secure`) |
+| `X-Frame-Options`            | `SAMEORIGIN`                                                          | Prevents clickjacking                                            |
+| `X-Content-Type-Options`     | `nosniff`                                                             | Prevents MIME-type sniffing                                      |
+| `Referrer-Policy`            | `no-referrer`                                                         | No referrer leaked to external URLs                              |
+| `Cross-Origin-Opener-Policy` | `same-origin`                                                         | Isolates browsing context                                        |
 
 To verify headers on a live instance:
 
@@ -406,9 +492,9 @@ curl -sI https://your-instance/ | grep -i "content-security\|strict-transport\|x
 ### Ports
 
 | Protocol | Default port | Config key |
-| --- | --- | --- |
-| HTTP | `8080` | `port` |
-| HTTPS | `8443` | `tlsport` |
+| -------- | ------------ | ---------- |
+| HTTP     | `8080`       | `port`     |
+| HTTPS    | `8443`       | `tlsport`  |
 
 Change either in `.config.json`. If you run Dicefiles behind a reverse proxy (nginx/caddy), set the proxy to forward to the HTTP port and terminate TLS at the proxy layer.
 
@@ -430,6 +516,11 @@ If Firejail is not installed, the server logs a warning and falls back to unsand
 
 The stable automation API prefix is `/api/v1` (legacy `/api/automation` is kept as a compatibility alias).
 The complete reference lives in [`API.md`](API.md), structured for agentic tools and skill generation.
+
+For connecting AI clients (Claude Desktop, Cursor, Codex CLI, OpenClaw) via the
+Model Context Protocol, see [`MCP.md`](MCP.md). The bundled MCP server
+(`scripts/mcp-server.js`) wraps every automation endpoint as a named, schema-validated
+tool — no HTTP code required.
 
 ## Health Endpoint
 
