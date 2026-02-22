@@ -161,19 +161,11 @@ body#page {
 #page #userprofile .profile-header,
 #page #userprofile .profile-stats,
 #page #userprofile .profile-message,
-#page #userprofile .profile-achievements,
-#page #userprofile .profile-activity {
+#page #userprofile .profile-achievements {
   border: 1px solid var(--hairline);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.03);
   padding: 1rem;
-}
-
-#page #userprofile .profile-message,
-#page #userprofile .profile-achievements,
-#page #userprofile .profile-activity {
-  overflow-y: auto;
-  max-height: 460px;
 }
 
 #page #userprofile .profile-header {
@@ -511,9 +503,7 @@ body#page {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  min-height: 0;
-  max-height: 520px;
-  overflow: hidden;
+  align-self: start;
 }
 
 /* Achievements hidden by default (overview is default tab) */
