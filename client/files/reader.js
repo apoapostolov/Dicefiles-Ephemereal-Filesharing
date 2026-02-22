@@ -1175,6 +1175,7 @@ class WebtoonReader {
     this._observer = null;
     this._visiblePage = 0; // 0-indexed page currently most visible
     this._fileKey = null;
+    this._restoring = false; // true during initial position restore — blocks visTracker saves
     this.onPageChange = null; // callback(page) — set by Reader
   }
 
@@ -1264,14 +1265,48 @@ class WebtoonReader {
       this._observer.observe(this._imgEls[i]);
     }
 
-    // Separate visibility tracker: update page counter + persist progress
+    // Restore saved position BEFORE setting up the visibility tracker so that
+    // the tracker does not clobber the newly-restored page with page 0.
+    const saved = loadProgress(this._fileKey);
+    if (saved && saved.page > 0 && saved.page < this._totalPages) {
+      // Give unloaded images a provisional min-height so the pixel-based
+      // scroll target is accurate even before images have loaded.
+      for (const img of this._imgEls) {
+        img.style.minHeight = this._pageHeight + "px";
+      }
+      // Pre-load frames around the target page so they render quickly.
+      for (
+        let i = Math.max(0, saved.page - 2);
+        i <= Math.min(this._totalPages - 1, saved.page + 10);
+        i++
+      ) {
+        loadPage(i);
+      }
+      // Pixel-based scroll: reliable even when images haven't loaded yet.
+      // scrollIntoView on zero-height images always ends at y=0.
+      this._restoring = true;
+      requestAnimationFrame(() => {
+        this.container.scrollTop = saved.page * this._pageHeight;
+        // Give the browser one more frame to settle, then allow visTracker saves.
+        requestAnimationFrame(() => {
+          // Remove provisional min-heights now that the real images are loading.
+          for (const img of this._imgEls) img.style.minHeight = "";
+          this._restoring = false;
+        });
+      });
+    }
+
+    // Separate visibility tracker: update page counter + persist progress.
+    // Reads _restoring so the initial position restore cannot be overwritten.
     const visTracker = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             this._visiblePage = parseInt(entry.target.dataset.page, 10);
             this._updateInfo();
-            saveProgress(this._fileKey, { page: this._visiblePage });
+            if (!this._restoring) {
+              saveProgress(this._fileKey, { page: this._visiblePage });
+            }
             if (this.onPageChange) this.onPageChange(this._visiblePage);
           }
         }
@@ -1279,26 +1314,6 @@ class WebtoonReader {
       { root: this.container, rootMargin: "0px", threshold: 0.4 },
     );
     for (const img of this._imgEls) visTracker.observe(img);
-
-    // Restore saved position
-    const saved = loadProgress(this._fileKey);
-    if (saved && saved.page > 0 && saved.page < this._totalPages) {
-      // Scroll to saved page after layout settles
-      requestAnimationFrame(() => {
-        const img = this._imgEls[saved.page];
-        if (img) {
-          // Ensure the saved page and up-front neighbours are loaded
-          for (
-            let i = Math.max(0, saved.page - 2);
-            i <= Math.min(this._totalPages - 1, saved.page + 10);
-            i++
-          ) {
-            loadPage(i);
-          }
-          img.scrollIntoView({ behavior: "instant", block: "start" });
-        }
-      });
-    }
 
     this._updateInfo();
   }
