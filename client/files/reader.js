@@ -1316,6 +1316,7 @@ export default class Reader {
     this._optsOpen = false;
     this._focusMode = false;
     this._focusMouseTimer = null;
+    this._onFullscreenChange = null;
 
     // Log which DOM elements were found / missing
     dbg(
@@ -1488,6 +1489,14 @@ export default class Reader {
       this._focusMouseTimer = setTimeout(() => {
         document.body.classList.remove("focus-bar-visible");
       }, 2000);
+    };
+
+    // Sync focus mode when native browser fullscreen is dismissed externally
+    // (e.g. user presses F11 or OS shortcut to exit fullscreen)
+    this._onFullscreenChange = () => {
+      if (this._focusMode && !document.fullscreenElement) {
+        this._toggleFocus();
+      }
     };
 
     Object.seal(this);
@@ -1715,12 +1724,29 @@ export default class Reader {
     document.body.classList.toggle("focus-reading", this._focusMode);
     if (this._focusMode) {
       document.addEventListener("mousemove", this._onFocusMouseMove);
+      document.addEventListener("fullscreenchange", this._onFullscreenChange);
+      // Enter browser native fullscreen so the OS chrome disappears too
+      try {
+        document.documentElement.requestFullscreen();
+      } catch (_) {
+        // ignore — unsupported contexts (iframes, some browsers)
+      }
       // Show bar briefly on entry
       this._onFocusMouseMove();
     } else {
       document.removeEventListener("mousemove", this._onFocusMouseMove);
+      document.removeEventListener(
+        "fullscreenchange",
+        this._onFullscreenChange,
+      );
       clearTimeout(this._focusMouseTimer);
       document.body.classList.remove("focus-bar-visible");
+      // Exit browser native fullscreen if it is still active
+      if (document.fullscreenElement) {
+        try {
+          document.exitFullscreen();
+        } catch (_) {}
+      }
     }
     if (this.fullscreenEl) {
       this.fullscreenEl.classList.toggle("active", this._focusMode);

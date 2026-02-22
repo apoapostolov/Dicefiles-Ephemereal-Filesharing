@@ -1,12 +1,15 @@
 # Dicefiles Development Log
 
-## 2026-02-22 - Feature: EPUB/MOBI Reader Options Modal (Kindle-style typography)
+## 2026-02-22 - Fix: Focus reading mode uses browser native fullscreen; gallery request tile hide
+
+- `client/files/reader.js` — Added `_onFullscreenChange` field (declared before `Object.seal`). `_toggleFocus()` now calls `document.documentElement.requestFullscreen()` when entering focus mode and `document.exitFullscreen()` when leaving (guarded by `document.fullscreenElement` check). A `fullscreenchange` listener is attached on enter and removed on exit so that externally-triggered fullscreen dismissal (F11, OS shortcut) syncs the focus mode state automatically. Closing the reader via ✕ while in focus mode therefore also exits native browser fullscreen.
+- `CHANGELOG.md` — Updated `[Unreleased]` section: merged duplicate `Changed` blocks, added Focus reading mode, EPUB/MOBI reader options, Webtoon PgDn/PgUp, gallery request tile hiding, and EPUB/MOBI dark-text fix entries.
+
+
 
 - `views/room.ejs` — Added `<button id="reader-opts">Aa</button>` to `#reader-bar` (shows only for EPUB/MOBI) and `<div id="reader-opts-modal">` panel with four sections: font family (4 swatches), font size stepper, line spacing (Compact/Normal/Relaxed), and margins (Narrow/Normal/Wide).
 - `client/files/reader.js` — Added `READER_OPTS_KEY`, `READER_OPTS_DEFAULTS`, `FONT_FAMILIES` map, `loadReaderOpts()` / `saveReaderOpts()` helpers. Modified `buildSrcdoc()` to accept an `opts` argument and apply dynamic `font-family`, `font-size`, `line-height`, and horizontal padding. Added `_opts` field and `applyOpts(patch)` method to `BookReader` which re-renders the current chapter page. Added `readerOptsEl`, `readerOptsModalEl`, `_optsOpen` fields to `Reader`; wired click handlers for all modal controls; `_openOptsModal`, `_closeOptsModal`, `_toggleOptsModal`, `_applyReaderOpt`, `_updateOptsUI` methods added. Modal auto-closes on outside click and on reader close. Options persist in `localStorage` under `dicefiles:readeropts`.
 - `entries/css/reader.css` — Added `#reader-opts` button styles (matches fullscreen button), `#reader-opts-modal` dark panel with gap-based flex layout, `.rom-section`, `.rom-label`, `.rom-fonts`, `.rom-font-btn`, `.rom-row`, `.rom-step-btn`, `#rom-size-val`, `.rom-choices`, `.rom-choice-btn` styles including active/hover states. Added `position: relative` to `#reader` to anchor the modal.
-
-
 
 - `entries/css/files.css` — Added `#files.gallerymode > .file.request-file { display: none !important; }` so request tiles are hidden in gallery mode (they have no cover image to show).
 - `client/files/reader.js` — Webtoon `PageDown`/`PageUp` now scroll by one full natural page height (`this._renderer._pageHeight`) instead of falling through to the book chapter handler. `F` key also toggles focus mode.

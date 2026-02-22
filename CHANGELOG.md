@@ -10,18 +10,25 @@
 
 - **On-demand comic index rebuild**: The `/api/v1/comic/:key/index` endpoint now rebuilds a missing `comic_index` on first request instead of returning `pages: 0`. This recovers any comic file whose initial indexing was interrupted.
 
+- **Focus reading mode**: Pressing `F` or clicking the ⛎ button in the reader bar switches to an immersive full-screen reading experience using the browser's native fullscreen API. The toolbar fades out and reappears for two seconds on mouse movement. Pressing `Escape`, clicking ✕, or pressing `F` again exits focus mode and dismisses native fullscreen.
+
+- **EPUB/MOBI reader typography options**: An **Aa** button (book files only) in the reader bar opens a Kindle-style panel: choose font family (Georgia, Bookerly, Helvetica, OpenDyslexic), step font size from 80 % to 200 %, pick line spacing (Compact / Normal / Relaxed), and pick margins (Narrow / Normal / Wide). All settings persist in `localStorage` across reloads.
+
+- **Gallery mode hides request tiles**: Files posted as requests have no cover art and are now hidden when gallery view is active, keeping the grid clean.
+
 ### Changed
 
-- **Manga/Webtoon as a pill**: The two view-mode buttons are now a single segmented pill (`#reader-view-pill`) placed to the LEFT of the download button, not after Prev/Next.
+- **Manga/Webtoon as a pill**: The two view-mode buttons are now a single segmented pill (`#reader-view-pill`) placed to the left of the download button.
+
+- **Webtoon PageDown / PageUp**: In webtoon mode PageDown/PageUp scroll by exactly one full page height rather than jumping to the next chapter.
+
+- Switched to serving a full `/favicon` directory of multiple icon sizes and manifest; updated templates and CSS to point at new paths.
 
 ### Fixed
 
 - **"Comic archive has no readable pages"** for the Batman Dark Designs .cbz — on-demand index rebuild now kicks in automatically.
 - **CBZ override** — `.cbz` files with internal RAR containers were stored as `meta.type = "RAR"` and rejected by the reader API. Extension now always wins over detected container format.
-
-### Changed
-
-- Switched to serving a full `/favicon` directory of multiple icon sizes and manifest; updated templates and CSS to point at new paths.
+- **EPUB/MOBI dark text on dark background**: Publisher-embedded colour declarations no longer render as dark-on-dark. All body text is now overridden to light grey (`#e8e8e8`); link colours remain distinct.
 
 ## [1.1.0] - 2026-02-21
 
