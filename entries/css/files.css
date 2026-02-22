@@ -376,8 +376,11 @@ body.links-mode #filelist-scroller {
 #files.gallerymode > .file:not(.upload):not(.request-file) {
   position: relative;
   display: block !important;
-  width: 250px !important;
-  height: 340px !important;
+  /* Five covers fill the row exactly: width × 5 + gap × 4 = 100% */
+  box-sizing: border-box;
+  width: calc((100% - 4 * 0.85rem) / 5) !important;
+  height: auto !important;
+  aspect-ratio: 250 / 340;
   margin: 0;
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.22) !important;

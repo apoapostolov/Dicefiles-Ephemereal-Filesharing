@@ -1,5 +1,14 @@
 # Dicefiles Development Log
 
+## 2026-02-22 — Gallery mode: fix tile height on toggle and 4-per-row wrap
+
+Root cause 1 (minimal height on toggle): `setFileStyle()` injects `#files > .file { height: Xpx; }` into a `<style>` tag to normalise list rows. `aspect-ratio` only controls height when height is `auto`, so the injected pixel value suppressed it — tiles rendered as collapsing bars until F5.
+Root cause 2 (4 instead of 5 per row): `.file` elements default to `box-sizing: content-box`, so the `1px` border adds 2px per tile × 5 tiles = 10px overflow, wrapping the 5th tile.
+
+- `entries/css/files.css`: added `height: auto !important` to the gallery tile rule so the injected list-mode height is overridden and `aspect-ratio` can take effect on class toggle; added `box-sizing: border-box` so the border is included in the calc width.
+
+- `entries/css/files.css`: replaced fixed `width: 250px; height: 340px` on gallery tiles with `width: calc((100% - 4 * 0.85rem) / 5)` + `aspect-ratio: 250 / 340`. Five covers now exactly fill the gallery canvas width regardless of window size, with the gap between tiles already accounted for in the calc. Proportions are preserved via `aspect-ratio`.
+
 ## 2026-02-22 — Fix all ESLint CI failures
 
 Root cause: `.eslintrc.js` set `ecmaVersion: 8` (ES2017), which caused the parser to reject object spread (`...`), optional chaining (`?.`), numeric separators (`1_000`), and dynamic `import()` — all ES2018–2021 features already used throughout the codebase. Once the parse errors were masking ~600 auto-fixable style violations, those ran fine after a first `--fix` pass, leaving 19 genuine code issues plus rule-configuration problems.
