@@ -785,8 +785,7 @@ class BookReader {
         // offsets always land on a line boundary, preventing the half-line
         // bleed at the top and bottom of each page.
         try {
-          const sampleEl =
-            scroller.querySelector("p,li,div,span") || scroller;
+          const sampleEl = scroller.querySelector("p,li,div,span") || scroller;
           const lhPx = parseFloat(
             iframe.contentWindow.getComputedStyle(sampleEl).lineHeight,
           );
@@ -794,8 +793,7 @@ class BookReader {
             const usableH = this._pageHeight - 2 * BOOK_VP;
             const linesPerPage = Math.floor(usableH / lhPx);
             if (linesPerPage > 0) {
-              const snappedH =
-                Math.round(linesPerPage * lhPx) + 2 * BOOK_VP;
+              const snappedH = Math.round(linesPerPage * lhPx) + 2 * BOOK_VP;
               if (snappedH > 0 && snappedH <= this._pageHeight) {
                 iframe.style.height = snappedH + "px";
                 doc.documentElement.style.height = snappedH + "px";
@@ -1768,12 +1766,14 @@ export default class Reader {
       document.addEventListener("mousemove", this._onFocusMouseMove);
       // Sync when native fullscreen is dismissed externally (Escape, F11, OS).
       document.addEventListener("fullscreenchange", this._onFullscreenChange);
-      // Ask the browser to enter native fullscreen — OS chrome disappears and
-      // the in-app overlay (body.focus-reading) already fills the viewport.
+      // Fullscreen the #reader element itself so only the reader panel
+      // (content + header bar) fills the screen — not the whole page with chat.
       try {
-        document.documentElement.requestFullscreen();
+        if (this.el && this.el.requestFullscreen) {
+          this.el.requestFullscreen();
+        }
       } catch (_) {
-        // Unsupported (iframes, some browsers) — in-app overlay still works.
+        // Unsupported context — in-app overlay still works.
       }
       // Show bar briefly on entry
       this._onFocusMouseMove();
