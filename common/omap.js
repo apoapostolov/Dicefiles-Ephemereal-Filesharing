@@ -1,7 +1,7 @@
 "use strict";
 
 const EventEmitter = require("events");
-const {mixin} = require("./");
+const { mixin } = require("./");
 
 class ObservableMap extends Map {
   constructor(...args) {
@@ -15,8 +15,7 @@ class ObservableMap extends Map {
     if (!exists) {
       this.emit("set", k, v);
       this.emit(`set-${k}`, v);
-    }
-    else {
+    } else {
       this.emit("update", k, v);
       this.emit(`update-${k}`, v);
     }

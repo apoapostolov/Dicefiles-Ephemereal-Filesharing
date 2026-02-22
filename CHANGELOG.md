@@ -2,8 +2,6 @@
 
 ## [Unreleased]
 
-## [1.3.0] - 2026-02-22
-
 ### Added
 
 - **Per-account login lockout**: failed login attempts against the same account now trigger a configurable cool-down. After 10 failures (default) within a 15-minute window the account is temporarily locked and further attempts are rejected with a clear error. Both thresholds are tunable via `loginAccountFloodTrigger` and `loginAccountFloodDuration` in the project configuration file.

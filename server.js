@@ -10,7 +10,7 @@ const EXPIRATION_WORKER = "DICEFILES_EXPIRATION_WORKER";
 function master() {
   console.log(`Master ${process.pid.toString().bold} is running`);
 
-  // P0.5 — 3.1: Block startup in production when secret is weak/default.
+  // Block startup in production when secret is weak/default.
   // In development, emit a warning so local setups aren't blocked.
   const _secret = config.get("secret");
   const _weakSecrets = new Set([
@@ -38,7 +38,7 @@ function master() {
     }
   }
 
-  // P0.5 — 3.7: Validate Firejail sandbox availability at startup.
+  // Validate Firejail sandbox availability at startup.
   // Firejail is enabled by default on Linux (config.jail === true).
   // Log clearly if it is active, missing, or intentionally disabled.
   if (config.get("jail")) {

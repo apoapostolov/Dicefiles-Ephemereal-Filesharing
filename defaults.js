@@ -60,7 +60,7 @@ module.exports = {
 
   // Default fixed-window API rate limiting for automation routes
   // (`/api/automation/*` and `/api/v1/*`).
-  // P0.5 — 3.6: Limits are Redis-backed across all workers; overrides below.
+  // Limits are Redis-backed across all workers; per-scope overrides below.
   automationApiRateLimit: {
     windowMs: 60000,
     max: 180,

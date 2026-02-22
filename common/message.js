@@ -1,6 +1,6 @@
 "use strict";
 
-// P0.5 — 3.3: Replace url-regex (ReDoS-vulnerable, no fix) with url-regex-safe.
+// Replace url-regex (ReDoS-vulnerable) with url-regex-safe.
 // The API is identical: calling the function returns a RegExp; we use .source
 // to embed it into the composite splitting regex.
 const SCHEME_REGEX = /^(?:https?|ftp|irc):/;

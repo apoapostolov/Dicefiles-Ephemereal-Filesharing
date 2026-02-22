@@ -20,3 +20,4 @@ docs/
 tests/
 server.log
 ops.log
+automation.log
