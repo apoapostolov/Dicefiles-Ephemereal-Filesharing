@@ -492,3 +492,313 @@ Persisted state:
 - `roomid`
 - `lastSeenMs`
 - per-upload `key` + `offset`
+
+---
+
+## 12. File & Room Management Endpoints (v1.1)
+
+### 12.1 Get single file metadata
+
+- `GET /api/v1/file/:key`
+- Scope: `files:read`
+- Returns the same JSON shape as a single object from `/api/v1/files`.
+
+```json
+{
+  "ok": true,
+  "file": { "key": "abc123", "name": "book.pdf", "type": "document", ... }
+}
+```
+
+### 12.2 Update file metadata
+
+- `PATCH /api/v1/file/:key`
+- Scope: `files:write`
+- Body (all fields optional):
+
+```json
+{
+  "meta": {
+    "description": "A helpful description",
+    "ai_caption": "AI-generated one-liner",
+    "ocr_text_preview": "First 500 chars of OCR text"
+  },
+  "tags": {
+    "title": "Book Title",
+    "author": "Author Name",
+    "genre": "Fantasy",
+    "language": "en",
+    "series": "Series Name"
+  }
+}
+```
+
+Only the allow-listed keys above are accepted. Unknown keys are silently dropped.
+
+```json
+{ "ok": true, "key": "abc123", "hash": "sha512hex" }
+```
+
+### 12.3 Upload agent-provided cover image
+
+- `POST /api/v1/file/:key/asset/cover`
+- Scope: `files:write`
+- Body: raw JPEG bytes (`Content-Type: image/jpeg`, max 5 MB)
+- The image is validated with `sharp`, encoded as JPEG at quality 85, and stored as the file's `.cover.jpg` asset, replacing any existing one.
+
+```json
+{ "ok": true, "key": "abc123", "hash": "sha512hex" }
+```
+
+---
+
+## 13. Room Interaction Endpoints (v1.1)
+
+### 13.1 Post agent chat message
+
+- `POST /api/v1/room/:id/chat`
+- Scope: `rooms:write`
+- Body:
+
+```json
+{ "msg": "Hello from the agent.", "nick": "AgentBot" }
+```
+
+`nick` defaults to `"Agent"` if omitted.
+
+```json
+{ "ok": true }
+```
+
+### 13.2 Room snapshot
+
+- `GET /api/v1/room/:id/snapshot`
+- Scope: `files:read`
+- Returns aggregate statistics for the room.
+
+```json
+{
+  "ok": true,
+  "roomid": "AbCdEf1234",
+  "fileCount": 42,
+  "totalBytes": 104857600,
+  "openRequestCount": 3,
+  "uniqueUploaders": 5,
+  "oldestExpiry": 1750000000000
+}
+```
+
+---
+
+## 14. Server Observability Endpoints (v1.1)
+
+### 14.1 Metrics snapshot
+
+- `GET /api/v1/metrics`
+- Scope: `admin:read`
+
+```json
+{
+  "ok": true,
+  "metrics": {
+    "uploadsCreated": 1234,
+    "uploadsDeleted": 56,
+    "downloadsServed": 9876,
+    "downloadsBytes": 10737418240,
+    "requestsCreated": 78,
+    "requestsFulfilled": 45,
+    "previewFailures": 2,
+    "uptimeSec": 86400
+  }
+}
+```
+
+### 14.2 Paginated audit log
+
+- `GET /api/v1/audit`
+- Scope: `admin:read`
+- Query params:
+  - `since` — ISO timestamp; return only entries after this time
+  - `limit` — max entries to return (default 100, max 1000)
+- Returns newest entries first.
+
+```json
+{
+  "ok": true,
+  "count": 25,
+  "entries": [
+    { "at": "2025-01-01T00:00:00.000Z", "key": "...", "scope": "files:read", ... }
+  ]
+}
+```
+
+---
+
+## 15. Batch Upload (v1.1)
+
+### 15.1 Fetch-and-ingest URLs
+
+- `POST /api/v1/batch-upload`
+- Scope: `uploads:write`
+- Body:
+
+```json
+{
+  "roomid": "AbCdEf1234",
+  "items": [
+    { "url": "https://example.com/book.pdf", "name": "book.pdf" },
+    { "url": "https://example.com/cover.jpg" }
+  ]
+}
+```
+
+- Max 20 items per call, max 100 MB per file, 60 s fetch timeout per URL.
+- `name` defaults to the last URL path segment.
+- `roomid` may also be specified per item (overrides the root `roomid`).
+
+```json
+{
+  "ok": true,
+  "results": [
+    { "ok": true, "url": "https://example.com/book.pdf", "key": "abc123", "href": "/g/abc123" },
+    { "ok": false, "url": "https://example.com/cover.jpg", "error": "fetch failed: 404" }
+  ]
+}
+```
+
+---
+
+## 16. Request Claiming (v1.1)
+
+Agents can claim an open request to signal they are fulfilling it, preventing duplicate work.
+
+### 16.1 Claim a request
+
+- `POST /api/v1/requests/:key/claim`
+- Scope: `requests:write`
+- Body (optional):
+
+```json
+{ "ttlMs": 300000 }
+```
+
+`ttlMs` is the claim TTL in milliseconds (min 5 s, max 1 h, default 5 min). The claim auto-releases after the TTL if not released manually.
+
+```json
+{ "ok": true, "key": "req_abc", "claimedUntil": 1750000300000 }
+```
+
+Returns `409` if already claimed by a different key.
+
+### 16.2 Release a claim
+
+- `DELETE /api/v1/requests/:key/claim`
+- Scope: `requests:write`
+- Returns `403` if the claim belongs to a different agent.
+
+```json
+{ "ok": true }
+```
+
+---
+
+## 17. Agent Subscriptions (v1.1)
+
+Named server-side filter presets. Save upload matching criteria; retrieve them to know what to watch for.
+
+### 17.1 Save a subscription
+
+- `POST /api/v1/agent/subscriptions`
+- Scope: `files:read`
+- Body:
+
+```json
+{
+  "name": "new-pdfs",
+  "room": "AbCdEf1234",
+  "ext": [".pdf", ".epub"],
+  "name_contains": "fantasy",
+  "max_size_mb": 50,
+  "type": "document"
+}
+```
+
+All filter fields except `name` are optional. Overwrites an existing subscription with the same `name` for this API key.
+
+```json
+{ "ok": true, "name": "new-pdfs" }
+```
+
+### 17.2 List subscriptions
+
+- `GET /api/v1/agent/subscriptions`
+- Scope: `files:read`
+
+```json
+{
+  "ok": true,
+  "subscriptions": [
+    { "name": "new-pdfs", "room": "AbCdEf1234", "ext": [".pdf", ".epub"], ... }
+  ]
+}
+```
+
+### 17.3 Delete a subscription
+
+- `DELETE /api/v1/agent/subscriptions/:name`
+- Scope: `files:read`
+- Returns `404` if the subscription does not exist.
+
+```json
+{ "ok": true }
+```
+
+---
+
+## 18. Request Hints (v1.1)
+
+The `POST /api/v1/requests` endpoint now accepts an optional `hints` object alongside the free-text `text` field:
+
+```json
+{
+  "roomid": "AbCdEf1234",
+  "text": "Please upload the Player's Handbook 5e",
+  "hints": {
+    "type": "document",
+    "keywords": ["D&D", "Player's Handbook"],
+    "max_size_mb": 50
+  }
+}
+```
+
+Agents can filter `GET /api/v1/files?type=requests` results by `meta.hints` to find requests matching their capabilities.
+
+---
+
+## 19. Updated Endpoint Matrix (v1.1)
+
+| Method   | Path                                  | Scope            | Session Required |
+| -------- | ------------------------------------- | ---------------- | ---------------- |
+| `POST`   | `/api/v1/auth/login`                  | `auth:login`     | No               |
+| `POST`   | `/api/v1/auth/logout`                 | `auth:logout`    | Yes              |
+| `POST`   | `/api/v1/rooms`                       | `rooms:write`    | Yes              |
+| `POST`   | `/api/v1/requests`                    | `requests:write` | Yes              |
+| `POST`   | `/api/v1/uploads/key`                 | `uploads:write`  | Yes              |
+| `GET`    | `/api/v1/uploads/:key/offset`         | `uploads:write`  | Yes              |
+| `PUT`    | `/api/v1/uploads/:key`                | `uploads:write`  | Yes              |
+| `GET`    | `/api/v1/files`                       | `files:read`     | Optional         |
+| `GET`    | `/api/v1/downloads`                   | `files:read`     | Optional         |
+| `POST`   | `/api/v1/files/delete`                | `files:delete`   | Yes              |
+| `GET`    | `/api/v1/file/:key`                   | `files:read`     | No               |
+| `PATCH`  | `/api/v1/file/:key`                   | `files:write`    | No               |
+| `POST`   | `/api/v1/file/:key/asset/cover`       | `files:write`    | No               |
+| `POST`   | `/api/v1/room/:id/chat`               | `rooms:write`    | No               |
+| `GET`    | `/api/v1/room/:id/snapshot`           | `files:read`     | No               |
+| `GET`    | `/api/v1/metrics`                     | `admin:read`     | No               |
+| `GET`    | `/api/v1/audit`                       | `admin:read`     | No               |
+| `POST`   | `/api/v1/batch-upload`                | `uploads:write`  | No               |
+| `POST`   | `/api/v1/requests/:key/claim`         | `requests:write` | No               |
+| `DELETE` | `/api/v1/requests/:key/claim`         | `requests:write` | No               |
+| `POST`   | `/api/v1/agent/subscriptions`         | `files:read`     | No               |
+| `GET`    | `/api/v1/agent/subscriptions`         | `files:read`     | No               |
+| `DELETE` | `/api/v1/agent/subscriptions/:name`   | `files:read`     | No               |

@@ -1097,3 +1097,97 @@ a.r::before {
   box-shadow: none;
   outline: 0;
 }
+
+/* ===== P1: Sort Pill ===== */
+.sort-pill {
+  margin-left: 0.5rem;
+}
+
+.sort-pill .btn {
+  min-width: 34px;
+  font-size: 10pt;
+  padding: 0 6px;
+}
+
+.sort-pill .btn.active {
+  background: var(--accent, #555);
+  color: #fff;
+}
+
+/* ===== P1: Show-New Button ===== */
+#show-new-btn {
+  margin-left: 0.5rem;
+  font-size: 11pt;
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+
+#show-new-btn.active {
+  opacity: 1;
+  color: var(--accent-light, #4af);
+}
+
+/* ===== P1: Presets Row ===== */
+#presets-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-top: 1px solid var(--border, rgba(255,255,255,.08));
+}
+
+#presets-row.hidden {
+  display: none;
+}
+
+#presets-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  flex: 1;
+}
+
+.preset-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border, rgba(255,255,255,.25));
+  background: transparent;
+  color: inherit;
+  font-size: 10pt;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.preset-pill:hover {
+  background: var(--hover-bg, rgba(255,255,255,.08));
+}
+
+.preset-pill-del {
+  display: inline-block;
+  background: transparent;
+  border: none;
+  color: inherit;
+  opacity: 0.5;
+  font-size: 9pt;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.preset-pill-del:hover {
+  opacity: 1;
+  color: var(--danger, #f55);
+}
+
+#preset-save {
+  font-size: 11pt;
+  opacity: 0.65;
+}
+
+#preset-save:hover {
+  opacity: 1;
+}

@@ -65,6 +65,11 @@
       class="hidden blink i-arrow-up"
       title="New files at the top"
     ></div>
+    <button
+      id="show-new-btn"
+      class="btn i-arrow-up"
+      title="Show only new files since last visit"
+    ></button>
     <div class="spacer"></div>
     <div id="createrequest" class="btn" title="Create Request">
       <span class="i-question"></span>
@@ -104,6 +109,11 @@
       class="modctrl btn i-whitelist"
       title="Whitelist files"
     ></div>
+    <div class="btn-pill sort-pill">
+      <div id="sort-newest" class="btn active" data-sort-mode="newest" title="Sort: Newest first">New</div>
+      <div id="sort-largest" class="btn" data-sort-mode="largest" title="Sort: Largest first">Size</div>
+      <div id="sort-expiring" class="btn" data-sort-mode="expiring" title="Sort: Expiring soon">Exp</div>
+    </div>
     <div class="btn-pill viewmode-pill">
       <div id="nailoff" class="btn i-list active" title="List view"></div>
       <div id="nailon" class="btn i-grid" title="Gallery view"></div>
@@ -140,6 +150,11 @@
     <label for="upload-button" id="up" class="btn" title="Upload something!">
       <span class="i-upload"></span> Upload
     </label>
+  </nav>
+
+  <nav id="presets-row" class="layer hidden">
+    <div id="presets-list"></div>
+    <button id="preset-save" class="btn i-plus" title="Save current filter as preset"></button>
   </nav>
 
   <section id="chat" class="layer">

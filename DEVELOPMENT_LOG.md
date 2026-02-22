@@ -1,6 +1,35 @@
 # Dicefiles Development Log
 
-## 2026-02-22 - Migrate runtime baseline from Node 18 to Node 20
+## 2026-02-22 - P1 Smart Collections + P2 AI Automation Infrastructure
+
+### Summary
+
+Implements two major feature groups from TODO.md:
+- **P1 Smart Collections / Saved Filters** — per-room filter presets, sort modes (newest/size/expiring), and a "show new only" toggle
+- **P2 AI Automation Infrastructure** — 13 new server-side REST endpoints covering file metadata management, room interaction, observability, batch upload, request claiming, and agent subscriptions
+
+### Changed Files
+
+- **`lib/request.js`** — Added `hints`, `claimedBy`, `claimedUntil` fields to `RequestFile` and `REQUEST_OFILTER`. Added `claim(key, agentId, ttlMs)` and `release(key, agentId)` methods to `EMITTER` for single-agent request claiming with auto-release TTL (5s–1h, default 5min). Extended `createRequest()` to accept and store `hints`.
+- **`lib/upload.js`** — Added `ingestFromBuffer({name, roomid, buffer, ip, user, account, role, ttl})` async function that replicates the full upload pipeline (hash, dedup, metadata extraction, asset generation, Upload.create) from a raw `Buffer`. Exported as `ingestFromBuffer`.
+- **`lib/httpserver.js`** — Added imports for `StorageLocation`, `STORAGE`, `ingestFromBuffer`, `REQUESTS`, and optional `sharp`. Added `files:write` and `admin:read` to the `mod` scope preset. Added all 13 P2 endpoints:
+  - `GET /api/v1/file/:key` — single-file metadata (files:read)
+  - `PATCH /api/v1/file/:key` — allow-listed meta/tag updates, creates new frozen StorageLocation (files:write)
+  - `POST /api/v1/file/:key/asset/cover` — raw JPEG body → sharp JPEG → replaces existing cover asset (files:write)
+  - `POST /api/v1/room/:id/chat` — emit agent message into room chat (rooms:write)
+  - `GET /api/v1/room/:id/snapshot` — fileCount, totalBytes, openRequestCount, uniqueUploaders, oldestExpiry (files:read)
+  - `GET /api/v1/metrics` — OBS.snapshot() (admin:read)
+  - `GET /api/v1/audit` — paginated JSON-lines audit log, newest-first, supports `since`+`limit` (admin:read)
+  - `POST /api/v1/batch-upload` — fetch URLs (max 20, 100 MB/file, 60 s timeout) via ingestFromBuffer (uploads:write)
+  - `POST /api/v1/requests/:key/claim` + `DELETE /api/v1/requests/:key/claim` — agent claiming with TTL (requests:write)
+  - `POST/GET/DELETE /api/v1/agent/subscriptions[/:name]` — Redis-backed named filter presets per API key (files:read)
+  - Updated existing `POST /api/v1/requests` to parse and forward `hints`.
+- **`client/files.js`** — Added constants `PRESETS_PREFIX`, `SORT_MODE_PREFIX`, `SORT_MODES`. Added constructor members: `presetsKey`, `sortModeKey`, `sortMode`, `showingNewOnly`, plus DOM refs for new UI elements (`presetsEl`, `presetsListEl`, `presetSaveEl`, `sortNewestEl`, `sortLargestEl`, `sortExpiringEl`, `showNewBtnEl`). Extended `init()` to set the localStorage keys, call `initSortMode()` and `renderPresets()`. Modified `filtered()` to apply a `showingNewOnly` post-filter. Modified `sortFiles()` to branch on `sortMode` (newest/largest/expiring). Added new methods: `initSortMode`, `setSortMode`, `updateSortButtons`, `toggleNewOnly`, `loadPresets`, `_savePresets`, `onPresetSave`, `applyPreset`, `deletePreset`, `renderPresets`. Added click listeners for all new buttons.
+- **`views/room.ejs`** — Added `#show-new-btn` button (near `#new-status`), a `#sort-pill` with three `.btn` divs (`#sort-newest`, `#sort-largest`, `#sort-expiring`), and a `#presets-row` nav below `#tools` containing `#presets-list` + `#preset-save`.
+- **`entries/css/room.css`** — Added CSS for `.sort-pill` (3-button sort pill with active state), `#show-new-btn` (opacity + accent color when active), `#presets-row`, `#presets-list`, `.preset-pill`, and `.preset-pill-del`.
+- **`API.md`** — Added Sections 12–19 documenting all new v1.1 endpoints, including request hints extension, and an updated full endpoint matrix.
+
+
 
 ### Changes
 

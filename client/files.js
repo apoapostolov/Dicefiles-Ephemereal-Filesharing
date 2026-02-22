@@ -32,6 +32,9 @@ const VIEW_MODE_GLOBAL_KEY = "dicefiles:viewmode:last";
 const BATCH_PREFS_PREFIX = "dicefiles:downloadprefs:room:";
 const BATCH_QUEUE_PREFIX = "dicefiles:downloadqueue:room:";
 const DOWNLOADED_NAMES_PREFIX = "dicefiles:downloadednames:room:";
+const PRESETS_PREFIX = "dicefiles:filterpresets:room:";
+const SORT_MODE_PREFIX = "dicefiles:sortmode:room:";
+const SORT_MODES = Object.freeze(["newest", "largest", "expiring"]);
 
 export default new (class Files extends EventEmitter {
   constructor() {
@@ -78,6 +81,18 @@ export default new (class Files extends EventEmitter {
     this.downloadedNameSet = null;
     this.fileStyleLocked = false;
     this._pendingLinksRestore = false;
+    // P1 — Smart Collections
+    this.presetsKey = null;
+    this.sortModeKey = null;
+    this.sortMode = "newest"; // newest | largest | expiring
+    this.showingNewOnly = false;
+    this.presetsEl = document.querySelector("#presets-row");
+    this.presetsListEl = document.querySelector("#presets-list");
+    this.presetSaveEl = document.querySelector("#preset-save");
+    this.sortNewestEl = document.querySelector("#sort-newest");
+    this.sortLargestEl = document.querySelector("#sort-largest");
+    this.sortExpiringEl = document.querySelector("#sort-expiring");
+    this.showNewBtnEl = document.querySelector("#show-new-btn");
 
     this.onfiles = this.onfiles.bind(this);
     this.filesQueue = [];
@@ -166,6 +181,43 @@ export default new (class Files extends EventEmitter {
       this.linkModeEl.addEventListener("click", this.linkMode.bind(this));
     }
 
+    // P1 — Smart Collections button wiring
+    if (this.presetSaveEl) {
+      this.presetSaveEl.addEventListener(
+        "click",
+        this.onPresetSave.bind(this),
+        true,
+      );
+    }
+    if (this.sortNewestEl) {
+      this.sortNewestEl.addEventListener(
+        "click",
+        () => this.setSortMode("newest"),
+        true,
+      );
+    }
+    if (this.sortLargestEl) {
+      this.sortLargestEl.addEventListener(
+        "click",
+        () => this.setSortMode("largest"),
+        true,
+      );
+    }
+    if (this.sortExpiringEl) {
+      this.sortExpiringEl.addEventListener(
+        "click",
+        () => this.setSortMode("expiring"),
+        true,
+      );
+    }
+    if (this.showNewBtnEl) {
+      this.showNewBtnEl.addEventListener(
+        "click",
+        this.toggleNewOnly.bind(this),
+        true,
+      );
+    }
+
     Object.seal(this);
   }
 
@@ -183,7 +235,11 @@ export default new (class Files extends EventEmitter {
       this.batchPrefsKey = `${BATCH_PREFS_PREFIX}${roomid}`;
       this.batchQueueKey = `${BATCH_QUEUE_PREFIX}${roomid}`;
       this.downloadedNamesKey = `${DOWNLOADED_NAMES_PREFIX}${roomid}`;
+      this.presetsKey = `${PRESETS_PREFIX}${roomid}`;
+      this.sortModeKey = `${SORT_MODE_PREFIX}${roomid}`;
     }
+    this.initSortMode();
+    this.renderPresets();
     const configuredMaxConcurrent = Number(
       registry.config && registry.config.get("downloadMaxConcurrent"),
     );
@@ -416,13 +472,18 @@ export default new (class Files extends EventEmitter {
 
   filtered(files) {
     const { filterFunc } = this;
+    let result;
     if (filterFunc === filesfilter.NONE) {
-      return [];
+      result = [];
+    } else if (filterFunc) {
+      result = files.filter(filterFunc);
+    } else {
+      result = files;
     }
-    if (filterFunc) {
-      return files.filter(filterFunc);
+    if (this.showingNewOnly) {
+      result = result.filter((f) => Number(f.uploaded) > this.newSinceServerTime);
     }
-    return files;
+    return result;
   }
 
   applyFilter() {
@@ -1429,7 +1490,13 @@ export default new (class Files extends EventEmitter {
       return;
     }
     const [head] = visible;
-    sort(visible, (e) => e.uploaded).reverse();
+    if (this.sortMode === "largest") {
+      sort(visible, (e) => e.size || 0).reverse();
+    } else if (this.sortMode === "expiring") {
+      sort(visible, (e) => Number(e.expires) || Infinity);
+    } else {
+      sort(visible, (e) => e.uploaded).reverse(); // newest (default)
+    }
     let idx = 0;
     const { el } = this;
     for (; idx < el.childElementCount; ++idx) {
@@ -1444,6 +1511,143 @@ export default new (class Files extends EventEmitter {
       }
       el.insertBefore(v.el, el.children[idx]);
       ++idx;
+    }
+  }
+
+  // ----- P1: Sort Modes -----
+  initSortMode() {
+    try {
+      const saved = this.sortModeKey && localStorage.getItem(this.sortModeKey);
+      if (saved && SORT_MODES.includes(saved)) {
+        this.sortMode = saved;
+      }
+    } catch (_) {}
+    this.updateSortButtons();
+  }
+
+  setSortMode(mode) {
+    if (!SORT_MODES.includes(mode)) {
+      return;
+    }
+    this.sortMode = mode;
+    try {
+      if (this.sortModeKey) {
+        localStorage.setItem(this.sortModeKey, mode);
+      }
+    } catch (_) {}
+    this.updateSortButtons();
+    this.sortFiles();
+  }
+
+  updateSortButtons() {
+    if (this.sortNewestEl) {
+      this.sortNewestEl.classList.toggle("active", this.sortMode === "newest");
+    }
+    if (this.sortLargestEl) {
+      this.sortLargestEl.classList.toggle("active", this.sortMode === "largest");
+    }
+    if (this.sortExpiringEl) {
+      this.sortExpiringEl.classList.toggle("active", this.sortMode === "expiring");
+    }
+  }
+
+  // ----- P1: Show-New toggle -----
+  toggleNewOnly() {
+    this.showingNewOnly = !this.showingNewOnly;
+    if (this.showNewBtnEl) {
+      this.showNewBtnEl.classList.toggle("active", this.showingNewOnly);
+    }
+    if (!this.applying) {
+      this.applying = this.applyFilter().then(() => (this.applying = null));
+    }
+  }
+
+  // ----- P1: Filter Presets -----
+  loadPresets() {
+    if (!this.presetsKey) {
+      return [];
+    }
+    try {
+      return JSON.parse(localStorage.getItem(this.presetsKey) || "[]");
+    } catch (_) {
+      return [];
+    }
+  }
+
+  _savePresets(presets) {
+    if (!this.presetsKey) {
+      return;
+    }
+    try {
+      localStorage.setItem(this.presetsKey, JSON.stringify(presets));
+    } catch (_) {}
+  }
+
+  onPresetSave() {
+    const name = window.prompt("Save current filter as preset:", "");
+    if (!name || !name.trim()) {
+      return;
+    }
+    const trimmed = name.trim();
+    const buttonState = {};
+    if (this.filterButtons) {
+      this.filterButtons.forEach((b) => {
+        buttonState[b.id.replace(/^filter-/, "")] = !b.classList.contains("disabled");
+      });
+    }
+    const presets = this.loadPresets().filter((p) => p.name !== trimmed);
+    presets.push({
+      name: trimmed,
+      query: this.filter ? this.filter.value : "",
+      buttons: buttonState,
+    });
+    this._savePresets(presets);
+    this.renderPresets();
+  }
+
+  applyPreset(preset) {
+    if (this.filter) {
+      this.filter.value = preset.query || "";
+    }
+    if (this.filterButtons && preset.buttons) {
+      this.filterButtons.forEach((b) => {
+        const key = b.id.replace(/^filter-/, "");
+        b.classList.toggle("disabled", !preset.buttons[key]);
+      });
+    }
+    this.doFilter();
+  }
+
+  deletePreset(name) {
+    const presets = this.loadPresets().filter((p) => p.name !== name);
+    this._savePresets(presets);
+    this.renderPresets();
+  }
+
+  renderPresets() {
+    if (!this.presetsListEl) {
+      return;
+    }
+    const presets = this.loadPresets();
+    this.presetsListEl.innerHTML = "";
+    for (const preset of presets) {
+      const pill = document.createElement("button");
+      pill.className = "preset-pill";
+      pill.title = preset.query || "";
+      pill.textContent = preset.name;
+      pill.addEventListener("click", () => this.applyPreset(preset));
+      const del = document.createElement("button");
+      del.className = "preset-pill-del i-clear";
+      del.title = `Delete "${preset.name}"`;
+      del.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.deletePreset(preset.name);
+      });
+      pill.appendChild(del);
+      this.presetsListEl.appendChild(pill);
+    }
+    if (this.presetsEl) {
+      this.presetsEl.classList.toggle("hidden", presets.length === 0);
     }
   }
 
