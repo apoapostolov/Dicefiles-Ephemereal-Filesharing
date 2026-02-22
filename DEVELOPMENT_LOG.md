@@ -1,5 +1,13 @@
 # Dicefiles Development Log
 
+## 2026-02-22 — File icon downloads, uploader pill profile link, gallery download button
+
+- `client/files/file.js` — `oniconclick` refactored: now always calls `nukeEvent` and `this.download()` for all users so the type icon always triggers a file download. Mods/owners additionally trigger `this.owner.select()` so selection still works. Previously icon click only worked as selection for mods and did a bare anchor navigate for regulars.
+- `client/files/file.js` — `setupTags`: when creating a `usernick` tag that has `this.meta.account`, a `click` listener is added directly on the tag element that calls `window.open('/user/{account}', '_blank')` and stops propagation, so clicking the uploader pill opens the user profile in a new tab instead of setting the filter.
+- `views/room.ejs` — Added `<a id="gallery_download" class="i-download">` anchor to the `#gallery` section.
+- `client/files/gallery.js` — Added `this.downloadEl` reference; wired click handler that calls `this.file.download()`; added `applyDownloadColor(img)` which samples the top-right 40×40 px of the loaded cover image via Canvas to compute average brightness and toggles `dl-light` (white icon) or `dl-dark` (dark icon) class accordingly; color detection called after image swap in `open()`; video and no-cover cases default to `dl-light`; color classes reset in `close()`.
+- `entries/css/gallery.css` — Added `#gallery_download` rule: `position: absolute` at top-right (just left of close button), fades in with `.aux` class using the same `0.3s opacity` transition as other gallery UI, `dl-light`/`dl-dark` classes add appropriate `color` and `text-shadow` for readability on any cover.
+
 ## 2026-02-23 — Latest Activity tab, tab hover fix, profileActivity config
 
 - `lib/user.js` — Added `zadd` and `zremrangebyrank` to `redis.getMethods()`; added `ACTIVITY_MAX = 20` and `activityKey()` constants; added `recordActivity(type, entry)` (writes to Redis sorted set `activity:{account}` capped at 20) and `getActivity()` (returns last 20 entries newest-first) methods to `User` class.
