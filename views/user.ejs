@@ -30,15 +30,6 @@
       </div>
     </section>
 
-    <nav class="profile-tabs" role="tablist" aria-label="Profile sections">
-      <button class="profile-tab active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
-      <button class="profile-tab" data-tab="achievements" role="tab" aria-selected="false">
-        Achievements
-        <span class="tab-badge"><%=info.achievements.unlocked%></span>
-      </button>
-    </nav>
-
-    <div class="profile-panel" data-panel="overview">
     <section class="profile-stats">
       <div class="stat-card">
         <h3>Total Uploaded</h3>
@@ -68,6 +59,15 @@
       </div>
     </section>
 
+    <div class="profile-tabbed">
+    <nav class="profile-tabs" role="tablist" aria-label="Profile sections">
+      <button class="profile-tab active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
+      <button class="profile-tab" data-tab="achievements" role="tab" aria-selected="false">
+        Achievements
+        <span class="tab-badge"><%=info.achievements.unlocked%></span>
+      </button>
+    </nav>
+
     <section class="profile-message">
       <h3>Profile Message</h3>
       <% if (info.canEditMessage) { %>
@@ -90,9 +90,7 @@
         <% } %>
       </div>
     </section>
-    </div><!-- /panel overview -->
 
-    <div class="profile-panel hidden" data-panel="achievements">
     <section class="profile-achievements">
       <h3>Achievements</h3>
       <div class="achievement-grid">
@@ -111,7 +109,7 @@
         <% } %>
       </div>
     </section>
-    </div><!-- /panel achievements -->
+    </div><!-- /profile-tabbed -->
   </article>
   <script src="/user.js?v=<%=v%>"></script>
   <%- include("footer"); %>

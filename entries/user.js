@@ -1,8 +1,8 @@
 "use strict";
 
-// Tab switching
+// Tab switching — toggles .tab-<name> class on #userprofile
+const profileEl = document.querySelector("#userprofile");
 const tabs = document.querySelectorAll(".profile-tab");
-const panels = document.querySelectorAll(".profile-panel");
 
 tabs.forEach((tab) => {
   tab.addEventListener("click", () => {
@@ -11,9 +11,8 @@ tabs.forEach((tab) => {
       t.classList.toggle("active", t.dataset.tab === target);
       t.setAttribute("aria-selected", t.dataset.tab === target ? "true" : "false");
     });
-    panels.forEach((p) => {
-      p.classList.toggle("hidden", p.dataset.panel !== target);
-    });
+    profileEl.className = profileEl.className.replace(/\btab-\w+/g, "").trim();
+    if (target !== "overview") profileEl.classList.add("tab-" + target);
   });
 });
 

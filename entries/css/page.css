@@ -458,14 +458,26 @@ body#page {
   padding: 0 0.3em;
 }
 
-/* ── Profile panels ─────────────────────────────────────────────────────────── */
+/* ── Profile tabbed container ─────────────────────────────────── */
 
-#page #userprofile .profile-panel {
-  display: contents;
+#page #userprofile .profile-tabbed {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-#page #userprofile .profile-panel.hidden {
+/* Achievements hidden by default (overview is default tab) */
+#page #userprofile .profile-achievements {
   display: none;
+}
+
+/* When achievements tab is active */
+#page #userprofile.tab-achievements .profile-message {
+  display: none;
+}
+
+#page #userprofile.tab-achievements .profile-achievements {
+  display: block;
 }
 
 @media (max-width: 920px) {
