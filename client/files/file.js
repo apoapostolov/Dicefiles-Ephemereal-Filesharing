@@ -19,11 +19,6 @@ export default class File extends BaseFile {
       this.el.classList.add("request-file");
       if ((file.status || "open") === "fulfilled") {
         this.el.classList.add("request-fulfilled");
-        this.fulfilledPillEl = dom("span", {
-          classes: ["request-fulfilled-pill"],
-          text: "Fulfilled",
-        });
-        this.nameEl.appendChild(this.fulfilledPillEl);
       }
     }
 
@@ -68,7 +63,16 @@ export default class File extends BaseFile {
       }),
     );
     this.requestUrlEl = null;
-    this.fulfilledPillEl = null;
+    // Fulfilled-request pill — appended after nameEl is ready
+    if (this.isRequest && (file.status || "open") === "fulfilled") {
+      this.fulfilledPillEl = dom("span", {
+        classes: ["request-fulfilled-pill"],
+        text: "Fulfilled",
+      });
+      this.nameEl.appendChild(this.fulfilledPillEl);
+    } else {
+      this.fulfilledPillEl = null;
+    }
     this.copyMetaEl = null;
     this.ttlValueEl = null;
     this.nameEl.addEventListener("mouseenter", this.onenter.bind(this), {
