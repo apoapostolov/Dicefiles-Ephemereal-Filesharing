@@ -1,6 +1,23 @@
 # Dicefiles Development Log
 
-## 2026-02-22 - Fix: EPUB/MOBI column-stretching — margin drift and broken pagination after font change
+## 2026-02-22 - Feature: Request Workflow Maturity (P0-3)
+
+Implemented the full request status lifecycle — clicking a request now opens a management modal, uploaded files can be linked to a request, and fulfilled requests are visually distinct.
+
+**Changed files:**
+
+- `lib/request.js` — Added `status` (`"open"` / `"fulfilled"`) and `fulfilledByNick` fields to `RequestFile`; both go through `REQUEST_OFILTER` so they reach the client. Added `EMITTER.setStatus(key, status, byNick)` which rebuilds the `RequestFile` from its serialised form (to work around `Object.seal`) and sets the new value via `REQUESTS.set()`, triggering the distributed "update" event chain.
+- `lib/client.js` — Added `requeststatus` socket event handler (`onrequestStatus`). Fulfilled and Reopen are available to any connected user; Remove is mod-only. Imports both `EMITTER` (for `setStatus`) and `REQUESTS` DistributedMap (for `loaded`, `get`, `delete`) from `./request`.
+- `lib/upload.js` — Reads `req.query.fulfillsRequest`; validates it as a `rqXXX` key in the same room; stores `meta.fulfilledRequestKey` and `meta.requesterNick` on the new upload so the link survives in Redis.
+- `client/files/requestmodal.js` — Added `RequestViewModal` named export. Shows request text, optional reference image, and (for open requests) a file drop/pick zone. Inline XHR upload with per-file progress bar; marks fulfilled after all uploads complete. Remove (mod), Reopen, and Cancel are also implemented.
+- `client/files/file.js` — Request clicks now call `owner.openRequestView(this)` instead of consuming the event silently. `request-fulfilled` CSS class toggled in constructor and `update()`.
+- `client/files.js` — Imports `RequestViewModal`; adds `openRequestView(fileInst)` method that shows the modal and emits `requeststatus` on resolution.
+- `client/file.js` — `FileTooltip` renders a "Requested by: {nick}" row when `meta.requesterNick` is present.
+- `entries/css/files.css` — `.request-file.request-fulfilled > .name`: `#888` colour + `text-decoration: line-through`; `.request-file > .name`: `cursor: pointer`.
+- `entries/css/modal.css` — Full `RequestViewModal` layout: two-column grid (preview + right panel), upload zone, staged files list, progress bar, coloured action buttons.
+- `TODO.md` — Marked P0-1 webtoon persistence as done; replaced P0-3 bullet list with detailed spec and implementation checklist.
+
+
 
 **Root cause**: CSS multi-column stretches columns to exactly fill the content-box width. With `#scroller { box-sizing: border-box; width: 30000px; padding-left: HP }`, content-box = `30000 − HP`. For `HP=56, pageWidth=400`: content-box = 29944 px, 75 columns, actual width = 288.75 px (should be 288), actual step = 400.75 px (+0.75 px per page). Two bugs from this one root cause:
 
