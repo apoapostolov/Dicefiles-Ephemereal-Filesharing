@@ -573,6 +573,182 @@
 }
 
 
+/* ── RequestViewModal ─────────────────────────────────────────────────────── */
+
+.modal-requestview .modal-body {
+  display: grid;
+  grid-template-columns: 11em 1fr;
+  gap: 1.1em;
+  min-width: 34em;
+  align-items: start;
+}
+
+.modal-requestview .requestview-preview {
+  width: 11em;
+  height: 11em;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background:
+    linear-gradient(180deg, rgba(20, 20, 20, 0.95), rgba(26, 26, 26, 0.9));
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.modal-requestview .requestview-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55em;
+  min-width: 0;
+  min-height: 11em;
+}
+
+.modal-requestview .requestview-requester {
+  margin: 0;
+  font-size: 0.82em;
+  color: rgba(180, 180, 220, 0.9);
+}
+
+.modal-requestview .requestview-text {
+  margin: 0;
+  font-size: 1.03em;
+  color: rgba(240, 240, 240, 0.97);
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.modal-requestview .requestview-refurl {
+  font-size: 0.78em;
+  color: rgba(140, 190, 255, 0.85);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.modal-requestview .requestview-refurl:hover {
+  color: rgba(170, 210, 255, 1);
+}
+
+.modal-requestview .requestview-fulfilled-by {
+  margin: 0;
+  font-size: 0.8em;
+  color: rgba(150, 220, 150, 0.9);
+}
+
+.modal-requestview .requestview-upload-zone {
+  border: 1px dashed rgba(200, 200, 200, 0.28);
+  border-radius: 6px;
+  padding: 0.55em 0.8em;
+  text-align: center;
+  cursor: pointer;
+  font-size: 0.8em;
+  color: rgba(190, 190, 190, 0.7);
+  transition: border-color 0.15s, color 0.15s;
+  user-select: none;
+}
+
+.modal-requestview .requestview-upload-zone:hover {
+  border-color: rgba(200, 200, 200, 0.5);
+  color: rgba(220, 220, 220, 0.9);
+}
+
+.modal-requestview .requestview-upload-zone.dragging {
+  border-color: rgba(208, 236, 214, 0.88);
+  color: rgba(230, 250, 230, 0.92);
+  background: rgba(208, 236, 214, 0.06);
+}
+
+.modal-requestview .requestview-staged-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  max-height: 8em;
+  overflow-y: auto;
+}
+
+.modal-requestview .requestview-staged-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 0.78em;
+  color: rgba(210, 210, 210, 0.9);
+}
+
+.modal-requestview .requestview-staged-name {
+  flex: 1 1 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-requestview .requestview-staged-remove {
+  flex: 0 0 auto;
+  background: transparent;
+  border: none;
+  color: rgba(220, 100, 100, 0.7);
+  cursor: pointer;
+  font-size: 1.1em;
+  line-height: 1;
+  padding: 0 0.2em;
+}
+
+.modal-requestview .requestview-staged-remove:hover {
+  color: rgba(240, 80, 80, 1);
+}
+
+.modal-requestview .requestview-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+
+.modal-requestview .requestview-progress-bar {
+  height: 4px;
+  background: rgba(100, 200, 130, 0.9);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.2s ease;
+}
+
+.modal-requestview .requestview-progress-label {
+  font-size: 0.78em;
+  color: rgba(180, 220, 180, 0.85);
+}
+
+.modal-requestview .modal-button-fulfill {
+  background: rgba(80, 160, 100, 0.25);
+  border-color: rgba(100, 200, 130, 0.4);
+}
+
+.modal-requestview .modal-button-fulfill:hover {
+  background: rgba(80, 160, 100, 0.38);
+}
+
+.modal-requestview .modal-button-reopen {
+  background: rgba(80, 120, 200, 0.22);
+  border-color: rgba(100, 150, 220, 0.4);
+}
+
+.modal-requestview .modal-button-reopen:hover {
+  background: rgba(80, 120, 200, 0.35);
+}
+
+.modal-requestview .modal-button-remove {
+  background: rgba(160, 60, 60, 0.2);
+  border-color: rgba(200, 80, 80, 0.38);
+  color: rgba(240, 160, 160, 0.9);
+}
+
+.modal-requestview .modal-button-remove:hover {
+  background: rgba(160, 60, 60, 0.35);
+  color: rgba(255, 180, 180, 1);
+}
+
+
 .modal-notifydlg {
   max-width: 36rem;
 }

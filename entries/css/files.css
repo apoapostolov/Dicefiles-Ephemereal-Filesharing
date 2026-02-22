@@ -225,6 +225,25 @@ body.links-mode #filelist-scroller {
   color: #fff8d5;
 }
 
+/* Fulfilled request: dimmed + strikethrough */
+#files > .file.request-file.request-fulfilled > .name {
+  color: #888;
+}
+
+#files > .file.request-file.request-fulfilled > .name > .name-text {
+  text-decoration: line-through;
+  text-decoration-color: #777;
+}
+
+#files > .file.request-file.request-fulfilled > .icon {
+  opacity: 0.45;
+}
+
+/* Make request files show a pointer cursor to hint they're clickable */
+#files > .file.request-file > .name {
+  cursor: pointer;
+}
+
 #files:not(.gallerymode) > .file .galleryonly {
   display: none;
 }

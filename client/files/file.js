@@ -17,6 +17,9 @@ export default class File extends BaseFile {
     this.el = dom("div", { classes: ["file"] });
     if (this.isRequest) {
       this.el.classList.add("request-file");
+      if ((file.status || "open") === "fulfilled") {
+        this.el.classList.add("request-fulfilled");
+      }
     }
 
     this.iconEl = dom("a", {
@@ -279,6 +282,9 @@ export default class File extends BaseFile {
     if (!this.el) {
       return;
     }
+    if (this.isRequest) {
+      this.el.classList.toggle("request-fulfilled", (this.status || "open") === "fulfilled");
+    }
     this.setupTags();
     if (typeof isNew === "boolean") {
       this.setNew(isNew);
@@ -392,6 +398,10 @@ export default class File extends BaseFile {
   onclick(e) {
     try {
       if (this.isRequest) {
+        if (e.altKey || e.shiftKey || e.metaKey || e.optionKey) {
+          return true;
+        }
+        this.owner.openRequestView(this);
         return nukeEvent(e);
       }
       if (e.altKey || e.shiftKey || e.metaKey || e.optionKey) {

@@ -46,6 +46,10 @@ class FileTooltip extends Tooltip {
     if (Array.isArray(meta.suggestedTags) && meta.suggestedTags.length) {
       a(meta.suggestedTags.join(", "), "suggested tags");
     }
+    // Files uploaded to fulfil a request show the original requester
+    if (meta.requesterNick) {
+      a(meta.requesterNick, "requested by");
+    }
 
     const diff = Math.max(0, file.ttl);
     a(toPrettySize(file.size), "size");

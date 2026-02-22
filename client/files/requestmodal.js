@@ -1,11 +1,13 @@
 "use strict";
 
 import Modal from "../modal";
+import registry from "../registry";
 import {dom} from "../util";
 
 const MAX_IMAGE_BYTES = 35 * 1024 * 1024;
 const PREVIEW_SIZE = 320;
 const MAX_DATAURL_LENGTH = 2_500_000;
+const UPLOAD_TIMEOUT_MS = 120_000;
 
 export default class RequestModal extends Modal {
   constructor() {
@@ -314,5 +316,402 @@ export default class RequestModal extends Modal {
       url,
       requestImage: this.imageDataUrl,
     });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// RequestViewModal — manage an existing request (fulfill / reopen / remove)
+// ---------------------------------------------------------------------------
+
+const ACCEPTED_TYPES = "";  // accept all file types
+
+export class RequestViewModal extends Modal {
+  constructor(requestFile, {isMod = false} = {}) {
+    const status = requestFile.status || "open";
+    const isFulfilled = status === "fulfilled";
+
+    const primaryBtn = isFulfilled
+      ? {id: "reopen", text: "Reopen", default: !isMod, cls: "modal-button-reopen"}
+      : {id: "fulfill", text: "Fulfill", default: true, cls: "modal-button-fulfill"};
+
+    const buttons = [primaryBtn];
+    if (isMod) {
+      buttons.push({id: "remove", text: "Remove", cls: "modal-button-remove"});
+    }
+    buttons.push({id: "cancel", text: "Cancel", cancel: true});
+
+    super("requestview", "Request", ...buttons);
+    this.el.classList.add("modal-requestview");
+
+    this.requestFile = requestFile;
+    this.isMod = isMod;
+    this.isFulfilled = isFulfilled;
+    this.stagedFiles = [];
+    this.dragDepth = 0;
+    this.dragHandlers = null;
+    this._uploading = false;
+
+    this._buildBody();
+    this._makeLifecycleSafe();
+  }
+
+  _buildBody() {
+    const {requestFile, isFulfilled} = this;
+    const requester = requestFile.tags && (requestFile.tags.usernick || requestFile.tags.user) || "";
+
+    // ── Left column: image preview or placeholder ──────────────────────────
+    this.previewEl = dom("div", {classes: ["requestview-preview"]});
+    if (requestFile.meta && requestFile.meta.requestImageDataUrl) {
+      this.previewEl.style.backgroundImage = `url(${requestFile.meta.requestImageDataUrl})`;
+      this.previewEl.classList.add("has-image");
+    }
+    this.body.appendChild(this.previewEl);
+
+    // ── Right column: info + action area ───────────────────────────────────
+    this.rightEl = dom("div", {classes: ["requestview-right"]});
+    this.body.appendChild(this.rightEl);
+
+    // Requester name
+    if (requester) {
+      this.rightEl.appendChild(dom("p", {
+        classes: ["requestview-requester"],
+        text: `Requested by: ${requester}`,
+      }));
+    }
+
+    // Request text
+    this.rightEl.appendChild(dom("p", {
+      classes: ["requestview-text"],
+      text: requestFile.name,
+    }));
+
+    // Reference URL
+    const refUrl = requestFile.meta && requestFile.meta.requestUrl;
+    if (refUrl) {
+      const a = dom("a", {
+        classes: ["requestview-refurl"],
+        attrs: {href: refUrl, target: "_blank", rel: "noopener noreferrer nofollow"},
+        text: refUrl.length > 60 ? `${refUrl.slice(0, 57)}…` : refUrl,
+      });
+      this.rightEl.appendChild(a);
+    }
+
+    // Fulfilled‑by notice
+    if (isFulfilled && requestFile.fulfilledByNick) {
+      this.rightEl.appendChild(dom("p", {
+        classes: ["requestview-fulfilled-by"],
+        text: `Fulfilled by: ${requestFile.fulfilledByNick}`,
+      }));
+    }
+
+    if (!isFulfilled) {
+      this._buildUploadZone();
+    }
+  }
+
+  _buildUploadZone() {
+    this.uploadZoneEl = dom("div", {
+      classes: ["requestview-upload-zone"],
+      attrs: {title: "Drop files here or click to choose"},
+    });
+    this.uploadZoneLabelEl = dom("span", {
+      classes: ["requestview-upload-label"],
+      text: "Drop files to upload (optional)",
+    });
+    this.uploadZoneEl.appendChild(this.uploadZoneLabelEl);
+    this.uploadZoneEl.addEventListener("click", this._onZoneClick.bind(this));
+    this.rightEl.appendChild(this.uploadZoneEl);
+
+    this.filePickerEl = dom("input", {
+      attrs: {type: "file", multiple: true, accept: ACCEPTED_TYPES, style: "display:none"},
+    });
+    this.filePickerEl.addEventListener("change", this._onPickFile.bind(this));
+    this.rightEl.appendChild(this.filePickerEl);
+
+    this.stagedListEl = dom("ul", {classes: ["requestview-staged-list", "hidden"]});
+    this.rightEl.appendChild(this.stagedListEl);
+
+    // Progress bar (hidden until upload starts)
+    this.progressWrapEl = dom("div", {classes: ["requestview-progress-wrap", "hidden"]});
+    this.progressBarEl = dom("div", {classes: ["requestview-progress-bar"]});
+    this.progressWrapEl.appendChild(this.progressBarEl);
+    this.progressLabelEl = dom("span", {classes: ["requestview-progress-label"]});
+    this.progressWrapEl.appendChild(this.progressLabelEl);
+    this.rightEl.appendChild(this.progressWrapEl);
+  }
+
+  _makeLifecycleSafe() {
+    const {resolve, reject} = this;
+    this.resolve = v => {
+      this._uninstallDragDrop();
+      resolve(v);
+    };
+    this.reject = v => {
+      this._uninstallDragDrop();
+      reject(v);
+    };
+  }
+
+  onshown() {
+    this._installDragDrop();
+  }
+
+  // ── Drag & drop ──────────────────────────────────────────────────────────
+  _installDragDrop() {
+    if (this.isFulfilled || this.dragHandlers) {
+      return;
+    }
+    this.dragHandlers = {
+      dragenter: this._onDragEnter.bind(this),
+      dragover:  this._onDragOver.bind(this),
+      dragleave: this._onDragLeave.bind(this),
+      drop:      this._onDrop.bind(this),
+    };
+    const opts = {capture: true};
+    addEventListener("dragenter", this.dragHandlers.dragenter, opts);
+    addEventListener("dragover",  this.dragHandlers.dragover, opts);
+    addEventListener("dragleave", this.dragHandlers.dragleave, opts);
+    addEventListener("drop",      this.dragHandlers.drop, opts);
+  }
+
+  _uninstallDragDrop() {
+    if (!this.dragHandlers) {
+      return;
+    }
+    const opts = {capture: true};
+    removeEventListener("dragenter", this.dragHandlers.dragenter, opts);
+    removeEventListener("dragover",  this.dragHandlers.dragover, opts);
+    removeEventListener("dragleave", this.dragHandlers.dragleave, opts);
+    removeEventListener("drop",      this.dragHandlers.drop, opts);
+    this.dragHandlers = null;
+    this.dragDepth = 0;
+    this._setDragActive(false);
+  }
+
+  _hasDragFiles(e) {
+    return e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files");
+  }
+
+  _setDragActive(active) {
+    this.uploadZoneEl && this.uploadZoneEl.classList.toggle("dragging", !!active);
+  }
+
+  _onDragEnter(e) {
+    if (!this._hasDragFiles(e)) { return; }
+    e.preventDefault(); e.stopPropagation();
+    this.dragDepth++;
+    this._setDragActive(true);
+  }
+
+  _onDragOver(e) {
+    if (!this._hasDragFiles(e)) { return; }
+    e.preventDefault(); e.stopPropagation();
+    e.dataTransfer.dropEffect = "copy";
+  }
+
+  _onDragLeave(e) {
+    if (!this._hasDragFiles(e)) { return; }
+    e.preventDefault(); e.stopPropagation();
+    this.dragDepth = Math.max(0, this.dragDepth - 1);
+    if (!this.dragDepth) { this._setDragActive(false); }
+  }
+
+  _onDrop(e) {
+    if (!this._hasDragFiles(e)) { return; }
+    e.preventDefault(); e.stopPropagation();
+    this.dragDepth = 0;
+    this._setDragActive(false);
+    const files = Array.from(e.dataTransfer.files || []);
+    this._stageFiles(files);
+  }
+
+  _onZoneClick() {
+    this.filePickerEl && this.filePickerEl.click();
+  }
+
+  _onPickFile() {
+    const files = Array.from(this.filePickerEl.files || []);
+    this.filePickerEl.value = "";
+    this._stageFiles(files);
+  }
+
+  _stageFiles(files) {
+    if (!files.length) { return; }
+    for (const f of files) {
+      if (!this.stagedFiles.some(s => s.name === f.name && s.size === f.size)) {
+        this.stagedFiles.push(f);
+      }
+    }
+    this._renderStagedList();
+  }
+
+  _renderStagedList() {
+    if (!this.stagedListEl) { return; }
+    this.stagedListEl.textContent = "";
+    if (!this.stagedFiles.length) {
+      this.stagedListEl.classList.add("hidden");
+      return;
+    }
+    this.stagedListEl.classList.remove("hidden");
+    for (const [i, f] of this.stagedFiles.entries()) {
+      const li = dom("li", {classes: ["requestview-staged-item"]});
+      li.appendChild(dom("span", {classes: ["requestview-staged-name"], text: f.name}));
+      const rm = dom("button", {
+        classes: ["requestview-staged-remove"],
+        attrs: {type: "button", title: "Remove"},
+        text: "×",
+      });
+      rm.onclick = () => {
+        this.stagedFiles.splice(i, 1);
+        this._renderStagedList();
+      };
+      li.appendChild(rm);
+      this.stagedListEl.appendChild(li);
+    }
+    if (this.uploadZoneLabelEl) {
+      this.uploadZoneLabelEl.textContent =
+        `${this.stagedFiles.length} file${this.stagedFiles.length !== 1 ? "s" : ""} ready — drop more or click to add`;
+    }
+  }
+
+  // ── Button handler ───────────────────────────────────────────────────────
+  async onclick(button, e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (button.cancel) {
+      this.reject(new Error("cancelled"));
+      return;
+    }
+    if (button.id === "remove") {
+      this.resolve({action: "remove"});
+      return;
+    }
+    if (button.id === "reopen") {
+      this.resolve({action: "reopen"});
+      return;
+    }
+    if (button.id === "fulfill") {
+      if (this._uploading) { return; }
+      if (this.stagedFiles.length === 0) {
+        // No files — just mark as fulfilled immediately
+        this.resolve({action: "fulfill", files: []});
+        return;
+      }
+      // Upload files first
+      await this._doUploads();
+      return;
+    }
+  }
+
+  // ── Upload machinery ─────────────────────────────────────────────────────
+  async _doUploads() {
+    this._uploading = true;
+    // Disable all buttons during upload
+    this.buttons.forEach(b => b.setAttribute("disabled", "disabled"));
+    this.progressWrapEl.classList.remove("hidden");
+    this.uploadZoneEl && this.uploadZoneEl.classList.add("hidden");
+    this.stagedListEl && this.stagedListEl.classList.add("hidden");
+
+    const total = this.stagedFiles.length;
+    let done = 0;
+    let failed = 0;
+    const uploadedKeys = [];
+
+    const setProgress = (label, pct) => {
+      this.progressBarEl.style.width = `${Math.min(100, pct * 100).toFixed(1)}%`;
+      this.progressLabelEl.textContent = label;
+    };
+
+    setProgress(`Uploading 0 / ${total}…`, 0);
+
+    for (const file of this.stagedFiles) {
+      try {
+        const key = await this._uploadFile(file, (loaded, total) => {
+          const overall = (done + loaded / total) / this.stagedFiles.length;
+          setProgress(`Uploading ${done + 1} / ${total}…`, overall);
+        });
+        uploadedKeys.push(key);
+        done++;
+        setProgress(`Uploaded ${done} / ${total}`, done / total);
+      }
+      catch (ex) {
+        console.error("Failed to upload fulfillment file", file.name, ex);
+        failed++;
+        done++;
+      }
+    }
+
+    if (failed === total) {
+      setProgress("All uploads failed", 0);
+      this._uploading = false;
+      this.buttons.forEach(b => b.removeAttribute("disabled"));
+      this.progressWrapEl.classList.add("hidden");
+      this.uploadZoneEl && this.uploadZoneEl.classList.remove("hidden");
+      this.stagedListEl && this.stagedListEl.classList.remove("hidden");
+      return;
+    }
+
+    setProgress(`Done (${done - failed} uploaded)`, 1);
+    // Short delay so the user can see "Done"
+    await new Promise(r => setTimeout(r, 600));
+    this.resolve({action: "fulfill", files: uploadedKeys});
+  }
+
+  async _uploadFile(file, onprogress) {
+    await registry.init();
+    await registry.chatbox.ensureNick();
+
+    // Get upload key
+    let keyResult;
+    await new Promise((resolve, reject) => {
+      const to = setTimeout(() => reject(new Error("Upload key timeout")), UPLOAD_TIMEOUT_MS);
+      const id = Date.now() + Math.random();
+      registry.socket.makeCall("uploadkey", id).then(d => {
+        clearTimeout(to);
+        resolve(d);
+      }).catch(err => {
+        clearTimeout(to);
+        reject(err);
+      });
+    }).then(d => { keyResult = d; });
+
+    if (!keyResult || keyResult.err) {
+      throw new Error(keyResult ? keyResult.err : "No upload key");
+    }
+    if (keyResult.wait) {
+      throw new Error("Upload queue is full, try again later");
+    }
+    const key = typeof keyResult === "string" ? keyResult : (keyResult.key || "");
+    if (!key) { throw new Error("Invalid upload key"); }
+
+    const params = new URLSearchParams();
+    params.set("name", file.name);
+    params.set("offset", "0");
+    params.set("now", Date.now());
+    params.set("fulfillsRequest", this.requestFile.key);
+
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.responseType = "json";
+      xhr.onerror = () => reject(new Error("Connection lost"));
+      xhr.onabort = () => reject(new Error("Aborted"));
+      xhr.onload = () => {
+        if (xhr.response && xhr.response.err) {
+          reject(new Error(xhr.response.err));
+        }
+        else {
+          resolve(xhr.response);
+        }
+      };
+      if (onprogress) {
+        xhr.upload.addEventListener("progress", e => {
+          if (e.lengthComputable) { onprogress(e.loaded, e.total); }
+        }, {passive: true});
+      }
+      xhr.open("PUT", `/api/upload/${key}?${params.toString()}`);
+      xhr.send(file);
+    });
+
+    return key;
   }
 }
