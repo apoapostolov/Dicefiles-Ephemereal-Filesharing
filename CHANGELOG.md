@@ -24,9 +24,17 @@
 
 ### Changed
 
+- **EPUB/MOBI focus-mode centering**: The A5 page frame is now vertically centered in the viewport when focus reading mode is active, rather than being pinned to the top edge.
+
 - **API file-listing filters**: `GET /api/v1/files` and `GET /api/v1/downloads` accept new `name_contains` (case-insensitive substring match) and `ext` (comma-separated extension list) query parameters, combinable with existing `type`, `scope`, and `since` filters.
 
 - Switched to serving a full `/favicon` directory of multiple icon sizes and manifest; updated templates and CSS to point at new paths.
+
+- **Failed login security logging**: Invalid login attempts (wrong password or 2FA code) are now recorded in the server log at `[WARN]` level with the originating IP address and account name, making brute-force attempts visible to operators without impacting normal users.
+
+- **Startup weak-secret warning**: Server startup now prints a prominent `[WARN]` when the configured `secret` value matches a known default (e.g. `"dicefiles"`) or is shorter than 16 characters. This is advisory only — existing deployments continue to operate, but operators are prompted to set a proper secret before going to production.
+
+- **Replaced `request`/`request-promise-native` with native `fetch`**: The two deprecated HTTP client packages have been removed. Gravatar profile lookups in user account settings now use the Node 18 built-in `fetch` API.
 
 ### Fixed
 

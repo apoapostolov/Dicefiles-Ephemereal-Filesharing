@@ -1,5 +1,45 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - Feat: Focus-mode A5 centering; P0.5 security hardening (secret warn, native fetch, auth logs)
+
+### Summary
+
+Three areas touched in one session:
+1. **EPUB/MOBI focus-mode centering**: In focus reading mode the A5 page was top-aligned inside the full-viewport content area. Added a CSS override (`justify-content: center; padding: 0`) scoped to `body.focus-reading #reader-content:has(.reader-book-iframe)`.
+2. **P0-3 TODO update**: Marked 9 of 11 implementation checklist items done; heading updated to "Mostly Done"; clarified the webhook gap (fires on deletion only, not `setStatus`).
+3. **P0.5 security hardening** (safe/additive items only):
+   - **3.1 startup warning**: `server.js` now logs `[WARN]` when the secret is a known default or shorter than 16 chars. Advisory only — does not refuse to start.
+   - **3.2 auth event logs**: `User.login()` now logs `[auth] Failed login attempt from <ip> for account <nick>` on wrong password, and `[auth] Failed 2FA attempt ...` on wrong TOTP.
+   - **3.3 dep modernization**: Removed `request-promise-native` import from `lib/user.js`; replaced the Gravatar HTTP call with native `fetch` + `AbortSignal.timeout(8000)`. `request` and `request-promise-native` removed from `package.json`.
+   - **3.8 MD5 comment**: Added inline comment in `adopt()` clarifying MD5 is for Gravatar URL construction only.
+   - **defaults.js**: Updated `secret` comment to explain the security requirement and override method.
+
+### Items deliberately deferred
+
+- Password policy strengthening (3.2) — affects existing user flows, needs further design.
+- Login throttling tuning (3.2) — FloodProtector already covers this; behavioral change risk too high.
+- Express/Helmet upgrades (3.3) — too broad for one session.
+- Input validation centralization (3.4) — large scope, needs audit.
+- Memory Maps/Sets cleanup (3.5) — needs broker/collections audit.
+- `request_fulfilled` webhook on `setStatus` (P0.3 remaining) — `REQUESTS.set` fires for both create and update; needs semantic disambiguation before wiring.
+
+### Changed files
+
+- **`entries/css/reader.css`** — Add `body.focus-reading #reader-content:has(.reader-book-iframe)` rule.
+- **`server.js`** — Add weak-secret startup warning in `master()`.
+- **`lib/user.js`** — Remove `request-promise-native`; replace Gravatar call with `fetch`; add MD5 comment; add failed-login/2FA warn logs.
+- **`defaults.js`** — Update `secret` comment.
+- **`package.json`** — Remove `request` and `request-promise-native` dependencies.
+
+### Verification
+
+- webpack: `compiled with 4 warnings in 7808 ms`
+- curl `http://127.0.0.1:9090/` → `HTTP/1.1 200 OK`
+- `server.log` shows `[WARN] [security] WEAK OR DEFAULT SECRET in use.`
+- Commit: `d95ebfe`
+
+---
+
 ## 2026-02-22 - Fix: Fulfilled pill crashes file constructor before nameEl exists
 
 ### Summary
