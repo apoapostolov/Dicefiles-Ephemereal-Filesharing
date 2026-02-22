@@ -1,6 +1,58 @@
 # Dicefiles Development Log
 
-## 2026-02-24 - Expand MCP.md with all-client install guides + OpenClaw skill
+## 2026-02-22 - Fix show-new-btn active icon color; add opengraph.io link enrichment
+
+### Summary
+
+Two fixes shipped together: a CSS colour regression on the show-new-btn icon, and
+an optional opengraph.io integration for better link-title resolution in the Links
+Archive.
+
+**Show-new-btn icon colour**: The compiled `static/style.css` bundle still contained
+`color:var(--accent-light,#4af)` on `#show-new-btn.active` from before the prior
+source edit. Added explicit `color: var(--text-fg)` to the source rule so the compiled
+output is deterministic (white icon, matching all other active filter buttons). Bundle
+rebuilt — confirmed `color:var(--text-fg)` in new `static/style.css`.
+
+**opengraph.io link enrichment** (`lib/links.js`):
+- The original `resolveTitle(url)` function fetched the raw HTML of each posted URL
+  and parsed the `<title>` tag — cheap but fragile on JS-rendered pages and redirected
+  URLs.
+- New implementation adds an optional fast path: when `opengraphIoKey` is set in the
+  project configuration, `resolveByOpengraphIo(url, key)` is tried first. It calls
+  `https://opengraph.io/api/1.1/site/<encoded>?app_id=<key>` and extracts
+  `hybridGraph.title || openGraph.title || htmlInferred.title`.
+- On any failure (non-200 status, timeout, parse error, empty title) the fallback
+  `resolveByHtmlTitle(url)` — identical logic to the original `resolveTitle` — runs
+  instead. Existing deployments without a key are completely unaffected.
+- Added `const CONFIG = require("./config")` import to `lib/links.js`.
+- Config option `opengraphIoKey: ""` added to `defaults.js`.
+- Local `.config.json` updated with `"opengraphIoKey": "b01bd6fc-298d-47dd-ae15-7a354c0aa251"`.
+- `git/lifestyle/.env` updated with `OPENGRAPH_IO_API_KEY=b01bd6fc-...` under a new
+  `# DICEFILES` section.
+- `README.md` config table: new row for `opengraphIoKey` with description, fallback
+  behaviour, free tier note, and signup URL.
+- `CHANGELOG.md`: new `[Unreleased] Added` entry for the feature.
+
+### Changed Files
+
+- **`entries/css/room.css`** — `#show-new-btn.active`: added `color: var(--text-fg)` to
+  ensure white icon in active state; previously relied solely on inheritance which was
+  overridden in the old compiled bundle.
+- **`static/style.css`** (compiled) — Rebuilt; `show-new-btn.active` now emits
+  `color:var(--text-fg)`, no more `accent-light` blue.
+- **`lib/links.js`** — Added `CONFIG` import; split `resolveTitle` into
+  `resolveByOpengraphIo` + `resolveByHtmlTitle` + new `resolveTitle` orchestrator that
+  tries opengraph.io first when key is configured.
+- **`defaults.js`** — Added `opengraphIoKey: ""` config key with doc comment.
+- **`.config.json`** — Added `"opengraphIoKey": "b01bd6fc-298d-47dd-ae15-7a354c0aa251"`.
+- **`git/lifestyle/.env`** (external) — Added `OPENGRAPH_IO_API_KEY` under `# DICEFILES`.
+- **`README.md`** — Config table: added `opengraphIoKey` row.
+- **`CHANGELOG.md`** — Added opengraph.io feature entry under `[Unreleased] → Added`.
+
+---
+
+
 
 ### Summary
 
@@ -37,6 +89,7 @@ snapshot), and a configuration reference block. Intended to be installed into
 room without per-session prompting.
 
 **Research findings recorded**:
+
 - VS Code uses `"servers"` key (not `"mcpServers"`) and requires `"type":"stdio"` field
 - OpenCode `command` is a merged array, not separate `command`+`args`; env key is `"environment"`, not `"env"`
 - Codex silently ignores `mcpServers` / `mcp-servers`; only `mcp_servers` (underscore) works

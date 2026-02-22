@@ -4,6 +4,8 @@
 
 ### Added
 
+- **opengraph.io link title enrichment**: The Links Archive now optionally uses [opengraph.io](https://www.opengraph.io/) to resolve link titles. When `opengraphIoKey` is set in the project configuration, titles are fetched via the opengraph.io API (which follows redirects, handles JavaScript-rendered pages, and returns the OG `title` field when present) instead of the built-in HTML `<title>` scraper. Falls back to inline scraping automatically when the API key is unset or when the API call fails, so existing deployments keep working without any configuration change.
+
 - **Sort controls redesigned with icons**: The sort buttons in the file browser (newest / largest / expiring) now display compact inline icons instead of text labels. A lightning bolt indicates newest-first, a descending bar chart indicates largest-first, and an hourglass indicates expiring-soon. The active sort method is always highlighted with an accent background.
 
 - **"Show new files" button integrated into the filter bar**: The "Show only files newer than your last visit" toggle is now part of the filter pill as its rightmost button, placing all file-type and visibility controls in one consistent row.

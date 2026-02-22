@@ -236,4 +236,14 @@ module.exports = {
   // Whether new rooms enable the link-collection archive (URLs shared in chat).
   // Room owners can override this per room via Room Options.
   linkCollection: true,
+
+  /*****************************/
+  /* Optional External Services */
+  /*****************************/
+
+  // opengraph.io API key for enriched link title + OG metadata resolution.
+  // When set, link titles are fetched via the opengraph.io API (better accuracy
+  // than raw HTML scraping). Falls back to HTML <title> scraping when unset or
+  // when the API call fails. Get a key at https://www.opengraph.io/
+  opengraphIoKey: "",
 };

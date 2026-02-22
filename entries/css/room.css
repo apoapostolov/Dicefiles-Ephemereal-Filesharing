@@ -1127,6 +1127,7 @@ a.r::before {
 #show-new-btn.active {
   opacity: 1;
   background: var(--surface-2);
+  color: var(--text-fg);
 }
 
 /* ===== Presets Row ===== */

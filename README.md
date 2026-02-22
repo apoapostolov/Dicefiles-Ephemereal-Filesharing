@@ -376,6 +376,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | `observabilityLog`              | `"ops.log"`                 | JSONL lifecycle log for uploads/downloads/requests/previews                                    |
 | `allowRequests`                 | `true`                      | Default for new rooms: whether request creation is enabled (room owners can override per room) |
 | `linkCollection`                | `true`                      | Default for new rooms: whether the link archive is enabled (room owners can override per room) |
+| `opengraphIoKey`                | `""`                        | **Optional.** API key for [opengraph.io](https://www.opengraph.io/) enriched link-title resolution. When set, chat-link titles in the Links Archive are fetched via the opengraph.io API (follows redirects, handles JS-rendered pages, returns OG `title`). Falls back to inline HTML `<title>` scraping when unset or on API failure. Free tier: 100 req/day. Get a key at `https://www.opengraph.io/` |
 | `webhooks`                      | `[]`                        | Outbound webhook targets/events for upload/request lifecycle                                   |
 | `webhookRetry`                  | `{...}`                     | Webhook retry policy defaults (retries/backoff)                                                |
 | `webhookDeadLetterLog`          | `"webhook-dead-letter.log"` | JSONL sink for failed webhook deliveries                                                       |
