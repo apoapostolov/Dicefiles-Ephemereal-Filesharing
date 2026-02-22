@@ -1,5 +1,19 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - GitHub Actions, AI automation P-level, TODO.md cleanup
+
+### Changes
+
+- **`.github/workflows/ci.yml`** *(new)* — CI test workflow; runs Jest on every push and PR to `main` using Node 18.
+- **`.github/workflows/release.yml`** *(new)* — Release automation; triggered by any `v*.*.*` tag push; runs tests, builds webpack, extracts the matching CHANGELOG.md section, and publishes a GitHub Release.
+- **`.github/workflows/stale.yml`** *(new)* — Marks issues/PRs stale after 60 days of inactivity, closes after a further 7.
+- **`.github/workflows/compat.yml`** *(new)* — Node compatibility matrix; tests on Node 18, 20, and 22 in parallel on every push to `main` and weekly on Mondays.
+- **`.github/workflows/lint.yml`** *(new)* — ESLint check on every push and PR to `main`.
+- **`.github/dependabot.yml`** *(new)* — Dependabot weekly npm scan; groups minor/patch production updates; blocks major upgrades for webpack, pdfjs-dist, socket.io, express, redis.
+- **`.eslintignore`** *(new)* — Excludes `static/` (webpack output), `uploads/`, `views/`, `scripts/`, `contrib/`, `core/`, `images/`, `tests/` from lint scope.
+- **`package.json`** — Added `eslint@^8.57.0` to `devDependencies`; added `"lint": "eslint ."` to `scripts`.
+- **`TODO.md`** — Full rewrite: removed all fully-implemented sections (P0.5, P2 webhooks/API hardening, P1 notifications/downloads/metadata); added new **P2 — AI Automation Infrastructure** section with 11 server-side feature items from `docs/ai_automation.md`; updated execution order.
+
 ## 2026-02-22 - Security hardening cleanup, additional tests, and documentation
 
 ### Changes

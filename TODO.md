@@ -1,197 +1,97 @@
 # Dicefiles TODO (New Feature Roadmap)
 
-Last updated: 2026-02-21
+Last updated: 2026-02-22
 
 ## Product Direction
 
-Build Dicefiles into the best lightweight collaboration room for ephemeral files, requests, and fast archival workflows.
+Build Dicefiles into the best lightweight collaboration room for ephemeral files,
+requests, and fast archival workflows.
 
-## P0 - Validate and Ship High-Impact Features
+## P0 — Complete
 
-### 1) In-browser PDF / Book Reader ✅ Done (v1.1.0)
+### Request Workflow — Open Filter
 
-- [x] Add a first-class "Read" action for PDF files.
-- [x] Render PDFs in a modal viewer with page navigation, zoom, fit-width, and fullscreen.
-- [x] Keep "Download" as a separate explicit action.
-- [x] Streaming/range support — only pages near the viewport are fetched.
-- [x] Graceful fallback when PDF fails to render (OBS.trackPreviewFailure everywhere).
-- [x] EPUB and MOBI reader shipped alongside PDF in same drawer component.
-- [x] Persist last-read page per user per file — WebtoonReader uses `offsetHeight`-based scroll restoration with debounced save; BookReader restores page index on re-open.
+The last outstanding item from the request workflow feature:
 
-### 2) File Preview Reliability — Mostly Done (v1.1.0)
+- [ ] Add "Show only open requests" quick filter button in the files panel.
 
-- [x] Add preview health checks and fallback chain for PDF/EPUB/MOBI cover generation.
-- [x] Expose diagnostics for failed preview jobs (`OBS.trackPreviewFailure` + metrics counters).
-- [x] Add retry queue for transient preview failures — `lib/previewretry.js`; Redis sorted set with exponential backoff (5/15/45 min), max 3 retries; per-hash distributed lock; started per HTTP worker.
+---
 
-### 3) Request Workflow Maturity — Mostly Done
+## P1 — Collaboration Features
 
-**Status states**: `open` (default), `fulfilled`, removed (deleted outright — no tombstone).
-
-**Click-to-manage modal** — clicking any request (open or fulfilled) opens a `RequestViewModal`:
-
-- Displays: requester's name, request text, optional reference image.
-- **Fulfill** (visible when `open`): accepts file drops/picks (any type); uploads them with a
-  progress bar inside the modal, then marks the request as fulfilled and closes.
-  If no files are dropped, marks as fulfilled immediately (useful for out-of-band uploads).
-- **Reopen** (visible when `fulfilled`): resets status to `open` — for correcting wrong
-  fulfillments.
-- **Remove** (mod-only): deletes the request entirely from the room.
-
-**Fulfilled-request styling**: strikethrough name text + dark grey colour. Clicking still works
-so Reopen is always discoverable.
-
-**Fulfillment file linking**: files uploaded through the Fulfill flow carry
-`meta.fulfilledRequestKey` (the request key) and `meta.requesterNick` (the original requester's
-display name). These files show an extra tooltip entry: **"Requested by: {requester_name}"**
-— only appears on files that were uploaded as fulfillments.
-
-**Implementation checklist**:
-
-- [x] `lib/request.js` — add `status` (`"open"` default) and `fulfilledByNick` fields;
-      add `EMITTER.setStatus(key, status, byNick)`.
-- [x] `lib/client.js` — add `requeststatus` socket event handler; Fulfilled/Reopen by any
-      connected user; Remove by mod only.
-- [x] `lib/upload.js` — read `req.query.fulfillsRequest`; if valid, look up requester name and
-      store `meta.fulfilledRequestKey` + `meta.requesterNick` on the new upload.
-- [x] `client/files/requestmodal.js` — add `RequestViewModal` class (named export); upload
-      zone accepts any MIME; progress bar; resolves with `{ action, files }`.
-- [x] `client/files/upload.js` — add optional `fulfillsRequest` property; included in PUT
-      query string when set.
-- [x] `client/files/file.js` — route request clicks to `owner.openRequestView()`; apply
-      `.request-fulfilled` CSS class when `status === "fulfilled"`.
-- [x] `client/files.js` — add `openRequestView(fileInst)` method; orchestrates modal +
-      upload-queue + requeststatus emit.
-- [x] `client/file.js` — `FileTooltip` shows "Requested by: {nick}" when
-      `meta.requesterNick` is present.
-- [x] CSS — `.request-file.request-fulfilled > .name`: strikethrough + `#888` colour;
-      `RequestViewModal` layout (progress bar, staged files list, preview).
-- [ ] Add "Show only open requests" quick filter button.
-- [x] Wire webhook `request_fulfilled` event on status transition (currently fires on
-      request deletion only; should also fire when `setStatus("fulfilled")` is called).
-
-## P0.5 - Security and Reliability Hardening (Audit-Derived)
-
-### 3.1) Secret Management and Token Safety
-
-- [x] Remove the shared default secret from runtime usage; require a unique per-installation secret via env/config.
-- [x] Add startup validation that refuses to run with weak/default secret values.
-- [x] Document secure secret generation and rotation procedure.
-
-### 3.2) Authentication Hardening
-
-- [x] Strengthen password policy (length + character classes + basic entropy/reuse checks).
-- [x] Add optional progressive login throttling/cooldown by account and IP.
-- [x] Add explicit security event logs for failed login attempts and lockout/throttle actions.
-
-### 3.3) Dependency and API Modernization
-
-- [x] Replace deprecated `request` / `request-promise-native` usage with `fetch`/`undici`.
-- [x] Audit and upgrade high-risk dependencies (Express/Helmet and related middleware path).
-- [x] Add automated dependency scanning in CI (audit/SCA) with fail thresholds.
-
-### 3.4) Input Validation and Content Safety
-
-- [x] Centralize server-side input validation for room/user/request/chat payloads.
-- [x] Add stricter validation for upload metadata and user-generated text fields.
-- [x] Add regression tests for XSS-safe rendering in chat/file/request surfaces.
-
-### 3.5) Runtime Stability and Memory Hygiene
-
-- [x] Add lifecycle cleanup and size caps for long-lived Maps/Sets (e.g. reconnect/resume trackers).
-- [x] Add periodic diagnostics for in-memory structures (counts, high-water marks).
-- [x] Add targeted stress tests for reconnect/disconnect churn.
-
-### 3.6) Flood/Rate Control Improvements
-
-- [x] Review current flood controls for bypass vectors; combine account + IP + room scopes.
-- [x] Add distributed-safe rate limits for multi-worker behavior.
-- [x] Add operator-tunable token-bucket limits for chat/upload/api endpoints.
-
-### 3.7) Configuration and Security Posture Consistency
-
-- [x] Align documented/default ports and deployment examples to avoid ambiguity.
-- [x] Verify effective Helmet/CSP/HSTS behavior in production and document expected headers.
-- [x] Validate Firejail/jail profile behavior at startup and clearly report fallback mode.
-
-### 3.8) Crypto Hygiene Notes
-
-- [x] Keep MD5 usage only where externally required (Gravatar hashing); avoid MD5 for any security-sensitive purpose.
-- [x] Add code comments/docs clarifying why that MD5 usage is non-authentication and non-integrity-critical.
-
-## P1 - Collaboration and Download Power Features
-
-### 4) Smart Collections and Saved Filters
+### Smart Collections and Saved Filters
 
 - [ ] Save filter presets per user (e.g. "Books", "Images", "Requests").
 - [ ] Add one-click "Only NEW since last visit" view.
 - [ ] Add optional sort presets (newest, largest, expiring soon).
 
-### 5) Native Browser Notifications (Chrome/Firefox)
+---
 
-- [x] Add native notifications for new files and new requests via the Web Notifications API.
-- [x] Ask notification permission only after explicit user opt-in (not on page load).
-- [x] Add per-room toggles: `notify files`, `notify requests`, `mute room`.
-- [x] De-duplicate notifications on reconnect/reload so old items are not re-notified.
-- [x] Clicking a notification should focus/open the room and highlight the related item.
+## P2 — AI Automation Infrastructure
 
-### 6) Advanced Batch Downloads (Done)
+Based on `docs/ai_automation.md`. Server-side building blocks that unlock agent
+integration. Polling, webhooks, upload, and request-fulfillment APIs are already
+implemented — these are the gaps.
 
-- [x] Add retry-on-failure with per-file status list.
-- [x] Add "skip existing filename" option.
-- [x] Add resumable queue persistence in browser (recover after refresh).
-- [x] Add post-download report (success/failed/skipped).
+### Server API Gaps
 
-### 7) Better Metadata for Library Use ✅ Done (v1.0.0 + v1.1.0)
+- [ ] `GET /api/v1/file/:hash` — single-file metadata lookup (agents need a point
+      query; the only current read path is the full-list scan).
+- [ ] `PATCH /api/v1/file/:hash` — post-upload metadata update: tags, description,
+      `ai_caption`, `ocr_text_preview`. Requires a separate `files:write` API scope
+      distinct from upload scope to prevent over-privileged keys.
+- [ ] `POST /api/v1/file/:hash/asset/cover` — accept a JPEG from an agent as the
+      file's cover thumbnail; served through the existing gallery thumbnail pipeline.
+- [ ] `POST /api/v1/room/:id/chat` — agents post a chat message (`text`, `nick`,
+      optional `replyTo`). Enables conversational agent integration.
+- [ ] `GET /api/v1/room/:id/snapshot` — compact room summary: file count, total bytes,
+      open requests, unique uploaders, oldest expiry.
+- [ ] `GET /api/v1/metrics` — Prometheus text-format (or JSON) metrics export from the
+      counters already tracked in `lib/observability.js`.
+- [ ] `GET /api/v1/audit` — paginated JSON audit log (uploads, deletes, rate-limit
+      hits, auth failures) with `since` and `limit` params; `admin:read` scope required.
 
-- [x] Detect and display richer book metadata: title, author, pages — PDF (exiftool), EPUB (OPF spine walk), MOBI/AZW/AZW3 (PalmDoc text_length).
-- [x] Cover thumbnails for images, video, audio, PDF, EPUB, MOBI, AZW, AZW3.
-- [x] Add optional tag suggestion from filename/metadata.
-- [x] Add quick copy for direct file link + metadata snippet.
+### Upload and Ingestion
 
-## P2 - Automation and Ecosystem
+- [ ] `POST /api/v1/batch-upload` — accept a JSON array of `{url, name, roomid}`
+      objects; server fetches each URL with size cap and timeout, stores as normal uploads.
+- [ ] Structured request hints — extend request creation to accept a `hints` object
+      (`{type, keywords, max_size_mb}`) alongside free text for agent pattern-matching.
 
-### 8) Automation API Hardening (Agent-ready)
+### Workflow and Coordination
 
-- [x] Stabilize API versioning (`/api/v1`).
-- [x] Publish machine-friendly API examples for skill builders.
-- [x] Add scoped API keys (read-only, upload, mod actions).
-- [x] Add per-endpoint rate limiting + audit logs.
+- [ ] Agent request claiming — `claimedBy` field with TTL auto-release; visible in the
+      request UI while the agent processes it.
+- [ ] `POST /api/v1/agent/subscriptions` — save named server-side filter presets;
+      server evaluates at upload time and routes only matching webhook events to each
+      subscriber.
 
-### 9) Webhooks and Integrations
+---
 
-- [x] Add outbound webhooks for `file_uploaded`, `request_created`, `request_fulfilled`, `file_deleted`.
-- [x] Add signed webhook payloads.
-- [x] Add simple webhook retry policy and dead-letter logging.
+## P3 — Profile and Community Layer
 
-## P3 - Profile and Community Layer
-
-### 10) Profile Evolution
+### Profile Evolution
 
 - [ ] Add profile tabs: Overview, Achievements, Activity.
 - [ ] Add recent uploads panel with filters.
 - [ ] Add optional public "favorite tags" or "currently looking for" block.
-- [ ] Persist last-read page per user per file (deferred from P0 reader).
+- [ ] Persist last-read page per user per file.
 
-### 11) Achievement System Improvements
+### Achievement System Improvements
 
 - [ ] Replace placeholder icons with a consistent high-quality icon set.
 - [ ] Add hover tooltips with unlock rationale and progress.
 - [ ] Add seasonal/limited achievements behind feature flags.
 
+---
+
 ## Technical and Platform Improvements
 
-### 12) Node Runtime and Dependency Safety
+### Node Runtime and Dependency Safety
 
-- [x] Node 18 runtime policy documented in `AGENTS.md`.
-- [ ] Add startup guard that warns/fails on unsupported Node major.
-- [ ] Add CI matrix for Node 18 plus future-canary check jobs.
+- [ ] Add startup guard that warns/fails on unsupported Node major version.
 
-### 13) Observability and Ops
-
-- [x] Add structured logs for upload/download/request lifecycle.
-- [x] Add metrics counters (uploads, downloads, preview failures, request conversions).
-- [x] Add lightweight health endpoint that checks Redis and storage writeability.
+---
 
 ## Research Backlog
 
@@ -204,7 +104,7 @@ display name). These files show an extra tooltip entry: **"Requested by: {reques
 
 ## P1.5 — Archive Viewer and Comic Book Reader
 
-Last updated: 2026-02-21
+Last updated: 2026-02-22
 
 Two related features sharing most of the same infrastructure: a generic archive
 contents browser (useful for STL packs, asset bundles, mod archives) and a
@@ -622,12 +522,11 @@ Phase 4 — 7z / CB7 (requires apt install p7zip-full)
 
 ---
 
-## Execution Order Proposal
+## Execution Order
 
-1. ~~PDF/EPUB/MOBI Reader feasibility + prototype.~~ ✅ Done (v1.1.0)
-2. ~~Preview reliability.~~ ✅ Done — request status flow still outstanding.
-3. Comic reader Phase 1 (CBZ, pure JS, zero new deps).
-4. Archive browser Phase 3 (ZIP + RAR viewer with per-file extract).
-5. Request workflow maturity (status states, fulfilled marker, open filter).
-6. Security hardening P0.5 (secret mgmt, auth hardening, dep modernization).
-7. Profile/achievement polish.
+1. Open requests filter (P0 — final item completing the request workflow).
+2. Comic reader Phase 1 (P1.5 — CBZ, pure JS, zero new deps).
+3. Archive browser Phase 3 (P1.5 — ZIP + RAR listing and per-file extraction).
+4. AI Automation server API gaps (P2 — start with the high-value endpoints).
+5. Smart Collections (P1).
+6. Profile and achievement polish (P3).

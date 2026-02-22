@@ -1,0 +1,35 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+    open-pull-requests-limit: 10
+    groups:
+      # Group minor/patch production dependency updates together
+      production-minor-patch:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      # Group all dev dependency updates together
+      dev-deps:
+        dependency-type: development
+    ignore:
+      # Major upgrades for these packages require manual vetting
+      - dependency-name: "webpack"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "webpack-cli"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "pdfjs-dist"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "socket.io"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "socket.io-client"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "express"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "redis"
+        update-types: ["version-update:semver-major"]

@@ -1,0 +1,13 @@
+# Generated or minified output — never lint these
+static/
+
+# Non-JS source directories
+uploads/
+views/
+scripts/
+contrib/
+core/
+images/
+
+# Test files need the jest environment configured separately
+tests/
