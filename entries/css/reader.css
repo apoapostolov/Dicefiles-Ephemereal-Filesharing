@@ -438,6 +438,12 @@ body.focus-reading #reader-content {
   flex: 1 1 0;
 }
 
+/* In focus mode, vertically center the A5 page frame in the viewport */
+body.focus-reading #reader-content:has(.reader-book-iframe) {
+  justify-content: center;
+  padding: 0;
+}
+
 /* ── "Read Now" overlay button in gallery ────────────────────────────────── */
 
 /* Positioned within #gallery (which now has position:relative).

@@ -30,7 +30,11 @@ module.exports = {
   // how many web workers to run
   workers: Math.max(NUM_CPUS + 1, 2),
 
-  // For crypto shit, probably wanna customize it, or not, not that important
+  // Session signing secret.
+  // MUST be changed to a unique, high-entropy value (≥16 random chars) in production.
+  // The default "dicefiles" value triggers a startup warning if not overridden.
+  // Override in ~/.config/dicefiles.json or ./.config.json:
+  //   { "secret": "your-long-random-secret-here" }
   secret: "dicefiles",
 
   // Path to upload directory
