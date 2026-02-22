@@ -66,7 +66,7 @@
         Achievements
         <span class="tab-badge"><%=info.achievements.unlocked%> / <%=info.achievements.total%></span>
       </button>
-      <% if (info.activity !== null) { %>
+      <% if (info.activity != null) { %>
       <button class="profile-tab" data-tab="activity" role="tab" aria-selected="false">Latest Activity</button>
       <% } %>
     </nav>
@@ -136,7 +136,7 @@
       </div>
     </section>
 
-    <% if (info.activity !== null) { %>
+    <% if (info.activity != null) { %>
     <section class="profile-activity">
       <% if (info.activity.length === 0) { %>
       <p class="activity-empty">No activity recorded yet.</p>

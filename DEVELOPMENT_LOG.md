@@ -1,6 +1,11 @@
 # Dicefiles Development Log
 
-## 2026-02-22 — Fix profile-stats stretch
+## 2026-02-23 — Fix activity null guard in user.ejs, run tests, update changelog
+
+- `views/user.ejs` — Fixed two `info.activity !== null` guards to use loose `!= null` (catches both `null` and `undefined`). The test fixture in `tests/views/render.test.js` does not set `activity` at all, so the strict `!== null` guard didn't catch `undefined` and `info.activity.length` threw a TypeError. Root cause: template was written expecting only `null`/array but the view-render test supplies a minimal fixture without the key. 324/324 tests now pass.
+- `CHANGELOG.md` — Added four new `[Unreleased]` entries: Latest Activity tab (Added), Per-tile gallery download button (Added), Uploader pill opens profile page (Changed), File type icon always downloads (Changed). Re-sorted Added and Changed sections by user-impact tier per AGENTS.md rules. Entries considered and deliberately omitted: internal CSS micro-polish commits (activity table centering, align-self fixes), git metadata changes, DEVELOPMENT_LOG updates.
+
+
 
 - `entries/css/page.css` — Added `align-self: start` to `.profile-stats`. Same root cause as the previous `.profile-tabbed` fix: `#userprofile` is a CSS grid whose cells default to `stretch`, causing the stats box to expand to the full row height alongside the (shorter) activity table.
 
