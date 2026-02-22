@@ -1,5 +1,12 @@
 # Dicefiles Development Log
 
+## 2026-02-22 — Gallery tile download button, uploader pill navigation, activity table redesign
+
+- `client/files/file.js` — Added `galleryDlEl` (`a.gallery-dl.i-download`) at the end of the file constructor. Button is absolutely positioned top-right of each gallery tile, triggers `this.download()` on click with `stopPropagation` so it never opens the lightbox. Hidden in list mode via CSS.
+- `client/files/file.js` — `setupTags`: split `usernick` tag handling into two passes — one for `tag-user` class (unchanged), one for the click-to-profile listener. Also added the same click listener for `tn === "user"` when `meta.account` exists. Both add `tag-user-link` class so CSS can target clickable pills specifically.
+- `entries/css/files.css` — Added `.tag-user-link { cursor: pointer }` and `hover opacity` rules for clickable uploader pills. Added `.gallery-dl` rules: `display: none` in list mode; in gallery mode `position: absolute; top/right 0.5rem; z-index: 9; border-radius: 50%` with `opacity: 0` that fades to `1` on tile `:hover`, plus `backdrop-filter: blur(2px)` for glass effect.
+- `entries/css/page.css` — Activity table fully redesigned: removed all `border-bottom` lines from header and rows; header now uppercase small text with `letter-spacing: 0.06em`; rows use `nth-child(odd)` for a subtle alternating fill instead of explicit borders; `.activity-type` changed to `text-align: center` with symmetric padding so FA icons are properly centered in their column; overall padding increased to `0.75rem` per column.
+
 ## 2026-02-22 — File icon downloads, uploader pill profile link, gallery download button
 
 - `client/files/file.js` — `oniconclick` refactored: now always calls `nukeEvent` and `this.download()` for all users so the type icon always triggers a file download. Mods/owners additionally trigger `this.owner.select()` so selection still works. Previously icon click only worked as selection for mods and did a bare anchor navigate for regulars.
