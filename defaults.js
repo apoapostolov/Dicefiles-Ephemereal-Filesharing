@@ -246,4 +246,8 @@ module.exports = {
   // than raw HTML scraping). Falls back to HTML <title> scraping when unset or
   // when the API call fails. Get a key at https://www.opengraph.io/
   opengraphIoKey: "",
+
+  // Enable seasonal/event achievements. When false (default) seasonal
+  // achievements are not computed or displayed. Set true to activate.
+  seasonalAchievements: false,
 };

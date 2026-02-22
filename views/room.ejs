@@ -716,6 +716,7 @@
 
   <script>
     window.__CV__ = "<%- v %>";
+    window.__ACCOUNT__ = "<%- (user && user.account) || '' %>";
   </script>
   <script src="/client.js?v=<%=v%>"></script>
 </body>

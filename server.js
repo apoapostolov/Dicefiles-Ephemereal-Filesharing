@@ -1,4 +1,15 @@
-"use strict";
+// Node version guard — must run before any require() to surface version mismatches early.
+{
+  const [major] = process.versions.node.split(".").map(Number);
+  if (major < 20) {
+    process.stderr.write(
+      `ERROR: Node.js 20+ required, found ${process.versions.node}\n`,
+    );
+    process.exit(1);
+  }
+}
+
+("use strict");
 
 require("./lib/loglevel").patch();
 const config = require("./lib/config");

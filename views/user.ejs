@@ -58,45 +58,117 @@
       </div>
     </section>
 
-    <section class="profile-message">
-      <h3>Profile Message</h3>
-      <% if (info.canEditMessage) { %>
-      <form id="profile-message-form" action="javascript:">
-        <input type="hidden" id="profile-token" value="<%=token%>">
-        <textarea
-          id="profile-message-input"
-          name="message"
-          maxlength="2000"
-          placeholder="Write a message for visitors. Markdown and links are supported."><%=user.message || ""%></textarea>
-        <div class="form-actions">
-          <span id="profile-message-status" class="muted"></span>
-          <button id="profile-message-save" type="submit">Save Message</button>
-        </div>
-      </form>
-      <% } %>
-      <div class="profile-message-rendered" id="profile-message-rendered">
-        <% if (info.messageHtml) { %>
-        <%-info.messageHtml%>
-        <% } %>
-      </div>
-    </section>
+    <nav class="profile-tabs" role="tablist">
+      <button class="profile-tab active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
+      <button class="profile-tab" data-tab="achievements" role="tab" aria-selected="false">Achievements <span class="tab-badge"><%=info.achievements.unlocked%></span></button>
+      <button class="profile-tab" data-tab="activity" role="tab" aria-selected="false">Activity</button>
+    </nav>
 
-    <section class="profile-achievements">
-      <h3>Achievements</h3>
-      <div class="achievement-grid">
-        <% for (const a of info.achievements.all) { %>
-        <article class="achievement <%=a.unlocked ? "unlocked" : "locked"%> rarity-<%=a.rarity%>" title="<%=a.description%>">
-          <span class="achievement-icon <%=a.icon%>" aria-hidden="true"></span>
-          <h4><%=a.title%></h4>
-          <p><%=a.description%></p>
-          <small><%=a.unlocked ? "Unlocked" : "Locked"%></small>
-        </article>
+    <div class="profile-panel" data-panel="overview">
+      <section class="profile-message">
+        <h3>Profile Message</h3>
+        <% if (info.canEditMessage) { %>
+        <form id="profile-message-form" action="javascript:">
+          <input type="hidden" id="profile-token" value="<%=token%>">
+          <textarea
+            id="profile-message-input"
+            name="message"
+            maxlength="2000"
+            placeholder="Write a message for visitors. Markdown and links are supported."><%=user.message || ""%></textarea>
+          <div class="form-actions">
+            <span id="profile-message-status" class="muted"></span>
+            <button id="profile-message-save" type="submit">Save Message</button>
+          </div>
+        </form>
         <% } %>
-      </div>
-    </section>
+        <div class="profile-message-rendered" id="profile-message-rendered">
+          <% if (info.messageHtml) { %>
+          <%-info.messageHtml%>
+          <% } else if (!info.canEditMessage) { %>
+          <p class="muted">No profile message yet.</p>
+          <% } %>
+        </div>
+      </section>
+
+      <section class="profile-interests">
+        <h3>Interests</h3>
+        <% if (info.canEditMessage) { %>
+        <form id="profile-interests-form" action="javascript:">
+          <input type="hidden" id="profile-interests-token" value="<%=token%>">
+          <input
+            type="text"
+            id="profile-interests-input"
+            name="interests"
+            maxlength="200"
+            placeholder="e.g. sci-fi, manga, audiobooks, horror..."
+            value="<%=user.interests || ""%>">
+          <div class="form-actions">
+            <span id="profile-interests-status" class="muted"></span>
+            <button id="profile-interests-save" type="submit">Save Interests</button>
+          </div>
+        </form>
+        <% } else if (user.interests) { %>
+        <p class="interests-display"><%=user.interests%></p>
+        <% } else { %>
+        <p class="muted">No interests listed.</p>
+        <% } %>
+      </section>
+    </div>
+
+    <div class="profile-panel hidden" data-panel="achievements">
+      <section class="profile-achievements">
+        <h3>Achievements <span class="muted">— <%=info.achievements.unlocked%> of <%=info.achievements.total%> unlocked</span></h3>
+        <div class="achievement-grid">
+          <% for (const a of info.achievements.all) { %>
+          <article
+            class="achievement <%=a.unlocked ? "unlocked" : "locked"%> rarity-<%=a.rarity%>"
+            data-kind="<%=a.kind%>"
+            data-current="<%=a.current%>"
+            data-required="<%=a.required%>"
+            data-rarity="<%=a.rarity%>"
+            title="<%=a.description%>">
+            <span class="achievement-icon <%=a.icon%>" aria-hidden="true"></span>
+            <h4><%=a.title%></h4>
+            <p><%=a.description%></p>
+            <% if (a.unlocked) { %>
+            <small class="achievement-status unlocked-label">Unlocked</small>
+            <% } else { %>
+            <small class="achievement-status locked-label">
+              <span class="progress-bar-wrap"><span class="progress-bar-fill" style="width:<%=Math.min(100, Math.floor(a.current / a.required * 100))%>%"></span></span>
+              <%=Math.min(100, Math.floor(a.current / a.required * 100))%>%
+            </small>
+            <% } %>
+          </article>
+          <% } %>
+        </div>
+      </section>
+    </div>
+
+    <div class="profile-panel hidden" data-panel="activity">
+      <section class="profile-activity">
+        <h3>Recent Uploads</h3>
+        <% if (info.recentUploads && info.recentUploads.length) { %>
+        <ul class="activity-list">
+          <% for (const u of info.recentUploads) { %>
+          <li class="activity-item">
+            <span class="activity-icon i-file" aria-hidden="true"></span>
+            <div class="activity-meta">
+              <a href="/g/<%=u.fileKey%>" class="activity-name"><%=u.name || u.fileKey%></a>
+              <span class="activity-type muted"><%=u.type || "file"%></span>
+            </div>
+            <span class="activity-time muted" data-ts="<%=u.uploaded%>"></span>
+          </li>
+          <% } %>
+        </ul>
+        <% } else { %>
+        <p class="muted">No recent uploads recorded.</p>
+        <% } %>
+      </section>
+    </div>
   </article>
   <% if (info.canEditMessage) { %>
-  <script src="/user.js?v=<%=v%>"></script>
+  <script>window.__PROFILE_TOKEN__ = "<%=token%>";</script>
   <% } %>
+  <script src="/user.js?v=<%=v%>"></script>
   <%- include("footer"); %>
 </body>

@@ -85,7 +85,9 @@ body#page {
   border-radius: 6px;
   border: 1px solid var(--hairline) !important;
   background: rgba(255, 255, 255, 0.05);
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
 #page #account input[type="text"]:focus,
@@ -282,7 +284,10 @@ body#page {
     rgba(255, 255, 255, 0.015)
   );
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-  transition: transform 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease;
   min-height: 170px;
   display: flex;
   flex-direction: column;
@@ -389,6 +394,193 @@ body#page {
   color: #ff8b8b;
 }
 
+/* ── Profile tabs ─────────────────────────────────────────────────────────── */
+
+#page #userprofile .profile-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--hairline);
+  padding: 0;
+  margin: 0;
+  background: transparent;
+}
+
+#page #userprofile .profile-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--dark-fg);
+  cursor: pointer;
+  font-size: 0.92rem;
+  padding: 0.55rem 1.1rem;
+  margin-bottom: -1px;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+#page #userprofile .profile-tab:hover {
+  color: var(--text-fg);
+}
+
+#page #userprofile .profile-tab.active {
+  color: var(--text-fg);
+  border-bottom-color: var(--accent, #7c93ff);
+  font-weight: 600;
+}
+
+#page #userprofile .tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.3em;
+  height: 1.3em;
+  border-radius: 999px;
+  background: rgba(124, 147, 255, 0.18);
+  color: var(--text-fg);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0 0.3em;
+}
+
+/* ── Profile panels ────────────────────────────────────────────────────────── */
+
+#page #userprofile .profile-panel {
+  display: contents;
+}
+
+#page #userprofile .profile-panel.hidden {
+  display: none;
+}
+
+/* ── Interests block ──────────────────────────────────────────────────────── */
+
+#page #userprofile .profile-interests {
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1rem;
+}
+
+#page #userprofile #profile-interests-input {
+  width: 95%;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  padding: 0.5rem 0.8rem;
+  background: var(--surface-1, rgba(255, 255, 255, 0.04));
+  color: var(--text-fg);
+  font-size: 0.95rem;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#page #userprofile .interests-display {
+  margin: 0;
+  color: var(--text-fg);
+  font-size: 0.96rem;
+}
+
+/* ── Achievement progress bar ────────────────────────────────────────────── */
+
+#page #userprofile .progress-bar-wrap {
+  display: inline-block;
+  width: 60px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  vertical-align: middle;
+  margin-right: 0.35rem;
+  overflow: hidden;
+}
+
+#page #userprofile .progress-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--rarity-edge, rgba(145, 153, 163, 0.5));
+  transition: width 0.3s ease;
+}
+
+#page #userprofile .achievement-status {
+  font-size: 0.78rem;
+}
+
+#page #userprofile .unlocked-label {
+  color: var(--rarity-fg, #c6ccd4);
+}
+
+#page #userprofile .locked-label {
+  color: var(--dark-fg);
+}
+
+/* ── Activity list ────────────────────────────────────────────────────────── */
+
+#page #userprofile .profile-activity {
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1rem;
+}
+
+#page #userprofile .activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+#page #userprofile .activity-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid var(--hairline);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+#page #userprofile .activity-item .activity-icon {
+  flex-shrink: 0;
+  color: var(--dark-fg);
+}
+
+#page #userprofile .activity-item .activity-icon::before {
+  font-size: 1.1rem;
+}
+
+#page #userprofile .activity-meta {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  overflow: hidden;
+}
+
+#page #userprofile .activity-name {
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 32ch;
+}
+
+#page #userprofile .activity-type {
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+#page #userprofile .activity-time {
+  font-size: 0.78rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 @media (max-width: 920px) {
   #page #userprofile {
     min-width: 0;
@@ -402,6 +594,11 @@ body#page {
 
   #page #userprofile .profile-stats {
     grid-template-columns: 1fr;
+  }
+
+  #page #userprofile .profile-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
   }
 }
 
@@ -427,7 +624,6 @@ body#page {
   justify-content: space-around;
 }
 
-
 #discover {
   width: 100%;
   min-width: 50vw;
@@ -448,11 +644,11 @@ body#page {
 }
 
 #modlog .sortable td:nth-child(4) {
-  white-space:unset;
+  white-space: unset;
 }
 
 .modlogstrip {
-  font-size: small
+  font-size: small;
 }
 
 .modlogstrip * {

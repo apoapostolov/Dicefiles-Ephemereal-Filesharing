@@ -1,5 +1,92 @@
 # Dicefiles Development Log
 
+## 2026-02-22 - P3 profile/community layer, server-side read progress, Node guard, TODO overhaul
+
+### Summary
+
+Implemented all P3 Profile and Community Layer items, the Technical Platform
+Improvements (Node version guard), and overhauled TODO.md and DEVELOPMENT_LOG.md.
+
+### Root cause / motivation
+
+P3 items were queued since prior sessions — profile was a flat single-page with no
+tabs, interests field, activity history, or achievement progress detail.
+Server-side reading-progress sync was entirely absent (localStorage only), meaning
+progress was lost on browser cache wipes. The Node startup guard was a missing
+safety check. TODO.md had grown to include lengthy spec text and completed items
+that cluttered the working task list.
+
+### Changed files
+
+- **`server.js`** — Added Node ≥ 20 startup guard before all `require()` calls;
+  exits with a clear message if run on an older major version.
+
+- **`defaults.js`** — Added `seasonalAchievements: false` config key (feature flag
+  to activate seasonal/event achievements without a code deploy).
+
+- **`lib/achievements.js`** — Replaced arbitrarily cycling icon lists with tier-
+  aligned icon assignments (common→uncommon→rare→epic→legendary→mythic→ascendant);
+  added `current` field to every achievement object (user's actual stat value, for
+  progress bars); added `computeSeasonalAchievements(stats)` stub exported and gated
+  on `CONFIG.get("seasonalAchievements")`; added `CONFIG` import.
+
+- **`lib/user.js`** — Added `zadd` and `zremrangebyrank` to redis method imports;
+  added `"interests"` to `ADOPT_OFILTER` and interests-length validation (≤ 200 chars)
+  in `adopt()`; added `ACTIVITY_KEY` helper and `ACTIVITY_MAX = 50` constant; added
+  `User.recordRecentUpload(account, info)` (zadd score=ts + trim to 50) and
+  `User.getRecentUploads(account, limit)` (zrevrange, JSON-parsed) static methods.
+
+- **`lib/upload.js`** — Added `require("./user")` import; added fire-and-forget
+  `User.recordRecentUpload(...)` call immediately after `acct.addUpload(written)` in
+  the upload finalization path, recording hash, fileKey, name, size, type, and
+  upload timestamp.
+
+- **`lib/httpserver.js`** — Added `info.recentUploads = await User.getRecentUploads(...)` 
+  to the `/u/:user` profile route; added `GET /api/v1/readprogress/:hash` and
+  `POST /api/v1/readprogress/:hash` endpoints using Redis key
+  `readprogress:<account>:<hash>` (TTL 365 days); added `_rpRedis` instance with
+  `get` and `set` methods.
+
+- **`views/room.ejs`** — Added `window.__ACCOUNT__ = "<%- (user && user.account) || '' %>"` 
+  inline script next to `window.__CV__` so the reader client can detect login state
+  for server-progress sync.
+
+- **`views/user.ejs`** — Full profile redesign: added three-tab nav (Overview /
+  Achievements / Activity); moved profile message + new Interests section under
+  Overview panel; moved achievement grid under Achievements panel with progress bars
+  and `data-current`/`data-required`/`data-rarity`/`data-kind` attributes; added
+  Activity panel rendering `info.recentUploads` list; user.js script now always
+  loaded (not only when editable) to power tab switching and timestamp formatting.
+
+- **`entries/css/page.css`** — Added profile tab nav styles (`.profile-tabs`,
+  `.profile-tab`, `.tab-badge`), panel show/hide (`.profile-panel.hidden`), interests
+  block styles, achievement progress bar (`.progress-bar-wrap`, `.progress-bar-fill`),
+  achievement locked/unlocked label styles, and activity list styles (`.activity-list`,
+  `.activity-item`, `.activity-meta`, `.activity-time`); updated responsive block to
+  also handle tab overflow.
+
+- **`entries/user.js`** — Rewrote from scratch: tab switching logic (click handler,
+  aria-selected), activity timestamp relative formatting, profile message form handler
+  (no longer throws on missing form — guards with `if (form)`), new interests form
+  handler (POST to `/api/account` with `interests` field).
+
+- **`client/files/reader.js`** — `saveProgress` now also fires-and-forgets a POST to
+  `/api/v1/readprogress/${fileKey}` when `window.__ACCOUNT__` is truthy; `loadProgress`
+  converted to `async` — tries localStorage first, falls back to server GET (and seeds
+  localStorage) when no local value exists and user is logged in; all 4 call sites
+  updated to `await loadProgress(...)`.
+
+- **`static/`** — Rebuilt via webpack (`--mode=production`).
+
+- **`TODO.md`** — Full overhaul: removed all completed sections (P2 MCP, P3 Profile,
+  Technical Improvements, Research Backlog); converted P1.5 Archive Viewer narrative
+  spec into 14 granular checkboxes; moved full spec text to `docs/archive-viewer.md`;
+  updated Execution Order table.
+
+- **`docs/archive-viewer.md`** — New file: Archive Viewer spec (endpoints, metadata,
+  format support table, security constraints, client UI description) moved here from
+  TODO.md.
+
 ## 2026-02-22 - yauzl streaming ZIP implementation for large CBZ archives
 
 ### Summary
