@@ -1,6 +1,43 @@
 # Dicefiles Development Log
 
-## 2026-02-22 - Feat: Focus-mode A5 centering; P0.5 security hardening (secret warn, native fetch, auth logs)
+## 2026-02-23 - Feat: Allow-Requests / Link-Collection room toggles; Fulfill Request modal UX; P0.5-3.2 password policy
+
+### Summary
+
+Four areas delivered in one session:
+
+1. **Fulfill Request modal — request-text-first**: The "Requested by: X" attribution was previously the first thing shown in the request view modal, making the fulfiller hunt for the actual request description. Request text is now the first and primary element; "Requested by" attribution is secondary below. No other structural changes.
+
+2. **Room Options — Allow Requests toggle** (owner-level, on by default):
+   - New checkbox in the Room Options dialog ("Allow Requests").
+   - When disabled: the "Create Request" toolbar button hides client-side; the server rejects `request` socket events for that room.
+   - Configurable site-wide default via `allowRequests: true|false` in the project config file.
+
+3. **Room Options — Link Collection toggle** (owner-level, on by default):
+   - New checkbox ("Link Collection") in Room Options.
+   - When disabled: the Links Archive toolbar button hides client-side; if the room is in links mode at the moment it is disabled, it exits to normal mode automatically; `Link.create()` is skipped so no new URLs accumulate; the initial links emit sends an empty list.
+   - Configurable site-wide default via `linkCollection: true|false` in the project config file.
+   - Both capabilities are pushed to clients via `exportedRoomConfig` as resolved booleans (room-level config takes precedence, falls back to global `CONFIG.get()`).
+
+4. **P0.5-3.2 — Password policy hardening**: The minimum password length was raised from 8 to 10 characters. The character-class check was tightened to require at least one letter (`[a-zA-Z]`) and one digit (`\d`). The same check was applied to `User.changePassword()` (previously absent — any string was accepted on password change).
+
+### Items deliberately deferred
+
+- Login throttling tuning (3.2) — FloodProtector already covers this; behavioral change risk.
+- Dynamic `Unreleased` blocking of links-mode restoration from localStorage when `linkCollection=false` — would require reading the config at restore time; deferred.
+
+### Changed files
+
+- **`client/files/requestmodal.js`** — `_buildBody()`: reorder request text before "Requested by" attribution.
+- **`defaults.js`** — Add `allowRequests: true` and `linkCollection: true` global defaults with comments.
+- **`lib/room/index.js`** — `exportedRoomConfig`: push resolved `allowRequests` and `linkCollection` booleans.
+- **`lib/client.js`** — `setConfig()`: add `allowRequests` and `linkCollection` cases. `onrequest()`: gate with `effectiveAR`. `init()`: gate links emission on `effectiveLC`. Chat message handler: gate `Link.create()` calls on `collectLinks`.
+- **`views/room.ejs`** — Add `allowrequests` and `linkcollection` checkboxes to `#roomopts-tmpl`.
+- **`client/roomie/optsdlg.js`** — Add both fields to the fields array; init checkboxes from config; send `setconfig` calls in `validate()`.
+- **`client/files.js`** — Add `updateCapabilityButtons()` method; call it in `init()` and on every `config` socket event.
+- **`lib/user.js`** — Strengthen password check in `create()` (10 chars, letter + digit). Apply same check in `changePassword()`.
+
+
 
 ### Summary
 

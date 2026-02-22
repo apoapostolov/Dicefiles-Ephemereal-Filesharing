@@ -4,6 +4,10 @@
 
 ### Added
 
+- **Allow Requests room option**: Room owners now have an "Allow Requests" checkbox in Room Options (on by default). When disabled, the "Create Request" button disappears for all users and the server rejects any attempt to create requests in that room. The site-wide default can be set via `allowRequests: true|false` in the project configuration file.
+
+- **Link Collection room option**: Room owners now have a "Link Collection" checkbox in Room Options (on by default). When disabled, the Links Archive button is hidden, no new chat URLs are archived for that room, and the links view exits automatically if it was open when the setting was changed. The site-wide default can be set via `linkCollection: true|false` in the project configuration file.
+
 - **Request Fulfillment Workflow**: Request tiles are now fully interactive. Clicking any open request opens a management overlay where participants can drag-and-drop or browse for files that fulfill it. Uploaded files are linked to the original request at upload time, recording the requester's name in the upload metadata. After all files are confirmed, the request transitions to "fulfilled" state automatically. Any user can reopen a fulfilled request; moderators can remove one outright. Drag-and-drop into the management overlay is fully intercepted so dropped files go directly to the request rather than the general room upload queue.
 
 - **Fulfilled Request Pill**: Fulfilled requests now display a compact grey "Fulfilled" badge inline after the request title, replacing the previous strikethrough text decoration. The request title is also muted to mid-grey, giving fulfilled items a clearly resolved appearance without cluttering the list.
@@ -23,6 +27,10 @@
 - **Gallery mode hides request tiles**: Files posted as requests have no cover art and are now hidden when gallery view is active, keeping the grid clean.
 
 ### Changed
+
+- **Fulfill Request modal — request description shown first**: The request view overlay (opened when clicking a request tile to fulfill it) now shows the request text prominently as the first piece of information, so the fulfiller immediately sees what needs uploading. The "Requested by" attribution is shown below as secondary context.
+
+- **Stronger password requirements**: New accounts and password changes now require a minimum of 10 characters (up from 8) and must include at least one letter and one digit. The strength check was also applied to password changes, which previously had no strength validation.
 
 - **EPUB/MOBI focus-mode centering**: The A5 page frame is now vertically centered in the viewport when focus reading mode is active, rather than being pinned to the top edge.
 
