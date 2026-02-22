@@ -65,6 +65,7 @@ export default new (class Messages extends EventEmitter {
     this.restoring = [];
     this.bannable = new WeakMap();
     this._waitConfig = null;
+    this.motdEl = null;
 
     try {
       const options = {
@@ -798,15 +799,21 @@ export default new (class Messages extends EventEmitter {
 
   showMOTD() {
     const { motd } = registry.roomie;
-    if (!motd || !motd.length) {
-      return;
+    // Update the welcome-card inline MOTD slot if the welcome card has been
+    // rendered.  If it hasn't yet, addWelcome() will read registry.roomie.motd
+    // at the time it runs and populate the slot itself.
+    if (this.motdEl) {
+      const motdWrap = this.motdEl.closest(".welcome_motd_wrap");
+      this.motdEl.textContent = "";
+      if (motd && motd.length) {
+        const motdSpan = dom("span", {});
+        this.addMessageParts(motdSpan, motd);
+        this.motdEl.appendChild(motdSpan);
+        motdWrap && motdWrap.classList.remove("hidden");
+      } else {
+        motdWrap && motdWrap.classList.add("hidden");
+      }
     }
-    this.add({
-      volatile: true,
-      role: "system",
-      user: "MOTD",
-      msg: motd,
-    });
   }
 
   showEndMarker() {
@@ -892,6 +899,18 @@ export default new (class Messages extends EventEmitter {
       registry.config.on("change-roomnamecustom", syncRenameUi);
       registry.config.on("change-roomname", syncRenameUi);
       syncRenameUi();
+    }
+
+    // Populate the MOTD slot with whatever is currently set.
+    const motdWrap = root.querySelector(".welcome_motd_wrap");
+    const motdEl = root.querySelector(".welcome_motd");
+    this.motdEl = motdEl;
+    const currentMotd = registry.roomie && registry.roomie.motd;
+    if (motdEl && currentMotd && currentMotd.length) {
+      const motdSpan = dom("span", {});
+      this.addMessageParts(motdSpan, currentMotd);
+      motdEl.appendChild(motdSpan);
+      motdWrap && motdWrap.classList.remove("hidden");
     }
 
     this.add({

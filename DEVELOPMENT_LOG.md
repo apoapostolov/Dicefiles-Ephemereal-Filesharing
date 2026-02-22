@@ -1,5 +1,18 @@
 # Dicefiles Development Log
 
+## 2026-02-22 — MOTD frame in welcome card + README update
+
+**MOTD moved out of the chat stream into the welcome card**
+
+- `views/room.ejs`: Added `<div class="welcome_motd_wrap hidden"><div class="welcome_motd"></div></div>` inside the `#welcome` template, just before the TOS paragraph. The `hidden` class hides it when no MOTD is set.
+- `client/messages.js`: Added `this.motdEl = null` field to constructor. Modified `addWelcome()` to query the new MOTD slot from the cloned template, store the element reference in `this.motdEl`, and if `registry.roomie.motd` is already populated (i.e. initial config arrived before the welcome card rendered), render the token array via `addMessageParts()` and reveal the slot. Replaced the `showMOTD()` body: instead of injecting a `user: "MOTD"` system chat bubble it now updates the inline slot in-place (clear → re-render → show/hide wrap). If `motdEl` is null (welcome not yet rendered), the method is a no-op — `addWelcome()` will pick up the current value from `registry.roomie.motd` when it runs.
+- `entries/css/room.css`: Added `.welcome_motd_wrap` (margin + full-width box-sizing) and `.welcome_motd` styles — glassmorphic panel with `rgba(255,255,255,0.055)` background, `1px` solid border with a 3 px left accent stripe using `::before`, `border-radius: 10px`, left-aligned text, and `color: rgba(255,255,255,0.88)`. Links inside inherit theme via `var(--dark-fg)`.
+
+**README additions**
+
+- `README.md`: Added `publicRooms`, `roomPruning`, and `roomPruningDays` rows to the Configuration table.
+- `README.md`: Added two Feature bullets — **Public Room Directory** and **Room Pruning** — to the Features section.
+
 ## 2026-02-22 — Room directory: card grid redesign + MOTD column
 
 - `lib/room/index.js` (`Room.list()`): added `motd: config.get("rawmotd") || ""` to the room object so the raw MOTD text is included in the room list payload and cached with the rest.
