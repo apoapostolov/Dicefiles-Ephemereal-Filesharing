@@ -1,7 +1,7 @@
 # Dicefiles - Ephemereal Filesharing for Hobby Communities
 
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![Version](https://img.shields.io/badge/version-1.3.0-blue)
 ![Node](https://img.shields.io/badge/node-LTS-339933)
 ![Redis](https://img.shields.io/badge/redis-required-DC382D)
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
@@ -326,7 +326,7 @@ yarn --version
    sudo service redis-server start
    ```
 
-4. Dicefiles will need to connect to WSL's Redis (IP changes on restart)
+1. Dicefiles will need to connect to WSL's Redis (IP changes on restart)
 
 **Option B - Memurai (Native Windows Redis):**
 
@@ -802,7 +802,7 @@ server {
    which exiftool ffmpeg file
    ```
 
-2. If using a container/VPS/Docker, firejail may refuse to run. Disable it in config:
+1. If using a container/VPS/Docker, firejail may refuse to run. Disable it in config:
 
    ```json
    {
@@ -810,9 +810,9 @@ server {
    }
    ```
 
-3. Windows users: Ensure exiftool, ffmpeg, and imagemagick are in your PATH.
+1. Windows users: Ensure exiftool, ffmpeg, and imagemagick are in your PATH.
 
-4. Check server logs for preview-related errors.
+1. Check server logs for preview-related errors.
 
 ### Files don't upload
 
