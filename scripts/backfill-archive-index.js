@@ -26,7 +26,14 @@ const { listArchive } = require("../lib/archive");
 const DRY_RUN = process.argv.includes("--dry-run");
 const UPLOADS_DIR = CONFIG.get("uploads");
 
-const PLAIN_ARCHIVE_META_TYPES = new Set(["ZIP", "7Z", "RAR", "TAR", "GZIP", "BZ2"]);
+const PLAIN_ARCHIVE_META_TYPES = new Set([
+  "ZIP",
+  "7Z",
+  "RAR",
+  "TAR",
+  "GZIP",
+  "BZ2",
+]);
 const STORAGE_MAP_KEY = "map:upload:storage";
 
 async function main() {
@@ -75,7 +82,8 @@ async function main() {
     // Determine if this upload should be indexed
     const isArchiveType = type === "archive";
     const isPlainArchiveFile =
-      type === "file" && PLAIN_ARCHIVE_META_TYPES.has((meta.type || "").toUpperCase());
+      type === "file" &&
+      PLAIN_ARCHIVE_META_TYPES.has((meta.type || "").toUpperCase());
 
     if (!isArchiveType && !isPlainArchiveFile) {
       skipped++;
@@ -84,7 +92,9 @@ async function main() {
 
     // Skip if already indexed
     if (meta.archive_count) {
-      console.log(`  [skip] ${name} — already indexed (${meta.archive_count} files)`);
+      console.log(
+        `  [skip] ${name} — already indexed (${meta.archive_count} files)`,
+      );
       skipped++;
       continue;
     }
@@ -92,7 +102,9 @@ async function main() {
     // Resolve file path
     const filePath = path.join(UPLOADS_DIR, name[0], name[1], name);
 
-    console.log(`  [index] ${name} (type=${type}, meta.type=${meta.type || "?"})`);
+    console.log(
+      `  [index] ${name} (type=${type}, meta.type=${meta.type || "?"})`,
+    );
 
     if (DRY_RUN) {
       processed++;
@@ -132,7 +144,9 @@ async function main() {
   }
 
   await quit();
-  console.log(`\nDone. processed=${processed} skipped=${skipped} failed=${failed}`);
+  console.log(
+    `\nDone. processed=${processed} skipped=${skipped} failed=${failed}`,
+  );
 }
 
 main().catch((err) => {
