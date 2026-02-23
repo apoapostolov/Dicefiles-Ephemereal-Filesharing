@@ -20,12 +20,9 @@ Dicefiles is a self-hosted, open-source file sharing platform for hobby communit
 - Real-time chat rooms with file sharing
 - User accounts and moderation
 - File previews (images, videos, audio, PDFs)
+- Request system in rooms (including optional links and image references)
 - **In-page streaming PDF, ePub, and MOBI reader** — click "Read Now" on any PDF/ePub/MOBI cover in gallery view to open a reader without leaving the room. EPUB and MOBI files are rendered entirely client-side; cover thumbnails are extracted server-side via a pure Node.js PalmDB binary parser for MOBI/AZW/AZW3, and via `jszip` OPF manifest parsing for EPUB
 - **Links Archive** — all URLs posted in chat are automatically captured and stored; browse them via the link-icon toggle in the room toolbar
-- Configurable limits and flood control
-- TLS/HTTPS support
-- Room creation and management
-- Request system in rooms (including optional links and image references)
 - NEW badges for unseen files and requests
 - Batch download actions for All files or NEW files with progress modal
 - Request-only filter in the room toolbar
@@ -34,18 +31,11 @@ Dicefiles is a self-hosted, open-source file sharing platform for hobby communit
 - Achievement progression across uploaded files, uploaded size, and downloaded size (rarity-tier visual system)
 - Per-user downloaded-bytes tracking shown on profile (`Total Downloaded`)
 - **Public Room Directory** — when `publicRooms` is enabled in the server config, the home page becomes a card-grid directory of all registered rooms sorted by file count. Each card shows the room name, MOTD (if set), and live stats (file count, user count). Disabled by default.
-- **Room Pruning** — when `roomPruning` is enabled (on by default), rooms that have received no new file or chat activity within `roomPruningDays` days (default 21) are automatically and permanently deleted. Activity is tracked on every upload and every chat message.
 - **CB7 Comic Support** — CB7 (7z-based) comic archives are supported alongside CBZ and CBR. Requires `p7zip-full` for server-side extraction; falls back gracefully if not installed (no crash, comics just won't have previews or reading).
-
-## User-Facing Room Features
-
-- **Requests in file list**: Create a request from the room toolbar; requests appear in the file list with distinct styling.
-- **Request links**: Optional product/reference URL per request, opened in a new tab from the request row.
-- **Request images**: Optional cover/reference image in request creation, shown in request hover preview.
-- **NEW awareness**: Files and requests newer than your last seen state are highlighted with `NEW!`.
-- **Fast batch downloads**: `Download NEW` and `Download All` buttons with count badges and progress tracking.
-- **Request filtering**: Dedicated request icon in the filter strip to isolate request entries quickly.
-- **In-page document reader**: PDF, ePub, and MOBI files show a **Read Now** button on their gallery cover. Clicking it opens a full-screen reader that fills the file-list area — no new tab, no download required. See [In-Page Document Reader](#in-page-document-reader) for full details.
+- Room creation and management
+- Configurable limits and flood control
+- TLS/HTTPS support
+- **Room Pruning** — when `roomPruning` is enabled (on by default), rooms that have received no new file or chat activity within `roomPruningDays` days (default 21) are automatically and permanently deleted. Activity is tracked on every upload and every chat message.
 
 ## In-Page Document Reader
 
