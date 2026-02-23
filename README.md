@@ -17,24 +17,25 @@ Dicefiles is a self-hosted, open-source file sharing platform for hobby communit
 
 ## Features
 
-- Real-time chat rooms with file sharing
-- User accounts and moderation
-- File previews (images, videos, audio, PDFs)
-- Request system in rooms (including optional links and image references)
-- **In-page streaming PDF, ePub, MOBI, and comic reader** — click "Read Now" on any PDF/ePub/MOBI/comic cover in gallery view to open a reader without leaving the room. Comics (CBZ, CBR, CB7) are rendered as sequential image viewers; EPUB and MOBI files are rendered entirely client-side; cover thumbnails are extracted server-side via a pure Node.js PalmDB binary parser for MOBI/AZW/AZW3, via `jszip` OPF manifest parsing for EPUB, and via archive extraction for comics.
-- **Links Archive** — all URLs posted in chat are automatically captured and stored; browse them via the link-icon toggle in the room toolbar
-- NEW badges for unseen files and requests
-- Batch download actions for All files or NEW files with progress modal
-- Request-only filter in the room toolbar
-- Per-user file cleanup (users can remove their own uploads/requests)
-- Expanded profile page with editable profile message (owner-only), markdown rendering, and achievement grid
-- Achievement progression across uploaded files, uploaded size, and downloaded size (rarity-tier visual system)
-- Per-user downloaded-bytes tracking shown on profile (`Total Downloaded`)
-- **Public Room Directory** — when `publicRooms` is enabled in the server config, the home page becomes a card-grid directory of all registered rooms sorted by file count. Each card shows the room name, MOTD (if set), and live stats (file count, user count). Disabled by default.
+- Real-time chat rooms with file sharing, inline media embedding, and GIF provider integrations
+- User accounts and moderation with login lockout protection
+- File previews for images, videos, audio, PDFs, and book covers
+- **In-page streaming reader** for PDF, ePub, MOBI, and comics (CBZ/CBR/CB7) with progress persistence, focus mode, typography options, and A5 paginated layout
+- **Archive Viewer** for browsing and selective downloading from ZIP, RAR, 7Z, TAR, and multi-part archives
+- Request system with fulfillment workflow, optional links/images, status pills, and room-level enable/disable
+- Links Archive with automatic URL capture and optional opengraph.io title enrichment
+- Batch download actions for All/New files with progress tracking, concurrency control, and resumable queues
+- NEW badges for unseen files and requests with awareness highlighting
+- Per-user file cleanup and per-account activity tracking
+- Expanded profiles with editable messages, achievement progression (rarity tiers), and Latest Activity tabs
+- **Public Room Directory** when enabled, showing live stats for all registered rooms
+- Room options for requests and link collection, plus automatic room pruning
 - Room creation and management
-- Configurable limits and flood control
-- TLS/HTTPS support
-- **Room Pruning** — when `roomPruning` is enabled (on by default), rooms that have received no new file or chat activity within `roomPruningDays` days (default 21) are automatically and permanently deleted. Activity is tracked on every upload and every chat message.
+- Configurable limits, flood control, and retention policies
+- TLS/HTTPS support with Helmet security headers
+- Automation API with scoped keys, rate limiting, webhooks, and MCP server for AI clients
+- Health endpoint with Redis/storage checks and operational metrics
+- Centralized input validation, security audits, and regression testing
 
 ## In-Page Document and Comic Reader
 
