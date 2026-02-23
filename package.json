@@ -62,8 +62,8 @@
     "gm": "^1.23.1"
   },
   "devDependencies": {
-    "eslint": "^8.57.0",
-    "jest": "^29.7.0",
-    "stylelint-config-recommended": "^5.0.0"
+    "eslint": "^10.0.1",
+    "jest": "^30.2.0",
+    "stylelint-config-recommended": "^18.0.0"
   }
 }
