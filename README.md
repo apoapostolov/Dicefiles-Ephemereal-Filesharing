@@ -21,7 +21,7 @@ Dicefiles is a self-hosted, open-source file sharing platform for hobby communit
 - User accounts and moderation
 - File previews (images, videos, audio, PDFs)
 - Request system in rooms (including optional links and image references)
-- **In-page streaming PDF, ePub, and MOBI reader** — click "Read Now" on any PDF/ePub/MOBI cover in gallery view to open a reader without leaving the room. EPUB and MOBI files are rendered entirely client-side; cover thumbnails are extracted server-side via a pure Node.js PalmDB binary parser for MOBI/AZW/AZW3, and via `jszip` OPF manifest parsing for EPUB
+- **In-page streaming PDF, ePub, MOBI, and comic reader** — click "Read Now" on any PDF/ePub/MOBI/comic cover in gallery view to open a reader without leaving the room. Comics (CBZ, CBR, CB7) are rendered as sequential image viewers; EPUB and MOBI files are rendered entirely client-side; cover thumbnails are extracted server-side via a pure Node.js PalmDB binary parser for MOBI/AZW/AZW3, via `jszip` OPF manifest parsing for EPUB, and via archive extraction for comics.
 - **Links Archive** — all URLs posted in chat are automatically captured and stored; browse them via the link-icon toggle in the room toolbar
 - NEW badges for unseen files and requests
 - Batch download actions for All files or NEW files with progress modal
@@ -31,15 +31,14 @@ Dicefiles is a self-hosted, open-source file sharing platform for hobby communit
 - Achievement progression across uploaded files, uploaded size, and downloaded size (rarity-tier visual system)
 - Per-user downloaded-bytes tracking shown on profile (`Total Downloaded`)
 - **Public Room Directory** — when `publicRooms` is enabled in the server config, the home page becomes a card-grid directory of all registered rooms sorted by file count. Each card shows the room name, MOTD (if set), and live stats (file count, user count). Disabled by default.
-- **CB7 Comic Support** — CB7 (7z-based) comic archives are supported alongside CBZ and CBR. Requires `p7zip-full` for server-side extraction; falls back gracefully if not installed (no crash, comics just won't have previews or reading).
 - Room creation and management
 - Configurable limits and flood control
 - TLS/HTTPS support
 - **Room Pruning** — when `roomPruning` is enabled (on by default), rooms that have received no new file or chat activity within `roomPruningDays` days (default 21) are automatically and permanently deleted. Activity is tracked on every upload and every chat message.
 
-## In-Page Document Reader
+## In-Page Document and Comic Reader
 
-Dicefiles includes a built-in streaming reader for **PDF**, **ePub**, and **MOBI** files. It requires no additional server-side tooling — all parsing and rendering runs entirely in the browser.
+Dicefiles includes a built-in streaming reader for **PDF**, **ePub**, **MOBI**, and **comic** files. It requires no additional server-side tooling — all parsing and rendering runs entirely in the browser.
 
 ### How it works
 
@@ -71,6 +70,13 @@ Dicefiles includes a built-in streaming reader for **PDF**, **ePub**, and **MOBI
 - Parsed natively in the browser using [`@lingo-reader/mobi-parser`](https://github.com/hhk-png/lingo-reader) (MIT) — no conversion or server-side processing.
 - Spine items and chapter HTML are read directly from the MOBI binary; embedded images become `blob:` URLs automatically.
 - Same A5 paginated rendering as ePub: ← / → scroll pages, **PageUp / PageDown** change chapters.
+
+### Comic reader
+
+- Supports CBZ (ZIP), CBR (RAR), and CB7 (7Z) formats.
+- CBZ parsed client-side using [JSZip](https://stuk.github.io/jszip/) (MIT); CBR and CB7 require server-side extraction via system tools (`unrar`, `p7zip-full`).
+- Renders as a sequential image viewer with ← / → navigation for pages.
+- Page counter in the toolbar tracks the current page.
 
 ### Closing the reader
 
