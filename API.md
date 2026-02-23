@@ -1344,3 +1344,84 @@ Success:
 > **Warning:** This operation is intended for emergency use (e.g., legal
 > takedown). It permanently erases all rooms and uploaded files. There is no
 > undo. Protect keys carrying the `admin:rooms` scope accordingly.
+
+---
+
+## 22. Archive Viewer Endpoints (v1.2)
+
+These endpoints expose the contents of ZIP, RAR, 7z, and TAR archives stored in
+Dicefiles. They are read-only and require `files:read` scope (or a valid session).
+Archives larger than 50 MB are rejected to prevent runaway memory usage.
+
+### 22.1 List archive contents
+
+- `GET /api/v1/archive/:key/ls`
+- Scope: `files:read`
+
+Returns every file entry inside the archive with its name, uncompressed size,
+compressed size, and internal path.
+
+Success:
+
+```json
+{
+  "ok": true,
+  "key": "AbCdEfGh",
+  "name": "collection.zip",
+  "format": "zip",
+  "entries": [
+    {
+      "path": "docs/readme.txt",
+      "name": "readme.txt",
+      "size": 1024,
+      "compressedSize": 512
+    },
+    {
+      "path": "images/cover.jpg",
+      "name": "cover.jpg",
+      "size": 204800,
+      "compressedSize": 198000
+    }
+  ]
+}
+```
+
+Errors:
+
+| Status | `err`               | Meaning                                                |
+| ------ | ------------------- | ------------------------------------------------------ |
+| 400    | `not_archive`       | File is not a recognised archive format                |
+| 400    | `archive_too_large` | Archive exceeds 50 MB                                  |
+| 404    | `not_found`         | File key does not exist                                |
+| 500    | `extract_failed`    | The archive could not be opened (corrupt or encrypted) |
+
+### 22.2 Extract a single archive entry
+
+- `GET /api/v1/archive/:key/file?path=<encoded-path>`
+- Scope: `files:read`
+- Response: raw file bytes with `Content-Type` derived from the entry extension.
+
+Streams the decompressed content of a single entry directly to the client.
+Individual entries larger than 50 MB are refused with `400 entry_too_large`.
+
+Query parameters:
+
+| Parameter | Required | Notes                                               |
+| --------- | -------- | --------------------------------------------------- |
+| `path`    | Yes      | URL-encoded internal path, e.g. `docs%2Freadme.txt` |
+
+Errors:
+
+| Status | `err`               | Meaning                                  |
+| ------ | ------------------- | ---------------------------------------- |
+| 400    | `not_archive`       | File is not a recognised archive format  |
+| 400    | `archive_too_large` | Archive exceeds 50 MB                    |
+| 400    | `entry_too_large`   | Entry exceeds 50 MB                      |
+| 400    | `path_required`     | `path` query parameter was missing       |
+| 404    | `not_found`         | File key or internal path does not exist |
+| 500    | `extract_failed`    | The archive could not be opened          |
+
+> **MCP exposure:** `GET /api/v1/archive/:key/ls` is exposed as the
+> `archive_list_contents` MCP tool (tool #14). The single-entry extraction
+> endpoint is not wrapped as an MCP tool because binary download is better
+> served by constructing the URL directly and fetching it out-of-band.

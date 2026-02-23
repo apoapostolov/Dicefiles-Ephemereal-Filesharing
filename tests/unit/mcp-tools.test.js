@@ -113,9 +113,9 @@ function parseResult(result) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("registerTools", () => {
-  it("registers exactly 13 tools", () => {
+  it("registers exactly 14 tools", () => {
     const tools = buildToolMap();
-    expect(Object.keys(tools)).toHaveLength(13);
+    expect(Object.keys(tools)).toHaveLength(14);
   });
 
   it("registers every expected tool name", () => {
@@ -134,6 +134,7 @@ describe("registerTools", () => {
       "download_file",
       "save_subscription",
       "list_subscriptions",
+      "archive_list_contents",
     ];
     for (const name of expected) {
       expect(tools).toHaveProperty(name);
@@ -499,6 +500,34 @@ describe("list_subscriptions", () => {
     const [url, init] = global.fetch.mock.calls[0];
     expect(url).toContain("/api/v1/agent/subscriptions");
     expect(init.method).toBe("GET");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("archive_list_contents", () => {
+  it("calls GET /api/v1/archive/:key/ls", async () => {
+    const tools = buildToolMap();
+    const payload = { ok: true, entries: [] };
+    global.fetch = mockFetchJson(payload);
+
+    const result = await tools.archive_list_contents({ key: "zip99" });
+    const data = parseResult(result);
+
+    expect(data).toEqual(payload);
+    const [url, init] = global.fetch.mock.calls[0];
+    expect(url).toContain("/api/v1/archive/zip99/ls");
+    expect(init.method).toBe("GET");
+  });
+
+  it("URL-encodes keys with special chars", async () => {
+    const tools = buildToolMap();
+    global.fetch = mockFetchJson({ ok: true, entries: [] });
+    await tools.archive_list_contents({ key: "a/b c" });
+    const [url] = global.fetch.mock.calls[0];
+    expect(url).toContain("/api/v1/archive/a%2Fb%20c/ls");
   });
 });
 

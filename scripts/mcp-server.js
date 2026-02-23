@@ -2,7 +2,7 @@
 /**
  * scripts/mcp-server.js — Dicefiles MCP server wrapper
  *
- * Wraps the Dicefiles v1.1 REST API as 13 MCP tools, allowing any MCP-compatible
+ * Wraps the Dicefiles REST API as 14 MCP tools, allowing any MCP-compatible
  * AI client (Claude Desktop, Cursor, Continue, OpenClaw, AutoGen) to interact with
  * a Dicefiles instance directly.
  *
@@ -79,7 +79,7 @@ function wrap(data) {
 
 // ── Tool registration ──────────────────────────────────────────────────────
 
-const server = new McpServer({ name: "dicefiles", version: "1.1.0" });
+const server = new McpServer({ name: "dicefiles", version: "1.2.0" });
 
 /**
  * Register all Dicefiles tools on an McpServer (or mock server for tests).
@@ -391,6 +391,22 @@ function registerTools(srv) {
       "Requires files:read scope.",
     {},
     async () => wrap(await api("GET", "/agent/subscriptions")),
+  );
+
+  // ── 14. archive_list_contents ─────────────────────────────────────────
+  srv.tool(
+    "archive_list_contents",
+    "List every entry inside a ZIP, RAR, 7z, or TAR archive stored in Dicefiles. " +
+      "Returns name, size, compressed size, and path for every file in the archive. " +
+      "Use this to inspect what is inside an archive before deciding whether to download it. " +
+      "Requires files:read scope.",
+    {
+      key: z
+        .string()
+        .describe("File key of the archive (from list_files or get_file)"),
+    },
+    async ({ key }) =>
+      wrap(await api("GET", `/archive/${encodeURIComponent(key)}/ls`)),
   );
 }
 

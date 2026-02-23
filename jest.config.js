@@ -26,6 +26,10 @@ module.exports = {
   // (set to false when debugging a failing test)
   silent: false,
 
+  // Force Jest to exit after all tests complete, preventing hangs from
+  // open handles (Redis/HTTP connections in integration tests)
+  forceExit: true,
+
   // Increase max old space for heavy test suites
   // (Node 18 default is usually sufficient)
 };

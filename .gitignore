@@ -20,3 +20,4 @@ docs/*.draft.md
 server.log
 ops.log
 automation.log
+TODO.md

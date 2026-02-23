@@ -2,7 +2,7 @@
 
 This reference is written for developers who want to connect AI clients (Claude Desktop,
 Cursor, Continue, OpenClaw, AutoGen) to a Dicefiles instance via the
-[Model Context Protocol](https://modelcontextprotocol.io). It covers setup, all 13
+[Model Context Protocol](https://modelcontextprotocol.io). It covers setup, all 14
 exposed tools, security configuration, and worked multi-step workflows.
 
 ---
@@ -81,7 +81,7 @@ Add a `dicefiles` entry under `mcpServers`:
 }
 ```
 
-Restart Claude Desktop. All 13 tools appear in the tool picker. Try: _"Use the
+Restart Claude Desktop. All 14 tools appear in the tool picker. Try: _"Use the
 `server_health` tool to check my Dicefiles instance."_
 
 ---
@@ -327,6 +327,7 @@ beyond localhost.
 | 11  | `download_file`         | None             | No      |
 | 12  | `save_subscription`     | `files:read`     | No      |
 | 13  | `list_subscriptions`    | `files:read`     | No      |
+| 14  | `archive_list_contents` | `files:read`     | No      |
 
 ---
 
@@ -789,6 +790,30 @@ await mcp.call("post_room_chat", {
   nick: "Scribe",
 });
 ```
+
+---
+
+### 4.14 `archive_list_contents`
+
+List every entry inside a ZIP, RAR, 7z, or TAR archive stored in Dicefiles.
+
+- **Maps to**: `GET /api/v1/archive/:key/ls`
+- **Scope**: `files:read`
+- **Input**:
+
+| Field | Type   | Required |
+| ----- | ------ | -------- |
+| `key` | string | Yes      |
+
+- **Response**: `{ ok, key, name, format, entries: [{ path, name, size, compressedSize }] }`
+
+> **What this enables**
+>
+> An agent evaluating an uploaded ZIP can call this tool before deciding to download
+> or extract anything. "Show me what's in `collection.zip`" triggers a single tool
+> call that returns the full file tree — no download, no byte streaming through the
+> context window. The agent can then select specific entries worth extracting via the
+> `GET /api/v1/archive/:key/file?path=…` endpoint documented in API.md § 22.2.
 
 ---
 

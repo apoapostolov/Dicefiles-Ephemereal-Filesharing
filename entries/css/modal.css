@@ -969,3 +969,397 @@
   padding-top: 0.26em;
   padding-bottom: 0.26em;
 }
+
+/* ── Archive Viewer Modal ─────────────────────────────────────────────────── */
+
+/*
+ * .av-holder — full-bleed absolute overlay inside #filelist (position:relative)
+ * The archive viewer form fills 95% of that space and is centered inside it.
+ */
+.av-holder {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/*
+ * .av-sub-holder — download batch modal mounted inside the archive viewer holder
+ * z-index above .av-holder so it appears on top without leaving #filelist.
+ */
+.av-sub-holder {
+  position: absolute;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.modal-archiveviewer {
+  width: 95%;
+  height: 95%;
+  max-width: none;
+  max-height: none;
+  /* override .modal defaults that constrain to viewport percentage */
+  min-width: 0;
+  min-height: 0;
+  /* inherit body-level font size — slightly larger than --files-size */
+  font-size: 0.93rem;
+  /* anchor for .av-img-popup absolute positioning */
+  position: relative;
+}
+
+.modal-archiveviewer .modal-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.modal-archiveviewer .av-layout {
+  display: flex;
+  flex: 1 1 0;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Sidebar */
+.modal-archiveviewer .av-sidebar {
+  width: 18em;
+  min-width: 12em;
+  max-width: 22em;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.modal-archiveviewer .av-sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.45em 0.55em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.modal-archiveviewer .av-root-cb {
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.modal-archiveviewer .av-root-label {
+  font-size: 0.82em;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Tightly grouped expand/collapse buttons */
+.modal-archiveviewer .av-expand-group {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.modal-archiveviewer .av-tree {
+  overflow-y: auto;
+  flex: 1 1 0;
+  padding: 0.3em 0;
+}
+
+.modal-archiveviewer .av-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 0.28em;
+  height: 2em;
+  padding-right: 0.5em;
+  cursor: default;
+  border-radius: 3px;
+  transition: background 0.1s;
+  user-select: none;
+}
+
+.modal-archiveviewer .av-tree-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.modal-archiveviewer .av-tree-item.is-checked {
+  background: rgba(var(--accent-rgb, 100, 140, 220), 0.18);
+}
+
+.modal-archiveviewer .av-tree-cb {
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.modal-archiveviewer .av-tree-expander {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  font-size: 0.7em;
+  padding: 0 0.2em;
+  width: 1.4em;
+  text-align: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.modal-archiveviewer .av-tree-expander:hover,
+.modal-archiveviewer .av-tree-expander:focus {
+  background: none;
+  border: none;
+  box-shadow: none;
+  outline: none;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.modal-archiveviewer .av-tree-expander-leaf {
+  cursor: default;
+}
+
+.modal-archiveviewer .av-tree-icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+  font-size: 0.9em;
+}
+
+.modal-archiveviewer .av-tree-name {
+  flex: 1 1 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.88em;
+  cursor: pointer;
+}
+
+.modal-archiveviewer .av-tree-count {
+  font-size: 0.72em;
+  color: rgba(255, 255, 255, 0.38);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* File list panel */
+.modal-archiveviewer .av-filelist {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-archiveviewer .av-filelist-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.45em 0.65em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.modal-archiveviewer .av-files {
+  overflow-y: auto;
+  flex: 1 1 0;
+  padding: 0.3em 0;
+}
+
+.modal-archiveviewer .av-file-item {
+  display: grid;
+  grid-template-columns: 1.4em 1fr auto auto;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.28em 0.65em;
+  cursor: default;
+  border-radius: 3px;
+  transition: background 0.1s;
+  user-select: none;
+}
+
+/* Folder rows in the file list use 3 columns (no path column) */
+.modal-archiveviewer .av-file-item.av-file-folder {
+  grid-template-columns: 1.4em 1fr auto;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-style: normal;
+}
+
+.modal-archiveviewer .av-file-item.av-file-folder .av-file-name {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.modal-archiveviewer .av-file-item.av-file-folder .av-file-name::before {
+  content: "▸\20";
+  font-style: normal;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.modal-archiveviewer .av-file-item.av-file-folder:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.modal-archiveviewer .av-file-item.av-file-folder.is-checked {
+  background: rgba(var(--accent-rgb, 100, 140, 220), 0.2);
+}
+
+.modal-archiveviewer .av-file-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.modal-archiveviewer .av-file-item.is-checked {
+  background: rgba(var(--accent-rgb, 100, 140, 220), 0.14);
+}
+
+.modal-archiveviewer .av-file-cb {
+  cursor: pointer;
+  margin: 0;
+}
+
+.modal-archiveviewer .av-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.88em;
+  cursor: pointer;
+}
+
+.modal-archiveviewer .av-file-path {
+  font-size: 0.72em;
+  color: rgba(255, 255, 255, 0.4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 12em;
+}
+
+.modal-archiveviewer .av-file-size {
+  font-size: 0.78em;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.modal-archiveviewer .av-files-empty {
+  padding: 1.5em 1em;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.88em;
+}
+
+/* Status / loading bar */
+.modal-archiveviewer .av-status {
+  padding: 0.5em 0.85em;
+  font-size: 0.85em;
+  color: rgba(255, 255, 255, 0.6);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+}
+
+.modal-archiveviewer .av-status.hidden {
+  display: none;
+}
+
+/* Shared header controls */
+.modal-archiveviewer .av-select-info {
+  flex: 1 1 0;
+  font-size: 0.8em;
+  color: rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-archiveviewer .av-ctrl-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  font-size: 0.78em;
+  padding: 0.2em 0.5em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+
+.modal-archiveviewer .av-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.13);
+}
+
+@media (max-width: 640px) {
+  .modal-archiveviewer .av-layout {
+    flex-direction: column;
+  }
+
+  .modal-archiveviewer .av-sidebar {
+    width: 100%;
+    max-width: 100%;
+    max-height: 12em;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Search row */
+.modal-archiveviewer .av-search-row {
+  padding: 0.3em 0.65em 0.25em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.modal-archiveviewer .av-search {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  color: var(--text-fg);
+  font-size: 0.82em;
+  padding: 0.28em 0.55em;
+  outline: none;
+}
+
+.modal-archiveviewer .av-search:focus {
+  border-color: rgba(var(--accent-rgb, 100, 140, 220), 0.55);
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.modal-archiveviewer .av-search::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Image hover preview popup */
+.modal-archiveviewer .av-img-popup {
+  display: none;
+  position: absolute;
+  right: calc(
+    50% + 12px
+  ); /* left half of modal, so it doesn't overlap the list */
+  width: 150px;
+  max-height: 220px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #111;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  z-index: 50;
+  pointer-events: none;
+}
+
+.modal-archiveviewer .av-img-popup img {
+  width: 100%;
+  height: auto;
+  display: block;
+}

@@ -4,6 +4,8 @@
 
 ### Added
 
+- **Archive Viewer**: Clicking on an archive file (.zip, .rar, .7z, .001, .tar, .tar.gz, and multi-part RAR) now opens an interactive archive browser modal instead of downloading the file immediately. The modal shows a collapsible folder tree on the left and a flat file list on the right. Folders and individual files can be selected via checkboxes; selecting a folder automatically includes all files it contains. The "Download Selected" button passes the chosen files to the existing batch download modal, preserving concurrency, retry, and skip-existing controls. Powered by `lib/archive.js` (ZIP via yauzl, RAR/7z/TAR via system tools) and two new API endpoints: `GET /api/v1/archive/:key/ls` and `GET /api/v1/archive/:key/file?path=...`.
+
 - **Public room directory**: When `publicRooms: true` is set in the project configuration, the home page becomes a live directory of all registered rooms sorted by file count. Each entry links directly to the room and shows its current file count and number of online users. Disabled by default so existing deployments are unaffected.
 
 - **Automatic room pruning**: Rooms that have received no file uploads or chat messages within the last 21 days are automatically deleted, including all their files and Redis state. The prune cycle runs once at startup (60 s delay) then every 24 hours. Configurable via `roomPruning` (on/off) and `roomPruningDays` (default 21) in the project configuration file.
