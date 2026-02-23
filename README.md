@@ -6,6 +6,8 @@
 ![Redis](https://img.shields.io/badge/redis-required-DC382D)
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
 
+> ⚠️ **NOTE:** GitHub Actions workflows have been removed from this repository at the operator's request. There is no CI, lint, security audit, or release automation running on pushes or tags anymore. Manual testing and releases are now the responsibility of the maintainer.
+
 Dicefiles is a self-hosted, open-source file sharing platform for hobby communities, forked from Volafile and Kregfile, and extended with new automation features, quick downloading for archival purposes, and an improved in-room request flow. It is ideal for sharing roleplaying books, digital maps, board games, STL models, fiction, and more.
 
 <p align="center">
