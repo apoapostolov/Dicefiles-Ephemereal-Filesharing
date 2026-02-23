@@ -146,18 +146,6 @@ export default class File extends BaseFile {
       );
     }
 
-    // Archive info pill: "ZIP · 42 files" — populated by indexArchive() at upload time
-    if (this.isArchiveFile() && meta.archive_count) {
-      const fmt = (meta.type || "Archive").toUpperCase();
-      const count = meta.archive_count;
-      this.detailEl.appendChild(
-        dom("span", {
-          classes: ["archive-info-pill"],
-          text: `${fmt} · ${count} files`,
-        }),
-      );
-    }
-
     if (this.isRequest) {
       const requestUrl = this.meta && this.meta.requestUrl;
       this.iconEl.classList.remove(`i-${this.type}`);
@@ -417,6 +405,18 @@ export default class File extends BaseFile {
         });
       }
       this.tagsEl.appendChild(tag);
+    }
+
+    // Archive file-count pill: "ZIP · 42 files" — shown in tags area so it doesn't disrupt list columns
+    if (this.isArchiveFile() && this.meta && this.meta.archive_count) {
+      const fmt = (this.meta.type || "Archive").toUpperCase();
+      const count = this.meta.archive_count;
+      this.tagsEl.appendChild(
+        dom("span", {
+          classes: ["tag", "tag-archive-count"],
+          text: `${fmt} · ${count} files`,
+        }),
+      );
     }
   }
 

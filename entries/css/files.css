@@ -260,14 +260,11 @@ body.links-mode #filelist-scroller {
   align-items: center;
 }
 
-/* Archive file-count badge: "ZIP · 42 files" */
-#files > .file > .detail > .archive-info-pill {
-  font-size: 0.75em;
-  color: rgba(255, 255, 255, 0.52);
-  white-space: nowrap;
-  border-left: 1px solid rgba(255, 255, 255, 0.14);
-  padding-left: 0.5em;
-  margin-left: 0.2em;
+/* Archive file-count badge: "ZIP · 42 files" — non-interactive pill in the tags area */
+#files > .file > .tags > .tag.tag-archive-count {
+  cursor: default;
+  background: rgba(80, 120, 180, 0.2);
+  border-color: rgba(100, 160, 220, 0.28);
 }
 
 /* Make request files show a pointer cursor to hint they're clickable */
