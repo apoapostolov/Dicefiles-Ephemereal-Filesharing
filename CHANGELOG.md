@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.1] - 2026-02-23 [Security Hardening]
+
+### Security
+
+- **Admin config endpoint no longer exposes third-party API keys**: `opengraphIoKey` has been removed from the `ADMIN_CONFIG_WHITELIST`. `GET /api/v1/admin/config` now returns only runtime-mutable feature flags and thresholds; API keys configured in `.config.json` are no longer reflected back through this endpoint, preventing accidental exposure to any client that holds an `admin:config`-scoped key.
+
+- **HTTPS reverse-proxy requirement documented**: The _Security Posture_ section in `README.md` now includes a mandatory HTTPS section that clearly states sessions, bearer tokens, and file content travel in plaintext over plain HTTP. The section provides a complete nginx config block for TLS termination via reverse proxy, a built-in TLS (`tlsCert`/`tlsKey`) alternative, and a table listing the specific assets and their associated risk when deployed without TLS.
+
+- **All automation API keys rotated to 64-character hex values**: The three keys in `.config.json` (`test-read`, `test-upload`, `test-mod`) have been replaced with cryptographically random 256-bit hex strings. The previous short, guessable keys (`dicefiles-test-read-2026` etc.) are no longer valid.
+
+- **Session secret set to a strong 64-character hex value**: The `secret` field is now explicitly set in `.config.json`, replacing the `"dicefiles"` hard-coded default that was previously used for session and CSRF signing.
+
+- **opengraph.io API key cleared from runtime config**: The key has been removed from `.config.json`. Link title enrichment falls back to the built-in HTML scraper automatically; the operator should obtain a fresh key from their opengraph.io dashboard and re-add it when ready.
+
 ## [1.3.0] - 2026-02-23 [Archive Viewer, MCP Server, Security & Activity]
 
 ### Added

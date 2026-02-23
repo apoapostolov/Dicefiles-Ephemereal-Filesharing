@@ -1,7 +1,7 @@
 # Dicefiles - Ephemereal Filesharing for Hobby Communities
 
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Version](https://img.shields.io/badge/version-1.3.0-blue)
+![Version](https://img.shields.io/badge/version-1.3.1-blue)
 ![Node](https://img.shields.io/badge/node-LTS-339933)
 ![Redis](https://img.shields.io/badge/redis-required-DC382D)
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
@@ -326,7 +326,7 @@ yarn --version
    sudo service redis-server start
    ```
 
-1. Dicefiles will need to connect to WSL's Redis (IP changes on restart)
+4. Dicefiles will need to connect to WSL's Redis (IP changes on restart)
 
 **Option B - Memurai (Native Windows Redis):**
 
@@ -504,6 +504,56 @@ curl -sI https://your-instance/ | grep -i "content-security\|strict-transport\|x
 | HTTPS    | `8443`       | `tlsport`  |
 
 Change either in `.config.json`. If you run Dicefiles behind a reverse proxy (nginx/caddy), set the proxy to forward to the HTTP port and terminate TLS at the proxy layer.
+
+### HTTPS Reverse-Proxy Requirement (Production)
+
+> **Warning:** Dicefiles does not terminate TLS by itself in a typical deployment. Session cookies, bearer tokens (automation API keys), and all uploaded file content travel in plaintext over HTTP unless you place a TLS-terminating reverse proxy in front of the server — or configure the built-in `tlsport` listener with a valid certificate.
+
+**For any internet-facing deployment you must do one of the following:**
+
+**Option A — Reverse proxy (recommended)**
+
+Place nginx, Caddy, or another edge proxy in front of port `8080` and have it forward HTTPS traffic:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name files.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/files.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/files.example.com/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Forwarded-For  $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+The `Strict-Transport-Security` header is only emitted when Dicefiles detects `req.secure` — i.e. when the proxy sets `X-Forwarded-Proto: https`. Configure your proxy accordingly.
+
+**Option B — Built-in TLS**
+
+Set `tlsport`, `tlsCert`, and `tlsKey` in `.config.json` to use Node's built-in HTTPS listener for direct TLS termination:
+
+```json
+{
+  "tlsport": 443,
+  "tlsCert": "/etc/letsencrypt/live/files.example.com/fullchain.pem",
+  "tlsKey": "/etc/letsencrypt/live/files.example.com/privkey.pem"
+}
+```
+
+**What is at risk without HTTPS:**
+
+| Asset                                 | Risk over plain HTTP                          |
+| ------------------------------------- | --------------------------------------------- |
+| Session cookie (`connect.sid`)        | Stolen → account takeover                     |
+| Automation API bearer token           | Stolen → full API access at that key's scopes |
+| Uploaded file content                 | Intercepted in transit                        |
+| Login credentials (password at login) | Captured by a MITM on the same network        |
 
 ### Firejail Sandboxing
 
