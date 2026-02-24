@@ -7,3 +7,5 @@ s~*
 vendors*
 style.css*
 style.js*
+# Ignore VSCode settings folder
+.vscode/
