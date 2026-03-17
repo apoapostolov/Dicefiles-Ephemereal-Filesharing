@@ -51,7 +51,7 @@
     "tweetnacl-util": "^0.15.0",
     "url-loader": "^1.1.2",
     "url-regex-safe": "^4.0.0",
-    "uuid": "^8.3.2",
+    "uuid": "^13.0.0",
     "webpack": "^5.76.1",
     "webpack-cli": "^5.0.1",
     "xregexp": "^5.1.0",
