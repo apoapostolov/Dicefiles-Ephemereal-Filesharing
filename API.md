@@ -19,7 +19,7 @@ endpoints with required scopes. The manifest returns:
 {
   "ok": true,
   "service": "Dicefiles",
-  "version": "1.2.0",
+  "version": "1.3.2",
   "baseUrl": "/api/v1",
   "endpoints": [
     { "path": "/api/v1/files", "scope": "files:read" },

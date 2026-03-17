@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.2] - 2026-03-17 [Request Achievements & Manual Release Posture]
+
+### Added
+
+- **Completed-request achievements**: User profiles now include a new achievement track for fulfilling requests. Logged-in users progress through dedicated milestones as they resolve open requests for others, giving the request workflow its own visible progression instead of folding everything into raw upload/download stats.
+
+- **Request-creation achievements**: A lightweight three-step achievement track now rewards users for trying the request system itself, with milestones at **5**, **25**, and **100** created requests. This is intentionally a simple discovery-oriented track to encourage room members to use and test the feature.
+
+### Changed
+
+- **Achievement roster rounded to 80 total milestones**: the profile trophy room now includes both request-based tracks, bringing the full achievement count to an even 80 while keeping the rest of the progression system unchanged.
+
+- **Release posture is explicitly manual**: repository docs now consistently reflect that GitHub Actions workflows have been removed and that testing, tagging, and publishing releases are performed manually by the maintainer.
+
 ## [1.3.1] - 2026-02-23 [Security Hardening]
 
 ### Security

@@ -1,7 +1,7 @@
 # Dicefiles - Ephemereal Filesharing for Hobby Communities
 
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Version](https://img.shields.io/badge/version-1.3.1-blue)
+![Version](https://img.shields.io/badge/version-1.3.2-blue)
 ![Node](https://img.shields.io/badge/node-LTS-339933)
 ![Redis](https://img.shields.io/badge/redis-required-DC382D)
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
@@ -29,7 +29,7 @@ Dicefiles is a self-hosted, open-source file sharing platform for hobby communit
 - Batch download actions for All/New files with progress tracking, concurrency control, and resumable queues
 - NEW badges for unseen files and requests with awareness highlighting
 - Per-user file cleanup and per-account activity tracking
-- Expanded profiles with editable messages, achievement progression (rarity tiers), and Latest Activity tabs
+- Expanded profiles with editable messages, achievement progression (including request-based tracks), and Latest Activity tabs
 - **Public Room Directory** when enabled, showing live stats for all registered rooms
 - Room options for requests and link collection, plus automatic room pruning
 - Room creation and management
@@ -104,6 +104,7 @@ The PDF.js web worker is built as a separate webpack entry (`pdf.worker.js`) and
   - Uploaded file count
   - Uploaded total size
   - Downloaded total size
+- **Request-based progression**: Additional achievement tracks reward fulfilled requests and a lightweight set of request-creation milestones, so the request workflow now contributes directly to profile progression.
 - **Rarity visuals**: Achievement cards use progressive MMO-style rarity colors from common tiers to mythic/ascendant tiers.
 - **Stats snapshot**: Profile cards show Total Uploaded, Total Downloaded, Files Uploaded, and unlocked achievement count.
 

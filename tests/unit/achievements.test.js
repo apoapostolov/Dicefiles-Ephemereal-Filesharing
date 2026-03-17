@@ -7,7 +7,7 @@
  * computeAchievements returns:
  *  { files, uploaded, downloaded, unlocked, total, all,
  *    unlockedList, lockedList,
- *    filesOnly, bytesOnly, downloadsOnly }
+ *    filesOnly, bytesOnly, downloadsOnly, requestsOnly, requestsCreatedOnly }
  */
 
 const { computeAchievements } = require("../../lib/achievements.js");
@@ -20,6 +20,8 @@ describe("computeAchievements", () => {
     expect(Array.isArray(result.filesOnly)).toBe(true);
     expect(Array.isArray(result.bytesOnly)).toBe(true);
     expect(Array.isArray(result.downloadsOnly)).toBe(true);
+    expect(Array.isArray(result.requestsOnly)).toBe(true);
+    expect(Array.isArray(result.requestsCreatedOnly)).toBe(true);
     expect(typeof result.unlocked).toBe("number");
     expect(typeof result.total).toBe("number");
   });
@@ -84,6 +86,50 @@ describe("computeAchievements", () => {
     expect(result.downloadsOnly[0].unlocked).toBe(true);
   });
 
+  // ── completed request milestones ─────────────────────────────────────────
+  test("1 completed request unlocks first request achievement", () => {
+    const result = computeAchievements({
+      files: 0,
+      uploaded: 0,
+      downloaded: 0,
+      fulfilledRequests: 1,
+    });
+    expect(result.requestsOnly[0].unlocked).toBe(true);
+    expect(result.requestsOnly[0].title).toBe("First Responder");
+  });
+
+  test("0 completed requests does not unlock first request achievement", () => {
+    const result = computeAchievements({
+      files: 0,
+      uploaded: 0,
+      downloaded: 0,
+      fulfilledRequests: 0,
+    });
+    expect(result.requestsOnly[0].unlocked).toBe(false);
+  });
+
+  // ── created request milestones ───────────────────────────────────────────
+  test("5 created requests unlocks first created-request achievement", () => {
+    const result = computeAchievements({
+      files: 0,
+      uploaded: 0,
+      downloaded: 0,
+      createdRequests: 5,
+    });
+    expect(result.requestsCreatedOnly[0].unlocked).toBe(true);
+    expect(result.requestsCreatedOnly[0].title).toBe("Testing the Waters");
+  });
+
+  test("4 created requests does not unlock first created-request achievement", () => {
+    const result = computeAchievements({
+      files: 0,
+      uploaded: 0,
+      downloaded: 0,
+      createdRequests: 4,
+    });
+    expect(result.requestsCreatedOnly[0].unlocked).toBe(false);
+  });
+
   // ── missing stats fields default to 0 ────────────────────────────────────
   test("empty stats object produces zero unlocked", () => {
     const result = computeAchievements({});
@@ -104,10 +150,21 @@ describe("computeAchievements", () => {
   // ── key uniqueness ────────────────────────────────────────────────────────
   test("each achievement key is unique within its group", () => {
     const result = computeAchievements({ files: 0, uploaded: 0, downloaded: 0 });
-    for (const group of [result.filesOnly, result.bytesOnly, result.downloadsOnly]) {
+    for (const group of [
+      result.filesOnly,
+      result.bytesOnly,
+      result.downloadsOnly,
+      result.requestsOnly,
+      result.requestsCreatedOnly,
+    ]) {
       const keys = group.map((a) => a.key);
       expect(new Set(keys).size).toBe(keys.length);
     }
+  });
+
+  test("achievement count rounds to 80 with the new request-creation track", () => {
+    const result = computeAchievements({});
+    expect(result.total).toBe(80);
   });
 
   // ── totals consistency ────────────────────────────────────────────────────
