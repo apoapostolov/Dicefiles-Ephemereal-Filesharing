@@ -15,6 +15,10 @@ Owner-gated room features for multi-room file mirrors, a first-class request boa
 
 - README room options section; unit tests for shipped `lib/room/room-links.js`, `deep-links.js`, `request-board.js`.
 
+### Fixes
+
+- **Deep-link open race:** file/request open intents no longer mark complete before the file list is ready (config arrives before files). Open targets retry on list replace via `resolveDeepLinkOpenPlan`.
+
 ## [1.4.1] - 2026-07-27 [Room UI polish]
 
 Surgical room UI polish — no redesign. Clearer feedback, sticky preferences, dead GIF provider removed.

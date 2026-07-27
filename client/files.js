@@ -12,6 +12,8 @@ import RequestBoardModal from "./files/requestboard";
 import {
   resolveDeepLinkNavigation,
   applyDeepLinkIntents,
+  resolveDeepLinkOpenPlan,
+  shouldApplyDeepLinkListIntents,
 } from "../lib/room/deep-links";
 import ScrollState from "./files/scrollstate";
 import { REMOVALS } from "./files/tracker";
@@ -77,7 +79,10 @@ export default new (class Files extends EventEmitter {
     this.downloadAllEl = document.querySelector("#downloadall");
     this.createRequestEl = document.querySelector("#createrequest");
     this.requestBoardEl = document.querySelector("#requestboard");
-    this._deepLinksApplied = false;
+    this._deepLinkListApplied = false;
+    this._deepLinkOpenDone = false;
+    this._legacyGalleryOpened = false;
+    this._filesListReady = false;
     this.files = [];
     this.filemap = new Map();
     this.elmap = new WeakMap();
@@ -300,8 +305,12 @@ export default new (class Files extends EventEmitter {
       this.maybeApplyDeepLinks();
     });
     this.updateCapabilityButtons();
-    // Deep links after first file replace (config may already be present)
-    this.once("replaced", () => this.maybeApplyDeepLinks());
+    // File list often arrives after config — retry open intents on every replace
+    // until open is resolved (see resolveDeepLinkOpenPlan).
+    this.on("replaced", () => {
+      this._filesListReady = true;
+      this.maybeApplyDeepLinks();
+    });
     addEventListener("pagehide", this.onleave, { passive: true });
     addEventListener("beforeunload", this.onleave, { passive: true });
   }
@@ -338,6 +347,8 @@ export default new (class Files extends EventEmitter {
 
   /**
    * Admin-gated shareable deep links + always-on legacy gallery #key.
+   * Config often arrives before files — list intents apply once; open intents
+   * stay pending until the filemap has the key (or list is ready and missing).
    */
   maybeApplyDeepLinks() {
     const nav = resolveDeepLinkNavigation({
@@ -346,21 +357,18 @@ export default new (class Files extends EventEmitter {
       deepLinksEnabled: !!registry.config.get("deepLinks"),
     });
 
-    // Legacy gallery hash always works when bare #fileKey
-    if (nav.legacyGalleryKey) {
+    // Legacy gallery hash always works when bare #fileKey (retry until found)
+    if (nav.legacyGalleryKey && !this._legacyGalleryOpened) {
       const file = this.get(nav.legacyGalleryKey);
       if (file) {
         this.gallery.open(file);
+        this._legacyGalleryOpened = true;
       }
     }
 
     if (!nav.applyIntents) {
       return;
     }
-    if (this._deepLinksApplied) {
-      return;
-    }
-    this._deepLinksApplied = true;
 
     const next = applyDeepLinkIntents(
       {
@@ -373,25 +381,43 @@ export default new (class Files extends EventEmitter {
       true,
     );
 
-    if (next.sortMode && next.sortMode !== this.sortMode) {
-      this.setSortMode(next.sortMode);
-    }
-    if (this.filter && typeof next.filter === "string") {
-      this.filter.value = next.filter;
-      this.doFilter();
-    }
-    if (next.openRequestKey) {
-      const req = this.get(next.openRequestKey);
-      if (req && req.isRequest) {
-        registry.roomie
-          .showModal(new RequestViewModal(req))
-          .catch(() => {});
+    if (
+      shouldApplyDeepLinkListIntents({
+        applyIntents: true,
+        listAlreadyApplied: this._deepLinkListApplied,
+      })
+    ) {
+      this._deepLinkListApplied = true;
+      if (next.sortMode && next.sortMode !== this.sortMode) {
+        this.setSortMode(next.sortMode);
       }
-    } else if (next.openFileKey) {
-      const file = this.get(next.openFileKey);
+      if (this.filter && typeof next.filter === "string") {
+        this.filter.value = next.filter;
+        this.doFilter();
+      }
+    }
+
+    const openPlan = resolveDeepLinkOpenPlan({
+      openFileKey: next.openFileKey,
+      openRequestKey: next.openRequestKey,
+      filesReady: this._filesListReady,
+      openAlreadyDone: this._deepLinkOpenDone,
+      lookup: (key) => this.get(key) || null,
+    });
+
+    if (openPlan.tryOpenRequest) {
+      const req = this.get(openPlan.tryOpenRequest);
+      if (req && req.isRequest) {
+        registry.roomie.showModal(new RequestViewModal(req)).catch(() => {});
+      }
+    } else if (openPlan.tryOpenFile) {
+      const file = this.get(openPlan.tryOpenFile);
       if (file && !file.isRequest) {
         this.gallery.open(file);
       }
+    }
+    if (openPlan.openDone) {
+      this._deepLinkOpenDone = true;
     }
   }
 
