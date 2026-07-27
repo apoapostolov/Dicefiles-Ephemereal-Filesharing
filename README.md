@@ -1,14 +1,19 @@
 # Dicefiles - Ephemereal Filesharing for Hobby Communities
 
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Version](https://img.shields.io/badge/version-1.3.2-blue)
-![Node](https://img.shields.io/badge/node-LTS-339933)
-![Redis](https://img.shields.io/badge/redis-required-DC382D)
+![Version](https://img.shields.io/badge/version-1.4.0-blue)
+![Node](https://img.shields.io/badge/node-%3E%3D20-339933)
+![Redis](https://img.shields.io/badge/redis-v4%20client-DC382D)
+![Package manager](https://img.shields.io/badge/package%20manager-yarn%201.x-2C8EBB)
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
 
 > ⚠️ **NOTE:** GitHub Actions workflows have been removed from this repository at the operator's request. There is no CI, lint, security audit, or release automation running on pushes or tags anymore. Manual testing and releases are now the responsibility of the maintainer.
 
 Dicefiles is a self-hosted, open-source file sharing platform for hobby communities, forked from Volafile and Kregfile, and extended with new automation features, quick downloading for archival purposes, and an improved in-room request flow. It is ideal for sharing roleplaying books, digital maps, board games, STL models, fiction, and more.
+
+### What's new in 1.4.0
+
+**Code overhaul + Redis v4 migration.** Large rooms stay snappy (virtualized file list), readers load on demand, install is Yarn-only with Node ≥20, and the Redis broker runs on a modern node-redis v4 client while keeping Lua scripts and automation APIs stable. See [CHANGELOG.md](CHANGELOG.md) and [docs/PERF_NOTES.md](docs/PERF_NOTES.md).
 
 <p align="center">
   <img src="images/dicefiles_01.png" width="47.5%" />
@@ -36,7 +41,8 @@ Dicefiles is a self-hosted, open-source file sharing platform for hobby communit
 - Configurable limits, flood control, and retention policies
 - TLS/HTTPS support with Helmet security headers
 - Automation API with scoped keys, rate limiting, webhooks, and MCP server for AI clients
-- Health endpoint with Redis/storage checks and operational metrics
+- Health endpoint (`/healthz`) with Redis latency, storage, disk, preview-queue, and operational metrics
+- Large-room file list virtualization (viewport-bounded DOM) and on-demand reader/archive bundles
 - Centralized input validation, security audits, and regression testing
 
 ## In-Page Document and Comic Reader
@@ -110,12 +116,15 @@ The PDF.js web worker is built as a separate webpack entry (`pdf.worker.js`) and
 
 ## Documentation
 
-| Document                           | Purpose                                                                                                                                                                                       |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [INTRODUCTION.md](INTRODUCTION.md) | Complete guide to Dicefiles, use cases, and getting started                                                                                                                                   |
-| [CHANGELOG.md](CHANGELOG.md)       | Version history and release notes                                                                                                                                                             |
-| [API.md](API.md)                   | REST Automation API reference — all `/api/v1` endpoints, authentication, scopes, rate limits, and webhook events. Start here to build bots, scripts, or integrations against a live instance. |
-| [MCP.md](MCP.md)                   | Model Context Protocol server reference — setup for Claude Desktop, VS Code, Cursor, Codex CLI, OpenCode CLI, and OpenClaw. Covers all 13 MCP tools and worked multi-step workflow examples.  |
+| Document | Purpose |
+| -------- | ------- |
+| [docs/INTRODUCTION.md](docs/INTRODUCTION.md) | Complete guide to Dicefiles, use cases, and getting started |
+| [CHANGELOG.md](CHANGELOG.md) | Version history and release notes |
+| [API.md](API.md) | REST Automation API — `/api/v1` endpoints, scopes, rate limits, webhooks |
+| [MCP.md](MCP.md) | Model Context Protocol server — 13 tools and client setup |
+| [docs/PERF_NOTES.md](docs/PERF_NOTES.md) | 1.4.0 performance notes (virtualization, code-splitting, workers) |
+| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Dev setup (Yarn 1.x, Node ≥20, Redis) and PR expectations |
+| [docs/OVERHAUL_AND_OPTIMIZATION_PLAN.md](docs/OVERHAUL_AND_OPTIMIZATION_PLAN.md) | Architecture overhaul plan (phases 0–5 status) |
 
 ---
 
@@ -135,7 +144,8 @@ You are setting up Dicefiles on this machine. Work through these steps in order:
 ```bash
 git clone https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing.git Dicefiles
 cd Dicefiles
-npm install
+# Node >= 20 required. Yarn 1.x is the only supported package manager (yarn.lock).
+yarn install
 ```
 
 ## 2 — Generate a config
@@ -260,12 +270,14 @@ Notes:
 
 #### 2. Clone and Install
 
+**Requirements:** Node.js **≥ 20**, **Yarn 1.x** (only supported package manager — use `yarn.lock`, not npm’s lockfile), and a running **Redis** instance (compatible with the node-redis **v4** client shipped in 1.4.0).
+
 ```bash
 # Clone the repository
 git clone https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing.git
-cd dicefiles
+cd Dicefiles-Ephemereal-Filesharing
 
-# Install dependencies
+# Install dependencies (Yarn 1.x)
 yarn install
 
 # Build client-side code (production mode)
@@ -288,9 +300,17 @@ for a full description of every option.
 
 ```bash
 yarn start
+# equivalent: node server.js
 ```
 
-Access at `http://127.0.0.1:9090`
+Access at `http://127.0.0.1:9090` (or your configured port).
+
+**Health check** (Redis + storage + disk + metrics):
+
+```bash
+curl -s http://127.0.0.1:9090/healthz | jq .
+# expect: "ok": true, checks.redis.ok true
+```
 
 ---
 

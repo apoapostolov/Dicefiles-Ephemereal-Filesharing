@@ -6,11 +6,18 @@ import DownloadBatchModal from "./files/downloadmodal";
 import File from "./files/file";
 import * as filesfilter from "./files/filter";
 import Gallery from "./files/gallery";
-import { flushStaleProgress } from "./files/reader";
+// Reader is lazy-loaded; progress cleanup uses dynamic import.
 import RequestModal, { RequestViewModal } from "./files/requestmodal";
 import ScrollState from "./files/scrollstate";
 import { REMOVALS } from "./files/tracker";
 import Upload from "./files/upload";
+import {
+  computeWindow,
+  shouldVirtualize,
+  sliceWindow,
+} from "./files/windowing";
+import { getVisibleWindow as computeVisibleWindow } from "./files/list-window";
+import { SORT_MODES as LIST_SORT_MODES, sortFiles } from "./files/list-state";
 import registry from "./registry";
 import Scroller from "./scroller";
 import {
@@ -34,7 +41,7 @@ const BATCH_QUEUE_PREFIX = "dicefiles:downloadqueue:room:";
 const DOWNLOADED_NAMES_PREFIX = "dicefiles:downloadednames:room:";
 const PRESETS_PREFIX = "dicefiles:filterpresets:room:";
 const SORT_MODE_PREFIX = "dicefiles:sortmode:room:";
-const SORT_MODES = Object.freeze(["newest", "largest", "expiring"]);
+const SORT_MODES = LIST_SORT_MODES;
 
 export default new (class Files extends EventEmitter {
   constructor() {
@@ -416,6 +423,63 @@ export default new (class Files extends EventEmitter {
   onscroll() {
     this.delayedUpdateStatus();
     registry.roomie.hideTooltip();
+    // Re-window the virtualized file list as the user scrolls so only a
+    // viewport-bounded set of rows stays mounted.
+    this.scheduleVirtualWindowRefresh();
+  }
+
+  scheduleVirtualWindowRefresh() {
+    if (this._virtRefreshScheduled) {
+      return;
+    }
+    this._virtRefreshScheduled = true;
+    requestAnimationFrame(() => {
+      this._virtRefreshScheduled = false;
+      this.refreshVirtualWindow();
+    });
+  }
+
+  /**
+   * Remount the viewport window for large filtered lists.
+   * No-op when virtualization is off (small lists / gallery / links).
+   */
+  refreshVirtualWindow() {
+    try {
+      if (this.galleryMode || this.linksMode) {
+        return;
+      }
+      // Pass the full standing list — never null/visible (mounted-only slice).
+      const windowed = this.getVisibleWindow(this.files);
+      if (!windowed.virtualized) {
+        return;
+      }
+      // Skip if the window indices did not change (same mounted range).
+      if (
+        this._virtStart === windowed.start &&
+        this._virtEnd === windowed.end
+      ) {
+        return;
+      }
+      this._virtStart = windowed.start;
+      this._virtEnd = windowed.end;
+
+      // Remove currently mounted file rows (keep spacers / uploads).
+      const toRemove = [];
+      for (const child of Array.from(this.el.children)) {
+        if (
+          child.classList &&
+          child.classList.contains("file") &&
+          !child.classList.contains("upload")
+        ) {
+          toRemove.push(child);
+        }
+      }
+      // Re-insert only the windowed slice via the same DOM path.
+      this.insertFilesIntoDOM(this.files, toRemove);
+    }
+    catch (ex) {
+      console.error(ex);
+    }
   }
 
   onfilterbutton(e) {
@@ -1287,7 +1351,11 @@ export default new (class Files extends EventEmitter {
       }
       if (replace) {
         // Flush localStorage reading-progress entries for files no longer in the room
-        flushStaleProgress(new Set(this.filemap.keys()));
+        import(
+          /* webpackChunkName: "reader" */ "./files/reader"
+        ).then(({ flushStaleProgress }) => {
+          flushStaleProgress(new Set(this.filemap.keys()));
+        }).catch(() => {});
         this.emit("replaced");
       }
     }
@@ -1403,12 +1471,69 @@ export default new (class Files extends EventEmitter {
     }
   }
 
+  /**
+   * Active window of filtered files for virtualized list rendering.
+   * When the filtered set is large, only a viewport-bounded slice is mounted.
+   */
+  getVisibleWindow(files = null) {
+    return computeVisibleWindow(this, files);
+  }
+
   insertFilesIntoDOM(files, remove) {
     if (remove) {
-      remove.forEach((el) => el.parentElement.removeChild(el));
+      remove.forEach((el) => {
+        if (el && el.parentElement) {
+          el.parentElement.removeChild(el);
+        }
+      });
     }
+    const windowed = this.getVisibleWindow(files);
+    const toInsert = windowed.virtualized
+      ? windowed.items
+      : Array.from(this.filtered(files));
+    if (windowed.virtualized) {
+      this._virtStart = windowed.start;
+      this._virtEnd = windowed.end;
+    }
+    else {
+      this._virtStart = null;
+      this._virtEnd = null;
+    }
+
+    // Spacer maintains scroll height when only a window is mounted.
+    let topSpacer = this.el.querySelector(".filelist-spacer-top");
+    let bottomSpacer = this.el.querySelector(".filelist-spacer-bottom");
+    if (windowed.virtualized) {
+      if (!topSpacer) {
+        topSpacer = document.createElement("div");
+        topSpacer.className = "filelist-spacer-top";
+        topSpacer.setAttribute("aria-hidden", "true");
+        this.el.insertBefore(topSpacer, this.el.firstChild);
+      }
+      if (!bottomSpacer) {
+        bottomSpacer = document.createElement("div");
+        bottomSpacer.className = "filelist-spacer-bottom";
+        bottomSpacer.setAttribute("aria-hidden", "true");
+        this.el.appendChild(bottomSpacer);
+      }
+      topSpacer.style.height = `${windowed.offsetY}px`;
+      const bottom = Math.max(
+        0,
+        windowed.totalHeight - windowed.offsetY - windowed.items.length * (this._rowHeightHint || 52),
+      );
+      bottomSpacer.style.height = `${bottom}px`;
+    }
+    else {
+      if (topSpacer) {
+        topSpacer.remove();
+      }
+      if (bottomSpacer) {
+        bottomSpacer.remove();
+      }
+    }
+
     let head = this.el.querySelector(".file:not(.upload)");
-    for (const f of this.filtered(files)) {
+    for (const f of toInsert) {
       if (head) {
         this.el.insertBefore(f.el, head);
       } else {
@@ -1419,6 +1544,14 @@ export default new (class Files extends EventEmitter {
         f.adjustPreview();
       }
       head = f.el;
+    }
+
+    // Sample row height for subsequent windows.
+    if (toInsert.length && toInsert[0].el) {
+      const h = toInsert[0].el.offsetHeight;
+      if (h > 20) {
+        this._rowHeightHint = h;
+      }
     }
   }
 

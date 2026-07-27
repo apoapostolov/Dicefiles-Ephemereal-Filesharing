@@ -22,8 +22,8 @@ Contributions are welcome for:
 ## Development Setup
 
 Prerequisites:
-- Node.js (current LTS)
-- Yarn (`1.x`)
+- Node.js **≥ 20** (see `package.json` `engines`)
+- **Yarn 1.x only** (`yarn.lock` is the install source of truth; do not commit `package-lock.json`)
 - Redis running locally or remotely
 
 Install and build:

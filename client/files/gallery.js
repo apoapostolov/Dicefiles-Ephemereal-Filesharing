@@ -2,7 +2,6 @@
 
 import { APOOL } from "../animationpool";
 import { nukeEvent } from "../util";
-import Reader from "./reader";
 
 export default class Gallery {
   constructor(owner) {
@@ -18,7 +17,9 @@ export default class Gallery {
     this.readNowEl = document.querySelector("#gallery_read_now");
     this.file = null;
 
-    this.reader = new Reader();
+    // Reader is heavy (PDF.js / JSZip / mobi) — load on first use.
+    this.reader = null;
+    this._readerPromise = null;
 
     this.auxTimer = 0;
     this.startHideAux = this.startHideAux.bind(this);
@@ -74,11 +75,27 @@ export default class Gallery {
     e.stopPropagation();
   }
 
-  onreadnow(e) {
+  async ensureReader() {
+    if (this.reader) {
+      return this.reader;
+    }
+    if (!this._readerPromise) {
+      this._readerPromise = import(
+        /* webpackChunkName: "reader" */ "./reader"
+      ).then(({ default: Reader }) => {
+        this.reader = new Reader();
+        return this.reader;
+      });
+    }
+    return this._readerPromise;
+  }
+
+  async onreadnow(e) {
     nukeEvent(e);
     const {file} = this;
     this.close();
-    this.reader.open(file);
+    const reader = await this.ensureReader();
+    reader.open(file);
   }
 
   ontitleclick(e) {

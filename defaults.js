@@ -27,8 +27,11 @@ module.exports = {
   // Listen port
   port,
 
-  // how many web workers to run
-  workers: Math.max(NUM_CPUS + 1, 2),
+  // how many web workers to run.
+  // Default is intentionally modest: Redis is the real scale bottleneck, and
+  // oversubscribing small self-host boxes burns CPU for little gain.
+  // Override in .config.json when you have a dedicated multi-core host.
+  workers: Math.min(Math.max(NUM_CPUS - 1, 2), 4),
 
   // Session signing secret.
   // MUST be changed to a unique, high-entropy value (≥16 random chars) in production.

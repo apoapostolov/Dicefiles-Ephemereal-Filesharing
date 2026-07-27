@@ -21,3 +21,4 @@ server.log
 ops.log
 automation.log
 TODO.md
+package-lock.json

@@ -1,5 +1,47 @@
 # Changelog
 
+## [1.4.0] - 2026-07-27 [Code Overhaul & Redis v4 Migration]
+
+This release is a **platform overhaul**: cleaner internal architecture, a supported Redis client stack, faster large rooms, and deeper operator health signals. Product features and public automation API paths stay compatible with the 1.3.x line.
+
+### Highlights for operators
+
+- **Redis v4** — Dicefiles now talks to Redis through **node-redis 4** with a dedicated broker adapter. Existing Lua scripts (distributed maps/sets, rate limits, tracking, message removal) keep working; connect/load is explicit and promise-based.
+- **Yarn-only install** — `yarn.lock` is the single source of truth. `package-lock.json` is removed; Node **≥ 20** is required (`package.json` `engines`).
+- **Smarter large rooms** — the file list virtualizes when there are many files, so scrolling stays responsive instead of mounting every row at once.
+- **Lighter first paint** — PDF/EPUB/MOBI readers and the archive browser load on demand instead of inside the initial room shell.
+- **Richer `/healthz`** — Redis latency, storage writability, disk free/total (when available), preview-queue depth, process pid/uptime, plus existing counters.
+
+### Improvements
+
+- Modularized server HTTP helpers, automation auth/rate limits, WebSocket setup, media pipeline, and client reader formats into focused modules (easier upgrades without changing public routes).
+- Webpack CSS pipeline modernized for Webpack 5 (`css-loader` 6, `mini-css-extract` 2, `css-minimizer-webpack-plugin`).
+- Replaced abandoned or awkward dependencies (`colors` → `picocolors`, recursive `fs.mkdir` instead of `mkdirp`, current `lru-cache` API).
+- Default worker count capped more conservatively so small hosts are not oversubscribed (still override with `"workers"` in `.config.json`).
+- Upload tag sanitization extracted for reuse and testing; expanded unit coverage (windowing, list-window scroll re-window, Redis adapter, live broker, session verifier, health ops).
+
+### Fixes
+
+- File-list re-windowing on scroll uses the **full** filtered file list, not only currently mounted DOM rows (so large rooms keep virtualizing while you scroll).
+- Redis command path no longer mixes callback + promise settles (eliminates hung `set`/`get` and client queue desync under load).
+
+### Upgrade notes
+
+1. **Node 20+** and **Yarn 1.x** (`yarn install`).
+2. **Redis** remains required; Redis 6/7 servers work with the new client. Restart Dicefiles after deploy so workers pick up the new broker.
+3. Rebuild the client: `yarn prestart` (or `yarn start` after prestart).
+4. Confirm health: `curl -s http://127.0.0.1:<port>/healthz` should report `ok: true` with `checks.redis` and `checks.storage`.
+
+### Docs
+
+- README install path clarified (Yarn, engines, Redis v4, health checks).
+- [docs/PERF_NOTES.md](docs/PERF_NOTES.md) — virtualization and payload notes.
+- [docs/OVERHAUL_AND_OPTIMIZATION_PLAN.md](docs/OVERHAUL_AND_OPTIMIZATION_PLAN.md) — architecture plan status for phases 0–5.
+
+### Supply chain
+
+- Prefer `yarn audit` on a schedule. High-severity **dev-only** transitive findings (e.g. Jest → `js-yaml`) are not on the production server path; upgrade Jest when convenient.
+
 ## [1.3.2] - 2026-03-17 [Request Achievements & Manual Release Posture]
 
 ### Added

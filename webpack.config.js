@@ -7,7 +7,7 @@ const webpack = require("webpack");
 const { RawSource } = require("webpack-sources");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
-const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
 function readJSON(file, fallback = {}) {
   try {
@@ -78,18 +78,25 @@ module.exports = {
     rules: [
       {
         test: /\.css$/,
-        use: [MiniCssExtractPlugin.loader, "css-loader"],
-      },
-      {
-        test: /\.(png|jpg|gif|woff2?|ttf|svg|otf|eof)$/,
         use: [
+          MiniCssExtractPlugin.loader,
           {
-            loader: "file-loader",
+            loader: "css-loader",
             options: {
-              name: "s~[hash].[ext]",
+              // Keep absolute site paths like /loader.png as-is (served from static/)
+              url: {
+                filter: (url) => !url.startsWith("/"),
+              },
             },
           },
         ],
+      },
+      {
+        test: /\.(png|jpg|gif|woff2?|ttf|svg|otf|eof)$/,
+        type: "asset/resource",
+        generator: {
+          filename: "s~[hash][ext]",
+        },
       },
     ],
   },
@@ -108,6 +115,10 @@ module.exports = {
     alias: {
       localforage: "node_modules/localforage/dist/localforage.nopromises.js",
     },
+    fallback: {
+      // Browser builds of mobi/sax pull node stream; not needed in the browser.
+      stream: false,
+    },
   },
   optimization: {
     minimizer: [
@@ -117,11 +128,14 @@ module.exports = {
           ecma: 10,
         },
       }),
-      new OptimizeCSSAssetsPlugin({
-        cssProcessor: require("cssnano"),
-        cssProcessorOptions: {
-          preset: "default",
-          discardComments: { removeAll: true },
+      new CssMinimizerPlugin({
+        minimizerOptions: {
+          preset: [
+            "default",
+            {
+              discardComments: { removeAll: true },
+            },
+          ],
         },
       }),
     ],
