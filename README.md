@@ -520,6 +520,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | `publicRooms` | `false` | When enabled, the home page becomes a searchable directory of all registered rooms, ordered by file count descending. Disabled by default — rooms are private unless the server operator turns this on. |
 | `roomPruning` | `true` | Automatically delete rooms that have been inactive for more than `roomPruningDays` days. Inactivity is tracked per file upload and per chat message. Enabled by default. |
 | `roomPruningDays` | `21` | Number of days of inactivity before a room is pruned. Requires `roomPruning: true`. All room data (files, messages, metadata) is permanently deleted when the threshold is crossed. |
+| `pluginSyncLogRetentionDays` | `30` | How long plugin bots (e.g. Mega Autoshare) remember already-synced files (name+size) in Redis so restarts do not re-upload. Range 1–730 days. |
 
 
 ### Room options (owner/mod)

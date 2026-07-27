@@ -107,6 +107,9 @@ describe("room-runtime catalog (shipped)", () => {
             ];
           },
         },
+        syncLog: require("../../lib/plugins/sync-log").createMemorySyncLog({
+          retentionDays: 30,
+        }),
         async uploadFile(spec) {
           uploads.push(spec);
           return { key: "k1" };

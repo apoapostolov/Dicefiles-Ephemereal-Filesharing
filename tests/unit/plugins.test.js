@@ -77,6 +77,7 @@ describe("plugin registry (shipped)", () => {
     );
 
     // direct run with inject
+    const { createMemorySyncLog } = require("../../lib/plugins/sync-log");
     const sync = await runMegaFolderSync(
       {
         config: {
@@ -98,6 +99,7 @@ describe("plugin registry (shipped)", () => {
             ];
           },
         },
+        syncLog: createMemorySyncLog({ retentionDays: 30 }),
         async uploadFile(spec) {
           uploads.push(spec);
           return { key: "up1" };
@@ -114,8 +116,10 @@ describe("plugin registry (shipped)", () => {
     expect(uploads[0].meta.bot).toBe(true);
   });
 
-  test("mega-folder dedupes name+size across runs", async () => {
+  test("mega-folder dedupes name+size across runs (local + durable log)", async () => {
     mega._test.seenByScope.clear();
+    const { createMemorySyncLog } = require("../../lib/plugins/sync-log");
+    const syncLog = createMemorySyncLog({ retentionDays: 30 });
     const uploads = [];
     const downloader = {
       async listFolder() {
@@ -136,6 +140,7 @@ describe("plugin registry (shipped)", () => {
         roomId: "destRoom01",
       },
       megaDownloader: downloader,
+      syncLog,
       async uploadFile(spec) {
         uploads.push(spec.name);
         return { key: "k" + uploads.length };
@@ -146,6 +151,13 @@ describe("plugin registry (shipped)", () => {
     expect(r1.uploaded).toBe(1);
     expect(r2.uploaded).toBe(0);
     expect(r2.skipped).toBe(1);
+    expect(uploads).toEqual(["once.pdf"]);
+
+    // Simulate process restart: clear local cache, durable log still skips
+    mega._test.seenByScope.clear();
+    const r3 = await runMegaFolderSync(ctx, {});
+    expect(r3.uploaded).toBe(0);
+    expect(r3.skipped).toBe(1);
     expect(uploads).toEqual(["once.pdf"]);
   });
 });

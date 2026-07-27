@@ -2,7 +2,7 @@
 
 Canonical product and contributor docs. Filenames use **FULL_CAPS** (except this index).
 
-Plugin system docs live under **`../core/plugins/`** (not here).
+Plugin system docs live under **`../core/plugins/`** (design + operator guides). Research notes may also live under **`plugins/`** here.
 
 | Document | Purpose |
 | -------- | ------- |
@@ -16,6 +16,7 @@ Plugin system docs live under **`../core/plugins/`** (not here).
 | [ARCHIVE_VIEWER.md](./ARCHIVE_VIEWER.md) | In-browser archive browser spec |
 | [MESSAGE_REMOVAL.md](./MESSAGE_REMOVAL.md) | Moderator message removal behavior |
 | [AI_AUTOMATION.md](./AI_AUTOMATION.md) | AI agent automation use cases vs REST/MCP |
+| [plugins/REMOTE_HOST_LIBRARY_RESEARCH.md](./plugins/REMOTE_HOST_LIBRARY_RESEARCH.md) | Research: embeddable multi-host download libs (not a standalone product) |
 
 ## Archived (historical only)
 

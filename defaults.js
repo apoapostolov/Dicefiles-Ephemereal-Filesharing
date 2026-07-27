@@ -127,6 +127,10 @@ module.exports = {
   // }]
   plugins: [],
 
+  // How long plugin bots remember already-synced files (name+size) so restarts
+  // do not re-download. Redis ZSET per plugin/room/source. Range 1–730 days.
+  pluginSyncLogRetentionDays: 30,
+
   // Allow X-Forwarded-For to set client IP if found
   considerProxyForwardedForHeaders: false,
 

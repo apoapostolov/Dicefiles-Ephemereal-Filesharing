@@ -4,6 +4,8 @@ How Dicefiles should grow beyond **Mega.nz** toward the hosts hobby communities 
 
 This is a **design note**, not a shipped feature. The first-party path today is `mega-folder` + injectable downloaders ([MEGA_FOLDER.md](./MEGA_FOLDER.md)).
 
+**Library research** (GitHub/npm candidates, embed vs product boundary, shell/debrid options): [REMOTE_HOST_LIBRARY_RESEARCH.md](../../docs/plugins/REMOTE_HOST_LIBRARY_RESEARCH.md).
+
 ---
 
 ## 1. Goal
@@ -146,6 +148,8 @@ Next code step when scheduled: extract `RemoteDownloader` + register Mega as fir
 ---
 
 ## 8. References
+
+Full candidate matrix and rejects: [REMOTE_HOST_LIBRARY_RESEARCH.md](../../docs/plugins/REMOTE_HOST_LIBRARY_RESEARCH.md).
 
 - megajs: https://www.npmjs.com/package/megajs — https://mega.js.org/
 - megajs-cli: https://github.com/qgustavor/megajs-cli

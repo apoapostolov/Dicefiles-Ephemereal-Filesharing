@@ -58,8 +58,18 @@ Optional account credentials (private folders):
 
 | Setting | Behavior |
 |---------|----------|
-| `pollIntervalMinutes` &gt; 0 | On start: one scan. Then re-scan every N minutes. New files only (name+size dedupe in-process). |
-| `pollIntervalMinutes` = 0 or omitted | No timer. Use manual `defaultRegistry.run("mega-folder")` or `pollEvents`. |
+| `pollIntervalMinutes` &gt; 0 | On start: one scan. Then re-scan every N minutes. |
+| `pollIntervalMinutes` = 0 or omitted | No timer. Use **Run now** / `run("mega-folder")` or `pollEvents`. |
+
+### Already-synced files (durable skip log)
+
+After a successful upload, Mega Autoshare records **name + size** for that room and folder in a **Redis-backed sync log**. Later polls (and **process restarts**) skip those entries until the log entry ages out.
+
+| App config | Default | Meaning |
+|------------|---------|---------|
+| `pluginSyncLogRetentionDays` | `30` | Keep skip records for this many days (1–730). Set in `.config.json`. |
+
+Expired entries are pruned on sync. Within a process lifetime an in-memory cache mirrors the log for speed.
 | `pollEvents` | Optional webhook event names (e.g. `linked_file_appeared`) that call `scheduleRun`. |
 
 Dedupe is process-local: after restart, existing Mega entries may upload again if they still appear in the folder listing. Use `namePrefix` and room cleanup as needed.

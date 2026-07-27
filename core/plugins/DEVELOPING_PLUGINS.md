@@ -1,6 +1,6 @@
 # Developing Dicefiles plugins
 
-This guide explains how to build **first-party plugins** that hook Dicefiles’ event bus and automation surface. The shipped example is **Mega Autoshare** (`mega-folder`): monitor a Mega.nz folder, download new files over time, and auto-share into a room **as a bot** (cyan **BOT** pill). For a multi-host roadmap (MediaFire, 4shared, Pixeldrain, Gofile, plowshare shell bridge), see **[REMOTE_HOST_IMPORTS.md](./REMOTE_HOST_IMPORTS.md)**.
+This guide explains how to build **first-party plugins** that hook Dicefiles’ event bus and automation surface. The shipped example is **Mega Autoshare** (`mega-folder`): monitor a Mega.nz folder, download new files over time, and auto-share into a room **as a bot** (cyan **BOT** pill). For a multi-host roadmap (MediaFire, 4shared, Pixeldrain, Gofile, plowshare shell bridge), see **[REMOTE_HOST_IMPORTS.md](./REMOTE_HOST_IMPORTS.md)**. Library/GitHub research for embeddable downloaders (not standalone products): **[REMOTE_HOST_LIBRARY_RESEARCH.md](../../docs/plugins/REMOTE_HOST_LIBRARY_RESEARCH.md)**.
 
 Audience: operators and developers who already run a self-hosted Dicefiles instance.
 
