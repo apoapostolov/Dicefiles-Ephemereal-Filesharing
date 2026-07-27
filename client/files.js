@@ -79,6 +79,9 @@ export default new (class Files extends EventEmitter {
     this.downloadAllEl = document.querySelector("#downloadall");
     this.createRequestEl = document.querySelector("#createrequest");
     this.requestBoardEl = document.querySelector("#requestboard");
+    this.requestPillEl =
+      document.querySelector(".request-pill") ||
+      (this.createRequestEl && this.createRequestEl.closest(".btn-pill"));
     this._deepLinkListApplied = false;
     this._deepLinkOpenDone = false;
     this._legacyGalleryOpened = false;
@@ -318,10 +321,16 @@ export default new (class Files extends EventEmitter {
   updateCapabilityButtons() {
     const allowRequests = registry.config.get("allowRequests");
     const linkCollection = registry.config.get("linkCollection");
-    // undefined = config not yet received from server; default to showing the button
-    this.createRequestEl.classList.toggle("hidden", allowRequests === false);
+    // undefined = config not yet received from server; default to showing the pill
+    const hideRequests = allowRequests === false;
+    if (this.requestPillEl) {
+      this.requestPillEl.classList.toggle("hidden", hideRequests);
+    }
+    if (this.createRequestEl) {
+      this.createRequestEl.classList.toggle("hidden", hideRequests);
+    }
     if (this.requestBoardEl) {
-      this.requestBoardEl.classList.toggle("hidden", allowRequests === false);
+      this.requestBoardEl.classList.toggle("hidden", hideRequests);
     }
     if (this.linkModeEl) {
       this.linkModeEl.classList.toggle("hidden", linkCollection === false);

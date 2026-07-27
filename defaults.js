@@ -240,6 +240,12 @@ module.exports = {
   // Room owners can override this per room via Room Options.
   linkCollection: true,
 
+  // Default for new rooms: whether other rooms may mirror this room's finished
+  // uploads via multi-room linking. Room owners must opt in via Room Options
+  // ("Allow Room Cross-Linking"). Destination rooms still choose which sources
+  // to list; without this flag, linked sources contribute zero files.
+  allowCrossLinking: false,
+
   // Show a Latest Activity tab on user profiles listing the last 20 uploads/downloads.
   // Set to false to disable for all users (privacy).
   profileActivity: true,

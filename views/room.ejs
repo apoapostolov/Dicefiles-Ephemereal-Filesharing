@@ -52,18 +52,22 @@
         title="Show only files newer than your last visit"
       ></button>
     </div>
-    <input
-      id="filter"
-      placeholder="Filter files…"
-      type="text"
-      autocomplete="off"
-      required
-    />
-    <button
-      id="filter-clear"
-      class="disabled i-clear"
-      title="Reset filters and show everything again"
-    ></button>
+    <div class="filter-field">
+      <input
+        id="filter"
+        placeholder="Filter files…"
+        type="text"
+        autocomplete="off"
+        required
+      />
+      <button
+        type="button"
+        id="filter-clear"
+        class="disabled i-clear"
+        title="Reset filters and show everything again"
+        aria-label="Clear filter"
+      ></button>
+    </div>
     <div id="filter-status" class="hidden i-filter"></div>
     <div
       id="new-status"
@@ -71,11 +75,13 @@
       title="New files at the top"
     ></div>
     <div class="spacer"></div>
-    <div id="createrequest" class="btn" title="Create Request">
-      <span class="i-question"></span>
-    </div>
-    <div id="requestboard" class="btn" title="Request board">
-      <span class="i-list"></span>
+    <div class="btn-pill request-pill">
+      <div id="createrequest" class="btn" title="Create Request">
+        <span class="i-question"></span>
+      </div>
+      <div id="requestboard" class="btn" title="Request board">
+        <span class="i-list"></span>
+      </div>
     </div>
     <div class="btn-pill download-pill">
       <div
@@ -121,8 +127,8 @@
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="14"
-          height="14"
+          width="16"
+          height="16"
           viewBox="0 0 14 14"
           fill="currentColor"
           aria-hidden="true"
@@ -138,8 +144,8 @@
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="14"
-          height="14"
+          width="16"
+          height="16"
           viewBox="0 0 14 14"
           fill="currentColor"
           aria-hidden="true"
@@ -158,8 +164,8 @@
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="14"
-          height="14"
+          width="16"
+          height="16"
           viewBox="0 0 14 14"
           fill="currentColor"
           aria-hidden="true"
@@ -176,12 +182,12 @@
       <div id="linkmode" class="btn" title="Links Archive">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="18"
-          height="18"
+          width="16"
+          height="16"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          stroke-width="2.5"
+          stroke-width="2.25"
           stroke-linecap="round"
           stroke-linejoin="round"
           aria-hidden="true"
@@ -592,9 +598,11 @@
     <input name="name" type="text" autocomplete="off" />
     <label>Message of the Day</label>
     <textarea name="motd" cols="20" rows="3"></textarea>
-    <div class="wide roomopts-primary-row">
+    <div class="wide roomopts-actions">
       <button name="owners">Manage Owners</button>
       <button class="hidden" name="invitees">Manage Invited Users</button>
+    </div>
+    <div class="wide roomopts-checks">
       <label><input type="checkbox" name="inviteonly" /> Invite-Only</label>
       <label><input type="checkbox" name="adult" /> Adult Content</label>
       <label
@@ -607,16 +615,21 @@
         ><input type="checkbox" name="deeplinks" /> Shareable deep
         links</label
       >
+      <label
+        ><input type="checkbox" name="allowcrosslinking" /> Allow Room
+        Cross-Linking</label
+      >
     </div>
-    <label class="wide"
-      >Linked rooms (mirror finished uploads; room ids, comma-separated)</label
+    <label class="wide roomopts-linked-label"
+      >Linked rooms (ids or exact names, comma-separated). Source rooms must
+      enable Allow Room Cross-Linking or nothing appears.</label
     >
     <input
       class="wide"
       name="linkedrooms"
       type="text"
       autocomplete="off"
-      placeholder="e.g. abCdEf12Gh, otherRoom99"
+      placeholder="e.g. Campaign Maps, abCdEf12Gh"
     />
     <label class="wide modctrl"
       ><input type="checkbox" name="disabled" /> Disabled</label

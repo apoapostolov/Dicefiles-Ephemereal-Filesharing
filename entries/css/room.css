@@ -38,14 +38,36 @@ body#room {
   width: 3ex;
 }
 
+/*
+ * Room toolbar design tokens
+ * One control height / icon size / radius / gap for the whole #tools bar.
+ */
+#room {
+  --tools-gap: 0.4rem;
+  --tools-control-h: 34px;
+  --tools-control-w: 34px;
+  --tools-icon: 15px;
+  --tools-radius: 6px;
+  --tools-pad-x: 0.5rem;
+  --tools-font: 0.8125rem; /* ~13px */
+  --tools-surface: var(--surface-2);
+  --tools-surface-hover: var(--surface-3);
+  --tools-border: var(--hairline);
+}
+
 #menu {
-  width: 34px;
-  height: 34px;
+  width: var(--tools-control-w);
+  height: var(--tools-control-h);
   background: transparent;
   border: 0;
   border-radius: 0;
   color: var(--text-fg);
   box-shadow: none;
+  font-size: var(--tools-icon);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition:
     color 0.2s ease,
     transform 0.15s ease;
@@ -61,44 +83,71 @@ body#room {
 
 #room > #tools {
   margin: 0;
-  padding: 3px 0.35rem;
+  padding: 4px var(--tools-pad-x);
+  min-height: calc(var(--tools-control-h) + 8px);
   height: 100%;
+  box-sizing: border-box;
   grid-area: tools;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.35rem;
+  gap: var(--tools-gap);
+  column-gap: var(--tools-gap);
+  row-gap: var(--tools-gap);
 }
 
-.filterbtn,
-.filterbtn:focus {
-  margin-right: 0;
-  overflow: hidden;
-  background: var(--surface-2);
-  border: 1px solid var(--hairline);
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease;
-  color: var(--text-fg);
-  font-size: 12pt;
-  width: 34px;
-  height: 34px;
+/* Direct children: spacing only from gap */
+#tools > * {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* ── Shared control chrome (buttons, filter type keys) ───────────── */
+#tools .btn,
+#tools label.btn,
+#tools .filterbtn,
+#tools .filterbtn:focus {
   box-sizing: border-box;
-  border-radius: 6px;
-  padding: 0.5ex;
+  width: var(--tools-control-w);
+  height: var(--tools-control-h);
+  min-width: var(--tools-control-w);
+  min-height: var(--tools-control-h);
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--tools-border);
+  border-radius: var(--tools-radius);
+  background: var(--tools-surface);
+  color: var(--text-fg);
+  font-size: var(--tools-font);
+  line-height: 1;
+  text-align: center;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   align-self: center;
+  flex: 0 0 auto;
+  overflow: hidden;
   -webkit-appearance: none;
   appearance: none;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    opacity 0.15s ease;
 }
 
-.filterbtn:hover {
-  background: var(--surface-3) !important;
+#tools .filterbtn:hover,
+#tools .btn:hover,
+#tools label.btn:hover {
+  background: var(--tools-surface-hover);
   border-color: rgba(255, 255, 255, 0.24);
+}
+
+/* No vertical bounce on hover — keeps the bar optically level */
+#tools .btn:hover,
+#tools label.btn:hover {
+  transform: none;
 }
 
 .filterbtn.disabled,
@@ -108,23 +157,85 @@ body#room {
   box-shadow: none;
 }
 
+/* Symbol icons (class i-* on control or child span) */
+#tools .btn[class*="i-"]::before,
+#tools .filterbtn[class*="i-"]::before,
+#tools .btn > span[class^="i-"]::before,
+#tools .btn > span[class*=" i-"]::before,
+#tools label.btn > span[class^="i-"]::before,
+#tools label.btn > span[class*=" i-"]::before,
+#tools #filter-clear[class*="i-"]::before {
+  font-size: var(--tools-icon);
+  line-height: 1;
+  width: var(--tools-icon);
+  height: var(--tools-icon);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#tools .btn > span[class^="i-"],
+#tools .btn > span[class*=" i-"],
+#tools label.btn > span[class^="i-"],
+#tools label.btn > span[class*=" i-"] {
+  font-size: var(--tools-icon);
+  line-height: 1;
+  width: var(--tools-icon);
+  height: var(--tools-icon);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+}
+
+/* Inline SVGs (sort, links) match icon token */
+#tools .btn svg {
+  width: var(--tools-icon);
+  height: var(--tools-icon);
+  flex: 0 0 auto;
+  display: block;
+  pointer-events: none;
+}
+
+/* ── Filter field + in-field clear (X) ───────────────────────────── */
+/* Grows to fill space up to the request/action pills (uniform tools-gap). */
+#tools .filter-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  /* Absorb free toolbar width; no artificial max-width cap. */
+  flex: 1 1 auto;
+  min-width: 10rem;
+  max-width: none;
+  width: auto;
+  height: var(--tools-control-h);
+  margin: 0;
+  flex-shrink: 1;
+  align-self: center;
+}
+
 #filter {
   color: white;
   background: rgba(0, 0, 0, 0.55);
-  border: 1px solid var(--hairline);
-  border-radius: 6px;
-  padding: 0 0.65rem;
-  height: 32px;
-  line-height: 1;
+  border: 1px solid var(--tools-border);
+  border-radius: var(--tools-radius);
+  /* Right pad reserves space for the inner clear control */
+  padding: 0 calc(var(--tools-control-h) + 0.15rem) 0 0.65rem;
+  height: 100%;
+  min-height: var(--tools-control-h);
+  width: 100%;
+  max-width: 100%;
+  line-height: var(--tools-control-h);
+  font-size: var(--tools-font);
   box-sizing: border-box;
-  align-self: center;
+  align-self: stretch;
   user-select: none;
   outline: 0;
-  /* Stable width: do not grow/shrink on focus/valid (old flex:5 animation). */
-  flex: 1 1 14rem;
-  min-width: 11rem;
-  max-width: 22rem;
-  width: 14rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
   transition:
     border-color 0.2s ease,
     background 0.2s ease;
@@ -140,21 +251,60 @@ body#room {
   box-shadow: none;
 }
 
+/* X sits inside the field on the right; does not take toolbar flex space */
 #filter-clear {
-  margin-left: 0.4ex;
-  font-size: 10pt;
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  transform: translateY(-50%);
+  box-sizing: border-box;
+  width: calc(var(--tools-control-h) - 4px);
+  height: calc(var(--tools-control-h) - 4px);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--tools-radius) - 2px);
   background: transparent;
-  color: var(--text-fg);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: var(--tools-icon);
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  z-index: 1;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    opacity 0.12s ease;
 }
 
+#filter-clear:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border: 0;
+}
+
+/* Keep layout stable: hide with opacity so reserved pad never shifts peers */
 #filter-clear.disabled {
-  display: none;
+  display: inline-flex;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
 }
 
 #new-status,
 #filter-status {
-  margin-left: 2em;
-  font-size: xx-small;
+  margin: 0;
+  font-size: 0.7rem;
+  line-height: var(--tools-control-h);
+  height: var(--tools-control-h);
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  color: var(--text-fg);
 }
 
 #filter-status {
@@ -166,62 +316,49 @@ body#room {
   font-family: "symbols";
   /* stylelint-enable */
   display: inline-block;
-  margin-right: 1ex;
+  font-size: var(--tools-icon);
+  margin-right: 0.35em;
+  line-height: 1;
 }
 
 #new-status {
   cursor: pointer;
 }
 
+/*
+ * Spacer is legacy: filter-field flex-grows into free space.
+ * Must be display:none — a 0-width flex item still receives gap on both
+ * sides and makes the right margin look thicker than the left.
+ */
 #tools .spacer {
-  flex: 5;
+  display: none;
 }
 
-#tools .btn,
-#tools label.btn {
-  font-size: 12pt;
-  width: 34px;
-  height: 34px;
-  text-align: center;
-  background: var(--surface-2);
-  border: 1px solid var(--hairline);
-  color: var(--text-fg);
-  padding: 0.5ex;
-  margin-top: 0;
-  margin-left: 0;
-  box-sizing: border-box;
-  border-radius: 6px;
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.15s ease;
-  align-self: center;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-}
-
+/* Download controls: slightly wider for count badge */
 #tools .btn.btn-download {
   width: auto;
-  height: 34px;
-  min-width: 44px;
-  gap: 0.4rem;
-  padding: 0 0.55rem;
+  min-width: calc(var(--tools-control-w) + 14px);
+  height: var(--tools-control-h);
+  gap: 0.35rem;
+  padding: 0 0.5rem;
 }
 
 #tools .btn.btn-download .count-pill {
-  min-width: 18px;
-  height: 18px;
+  min-width: 1.15rem;
+  height: 1.15rem;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.22);
   border: 1px solid rgba(255, 255, 255, 0.35);
   color: #ffffff;
-  font-size: 8pt;
-  line-height: 16px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1.1;
   text-align: center;
-  padding: 0 5px;
+  padding: 0 4px;
   box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #tools .btn.btn-download.disabled,
@@ -230,87 +367,74 @@ body#room {
   pointer-events: none;
 }
 
-#createrequest.btn {
-  margin-right: 0.55rem;
-}
-
-#tools .btn:hover,
-#tools label.btn:hover {
-  background: var(--surface-3);
-  border-color: rgba(255, 255, 255, 0.24);
-  transform: translateY(-1px);
-}
-
+/* Active states (view mode / sort / show-new) */
 #nailoff.btn.active,
 #nailon.btn.active,
-#linkmode.btn.active {
+#linkmode.btn.active,
+#tools .sort-pill .btn.active,
+#tools #show-new-btn.active {
   background: rgba(255, 255, 255, 0.5);
-  box-shadow: rgb(0 0 0 / 75%) 0px 0px 6px 0px inset;
-}
-
-#tools > .btn:last-child,
-#tools > label.btn:last-child {
-  display: flex;
-  justify-items: center;
-  justify-content: center;
-  align-items: center;
-  align-content: center;
-  width: auto;
-  margin-left: 0.85rem;
-}
-
-#tools > .btn:last-child span,
-#tools > label.btn:last-child span {
+  box-shadow: rgb(0 0 0 / 75%) 0 0 6px 0 inset;
   color: var(--text-fg);
-  font-size: 16pt;
-  display: inline-block;
-  padding-left: 0.3ex;
-  padding-right: 0.3ex;
+  opacity: 1;
+}
+
+/* Upload — full-height text button, icon token size */
+#tools > label.btn#up,
+#tools #up {
+  width: auto;
+  min-width: 0;
+  height: var(--tools-control-h);
+  padding: 0 0.7rem;
+  gap: 0.35rem;
+  font-size: var(--tools-font);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+#tools #up > span {
+  font-size: var(--tools-icon);
+  width: var(--tools-icon);
+  height: var(--tools-icon);
+  padding: 0;
 }
 
 /* ─── Segmented pill groups ─────────────────────────────────────── */
 .btn-pill {
   display: inline-flex;
-  align-items: center;
+  align-items: stretch;
   align-self: center;
+  margin: 0;
+  gap: 0;
+  flex: 0 0 auto;
+  height: var(--tools-control-h);
 }
 
-/* Use #tools prefix to beat the #tools .btn specificity (110) */
-#tools .btn-pill .btn {
+/* Segments share a continuous border; outer spacing from #tools gap only */
+#tools .btn-pill .btn,
+#tools .btn-pill .filterbtn {
   border-radius: 0;
-  border-right: 0;
+  border-right-width: 0;
   transform: none !important;
+  height: 100%;
+  min-height: 100%;
 }
 
-#tools .btn-pill .btn:first-child {
-  border-radius: 6px 0 0 6px;
+#tools .btn-pill .btn:first-child,
+#tools .btn-pill .filterbtn:first-child {
+  border-radius: var(--tools-radius) 0 0 var(--tools-radius);
 }
 
-#tools .btn-pill .btn:last-child {
-  border-radius: 0 6px 6px 0;
-  border-right: 1px solid var(--hairline);
+#tools .btn-pill .btn:last-child,
+#tools .btn-pill .filterbtn:last-child {
+  border-radius: 0 var(--tools-radius) var(--tools-radius) 0;
+  border-right-width: 1px;
+  border-right-style: solid;
+  border-right-color: var(--tools-border);
   margin-left: 0;
 }
 
-#tools .btn-pill .btn:hover {
-  z-index: 1;
-}
-
-/* Pill support for .filterbtn (native <button> elements) */
-#tools .btn-pill .filterbtn {
-  border-radius: 0;
-  border-right: 0;
-}
-
-#tools .btn-pill .filterbtn:first-child {
-  border-radius: 6px 0 0 6px;
-}
-
-#tools .btn-pill .filterbtn:last-child {
-  border-radius: 0 6px 6px 0;
-  border-right: 1px solid var(--hairline);
-}
-
+#tools .btn-pill .btn:hover,
 #tools .btn-pill .filterbtn:hover {
   z-index: 1;
 }
@@ -325,14 +449,23 @@ body#room {
   display: inline-flex;
 }
 
-/* View mode pill separator from preceding buttons */
-.viewmode-pill {
-  margin-left: 0.85rem;
+.viewmode-pill,
+.sort-pill,
+.request-pill,
+#banfiles.btn,
+#unbanfiles.btn,
+#blacklist.btn,
+#whitelist.btn {
+  margin: 0;
 }
 
-/* Toolbar group spacing for clearer hierarchy */
-#banfiles.btn {
-  margin-left: 0.85rem;
+#tools .request-pill {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+#tools .request-pill.hidden {
+  display: none;
 }
 
 .regular .modctrl {
@@ -380,8 +513,8 @@ body.noreports #ctx-report {
     flex-wrap: wrap;
     justify-content: flex-start;
     align-content: center;
-    padding-top: 0.35rem;
-    padding-bottom: 0.35rem;
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
   }
 
   #tools .spacer {
@@ -395,6 +528,14 @@ body.noreports #ctx-report {
 }
 
 @media (max-width: 860px) {
+  #room {
+    --tools-control-h: 30px;
+    --tools-control-w: 30px;
+    --tools-icon: 13px;
+    --tools-gap: 0.35rem;
+    --tools-font: 0.75rem;
+  }
+
   #room h1 {
     font-size: 10pt;
   }
@@ -403,29 +544,21 @@ body.noreports #ctx-report {
     width: 2.4ex;
   }
 
-  #filter {
-    min-width: 8.5rem;
-    flex: 1;
-  }
-
-  #tools .btn,
-  #tools label.btn,
-  .filterbtn,
-  #menu {
-    width: 30px;
-    height: 30px;
-    font-size: 10pt;
-  }
-
-  #tools .btn:last-child span,
-  #tools label.btn:last-child span {
-    font-size: 14pt;
-  }
-
-  #filter {
+  #tools .filter-field {
     min-width: 0;
     width: 100%;
+    flex: 1 1 100%;
+    max-width: none;
     order: 20;
+  }
+
+  #filter {
+    width: 100%;
+    max-width: none;
+  }
+
+  #tools .spacer {
+    display: none;
   }
 }
 
@@ -1122,43 +1255,18 @@ a.r::before {
 }
 
 /* ===== Sort Pill ===== */
-.sort-pill {
-  margin-left: 0.5rem;
-}
-
-.sort-pill .btn {
+#tools .sort-pill .btn {
   padding: 0;
   line-height: 0;
 }
 
-.sort-pill .btn svg {
-  pointer-events: none;
-  display: block;
-}
-
-/* Match UI_STYLE active (viewmode / links) — inset highlight */
-.sort-pill .btn.active,
-#tools .sort-pill .btn.active {
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: rgb(0 0 0 / 75%) 0px 0px 6px 0px inset;
-  color: var(--text-fg);
-}
-
-/* ===== Show-New Button (inside filter pill as rightmost item) ===== */
+/* ===== Show-New (rightmost segment of filter pill) ===== */
 #show-new-btn {
   opacity: 0.55;
-  transition:
-    opacity 0.15s,
-    background 0.2s ease,
-    box-shadow 0.2s ease;
 }
 
-#show-new-btn.active,
-#tools #show-new-btn.active {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: rgb(0 0 0 / 75%) 0px 0px 6px 0px inset;
-  color: var(--text-fg);
+#tools #show-new-btn:not(.active):hover {
+  opacity: 0.85;
 }
 
 /* ===== Presets Row ===== */

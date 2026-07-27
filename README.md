@@ -489,6 +489,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | `observabilityLog` | `"ops.log"` | JSONL lifecycle log for uploads/downloads/requests/previews |
 | `allowRequests` | `true` | Default for new rooms: whether request creation is enabled (room owners can override per room) |
 | `linkCollection` | `true` | Default for new rooms: whether the link archive is enabled (room owners can override per room) |
+| `allowCrossLinking` | `false` | Default for new rooms: whether other rooms may mirror this room’s finished files via multi-room linking (room owners override in Room Options) |
 | `profileActivity` | `true` | Show a Latest Activity tab on user profile pages (last 20 uploads/downloads). Set to `false` to disable for all users for privacy. Individual users cannot override this setting. |
 | `opengraphIoKey` | `""` | **Optional.** API key for [opengraph.io](https://www.opengraph.io/) enriched link-title resolution. When set, chat-link titles in the Links Archive are fetched via the opengraph.io API (follows redirects, handles JS-rendered pages, returns OG `title`). Falls back to inline HTML `<title>` scraping when unset or on API failure. Free tier: 100 req/day. Get a key at https://www.opengraph.io/.<br><br>**Setting the key:** add the value to your `.config.json` under `opengraphIoKey` and restart the server. This key is **not** returned by `/api/v1/admin/config` (intentionally excluded to avoid accidental leaks), so it cannot be changed at runtime via the admin API. |
 | `webhooks` | `[]` | Outbound webhook targets/events for upload/request lifecycle |
@@ -509,7 +510,8 @@ Additional per-room settings in **Room Options** (context menu):
 | Allow Requests | on | Request creation and the **Request board** toolbar entry |
 | Link Collection | on | Chat link archive mode |
 | Shareable deep links | **off** | When on, query/hash intents (`file`, `filter`, `sort`, `request`) apply on load. Bare gallery `#fileKey` still works when off. |
-| Linked rooms | empty | Comma-separated source room ids. Finished uploads from those rooms appear in this room marked **Linked · &lt;name&gt;**. Download/open uses the source file; delete stays in the source room. |
+| Allow Room Cross-Linking | **off** | When on, **other** rooms may mirror this room’s finished uploads via their Linked rooms list. Knowing a room id or name is not enough — the source owner must opt in. |
+| Linked rooms | empty | Comma-separated **source room ids or exact room names**. Finished uploads from those rooms appear here marked **Linked · &lt;name&gt;** only if each source has **Allow Room Cross-Linking** on. Download/open uses the source file; delete stays in the source room. |
 
 Example deep link (requires Shareable deep links enabled):
 

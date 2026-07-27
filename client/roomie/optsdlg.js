@@ -30,6 +30,7 @@ export class OptionsModal extends Modal {
       "allowrequests",
       "linkcollection",
       "deeplinks",
+      "allowcrosslinking",
       "linkedrooms",
       "disabled",
       "disablereports",
@@ -52,6 +53,9 @@ export class OptionsModal extends Modal {
     this.linkcollection.checked = c.get("linkCollection") !== false;
     if (this.deeplinks) {
       this.deeplinks.checked = !!c.get("deepLinks");
+    }
+    if (this.allowcrosslinking) {
+      this.allowcrosslinking.checked = !!c.get("allowCrossLinking");
     }
     if (this.linkedrooms) {
       const linked = c.get("linkedRooms");
@@ -134,9 +138,13 @@ will NOT be aborted, and they also retain their chat histories.`,
       const { checked: allowRequests } = this.allowrequests;
       const { checked: linkCollection } = this.linkcollection;
       const deepLinks = !!(this.deeplinks && this.deeplinks.checked);
+      const allowCrossLinking = !!(
+        this.allowcrosslinking && this.allowcrosslinking.checked
+      );
+      // Comma/newline-separated so multi-word room names work; server resolves names → ids.
       const linkedRoomsRaw = this.linkedrooms ? this.linkedrooms.value : "";
       const linkedRooms = linkedRoomsRaw
-        .split(/[\s,]+/)
+        .split(/[,\n]+/)
         .map((s) => s.trim())
         .filter(Boolean);
       const { checked: disabled } = this.disabled;
@@ -167,6 +175,13 @@ will NOT be aborted, and they also retain their chat histories.`,
       }
       if (deepLinks !== !!c.get("deepLinks")) {
         await socket.makeCall("setconfig", "deepLinks", deepLinks);
+      }
+      if (allowCrossLinking !== !!c.get("allowCrossLinking")) {
+        await socket.makeCall(
+          "setconfig",
+          "allowCrossLinking",
+          allowCrossLinking,
+        );
       }
       const prevLinked = Array.isArray(c.get("linkedRooms"))
         ? c.get("linkedRooms").slice().sort().join(",")

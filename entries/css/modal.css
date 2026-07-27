@@ -272,6 +272,7 @@
     "icon . ."
     "icon . ."
     "icon . ."
+    "icon . ."
     "icon . .";
   grid-row-gap: 1.3ex;
 }
@@ -862,10 +863,22 @@
 }
 
 /* Surgical polish: Room Options + Room Owners/Invitees dialogs */
+/* Cap width so checkbox labels don't force a huge dialog. */
+.modal-optsdlg {
+  width: min(32rem, 92vw);
+  max-width: min(32rem, 92vw);
+  box-sizing: border-box;
+}
+
 .modal-optsdlg .modal-body {
-  min-width: 60ex;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   align-items: start;
   grid-column-gap: 1.1em;
+  /* icon | label | field — keep field column from ballooning */
+  grid-template-columns: auto minmax(6rem, 9rem) minmax(0, 1fr);
 }
 
 .modal-optsdlg .modal-body label {
@@ -879,6 +892,10 @@
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 6px;
   padding: 0.32em 0.6em;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .modal-optsdlg .modal-body textarea {
@@ -888,6 +905,8 @@
 
 .modal-optsdlg .modal-body .wide {
   gap: 0.55em;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .modal-optsdlg .modal-body .wide > button {
@@ -907,10 +926,11 @@
 
 .modal-optsdlg .modal-body input[type="checkbox"] {
   margin-right: 0.45em;
+  flex: 0 0 auto;
 }
 
 .modal-optsdlg .usersdesc {
-  max-width: 66ex;
+  max-width: 100%;
   line-height: 1.4;
   color: rgba(220, 220, 220, 0.92);
 }
@@ -921,6 +941,8 @@
   border-radius: 8px;
   padding: 0.3em 0.45em;
   background: rgba(0, 0, 0, 0.18);
+  max-width: 100%;
+  min-width: 0;
 }
 
 .modal-optsdlg .userlistitem {
@@ -946,20 +968,71 @@
   box-shadow: none;
 }
 
-.modal-optsdlg .roomopts-primary-row {
+/* Manage Owners / Invitees — own row, not mixed with checkboxes */
+.modal-optsdlg .roomopts-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.55em;
 }
 
-.modal-optsdlg .roomopts-primary-row > label {
+.modal-optsdlg .roomopts-actions > button {
   display: inline-flex;
   align-items: center;
+  line-height: 1;
+  padding-top: 0.26em;
+  padding-bottom: 0.26em;
+  margin-right: 0;
+}
+
+/*
+ * Room option checkboxes: equal-width cells on two rows
+ * (3 columns × 2 rows for the six primary options).
+ */
+.modal-optsdlg .roomopts-checks {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55em 0.65em;
+  align-items: stretch;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-optsdlg .roomopts-checks > label {
+  display: inline-flex;
+  align-items: flex-start;
   gap: 0.32em;
   font-weight: 600;
   color: rgba(236, 236, 236, 0.95);
-  white-space: nowrap;
+  white-space: normal;
+  line-height: 1.25;
+  min-width: 0;
+  margin: 0;
+}
+
+.modal-optsdlg .roomopts-linked-label {
+  white-space: normal;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+/* Back-compat if any template still uses the old single-row class */
+.modal-optsdlg .roomopts-primary-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55em 0.65em;
+  align-items: start;
+}
+
+.modal-optsdlg .roomopts-primary-row > label {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.32em;
+  font-weight: 600;
+  color: rgba(236, 236, 236, 0.95);
+  white-space: normal;
+  min-width: 0;
 }
 
 .modal-optsdlg .roomopts-primary-row > button {
@@ -968,6 +1041,19 @@
   line-height: 1;
   padding-top: 0.26em;
   padding-bottom: 0.26em;
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 520px) {
+  .modal-optsdlg {
+    width: min(100vw - 1rem, 32rem);
+    max-width: calc(100vw - 1rem);
+  }
+
+  .modal-optsdlg .roomopts-checks,
+  .modal-optsdlg .roomopts-primary-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* ── Archive Viewer Modal ─────────────────────────────────────────────────── */
