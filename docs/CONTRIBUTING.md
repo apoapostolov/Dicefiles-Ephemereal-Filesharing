@@ -90,6 +90,7 @@ For room or account UI changes:
 - Keep visual changes consistent with the current greytone theme.
 - Validate desktop and mobile behavior.
 - Do not regress critical workflows (upload, select/delete, requests, downloads).
+- Component rules: [UI_STYLE.md](./UI_STYLE.md). Agents auditing, polishing, reworking, or implementing themes: [AI_UI_SKILLS.md](./AI_UI_SKILLS.md).
 
 ## Security and Privacy
 
