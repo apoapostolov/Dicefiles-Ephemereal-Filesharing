@@ -413,7 +413,10 @@ Configure in `.config.json`:
         "file_uploaded",
         "request_created",
         "request_fulfilled",
-        "file_deleted"
+        "file_deleted",
+        "linked_file_appeared",
+        "guest_invite_created",
+        "guest_invite_redeemed"
       ],
       "retries": 3,
       "timeoutMs": 7000
@@ -452,10 +455,23 @@ Signature format:
 
 - `file_uploaded`: upload registration completed
 - `request_created`: request pseudo-file created
-- `request_fulfilled`: request deleted before expiry (non-expired deletion path)
+- `request_fulfilled`: request marked fulfilled (status path) or fulfilled via lifecycle cleanup when not already fulfilled
 - `file_deleted`: upload deleted/expired path
+- `linked_file_appeared`: a file uploaded to a **source** room matches a **destination** room’s multi-room link rules (source has Allow Room Cross-Linking). Payload includes destination `roomid`, `sourceRoomId`, and file fields
+- `guest_invite_created` / `guest_invite_redeemed`: guest invite link minted or one use consumed
 
 Retries use exponential backoff. Permanent failures are written as JSON lines to `webhookDeadLetterLog`.
+
+The same event names are fanned out to **in-process plugins** (`lib/plugins/`). See [core/plugins/DEVELOPING_PLUGINS.md](core/plugins/DEVELOPING_PLUGINS.md).
+
+## 8.4 Guest invite links
+
+Room owners (privileged) can mint invite URLs for invite-only rooms via Room Options or:
+
+- `setconfig` socket: `createGuestInvite` `{ singleUse?, maxUses?, maxAgeHours?, label? }`
+- `listGuestInvites` / `revokeGuestInvite`
+
+Share: `/r/<roomId>?invite=<token>`. Single-use or max **X** redemptions; optional max age in hours. After redeem, a guest pass is stored for the browser session key so refresh does not re-burn multi-use invites.
 
 ## 9. Error Contract
 
@@ -1107,7 +1123,7 @@ including `meta.hints`, and can match against it programmatically.
 > the right HTTP API. The missing piece is a thin wrapper that speaks the
 > Model Context Protocol JSON-RPC dialect that Claude Desktop, Cursor, Continue,
 > and other MCP clients understand. That wrapper is a ~300-line Node.js script
-> that proxies MCP tool calls into Dicefiles REST calls. See `docs/mcp.md` for
+> that proxies MCP tool calls into Dicefiles REST calls. See `MCP.md` for
 > the full design and setup guide.
 
 ### 19.1 What MCP means here
@@ -1182,7 +1198,7 @@ like OpenClaw, AutoGen, or CrewAI that support the MCP remote-server spec.
 MCP_TRANSPORT=http MCP_PORT=3001 node scripts/mcp-server.js
 ```
 
-See `docs/mcp.md` for the full specification, security model, and deployment guide.
+See `MCP.md` for the full specification, security model, and deployment guide.
 
 ---
 

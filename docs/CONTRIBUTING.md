@@ -104,6 +104,7 @@ If your change modifies user-facing behavior or setup:
 - Update `README.md`.
 - Update `CHANGELOG.md`.
 - Add migration notes when behavior changes can affect existing deployments.
+- Docs index: [README.md](./README.md). Product backlog: [FUTURE_DEVELOPMENT_PLAN.md](./FUTURE_DEVELOPMENT_PLAN.md). Plugins: `../core/plugins/`.
 
 ## Review Criteria
 

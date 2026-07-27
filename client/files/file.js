@@ -399,10 +399,28 @@ export default class File extends BaseFile {
       if (tn === "usernick" && this.meta && this.meta.account) {
         tag.classList.add("tag-user");
       }
+      // Plugin/automation bots — distinctive cyan BOT pill (not a profile link)
+      const isBotUploader =
+        (tn === "usernick" || tn === "user" || tn === "bot") &&
+        this.meta &&
+        (this.meta.role === "bot" ||
+          this.meta.bot === true ||
+          this.meta.bot === "true");
+      if (isBotUploader) {
+        tag.classList.add("tag-bot");
+        const botLabel =
+          (this.meta.botName && String(this.meta.botName)) ||
+          (this.meta.plugin && String(this.meta.plugin)) ||
+          tv;
+        tag.textContent = botLabel;
+        tag.setAttribute("title", `Bot: ${botLabel}`);
+        tag.setAttribute("aria-label", `Bot uploader: ${botLabel}`);
+      }
       if (
         (tn === "usernick" || tn === "user") &&
         this.meta &&
-        this.meta.account
+        this.meta.account &&
+        !isBotUploader
       ) {
         const { account } = this.meta;
         tag.classList.add("tag-user-link");

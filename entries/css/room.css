@@ -649,6 +649,26 @@ body.noreports #ctx-report {
   color: var(--role-mod-fg);
 }
 
+.u.bot {
+  color: var(--role-bot-fg);
+}
+
+/* Bot role glyph next to nick (chat) */
+.u > .role.i-bot::before {
+  content: "BOT";
+  display: inline-block;
+  font-size: 7pt;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 0.15em 0.35em;
+  border-radius: 999px;
+  background: var(--role-bot-bg);
+  border: 1px solid var(--role-bot-border);
+  color: var(--role-bot-fg);
+  vertical-align: middle;
+}
+
 .u > .ban-btn {
   color: var(--text-fg);
   display: inline-block;

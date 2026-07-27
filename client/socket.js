@@ -78,6 +78,15 @@ export default async function createSocket() {
   const url = new URL(sc.getAttribute("src"), document.location);
   const cv = url.searchParams.get("v");
   params.set("cv", cv);
+  // Guest invite from room URL: /r/:id?invite=TOKEN
+  try {
+    const inv = new URLSearchParams(document.location.search).get("invite");
+    if (inv) {
+      params.set("invite", inv);
+    }
+  } catch (_) {
+    /* ignore */
+  }
   if (nick) {
     params.set("nick", nick);
   }

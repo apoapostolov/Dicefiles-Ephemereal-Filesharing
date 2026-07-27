@@ -1,9 +1,9 @@
 # Changelog
 
 
-## [1.4.2] - 2026-07-27 [Multi-room links, request board, deep links]
+## [1.4.2] - 2026-07-27 [Rooms that link, invite, and run bots]
 
-Owner-gated multi-room file mirrors, a first-class request board, shareable deep links, and a redesigned Room Options Linking experience.
+Multi-room file mirrors, a real request board, shareable deep links, guest invite links, in-process plugins (Mega Autoshare), and a Room Options UI that power users can live in.
 
 ### Added
 
@@ -12,16 +12,22 @@ Owner-gated multi-room file mirrors, a first-class request board, shareable deep
 - **Linking tab (Room Options):** Table of linked sources (add by room id or exact name, edit, remove). Per-link filters/rules: filename contains (comma-separated, match any), tag contains, file types (3×2 grid; none = all), no older than / at least this old (hours). Status column: Active, Cross-link off, or Missing. In-panel **?** help for power users.
 - **Request board:** First-class open/fulfilled board when Allow Requests is on, with Create Request and Request board as a segmented toolbar pill.
 - **Shareable deep links** (room option, default off): query/hash intents for `file`, `filter`, `sort`, and `request` when enabled. Bare gallery `#fileKey` still works when the option is off.
+- **Guest invite links (Invites tab):** Mint single-use, max-uses, and/or max-hours links for invite-only rooms; list active invites with copy-to-clipboard and revoke; redeem at `/r/:id?invite=TOKEN` with a guest pass so multi-use links are not re-burned on every refresh.
+- **Plugins & bots (Plugins tab):** Invite bots from the server registry into a room, set config, enable/disable, and **Run now**. Plugin uploads show a cyan **BOT** pill and bot display name (not a fake human account).
+- **Mega Autoshare:** First-party plugin that monitors a Mega.nz folder on a poll interval, downloads new files, and shares them into the room as the Mega Autoshare bot (`megajs` optional dependency).
+- **Webhook events:** `linked_file_appeared`, `guest_invite_created`, `guest_invite_redeemed` (plus existing upload/request/delete events) for external bots and automation.
 
 ### Improved
 
-- **Room Options:** Tabbed General / Linking layout, capped dialog width, section cards, and compact **?** help next to cross-linking.
+- **Room Options:** Tabbed **General / Invites / Linking / Plugins** layout, capped dialog width, section cards, and compact **?** help next to cross-linking.
 - **Toolbar:** Uniform control height, icon size, and gaps; filter field fills space to the action pills; clear (X) sits inside the filter field.
 - **Dark-theme scrollbars** for native and custom scrollers across the product.
+- **README** rewritten for operators and power users (1.3→1.4 story, room capabilities, automation without internal jargon).
 
 ### Docs / tests
 
-- README room options; unit coverage for shipped link helpers (entries, rules, status, resolve), deep-links, and request-board.
+- Plugin guides under `core/plugins/`; product docs under `docs/` with `FUTURE_DEVELOPMENT_PLAN.md` and `docs/archive/` for historical material.
+- Unit coverage for link helpers, deep-links, request-board, guest invites (pure + owner RPC), webhooks events, plugin registry/adapters, and room-plugin runtime.
 
 ## [1.4.1] - 2026-07-27 [Room UI polish]
 
@@ -85,7 +91,7 @@ This release is a **platform overhaul**: cleaner internal architecture, a suppor
 
 - README install path clarified (Yarn, engines, Redis v4, health checks).
 - [docs/PERF_NOTES.md](docs/PERF_NOTES.md) — virtualization and payload notes.
-- [docs/OVERHAUL_AND_OPTIMIZATION_PLAN.md](docs/OVERHAUL_AND_OPTIMIZATION_PLAN.md) — architecture plan status for phases 0–5.
+- [docs/archive/OVERHAUL_AND_OPTIMIZATION_PLAN.md](docs/archive/OVERHAUL_AND_OPTIMIZATION_PLAN.md) — architecture plan (phases 0–5; archived).
 
 ### Supply chain
 

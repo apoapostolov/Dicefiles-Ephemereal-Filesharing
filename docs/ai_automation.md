@@ -361,7 +361,7 @@ automation API events, newest first. See API.md §14.2.
 
 ## 11 — MCP Integration
 
-See `docs/mcp.md` for the complete design and implementation guide.
+See [`MCP.md`](../MCP.md) for the complete design and implementation guide.
 
 In brief: Dicefiles doesn't natively speak Model Context Protocol — it speaks HTTP REST.
 A thin `scripts/mcp-server.js` wrapper (~300 lines, using `@modelcontextprotocol/sdk`)

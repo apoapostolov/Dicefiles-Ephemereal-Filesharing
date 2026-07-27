@@ -389,7 +389,12 @@ export default new (class Messages extends EventEmitter {
 
     if (!m.raw) {
       let user;
-      if (m.role && m.role !== "white" && m.role !== "system") {
+      if (
+        m.role &&
+        m.role !== "white" &&
+        m.role !== "system" &&
+        m.role !== "bot"
+      ) {
         user = dom("a", {
           classes: ucls,
           attrs: {

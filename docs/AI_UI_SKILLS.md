@@ -420,7 +420,7 @@ When adding a theme, **override these names**; do not invent a parallel private 
 - [UI_STYLE.md](./UI_STYLE.md) — component law  
 - [CONTRIBUTING.md](./CONTRIBUTING.md) — workflow and greytone rule  
 - [PERF_NOTES.md](./PERF_NOTES.md) — performance  
-- [archive-viewer.md](./archive-viewer.md) / reader notes in README — reader behavior  
+- [ARCHIVE_VIEWER.md](./ARCHIVE_VIEWER.md) / reader notes in README — reader behavior  
 - Operator skill pack manifest (outside repo): `WEBDEV-INTERFACE-PACK.md` under agent `skills/` trees  
 
 ---

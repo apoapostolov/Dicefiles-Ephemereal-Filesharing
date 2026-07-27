@@ -80,7 +80,7 @@ Client (webpack → static/):
 | Client | Vanilla ES modules, no framework | Correct choice for this product |
 | Tests | Jest unit + integration + views | Good islands; god-files barely unit-tested |
 | Lockfiles | **Both** `yarn.lock` and `package-lock.json` | Reproducibility hazard |
-| CI | **None** (workflows removed; `docs/proposed_git_actions.md` remains) | Manual quality gate only |
+| CI | **None** (workflows removed; see `docs/archive/PROPOSED_GIT_ACTIONS.md`) | Manual quality gate only |
 | Artifacts | Built chunks under `static/` committed | Repo noise; cache-bust via custom HashPlugin |
 
 ### 2.3 What is already good (preserve)
@@ -206,7 +206,7 @@ Public APIs (`/api/v1/*`, socket events, storage layout) stay stable.
 | 0.3 Test baseline | Run full suite; record pass list & duration. Fix only blockers. | Documented baseline in this doc or CHANGELOG |
 | 0.4 Coverage snapshot | `npm run test:coverage` on unit tests; note % for `lib/` | Baseline numbers stored |
 | 0.5 Golden fixtures | Capture sample automation API responses + room file JSON shapes | Fixtures under `tests/fixtures/` |
-| 0.6 Optional CI | If maintainer allows: restore minimal workflow from `docs/proposed_git_actions.md` — unit tests only, Node 20 | Green on PR |
+| 0.6 Optional CI | If maintainer allows: restore minimal workflow from `docs/archive/PROPOSED_GIT_ACTIONS.md` — unit tests only, Node 20 | Green on PR |
 | 0.7 Secret hygiene check | Ensure `.config.json` never tracked; example only | `.gitignore` audit |
 
 **Exit criteria:** Reproducible install + known-green test suite + decision on CI.

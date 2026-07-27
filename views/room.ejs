@@ -607,11 +607,29 @@
         <button
           type="button"
           class="roomopts-tab"
+          data-roomopts-tab="invites"
+          role="tab"
+          aria-selected="false"
+        >
+          Invites
+        </button>
+        <button
+          type="button"
+          class="roomopts-tab"
           data-roomopts-tab="linking"
           role="tab"
           aria-selected="false"
         >
           Linking
+        </button>
+        <button
+          type="button"
+          class="roomopts-tab"
+          data-roomopts-tab="plugins"
+          role="tab"
+          aria-selected="false"
+        >
+          Plugins
         </button>
         <button
           type="button"
@@ -931,6 +949,202 @@
           </div>
         </div>
         <input type="hidden" name="linkedrooms" value="" />
+      </div>
+
+      <div
+        class="roomopts-panel roomopts-panel-invites hidden"
+        data-roomopts-panel="invites"
+        role="tabpanel"
+      >
+        <div class="roomopts-section">
+          <div class="roomopts-section-title">Guest invite links</div>
+          <p class="roomopts-hint">
+            Shareable links for invite-only rooms. Guests redeem once (or up to
+            your limit) and do not become owners. Enable
+            <strong>Invite-only</strong> on the General tab for links to gate
+            access.
+          </p>
+
+          <div class="roomopts-invite-gen">
+            <label class="roomopts-invite-gen-label" for="roomopts-inviteurl"
+              >Generated link</label
+            >
+            <div class="roomopts-invite-gen-row">
+              <input
+                id="roomopts-inviteurl"
+                name="inviteurlfield"
+                type="text"
+                readonly
+                autocomplete="off"
+                placeholder="Generate a guest invite link…"
+                aria-label="Generated guest invite link"
+              />
+              <button
+                type="button"
+                class="roomopts-invite-limits-btn"
+                name="invitelimitsbtn"
+                title="Set limits and generate"
+                aria-label="Open limits panel to generate invite"
+                aria-expanded="false"
+                aria-controls="roomopts-invite-limits"
+              >
+                Generate
+              </button>
+              <a
+                class="roomopts-invite-copy icon i-copy"
+                name="invitecopy"
+                href="#"
+                title="Copy link"
+                role="button"
+                aria-label="Copy invite link to clipboard"
+              ></a>
+            </div>
+          </div>
+
+          <div
+            id="roomopts-invite-limits"
+            class="roomopts-invite-limits-panel hidden"
+            name="invitelimitspanel"
+            role="region"
+            aria-label="Invite link limits"
+          >
+            <div class="roomopts-link-editor-title">Invite limits</div>
+            <p class="roomopts-hint">
+              Choose single-use, max redemptions, and/or a time limit, then
+              create the link.
+            </p>
+            <label class="roomopts-invite-check"
+              ><input type="checkbox" name="invitesingle" checked />
+              Single-use (exactly one redeem)</label
+            >
+            <div class="roomopts-link-age">
+              <div class="roomopts-field">
+                <label for="roomopts-invitemax">Max users (X)</label>
+                <input
+                  id="roomopts-invitemax"
+                  name="invitemax"
+                  type="number"
+                  min="1"
+                  max="10000"
+                  value="1"
+                />
+              </div>
+              <div class="roomopts-field">
+                <label for="roomopts-invitehours">Max age (hours)</label>
+                <input
+                  id="roomopts-invitehours"
+                  name="invitehours"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="optional"
+                />
+              </div>
+            </div>
+            <div class="roomopts-field">
+              <label for="roomopts-invitelabel">Label (optional)</label>
+              <input
+                id="roomopts-invitelabel"
+                name="invitelabel"
+                type="text"
+                autocomplete="off"
+                placeholder="e.g. Saturday session guest"
+              />
+            </div>
+            <div class="roomopts-link-editor-actions">
+              <button type="button" name="invitecreate">Create invite link</button>
+              <button type="button" name="invitelimitsclose">Close</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="roomopts-section">
+          <div class="roomopts-section-title">Active invites</div>
+          <div class="roomopts-invite-list-wrap">
+            <table class="roomopts-link-table roomopts-invite-table">
+              <thead>
+                <tr>
+                  <th>Link</th>
+                  <th>Uses</th>
+                  <th>Expires</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody name="invitetbody"></tbody>
+            </table>
+            <p class="roomopts-link-empty" name="inviteempty">
+              No guest invites yet.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="roomopts-panel roomopts-panel-plugins hidden"
+        data-roomopts-panel="plugins"
+        role="tabpanel"
+      >
+        <div class="roomopts-section">
+          <div class="roomopts-section-title">Bots &amp; plugins</div>
+          <p class="roomopts-hint">
+            Invite automation bots from the server registry into
+            <em>this</em> room. Invited bots upload with a cyan
+            <strong>BOT</strong> pill. Settings are stored per room.
+          </p>
+          <div class="roomopts-plugin-catalog">
+            <div class="roomopts-field">
+              <label for="roomopts-plugin-pick">Available bots</label>
+              <div class="roomopts-plugin-invite-row">
+                <select id="roomopts-plugin-pick" name="pluginpick">
+                  <option value="">Loading catalog…</option>
+                </select>
+                <button type="button" name="plugininvite">Invite</button>
+              </div>
+            </div>
+            <p class="roomopts-hint roomopts-plugin-desc" name="plugindesc"></p>
+          </div>
+        </div>
+
+        <div class="roomopts-section">
+          <div class="roomopts-section-title">Invited in this room</div>
+          <div class="roomopts-plugin-list-wrap">
+            <table class="roomopts-link-table roomopts-plugin-table">
+              <thead>
+                <tr>
+                  <th>Bot</th>
+                  <th>Status</th>
+                  <th>Settings</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody name="plugintbody"></tbody>
+            </table>
+            <p class="roomopts-link-empty" name="pluginempty">
+              No bots invited yet. Pick one from the catalog above.
+            </p>
+          </div>
+        </div>
+
+        <div class="roomopts-plugin-editor hidden" name="plugineditor">
+          <div class="roomopts-link-editor-title">
+            Bot settings —
+            <span name="plugineditorlabel"></span>
+          </div>
+          <div class="roomopts-plugin-editor-fields" name="plugineditorfields"></div>
+          <div class="roomopts-checks">
+            <label
+              ><input type="checkbox" name="pluginenabled" checked />
+              Enabled in this room</label
+            >
+          </div>
+          <div class="roomopts-link-editor-actions">
+            <button type="button" name="pluginapply">Save settings</button>
+            <button type="button" name="pluginrun">Run now</button>
+            <button type="button" name="pluginrevoke">Remove</button>
+            <button type="button" name="pluginclose">Close</button>
+          </div>
+          <p class="roomopts-hint roomopts-plugin-status" name="pluginstatus"></p>
+        </div>
       </div>
     </div>
   </form>

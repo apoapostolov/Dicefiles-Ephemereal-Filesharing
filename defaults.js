@@ -92,7 +92,10 @@ module.exports = {
   //   id: "ops-bot",
   //   url: "https://example.org/dicefiles-webhook",
   //   secret: "replace-with-long-random-secret",
-  //   events: ["file_uploaded", "request_created", "request_fulfilled", "file_deleted"],
+  //   events: [
+  //     "file_uploaded", "request_created", "request_fulfilled", "file_deleted",
+  //     "linked_file_appeared", "guest_invite_created", "guest_invite_redeemed"
+  //   ],
   //   retries: 3,
   //   timeoutMs: 7000,
   // }]
@@ -107,6 +110,22 @@ module.exports = {
 
   // JSON-lines dead-letter sink for permanently failed webhook deliveries.
   webhookDeadLetterLog: "webhook-dead-letter.log",
+
+  // First-party plugins (see core/plugins/DEVELOPING_PLUGINS.md).
+  // Mega Autoshare example — monitors a Mega.nz folder and uploads new files
+  // into a room as the cyan "Mega Autoshare" bot pill:
+  // plugins: [{
+  //   id: "mega-folder",
+  //   enabled: true,
+  //   config: {
+  //     folderUrl: "https://mega.nz/folder/...",
+  //     roomId: "yourRoomId",
+  //     namePrefix: "mega-",
+  //     pollIntervalMinutes: 15,
+  //     botName: "Mega Autoshare"
+  //   }
+  // }]
+  plugins: [],
 
   // Allow X-Forwarded-For to set client IP if found
   considerProxyForwardedForHeaders: false,

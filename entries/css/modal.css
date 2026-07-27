@@ -1242,6 +1242,165 @@
   margin-top: 0.15rem;
 }
 
+.modal-optsdlg .roomopts-invite-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Invites tab: generate row (field + Generate + i-copy like welcome room URL) */
+.modal-optsdlg .roomopts-invite-gen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.modal-optsdlg .roomopts-invite-gen-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.modal-optsdlg .roomopts-invite-gen-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 7px;
+  padding: 0.2em 0.45em 0.2em 0.55em;
+  background: rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.modal-optsdlg .roomopts-invite-gen-row > input[name="inviteurlfield"] {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  outline: none;
+  padding: 0.25em 0;
+  text-overflow: ellipsis;
+}
+
+.modal-optsdlg .roomopts-invite-limits-btn {
+  flex: 0 0 auto;
+  padding: 0.3em 0.65em;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.modal-optsdlg .roomopts-invite-limits-btn:hover,
+.modal-optsdlg .roomopts-invite-limits-btn:focus {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* Override .modal .icon (64px modal chrome icons) — keep copy compact like the row */
+.modal-optsdlg .roomopts-invite-copy,
+.modal-optsdlg a.roomopts-invite-copy.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 1.65rem;
+  height: 1.65rem;
+  margin: 0;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.9;
+  grid-area: auto;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+.modal-optsdlg .roomopts-invite-gen-row > .roomopts-invite-copy {
+  /* Match Generate button optical height in the same row */
+  height: 1.85rem;
+  width: 1.85rem;
+  font-size: 1.05rem;
+}
+
+.modal-optsdlg .roomopts-invite-url-line .roomopts-invite-copy {
+  width: 1.35rem;
+  height: 1.35rem;
+  font-size: 0.9rem;
+}
+
+.modal-optsdlg .roomopts-invite-copy:hover,
+.modal-optsdlg .roomopts-invite-copy:focus {
+  opacity: 1;
+}
+
+.modal-optsdlg .roomopts-invite-copy.copied {
+  transition: color 0.2s ease;
+  color: lightgreen !important;
+}
+
+.modal-optsdlg .roomopts-invite-limits-panel {
+  margin-top: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(20, 28, 36, 0.9);
+  padding: 0.75rem 0.9rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.modal-optsdlg .roomopts-invite-limits-panel.hidden {
+  display: none !important;
+}
+
+.modal-optsdlg .roomopts-invite-list-wrap {
+  width: 100%;
+  max-height: 14rem;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.modal-optsdlg .roomopts-invite-url-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  margin-top: 0.15rem;
+}
+
+.modal-optsdlg .roomopts-invite-url-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: ui-monospace, monospace;
+  font-size: 0.78rem;
+  opacity: 0.9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-optsdlg .roomopts-invite-link-cell {
+  max-width: 18rem;
+}
+
 .modal-optsdlg .roomopts-crosslink-help.hidden {
   display: none !important;
 }
@@ -1278,6 +1437,93 @@
   font-weight: 500;
   max-height: 16rem;
   overflow-y: auto;
+}
+
+/* Plugins / bots tab */
+.modal-optsdlg .roomopts-plugin-invite-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.modal-optsdlg .roomopts-plugin-invite-row > select {
+  flex: 1 1 12rem;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.4em 0.55em;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.28);
+  color: inherit;
+  font: inherit;
+}
+
+.modal-optsdlg .roomopts-plugin-invite-row > button,
+.modal-optsdlg .roomopts-plugin-editor .roomopts-link-editor-actions > button {
+  flex: 0 0 auto;
+}
+
+.modal-optsdlg .roomopts-plugin-desc {
+  margin-top: 0.35rem;
+  min-height: 1.2em;
+}
+
+.modal-optsdlg .roomopts-plugin-list-wrap {
+  width: 100%;
+  max-height: 14rem;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.modal-optsdlg .roomopts-bot-pill {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.12em 0.4em;
+  border-radius: 999px;
+  background: var(--role-bot-bg, rgba(62, 203, 255, 0.22));
+  border: 1px solid var(--role-bot-border, rgba(62, 203, 255, 0.55));
+  color: var(--role-bot-fg, #3ecbff);
+  vertical-align: middle;
+}
+
+.modal-optsdlg .roomopts-bot-name {
+  font-weight: 600;
+  color: var(--role-bot-fg, #3ecbff);
+}
+
+.modal-optsdlg .roomopts-plugin-editor {
+  margin-top: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(20, 28, 36, 0.9);
+  padding: 0.75rem 0.9rem;
+  box-sizing: border-box;
+}
+
+.modal-optsdlg .roomopts-plugin-editor.hidden {
+  display: none !important;
+}
+
+.modal-optsdlg .roomopts-plugin-editor-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-bottom: 0.65rem;
+}
+
+.modal-optsdlg .roomopts-plugin-status {
+  margin-top: 0.5rem;
+  min-height: 1.1em;
+}
+
+.modal-optsdlg .roomopts-status-ok {
+  color: #7ddea0;
+  font-weight: 600;
 }
 
 .modal-optsdlg .roomopts-link-help-body p,

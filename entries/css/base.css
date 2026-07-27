@@ -16,6 +16,10 @@
   --role-user-fg: #23d16f;
   --role-mod-fg: #d880fc;
   --role-system-fg: #ff6c00;
+  /* Plugin/automation bots — distinct cyan pill (not green user / purple mod / orange system) */
+  --role-bot-fg: #3ecbff;
+  --role-bot-bg: rgba(62, 203, 255, 0.22);
+  --role-bot-border: rgba(62, 203, 255, 0.55);
   --base-size: 12pt;
   --base-font: 'Rubik', 'Cairo', sans-serif;
   --files-size: 11pt;

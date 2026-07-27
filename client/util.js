@@ -192,6 +192,9 @@ export function roleToIcon(role) {
   case "system":
     return "i-sytem32";
 
+  case "bot":
+    return "i-bot";
+
   case "mod":
     return "i-purple";
 
@@ -207,6 +210,9 @@ export function roleToStatus(role) {
   switch (role) {
   case "system":
     return "System Message";
+
+  case "bot":
+    return "Bot / plugin";
 
   case "mod":
     return "Moderator";

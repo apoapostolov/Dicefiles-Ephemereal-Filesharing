@@ -1,8 +1,6 @@
-Message Removal
-===
+# Message Removal
 
-Goals
----
+## Goals
 
 Dicefiles moderators want to remove spam messages retroactively.
 
