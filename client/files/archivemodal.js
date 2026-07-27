@@ -340,9 +340,10 @@ export default class ArchiveModal extends Modal {
 
   async _loadListing() {
     if (!this.archiveKey) {
-      this._setStatus("Could not determine archive key.");
+      this._setStatus("Could not determine archive key.", { error: true });
       return;
     }
+    this._setStatus("Loading archive contents…");
     try {
       const res = await fetch(`/api/v1/archive/${this.archiveKey}/ls`, {
         credentials: "same-origin",
@@ -355,18 +356,26 @@ export default class ArchiveModal extends Modal {
       this._format = data.format || "?";
       this._allFiles = (data.files || []).filter((f) => !f.isDir);
       this._tree = buildTree(data.files || []);
-      this._setStatus("");
+      this._setStatus(
+        this._allFiles.length
+          ? ""
+          : "Archive has no extractable files.",
+      );
       this._renderTree();
       this._renderFiles();
     } catch (ex) {
-      this._setStatus(`Failed to load archive: ${ex.message}`);
+      this._setStatus(`Failed to load archive: ${ex.message}`, {
+        error: true,
+      });
     }
   }
 
-  _setStatus(text) {
+  _setStatus(text, opts = {}) {
     if (this._statusEl) {
-      this._statusEl.textContent = text;
+      this._statusEl.textContent = text || "";
       this._statusEl.classList.toggle("hidden", !text);
+      this._statusEl.classList.toggle("is-error", !!(text && opts.error));
+      this._statusEl.setAttribute("role", opts.error ? "alert" : "status");
     }
   }
 
@@ -613,13 +622,21 @@ export default class ArchiveModal extends Modal {
     const files = this._getVisibleFiles();
 
     if (!files.length) {
-      if (!this._tree || this._tree.children.size === 0) {
-        const empty = dom("div", {
-          classes: ["av-files-empty"],
-          text: this._tree ? "No files in selection." : "Loading…",
-        });
-        this._fileListEl.appendChild(empty);
+      let emptyText = "Loading…";
+      if (this._tree) {
+        if (this._searchQuery) {
+          emptyText = "No files match this filter.";
+        } else if (this._allFiles && this._allFiles.length) {
+          emptyText = "No files in selection.";
+        } else {
+          emptyText = "Archive is empty.";
+        }
       }
+      const empty = dom("div", {
+        classes: ["av-files-empty"],
+        text: emptyText,
+      });
+      this._fileListEl.appendChild(empty);
       this._updateFileInfo();
       this._updateDownloadBtn();
       return;

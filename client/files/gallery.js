@@ -20,6 +20,7 @@ export default class Gallery {
     // Reader is heavy (PDF.js / JSZip / mobi) — load on first use.
     this.reader = null;
     this._readerPromise = null;
+    this._readNowLoading = false;
 
     this.auxTimer = 0;
     this.startHideAux = this.startHideAux.bind(this);
@@ -90,12 +91,40 @@ export default class Gallery {
     return this._readerPromise;
   }
 
+  setReadNowLoading(loading) {
+    this._readNowLoading = !!loading;
+    if (!this.readNowEl) {
+      return;
+    }
+    this.readNowEl.classList.toggle("loading", this._readNowLoading);
+    this.readNowEl.disabled = this._readNowLoading;
+    this.readNowEl.setAttribute(
+      "aria-busy",
+      this._readNowLoading ? "true" : "false",
+    );
+    this.readNowEl.textContent = this._readNowLoading
+      ? "Loading…"
+      : "Read Now";
+  }
+
   async onreadnow(e) {
     nukeEvent(e);
+    if (this._readNowLoading) {
+      return;
+    }
     const {file} = this;
-    this.close();
-    const reader = await this.ensureReader();
-    reader.open(file);
+    if (!file || !(file.getReadableType && file.getReadableType())) {
+      return;
+    }
+    this.setReadNowLoading(true);
+    try {
+      const reader = await this.ensureReader();
+      this.close();
+      reader.open(file);
+    } catch (ex) {
+      console.error(ex);
+      this.setReadNowLoading(false);
+    }
   }
 
   ontitleclick(e) {
@@ -123,6 +152,17 @@ export default class Gallery {
     if (key === "ArrowRight") {
       this.prev();
       return nukeEvent(e);
+    }
+    if (key === "r" || key === "R") {
+      if (
+        this.file &&
+        this.file.getReadableType &&
+        this.file.getReadableType() &&
+        !this._readNowLoading
+      ) {
+        this.onreadnow(e);
+        return nukeEvent(e);
+      }
     }
     return true;
   }
@@ -157,6 +197,7 @@ export default class Gallery {
 
     // Reset download button color state
     this.downloadEl.classList.remove("dl-light", "dl-dark");
+    this.setReadNowLoading(false);
 
     // Turn off gallery mode and garbage collect
     this.el.parentElement.classList.remove("gallery");
@@ -331,10 +372,19 @@ export default class Gallery {
     this.infoEl.textContent = info.infos.join(" — ");
     this.showAux();
 
-    // Show "Read Now" button only for PDF/EPUB files
+    // Show "Read Now" button only for readable document types
     if (this.readNowEl) {
       const readable = file.getReadableType && file.getReadableType();
       this.readNowEl.classList.toggle("hidden", !readable);
+      if (readable && !this._readNowLoading) {
+        this.readNowEl.textContent = "Read Now";
+        this.readNowEl.disabled = false;
+        this.readNowEl.setAttribute("aria-busy", "false");
+        this.readNowEl.classList.remove("loading");
+      }
+      this.readNowEl.title = readable
+        ? "Open in-page reader (R)"
+        : "Not a readable document";
     }
 
     // Push gallery link (hash) into history

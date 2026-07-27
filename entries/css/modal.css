@@ -1271,6 +1271,11 @@
   display: none;
 }
 
+.modal-archiveviewer .av-status.is-error {
+  color: rgba(255, 160, 150, 0.95);
+  border-top-color: rgba(255, 120, 100, 0.28);
+}
+
 /* Shared header controls */
 .modal-archiveviewer .av-select-info {
   flex: 1 1 0;

@@ -120,7 +120,11 @@ body#room {
   align-self: center;
   user-select: none;
   outline: 0;
+  /* Stable width: do not grow/shrink on focus/valid (old flex:5 animation). */
+  flex: 1 1 14rem;
   min-width: 11rem;
+  max-width: 22rem;
+  width: 14rem;
   transition:
     border-color 0.2s ease,
     background 0.2s ease;
@@ -129,13 +133,6 @@ body#room {
 #filter:focus {
   border-color: var(--focus-ring);
   background: rgba(0, 0, 0, 0.7);
-}
-
-#filter:active,
-#filter:focus,
-#filter:valid {
-  transition: flex 0.5s ease-out;
-  flex: 5;
 }
 
 #filter:required,
@@ -746,40 +743,38 @@ a.r::before {
   padding: 0.1rem 0.15rem 0.2rem;
 }
 
-.gif-provider-pill {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 999px;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.18);
-}
-
-.gif-provider-btn {
+/* Single Giphy toggle (Tenor public API removed 2026-06-30) */
+.gif-toggle-btn {
   width: 1.9rem;
   height: 1.7rem;
-  border: 0;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  background: transparent;
+  margin-left: 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-.gif-provider-btn:last-child {
-  border-right: 0;
+.gif-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.gif-provider-btn.active {
-  background: rgba(255, 255, 255, 0.14);
+.gif-toggle-btn.active {
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: rgb(0 0 0 / 75%) 0px 0px 6px 0px inset;
 }
 
-.gif-provider-icon {
+.gif-toggle-icon {
   width: 14px;
   height: 14px;
   border-radius: 2px;
+  pointer-events: none;
 }
 
 .gif-menu {
@@ -1141,20 +1136,28 @@ a.r::before {
   display: block;
 }
 
-.sort-pill .btn.active {
-  background: var(--accent, #555);
-  color: #fff;
+/* Match UI_STYLE active (viewmode / links) — inset highlight */
+.sort-pill .btn.active,
+#tools .sort-pill .btn.active {
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: rgb(0 0 0 / 75%) 0px 0px 6px 0px inset;
+  color: var(--text-fg);
 }
 
 /* ===== Show-New Button (inside filter pill as rightmost item) ===== */
 #show-new-btn {
   opacity: 0.55;
-  transition: opacity 0.15s;
+  transition:
+    opacity 0.15s,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-#show-new-btn.active {
+#show-new-btn.active,
+#tools #show-new-btn.active {
   opacity: 1;
-  background: var(--surface-2);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: rgb(0 0 0 / 75%) 0px 0px 6px 0px inset;
   color: var(--text-fg);
 }
 

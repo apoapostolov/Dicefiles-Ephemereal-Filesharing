@@ -625,9 +625,12 @@ HTTP status is:
 
 See `defaults.js` for all available options.
 
-### GIF Provider API Keys (Giphy/Tenor)
+### GIF Provider API Key (Giphy)
 
-GIF search in the chat overlay uses provider APIs and requires keys.
+Chat GIF search uses **Giphy** only. Google discontinued the public **Tenor API** on
+**2026-06-30** (see [Tenor support](https://support.google.com/tenor/answer/10455265));
+that provider was removed from Dicefiles. Existing Tenor media URLs in chat still
+embed when possible.
 
 1. Edit `core/gif-providers.json` only for non-secret defaults (`limit`, `rating`, etc.).
 2. Create a local secret override file in the project root:
@@ -636,9 +639,6 @@ GIF search in the chat overlay uses provider APIs and requires keys.
 {
   "giphy": {
     "apiKey": "YOUR_GIPHY_API_KEY"
-  },
-  "tenor": {
-    "apiKey": "YOUR_TENOR_API_KEY"
   }
 }
 ```

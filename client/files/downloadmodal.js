@@ -37,11 +37,15 @@ export default class DownloadBatchModal extends Modal {
 
     this.statusEl = dom("div", {
       classes: ["download-status"],
-      text: `Preparing ${total} file downloads...`,
+      text:
+        total > 0
+          ? `Preparing ${total} file download${total === 1 ? "" : "s"}…`
+          : "No files to download.",
+      attrs: { role: "status" },
     });
     this.currentEl = dom("div", {
       classes: ["download-current"],
-      text: "",
+      text: total > 0 ? "" : "Add files or adjust filters, then try again.",
     });
 
     this.optionsEl = dom("div", { classes: ["download-options"] });
@@ -122,6 +126,13 @@ export default class DownloadBatchModal extends Modal {
 
     this.progressWrapEl = dom("div", {
       classes: ["download-progress-wrap"],
+      attrs: {
+        role: "progressbar",
+        "aria-valuemin": "0",
+        "aria-valuemax": "100",
+        "aria-valuenow": "0",
+        "aria-label": "Batch download progress",
+      },
     });
     this.progressBarEl = dom("div", {
       classes: ["download-progress-bar"],
@@ -149,6 +160,16 @@ export default class DownloadBatchModal extends Modal {
     this.body.appendChild(this.progressWrapEl);
     this.body.appendChild(this.reportSummaryEl);
     this.body.appendChild(this.reportListEl);
+
+    if (total <= 0) {
+      this.disableStartControls();
+      if (this.startBtn) {
+        this.startBtn.classList.add("hidden");
+      }
+      if (this.cancelBtn) {
+        this.cancelBtn.textContent = "Close";
+      }
+    }
   }
 
   dismiss() {
@@ -257,6 +278,9 @@ export default class DownloadBatchModal extends Modal {
       ? Math.floor((finished / this.total) * 100)
       : 100;
     this.progressBarEl.style.width = `${percent}%`;
+    if (this.progressWrapEl) {
+      this.progressWrapEl.setAttribute("aria-valuenow", String(percent));
+    }
     this.statusEl.textContent = `Downloaded ${done}/${this.total} (${failed} failed, ${skipped} skipped)`;
   }
 

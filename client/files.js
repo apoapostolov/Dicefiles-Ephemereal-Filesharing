@@ -17,7 +17,15 @@ import {
   sliceWindow,
 } from "./files/windowing";
 import { getVisibleWindow as computeVisibleWindow } from "./files/list-window";
-import { SORT_MODES as LIST_SORT_MODES, sortFiles } from "./files/list-state";
+import {
+  SORT_MODES as LIST_SORT_MODES,
+  applyFilterButtonState,
+  collectFilterButtonState,
+  normalizeSortMode,
+  parseFilterState,
+  serializeFilterState,
+  sortFiles,
+} from "./files/list-state";
 import registry from "./registry";
 import Scroller from "./scroller";
 import {
@@ -41,6 +49,7 @@ const BATCH_QUEUE_PREFIX = "dicefiles:downloadqueue:room:";
 const DOWNLOADED_NAMES_PREFIX = "dicefiles:downloadednames:room:";
 const PRESETS_PREFIX = "dicefiles:filterpresets:room:";
 const SORT_MODE_PREFIX = "dicefiles:sortmode:room:";
+const FILTER_STATE_PREFIX = "dicefiles:filterstate:room:";
 const SORT_MODES = LIST_SORT_MODES;
 
 export default new (class Files extends EventEmitter {
@@ -91,8 +100,10 @@ export default new (class Files extends EventEmitter {
     // Saved filters and sort state
     this.presetsKey = null;
     this.sortModeKey = null;
+    this.filterStateKey = null;
     this.sortMode = "newest"; // newest | largest | expiring
     this.showingNewOnly = false;
+    this._restoringFilter = false;
     this.presetsEl = document.querySelector("#presets-row");
     this.presetsListEl = document.querySelector("#presets-list");
     this.presetSaveEl = document.querySelector("#preset-save");
@@ -250,6 +261,7 @@ export default new (class Files extends EventEmitter {
       this.downloadedNamesKey = `${DOWNLOADED_NAMES_PREFIX}${roomid}`;
       this.presetsKey = `${PRESETS_PREFIX}${roomid}`;
       this.sortModeKey = `${SORT_MODE_PREFIX}${roomid}`;
+      this.filterStateKey = `${FILTER_STATE_PREFIX}${roomid}`;
     }
     this.initSortMode();
     this.renderPresets();
@@ -263,6 +275,7 @@ export default new (class Files extends EventEmitter {
       );
     }
     this.initNewState();
+    this.restoreFilterState();
     this.restoreViewMode();
     registry.socket.on("files", this.onfiles);
     registry.socket.on("files-deleted", this.onfilesdeleted);
@@ -534,9 +547,63 @@ export default new (class Files extends EventEmitter {
       this.filter.value,
     );
     this.filterClear.classList[this.filterFunc ? "remove" : "add"]("disabled");
+    if (!this._restoringFilter) {
+      this.persistFilterState();
+    }
     REMOVALS.trigger();
     if (!this.applying) {
       this.applying = this.applyFilter().then(() => (this.applying = null));
+    }
+  }
+
+  persistFilterState() {
+    if (!this.filterStateKey) {
+      return;
+    }
+    try {
+      const payload = serializeFilterState({
+        buttons: collectFilterButtonState(this.filterButtons),
+        query: this.filter ? this.filter.value : "",
+        showingNewOnly: this.showingNewOnly,
+      });
+      localStorage.setItem(this.filterStateKey, payload);
+    } catch (_) {
+      /* no-op */
+    }
+  }
+
+  restoreFilterState() {
+    if (!this.filterStateKey) {
+      return;
+    }
+    let raw = null;
+    try {
+      raw = localStorage.getItem(this.filterStateKey);
+    } catch (_) {
+      return;
+    }
+    const state = parseFilterState(raw);
+    if (!state) {
+      return;
+    }
+    this._restoringFilter = true;
+    try {
+      applyFilterButtonState(this.filterButtons, state.buttons);
+      if (this.filter && typeof state.query === "string") {
+        this.filter.value = state.query;
+      }
+      this.showingNewOnly = !!state.showingNewOnly;
+      if (this.showNewBtnEl) {
+        this.showNewBtnEl.classList.toggle("active", this.showingNewOnly);
+        this.showNewBtnEl.setAttribute(
+          "aria-pressed",
+          this.showingNewOnly ? "true" : "false",
+        );
+      }
+      this.doFilter();
+    } finally {
+      this._restoringFilter = false;
+      this.persistFilterState();
     }
   }
 
@@ -1659,9 +1726,7 @@ export default new (class Files extends EventEmitter {
   initSortMode() {
     try {
       const saved = this.sortModeKey && localStorage.getItem(this.sortModeKey);
-      if (saved && SORT_MODES.includes(saved)) {
-        this.sortMode = saved;
-      }
+      this.sortMode = normalizeSortMode(saved, this.sortMode);
     } catch (_) {
       /* no-op */
     }
@@ -1686,19 +1751,19 @@ export default new (class Files extends EventEmitter {
 
   updateSortButtons() {
     if (this.sortNewestEl) {
-      this.sortNewestEl.classList.toggle("active", this.sortMode === "newest");
+      const on = this.sortMode === "newest";
+      this.sortNewestEl.classList.toggle("active", on);
+      this.sortNewestEl.setAttribute("aria-pressed", on ? "true" : "false");
     }
     if (this.sortLargestEl) {
-      this.sortLargestEl.classList.toggle(
-        "active",
-        this.sortMode === "largest",
-      );
+      const on = this.sortMode === "largest";
+      this.sortLargestEl.classList.toggle("active", on);
+      this.sortLargestEl.setAttribute("aria-pressed", on ? "true" : "false");
     }
     if (this.sortExpiringEl) {
-      this.sortExpiringEl.classList.toggle(
-        "active",
-        this.sortMode === "expiring",
-      );
+      const on = this.sortMode === "expiring";
+      this.sortExpiringEl.classList.toggle("active", on);
+      this.sortExpiringEl.setAttribute("aria-pressed", on ? "true" : "false");
     }
   }
 
@@ -1707,7 +1772,12 @@ export default new (class Files extends EventEmitter {
     this.showingNewOnly = !this.showingNewOnly;
     if (this.showNewBtnEl) {
       this.showNewBtnEl.classList.toggle("active", this.showingNewOnly);
+      this.showNewBtnEl.setAttribute(
+        "aria-pressed",
+        this.showingNewOnly ? "true" : "false",
+      );
     }
+    this.persistFilterState();
     if (!this.applying) {
       this.applying = this.applyFilter().then(() => (this.applying = null));
     }

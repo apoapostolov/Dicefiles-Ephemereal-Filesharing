@@ -1,6 +1,26 @@
 # Changelog
 
 
+## [1.4.1] - 2026-07-27 [Room UI polish]
+
+Surgical room UI polish — no redesign. Clearer feedback, sticky preferences, dead GIF provider removed.
+
+### Improvements
+
+- **Filters & sort stick across reloads** in each room (type filters, text filter, “show new only,” sort mode). Active sort / show-new buttons use the same selected look as list/gallery/links.
+- **Gallery “Read Now”** shows a loading state while the in-page reader loads, avoids double-open, and supports keyboard **R**.
+- **Archive browser** has clearer loading / empty / search-empty / error messages when listing zip/rar/etc.
+- **Batch download** handles the empty queue honestly (no fake “preparing…”) and exposes progress more clearly.
+- **GIF search is Giphy only.** Google discontinued the public **Tenor API** on **2026-06-30**. Tenor is removed from the chat GIF control (single Giphy button — no multi-provider pill), search code, `core/gif-providers.json`, and CSP `connect-src`. Old Tenor media URLs in chat still embed when the CDN serves them.
+
+### Fixes
+
+- **Filter text field no longer grows/shrinks** on focus/blur (removed legacy `flex: 5` animation on `#filter:focus` / `:valid`).
+
+### Tests
+
+- Expanded unit coverage for shipped list-state helpers (sort/filter serialize/restore).
+
 ## [1.4.0] - 2026-07-27 [Code Overhaul & Redis v4 Migration]
 
 This release is a **platform overhaul**: cleaner internal architecture, a supported Redis client stack, faster large rooms, and deeper operator health signals. Product features and public automation API paths stay compatible with the 1.3.x line.

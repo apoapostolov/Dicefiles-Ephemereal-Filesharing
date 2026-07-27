@@ -482,6 +482,14 @@ body.focus-reading #reader-content:has(.reader-book-iframe) {
   color: #fff;
 }
 
+.gallery-read-now.loading,
+.gallery-read-now:disabled {
+  opacity: 0.72;
+  cursor: wait;
+  pointer-events: none;
+  border-color: rgba(180, 180, 180, 0.55);
+}
+
 /* ── Reader options button (EPUB / MOBI only) ────────────────────────────── */
 
 #reader-opts {
