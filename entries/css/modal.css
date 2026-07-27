@@ -1368,3 +1368,79 @@
   height: auto;
   display: block;
 }
+
+/* Request board */
+.modal-requestboard .modal-body {
+  min-width: 28em;
+  max-width: 40em;
+  max-height: 70vh;
+  overflow: auto;
+}
+.modal-requestboard .rb-summary {
+  margin-bottom: 0.6rem;
+  font-size: 0.9em;
+  color: rgba(230, 230, 230, 0.85);
+}
+.modal-requestboard .rb-filters {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+.modal-requestboard .rb-filter-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(230, 230, 230, 0.9);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+.modal-requestboard .rb-filter-btn.active {
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: rgb(0 0 0 / 75%) 0 0 6px 0 inset;
+}
+.modal-requestboard .rb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.modal-requestboard .rb-row {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.18);
+}
+.modal-requestboard .rb-status {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.modal-requestboard .rb-status-open .rb-status {
+  color: rgba(255, 200, 120, 0.95);
+}
+.modal-requestboard .rb-status-fulfilled .rb-status {
+  color: rgba(140, 220, 160, 0.95);
+}
+.modal-requestboard .rb-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.modal-requestboard .rb-open {
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  color: var(--text-fg);
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+}
+.modal-requestboard .rb-empty {
+  padding: 1.2rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.45);
+}

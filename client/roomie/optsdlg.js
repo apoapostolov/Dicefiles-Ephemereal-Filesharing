@@ -29,6 +29,8 @@ export class OptionsModal extends Modal {
       "adult",
       "allowrequests",
       "linkcollection",
+      "deeplinks",
+      "linkedrooms",
       "disabled",
       "disablereports",
       "ttl",
@@ -48,6 +50,17 @@ export class OptionsModal extends Modal {
     this.adult.checked = !!c.get("adult");
     this.allowrequests.checked = c.get("allowRequests") !== false;
     this.linkcollection.checked = c.get("linkCollection") !== false;
+    if (this.deeplinks) {
+      this.deeplinks.checked = !!c.get("deepLinks");
+    }
+    if (this.linkedrooms) {
+      const linked = c.get("linkedRooms");
+      this.linkedrooms.value = Array.isArray(linked)
+        ? linked.join(", ")
+        : linked
+          ? String(linked)
+          : "";
+    }
     this.disabled.checked = !!c.get("disabled");
     this.disablereports.checked = !!c.get("disableReports");
     this.ttl.value = c.get("fileTTL") || 0;
@@ -120,6 +133,12 @@ will NOT be aborted, and they also retain their chat histories.`,
       const { checked: adult } = this.adult;
       const { checked: allowRequests } = this.allowrequests;
       const { checked: linkCollection } = this.linkcollection;
+      const deepLinks = !!(this.deeplinks && this.deeplinks.checked);
+      const linkedRoomsRaw = this.linkedrooms ? this.linkedrooms.value : "";
+      const linkedRooms = linkedRoomsRaw
+        .split(/[\s,]+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
       const { checked: disabled } = this.disabled;
       const { checked: disableReports } = this.disablereports;
 
@@ -145,6 +164,16 @@ will NOT be aborted, and they also retain their chat histories.`,
       }
       if (linkCollection !== (c.get("linkCollection") !== false)) {
         await socket.makeCall("setconfig", "linkCollection", linkCollection);
+      }
+      if (deepLinks !== !!c.get("deepLinks")) {
+        await socket.makeCall("setconfig", "deepLinks", deepLinks);
+      }
+      const prevLinked = Array.isArray(c.get("linkedRooms"))
+        ? c.get("linkedRooms").slice().sort().join(",")
+        : "";
+      const nextLinked = linkedRooms.slice().sort().join(",");
+      if (prevLinked !== nextLinked) {
+        await socket.makeCall("setconfig", "linkedRooms", linkedRooms);
       }
       if (registry.chatbox.role === "mod") {
         if (disabled !== !!c.get("disabled")) {

@@ -8,6 +8,11 @@ import * as filesfilter from "./files/filter";
 import Gallery from "./files/gallery";
 // Reader is lazy-loaded; progress cleanup uses dynamic import.
 import RequestModal, { RequestViewModal } from "./files/requestmodal";
+import RequestBoardModal from "./files/requestboard";
+import {
+  resolveDeepLinkNavigation,
+  applyDeepLinkIntents,
+} from "../lib/room/deep-links";
 import ScrollState from "./files/scrollstate";
 import { REMOVALS } from "./files/tracker";
 import Upload from "./files/upload";
@@ -71,6 +76,8 @@ export default new (class Files extends EventEmitter {
     this.downloadNewEl = document.querySelector("#downloadnew");
     this.downloadAllEl = document.querySelector("#downloadall");
     this.createRequestEl = document.querySelector("#createrequest");
+    this.requestBoardEl = document.querySelector("#requestboard");
+    this._deepLinksApplied = false;
     this.files = [];
     this.filemap = new Map();
     this.elmap = new WeakMap();
@@ -178,6 +185,13 @@ export default new (class Files extends EventEmitter {
       "click",
       this.createRequest.bind(this),
     );
+    if (this.requestBoardEl) {
+      this.requestBoardEl.addEventListener(
+        "click",
+        this.openRequestBoard.bind(this),
+        true,
+      );
+    }
 
     const actions = [
       "banFiles",
@@ -281,8 +295,13 @@ export default new (class Files extends EventEmitter {
     registry.socket.on("files-deleted", this.onfilesdeleted);
     registry.socket.on("files-updated", this.onfilesupdated);
     registry.roomie.on("tooltip-hidden", () => this.adjustEmpty());
-    registry.socket.on("config", () => this.updateCapabilityButtons());
+    registry.socket.on("config", () => {
+      this.updateCapabilityButtons();
+      this.maybeApplyDeepLinks();
+    });
     this.updateCapabilityButtons();
+    // Deep links after first file replace (config may already be present)
+    this.once("replaced", () => this.maybeApplyDeepLinks());
     addEventListener("pagehide", this.onleave, { passive: true });
     addEventListener("beforeunload", this.onleave, { passive: true });
   }
@@ -292,11 +311,86 @@ export default new (class Files extends EventEmitter {
     const linkCollection = registry.config.get("linkCollection");
     // undefined = config not yet received from server; default to showing the button
     this.createRequestEl.classList.toggle("hidden", allowRequests === false);
+    if (this.requestBoardEl) {
+      this.requestBoardEl.classList.toggle("hidden", allowRequests === false);
+    }
     if (this.linkModeEl) {
       this.linkModeEl.classList.toggle("hidden", linkCollection === false);
       // If we're in links mode and it just got disabled, exit links mode
       if (linkCollection === false && this.linksMode) {
         this.normalMode();
+      }
+    }
+  }
+
+  openRequestBoard() {
+    if (registry.config.get("allowRequests") === false) {
+      return;
+    }
+    registry.roomie
+      .showModal(new RequestBoardModal(this))
+      .catch((ex) => {
+        if (ex) {
+          console.error(ex);
+        }
+      });
+  }
+
+  /**
+   * Admin-gated shareable deep links + always-on legacy gallery #key.
+   */
+  maybeApplyDeepLinks() {
+    const nav = resolveDeepLinkNavigation({
+      search: document.location.search,
+      hash: document.location.hash,
+      deepLinksEnabled: !!registry.config.get("deepLinks"),
+    });
+
+    // Legacy gallery hash always works when bare #fileKey
+    if (nav.legacyGalleryKey) {
+      const file = this.get(nav.legacyGalleryKey);
+      if (file) {
+        this.gallery.open(file);
+      }
+    }
+
+    if (!nav.applyIntents) {
+      return;
+    }
+    if (this._deepLinksApplied) {
+      return;
+    }
+    this._deepLinksApplied = true;
+
+    const next = applyDeepLinkIntents(
+      {
+        filter: this.filter ? this.filter.value : "",
+        sortMode: this.sortMode,
+        openFileKey: null,
+        openRequestKey: null,
+      },
+      nav.intents,
+      true,
+    );
+
+    if (next.sortMode && next.sortMode !== this.sortMode) {
+      this.setSortMode(next.sortMode);
+    }
+    if (this.filter && typeof next.filter === "string") {
+      this.filter.value = next.filter;
+      this.doFilter();
+    }
+    if (next.openRequestKey) {
+      const req = this.get(next.openRequestKey);
+      if (req && req.isRequest) {
+        registry.roomie
+          .showModal(new RequestViewModal(req))
+          .catch(() => {});
+      }
+    } else if (next.openFileKey) {
+      const file = this.get(next.openFileKey);
+      if (file && !file.isRequest) {
+        this.gallery.open(file);
       }
     }
   }
@@ -1992,10 +2086,17 @@ export default new (class Files extends EventEmitter {
   }
 
   trashFiles(files) {
-    registry.socket.emit(
-      "trash",
-      files.map((e) => e.key).filter((e) => e),
-    );
+    // Linked mirrors are owned by the source room — never trash from destination.
+    const keys = files
+      .filter((e) => e && e.key && !e.isLinked)
+      .map((e) => e.key);
+    if (!keys.length) {
+      registry.messages.addSystemMessage(
+        "Linked files cannot be removed here — manage them in the source room.",
+      );
+      return;
+    }
+    registry.socket.emit("trash", keys);
   }
 
   subjectsFromSelection() {

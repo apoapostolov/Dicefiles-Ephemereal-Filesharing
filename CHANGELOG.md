@@ -1,6 +1,20 @@
 # Changelog
 
 
+## [1.4.2] - 2026-07-27 [Multi-room links, request board, deep links]
+
+Owner-gated room features for multi-room file mirrors, a first-class request board, and optional shareable deep links.
+
+### Added
+
+- **Multi-room linking:** Room Options → *Linked rooms* (comma-separated source room ids). Finished uploads from those rooms appear in the destination list marked **Linked · &lt;name&gt;**. Open/download/read use the source file; trash stays source-owned. Destination users need not join the source room.
+- **Request board:** Toolbar entry (when Allow Requests is on) lists open and fulfilled requests with status filters and Open → existing request view.
+- **Shareable deep links (admin toggle, default off):** When *Shareable deep links* is enabled, load intents from query/hash: `file`, `filter`, `sort`, `request`. Bare gallery `#fileKey` still works when the option is off.
+
+### Docs / tests
+
+- README room options section; unit tests for shipped `lib/room/room-links.js`, `deep-links.js`, `request-board.js`.
+
 ## [1.4.1] - 2026-07-27 [Room UI polish]
 
 Surgical room UI polish — no redesign. Clearer feedback, sticky preferences, dead GIF provider removed.

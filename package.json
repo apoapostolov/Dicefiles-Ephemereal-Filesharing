@@ -1,6 +1,6 @@
 {
   "name": "dicefiles",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Ephemereal Filesharing for Hobby Communities",
   "main": "server.js",
   "author": "RealDolos <dolos@cock.li>",

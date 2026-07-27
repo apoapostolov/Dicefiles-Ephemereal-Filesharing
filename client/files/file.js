@@ -15,6 +15,14 @@ export default class File extends BaseFile {
     this.isRequest = !!(this.meta && this.meta.request);
 
     this.el = dom("div", { classes: ["file"] });
+    this.isLinked = !!(
+      file.linked ||
+      (file.meta && file.meta.linkedFrom) ||
+      file.linkedFrom
+    );
+    if (this.isLinked) {
+      this.el.classList.add("linked-file");
+    }
     if (this.isRequest) {
       this.el.classList.add("request-file");
       if ((file.status || "open") === "fulfilled") {
@@ -415,6 +423,22 @@ export default class File extends BaseFile {
         dom("span", {
           classes: ["tag", "tag-archive-count"],
           text: `${fmt} · ${count} files`,
+        }),
+      );
+    }
+
+    // Multi-room linked mirror badge
+    if (this.isLinked) {
+      const src =
+        (this.meta && this.meta.linkedRoomName) ||
+        (this.meta && this.meta.linkedFrom) ||
+        this.linkedFrom ||
+        "linked";
+      this.tagsEl.appendChild(
+        dom("span", {
+          classes: ["tag", "tag-linked"],
+          text: `Linked · ${src}`,
+          attrs: { title: `Mirrored from room ${src}` },
         }),
       );
     }

@@ -74,6 +74,9 @@
     <div id="createrequest" class="btn" title="Create Request">
       <span class="i-question"></span>
     </div>
+    <div id="requestboard" class="btn" title="Request board">
+      <span class="i-list"></span>
+    </div>
     <div class="btn-pill download-pill">
       <div
         id="downloadnew"
@@ -600,7 +603,21 @@
       <label
         ><input type="checkbox" name="linkcollection" /> Link Collection</label
       >
+      <label
+        ><input type="checkbox" name="deeplinks" /> Shareable deep
+        links</label
+      >
     </div>
+    <label class="wide"
+      >Linked rooms (mirror finished uploads; room ids, comma-separated)</label
+    >
+    <input
+      class="wide"
+      name="linkedrooms"
+      type="text"
+      autocomplete="off"
+      placeholder="e.g. abCdEf12Gh, otherRoom99"
+    />
     <label class="wide modctrl"
       ><input type="checkbox" name="disabled" /> Disabled</label
     >

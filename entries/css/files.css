@@ -261,6 +261,19 @@ body.links-mode #filelist-scroller {
 }
 
 /* Archive file-count badge: "ZIP · 42 files" — non-interactive pill in the tags area */
+#files > .file.linked-file {
+  border-left: 3px solid rgba(120, 180, 255, 0.55);
+}
+
+#files > .file > .tags > .tag.tag-linked {
+  background: rgba(100, 160, 230, 0.28);
+  border: 1px solid rgba(140, 190, 255, 0.4);
+  color: rgba(210, 230, 255, 0.95);
+  border-radius: 999px;
+  padding: 0.05rem 0.45rem;
+  font-size: 0.72rem;
+}
+
 #files > .file > .tags > .tag.tag-archive-count {
   cursor: default;
   background: rgba(80, 120, 180, 0.2);

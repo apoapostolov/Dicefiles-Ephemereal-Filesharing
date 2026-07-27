@@ -499,6 +499,24 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | `roomPruning` | `true` | Automatically delete rooms that have been inactive for more than `roomPruningDays` days. Inactivity is tracked per file upload and per chat message. Enabled by default. |
 | `roomPruningDays` | `21` | Number of days of inactivity before a room is pruned. Requires `roomPruning: true`. All room data (files, messages, metadata) is permanently deleted when the threshold is crossed. |
 
+
+### Room options (owner/mod)
+
+Additional per-room settings in **Room Options** (context menu):
+
+| Option | Default | Description |
+| --- | --- | --- |
+| Allow Requests | on | Request creation and the **Request board** toolbar entry |
+| Link Collection | on | Chat link archive mode |
+| Shareable deep links | **off** | When on, query/hash intents (`file`, `filter`, `sort`, `request`) apply on load. Bare gallery `#fileKey` still works when off. |
+| Linked rooms | empty | Comma-separated source room ids. Finished uploads from those rooms appear in this room marked **Linked · &lt;name&gt;**. Download/open uses the source file; delete stays in the source room. |
+
+Example deep link (requires Shareable deep links enabled):
+
+```text
+/r/yourRoom?filter=maps&sort=newest&file=FILEKEY
+```
+
 ## Security Posture
 
 ### HTTP Security Headers (Helmet 7)

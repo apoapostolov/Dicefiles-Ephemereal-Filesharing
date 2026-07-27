@@ -266,6 +266,14 @@ export default class File extends Removable {
 
   update(other) {
     Object.assign(this, other);
+    this.isLinked = !!(
+      this.linked ||
+      (this.meta && this.meta.linkedFrom) ||
+      this.linkedFrom
+    );
+    if (this.el) {
+      this.el.classList.toggle("linked-file", !!this.isLinked);
+    }
 
     if (this.ip) {
       this.tags.ip = this.ip;
