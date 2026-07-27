@@ -1,15 +1,5 @@
 # Changelog
 
-## [1.4.1] - 2026-07-27 [Redis v4 upload fix + virtualization seal]
-
-### Fixes
-
-- **Upload key registration (Redis v4)**: `HSETNX` no longer rejects numeric field values (`offset`, `ttl`). Hash writes coerce primitives to strings for the node-redis v4 encoder — restores `/api/v1/uploads/key` and file uploads after the 1.4.0 migration.
-- **File list virtualization**: initialize `_virtStart` / `_virtEnd` / `_rowHeightHint` before `Object.seal(this)` so scroll re-windowing does not throw `object is not extensible` and break the client.
-
-### Verification
-
-- Live systemd service on port 10005; browser + API E2E against Redis-backed room/create/list/upload/request/socket paths.
 
 ## [1.4.0] - 2026-07-27 [Code Overhaul & Redis v4 Migration]
 
@@ -35,6 +25,12 @@ This release is a **platform overhaul**: cleaner internal architecture, a suppor
 
 - File-list re-windowing on scroll uses the **full** filtered file list, not only currently mounted DOM rows (so large rooms keep virtualizing while you scroll).
 - Redis command path no longer mixes callback + promise settles (eliminates hung `set`/`get` and client queue desync under load).
+- **Upload key registration under Redis v4**: coerce hash field values to strings so `HSETNX` accepts numeric `offset`/`ttl` (node-redis v4 encoder).
+- **Virtualization on sealed Files controller**: declare `_virtStart` / `_virtEnd` / `_rowHeightHint` before `Object.seal` so scroll re-windowing does not throw.
+
+### Verification
+
+- Live systemd deployment on port 10005; browser + API E2E covered Redis-backed room/session/upload/list/request/socket paths.
 
 ### Upgrade notes
 
