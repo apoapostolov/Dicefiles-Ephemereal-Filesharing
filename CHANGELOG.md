@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.4.1] - 2026-07-27 [Redis v4 upload fix + virtualization seal]
+
+### Fixes
+
+- **Upload key registration (Redis v4)**: `HSETNX` no longer rejects numeric field values (`offset`, `ttl`). Hash writes coerce primitives to strings for the node-redis v4 encoder — restores `/api/v1/uploads/key` and file uploads after the 1.4.0 migration.
+- **File list virtualization**: initialize `_virtStart` / `_virtEnd` / `_rowHeightHint` before `Object.seal(this)` so scroll re-windowing does not throw `object is not extensible` and break the client.
+
+### Verification
+
+- Live systemd service on port 10005; browser + API E2E against Redis-backed room/create/list/upload/request/socket paths.
+
 ## [1.4.0] - 2026-07-27 [Code Overhaul & Redis v4 Migration]
 
 This release is a **platform overhaul**: cleaner internal architecture, a supported Redis client stack, faster large rooms, and deeper operator health signals. Product features and public automation API paths stay compatible with the 1.3.x line.

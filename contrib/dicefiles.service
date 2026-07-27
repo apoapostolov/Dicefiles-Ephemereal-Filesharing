@@ -1,22 +1,25 @@
 [Unit]
-Description=Dicefiles
-After=network.target
-Requires=redis.service network.target
+Description=Dicefiles Ephemeral Filesharing
+After=network-online.target
+Wants=network-online.target
+# If Redis is provided by a companion unit, uncomment:
+# After=dicefiles-redis.service
+# Requires=dicefiles-redis.service
 
 [Service]
 Type=simple
+# Adjust paths for your install
+WorkingDirectory=/mnt/c/git-public/Dicefiles-Ephemereal-Filesharing
 Environment=NODE_ENV=production
-Environment=ENV=production
-Environment=env=production
-ExecStartPre=/usr/bin/git pull
-ExecStartPre=/usr/bin/yarn
-ExecStart=/usr/bin/yarn start
-WorkingDirectory=/root/dicefiles
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+# Port is taken from .config.json (set "port": 10005)
+ExecStart=/usr/bin/node server.js
 Restart=always
-StandardOutput=syslog
-StandardError=syslog
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
 SyslogIdentifier=dicefiles
 
 [Install]
 WantedBy=multi-user.target
-Alias=dicefiles.service
+# For user systemd: WantedBy=default.target and place under ~/.config/systemd/user/

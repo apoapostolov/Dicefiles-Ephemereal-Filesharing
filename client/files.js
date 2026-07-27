@@ -225,6 +225,12 @@ export default new (class Files extends EventEmitter {
       );
     }
 
+    // Virtualized list state (must be declared before seal())
+    this._rowHeightHint = 52;
+    this._virtStart = null;
+    this._virtEnd = null;
+    this._virtRefreshScheduled = false;
+
     Object.seal(this);
   }
 
