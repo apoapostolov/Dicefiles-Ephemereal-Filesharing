@@ -593,59 +593,346 @@
   </form>
 
   <form id="roomopts-tmpl" class="tmpl">
-    <span class="icon i-edit"></span>
-    <label>Room Name</label>
-    <input name="name" type="text" autocomplete="off" />
-    <label>Message of the Day</label>
-    <textarea name="motd" cols="20" rows="3"></textarea>
-    <div class="wide roomopts-actions">
-      <button name="owners">Manage Owners</button>
-      <button class="hidden" name="invitees">Manage Invited Users</button>
+    <div class="roomopts-shell">
+      <div class="roomopts-tabs" role="tablist">
+        <button
+          type="button"
+          class="roomopts-tab active"
+          data-roomopts-tab="general"
+          role="tab"
+          aria-selected="true"
+        >
+          General
+        </button>
+        <button
+          type="button"
+          class="roomopts-tab"
+          data-roomopts-tab="linking"
+          role="tab"
+          aria-selected="false"
+        >
+          Linking
+        </button>
+        <button
+          type="button"
+          class="roomopts-help-btn hidden"
+          name="linkhelpbtn"
+          title="How multi-room linking works"
+          aria-label="Help: multi-room linking"
+        >
+          ?
+        </button>
+      </div>
+
+      <div
+        class="roomopts-panel roomopts-panel-general"
+        data-roomopts-panel="general"
+        role="tabpanel"
+      >
+        <div class="roomopts-section">
+          <div class="roomopts-field">
+            <label for="roomopts-name">Room name</label>
+            <input
+              id="roomopts-name"
+              name="name"
+              type="text"
+              autocomplete="off"
+            />
+          </div>
+          <div class="roomopts-field">
+            <label for="roomopts-motd">Message of the day</label>
+            <textarea
+              id="roomopts-motd"
+              name="motd"
+              cols="20"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="roomopts-actions">
+            <button type="button" name="owners">Manage owners</button>
+            <button type="button" class="hidden" name="invitees">
+              Manage invited users
+            </button>
+          </div>
+        </div>
+
+        <div class="roomopts-section">
+          <div class="roomopts-section-title">Room features</div>
+          <div class="roomopts-checks">
+            <label
+              ><input type="checkbox" name="inviteonly" /> Invite-only</label
+            >
+            <label
+              ><input type="checkbox" name="adult" /> Adult content</label
+            >
+            <label
+              ><input type="checkbox" name="allowrequests" /> Allow
+              requests</label
+            >
+            <label
+              ><input type="checkbox" name="linkcollection" /> Link
+              collection</label
+            >
+            <label
+              ><input type="checkbox" name="deeplinks" /> Shareable deep
+              links</label
+            >
+            <label class="roomopts-check-with-help">
+              <input type="checkbox" name="allowcrosslinking" />
+              <span>Allow room cross-linking</span>
+              <button
+                type="button"
+                class="roomopts-inline-help"
+                name="crosslinkhelpbtn"
+                title="What is room cross-linking?"
+                aria-label="Help: Allow room cross-linking"
+                aria-expanded="false"
+                aria-controls="roomopts-crosslink-help"
+              >
+                ?
+              </button>
+            </label>
+          </div>
+          <p
+            id="roomopts-crosslink-help"
+            class="roomopts-hint roomopts-crosslink-help hidden"
+            name="crosslinkhelp"
+            role="note"
+          >
+            <strong>Allow room cross-linking</strong> is an opt-in on
+            <em>this</em> room so other rooms can mirror its finished uploads.
+            To pull files <em>into</em> this room, use the Linking tab.
+          </p>
+        </div>
+
+        <div class="roomopts-section modctrl">
+          <div class="roomopts-section-title">Moderator</div>
+          <div class="roomopts-checks roomopts-checks-mod">
+            <label
+              ><input type="checkbox" name="disabled" /> Disabled</label
+            >
+            <label
+              ><input type="checkbox" name="disablereports" /> Disable
+              reports</label
+            >
+          </div>
+          <div class="roomopts-field roomopts-field-inline">
+            <label for="roomopts-ttl">File TTL (hours)</label>
+            <input
+              id="roomopts-ttl"
+              name="ttl"
+              type="number"
+              autocomplete="off"
+              min="0"
+              max="168"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="roomopts-panel roomopts-panel-linking hidden"
+        data-roomopts-panel="linking"
+        role="tabpanel"
+      >
+        <div
+          class="roomopts-link-help hidden"
+          name="linkhelp"
+          role="region"
+          aria-label="Linking help"
+        >
+          <div class="roomopts-link-help-head">
+            <strong>How multi-room linking works</strong>
+            <button type="button" name="linkhelpclose" class="roomopts-help-close">
+              Close
+            </button>
+          </div>
+          <div class="roomopts-link-help-body">
+            <p>
+              Linking makes finished uploads from another room appear in
+              <em>this</em> room’s file list (marked as linked). Files are not
+              copied — open/download still uses the source room. Delete and
+              moderation stay with the source.
+            </p>
+            <p><strong>Two sides of the setup</strong></p>
+            <ol>
+              <li>
+                <strong>Source room</strong> (General tab): enable
+                <em>Allow room cross-linking</em>. Without this, knowing the
+                room id or name is not enough — nothing is mirrored.
+              </li>
+              <li>
+                <strong>Destination room</strong> (this Linking tab): add the
+                source by room id or exact room name, then optional filters.
+              </li>
+            </ol>
+            <p><strong>Status column</strong></p>
+            <ul>
+              <li><em>Active</em> — source exists and allows cross-linking.</li>
+              <li>
+                <em>Cross-link off</em> — source has not opted in (row stays;
+                zero files until fixed).
+              </li>
+              <li><em>Missing</em> — room id not found.</li>
+            </ul>
+            <p><strong>Filters / rules (Edit on a row)</strong></p>
+            <ul>
+              <li>
+                Filename contains — comma-separated, match any (e.g.
+                <code>map, dungeon</code>)
+              </li>
+              <li>Tag contains — matches any tag key or value</li>
+              <li>File types — image, video, document, … (empty = all)</li>
+              <li>No older than (hours) — only recent uploads</li>
+              <li>At least this old (hours) — only older uploads</li>
+            </ul>
+            <p><strong>Examples</strong></p>
+            <ul>
+              <li>
+                Hub room pulls every PDF from “Campaign Maps”: add that room,
+                Edit → type <em>Document</em> only.
+              </li>
+              <li>
+                Only maps uploaded this week: filename contains
+                <code>map</code>, no older than <code>168</code> hours.
+              </li>
+              <li>
+                Archive dump, ignore brand-new drops: at least
+                <code>24</code> hours old.
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roomopts-section">
+          <div class="roomopts-link-add">
+            <input
+              name="linkaddtoken"
+              type="text"
+              autocomplete="off"
+              placeholder="Room id or exact name"
+              aria-label="Source room id or name"
+            />
+            <button type="button" name="linkaddbtn">Add link</button>
+          </div>
+          <div class="roomopts-link-table-wrap">
+            <table class="roomopts-link-table">
+              <thead>
+                <tr>
+                  <th>Source</th>
+                  <th>Status</th>
+                  <th>Filters / rules</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody name="linktbody"></tbody>
+            </table>
+            <p class="roomopts-link-empty hidden" name="linkempty">
+              No linked rooms yet. Add a source by id or exact name above.
+            </p>
+          </div>
+        </div>
+
+        <div class="roomopts-link-editor hidden" name="linkeditor">
+          <div class="roomopts-link-editor-title">
+            Edit rules —
+            <span name="linkeditorlabel"></span>
+          </div>
+          <div class="roomopts-field">
+            <label for="roomopts-rule-name"
+              >Filename contains
+              <span class="roomopts-field-hint"
+                >(comma-separated; match any)</span
+              ></label
+            >
+            <input
+              id="roomopts-rule-name"
+              name="rule_name"
+              type="text"
+              autocomplete="off"
+              placeholder="e.g. map, dungeon, city"
+            />
+          </div>
+          <div class="roomopts-field">
+            <label for="roomopts-rule-tag">Tag contains</label>
+            <input
+              id="roomopts-rule-tag"
+              name="rule_tag"
+              type="text"
+              autocomplete="off"
+              placeholder="e.g. dnd"
+            />
+          </div>
+          <fieldset class="roomopts-link-types">
+            <legend>File types (none selected = all types)</legend>
+            <div class="roomopts-link-types-grid">
+              <label
+                ><input type="checkbox" name="rule_type_image" value="image" />
+                Image</label
+              >
+              <label
+                ><input type="checkbox" name="rule_type_video" value="video" />
+                Video</label
+              >
+              <label
+                ><input type="checkbox" name="rule_type_audio" value="audio" />
+                Audio</label
+              >
+              <label
+                ><input
+                  type="checkbox"
+                  name="rule_type_document"
+                  value="document"
+                />
+                Document</label
+              >
+              <label
+                ><input
+                  type="checkbox"
+                  name="rule_type_archive"
+                  value="archive"
+                />
+                Archive</label
+              >
+              <label
+                ><input type="checkbox" name="rule_type_file" value="file" />
+                Other file</label
+              >
+            </div>
+          </fieldset>
+          <div class="roomopts-link-age">
+            <div class="roomopts-field">
+              <label for="roomopts-rule-maxage">No older than (hours)</label>
+              <input
+                id="roomopts-rule-maxage"
+                name="rule_maxage"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="any"
+              />
+            </div>
+            <div class="roomopts-field">
+              <label for="roomopts-rule-minage">At least this old (hours)</label>
+              <input
+                id="roomopts-rule-minage"
+                name="rule_minage"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="any"
+              />
+            </div>
+          </div>
+          <div class="roomopts-link-editor-actions">
+            <button type="button" name="linkeditorapply">Apply rules</button>
+            <button type="button" name="linkeditorclear">Clear rules</button>
+            <button type="button" name="linkeditorsclose">Close</button>
+          </div>
+        </div>
+        <input type="hidden" name="linkedrooms" value="" />
+      </div>
     </div>
-    <div class="wide roomopts-checks">
-      <label><input type="checkbox" name="inviteonly" /> Invite-Only</label>
-      <label><input type="checkbox" name="adult" /> Adult Content</label>
-      <label
-        ><input type="checkbox" name="allowrequests" /> Allow Requests</label
-      >
-      <label
-        ><input type="checkbox" name="linkcollection" /> Link Collection</label
-      >
-      <label
-        ><input type="checkbox" name="deeplinks" /> Shareable deep
-        links</label
-      >
-      <label
-        ><input type="checkbox" name="allowcrosslinking" /> Allow Room
-        Cross-Linking</label
-      >
-    </div>
-    <label class="wide roomopts-linked-label"
-      >Linked rooms (ids or exact names, comma-separated). Source rooms must
-      enable Allow Room Cross-Linking or nothing appears.</label
-    >
-    <input
-      class="wide"
-      name="linkedrooms"
-      type="text"
-      autocomplete="off"
-      placeholder="e.g. Campaign Maps, abCdEf12Gh"
-    />
-    <label class="wide modctrl"
-      ><input type="checkbox" name="disabled" /> Disabled</label
-    >
-    <label class="wide modctrl"
-      ><input type="checkbox" name="disablereports" />Disable Reports</label
-    >
-    <label class="modctrl">File TTL</label>
-    <input
-      class="modctrl"
-      name="ttl"
-      type="number"
-      autocomplete="off"
-      min="0"
-      max="168"
-    />
   </form>
 
   <form id="users-tmpl" class="tmpl">

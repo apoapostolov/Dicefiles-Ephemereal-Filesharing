@@ -208,7 +208,6 @@
 .modal-report .modal-body,
 .modal-changepw .modal-body,
 .modal-login .modal-body,
-.modal-optsdlg .modal-body,
 .modal-bandlg .modal-body,
 .modal-unbandlg .modal-body,
 .modal-bldlg .modal-body {
@@ -256,19 +255,6 @@
 
 .modal-changepw .modal-body {
   grid-template-areas:
-    "icon . ."
-    "icon . ."
-    "icon . ."
-    "icon . ."
-    "icon . .";
-  grid-row-gap: 1.3ex;
-}
-
-.modal-optsdlg .modal-body {
-  grid-template-areas:
-    "icon . ."
-    "icon . ."
-    "icon . ."
     "icon . ."
     "icon . ."
     "icon . ."
@@ -862,23 +848,49 @@
   font-size: 0.92em;
 }
 
-/* Surgical polish: Room Options + Room Owners/Invitees dialogs */
-/* Cap width so checkbox labels don't force a huge dialog. */
+/* ═══════════════════════════════════════════════════════════════════
+ * Room Options — flex layout (tabs + panels). Does NOT use the legacy
+ * 3-column form grid (that garbled tabs/panels).
+ * ═══════════════════════════════════════════════════════════════════ */
+
 .modal-optsdlg {
-  width: min(32rem, 92vw);
-  max-width: min(32rem, 92vw);
+  width: min(36rem, 94vw);
+  max-width: min(36rem, 94vw);
   box-sizing: border-box;
 }
 
+/* Default (owners/invitees subdialog): simple vertical stack */
 .modal-optsdlg .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
   min-width: 0;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  align-items: start;
-  grid-column-gap: 1.1em;
-  /* icon | label | field — keep field column from ballooning */
-  grid-template-columns: auto minmax(6rem, 9rem) minmax(0, 1fr);
+  padding: 0.75rem 1rem 1rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  grid-template-columns: none !important;
+  grid-template-areas: none !important;
+}
+
+/* Room Options shell owns its own layout */
+.modal-optsdlg .modal-body:has(.roomopts-shell) {
+  display: block;
+  padding-top: 0.55rem;
+}
+
+.modal-optsdlg .modal-body > .icon {
+  display: none;
+}
+
+.modal-optsdlg .modal-body:not(:has(.roomopts-shell)) > .icon {
+  display: block;
+  font-size: 2.2rem;
+  width: auto;
+  margin: 0 0 0.25rem;
+  align-self: flex-start;
 }
 
 .modal-optsdlg .modal-body label {
@@ -891,48 +903,54 @@
 .modal-optsdlg .modal-body textarea {
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 6px;
-  padding: 0.32em 0.6em;
+  padding: 0.4em 0.65em;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   min-width: 0;
+  background: var(--dark-bg);
+  color: var(--text-fg);
+}
+
+/* Number fields (age rules, TTL): no scrollbars / no tall spin-gutter */
+.modal-optsdlg .modal-body input[type="number"] {
+  overflow: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.modal-optsdlg .modal-body input[type="number"]::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.modal-optsdlg .modal-body input[type="number"]::-webkit-outer-spin-button,
+.modal-optsdlg .modal-body input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+  display: none;
 }
 
 .modal-optsdlg .modal-body textarea {
-  min-height: 5.6em;
+  min-height: 4.5em;
   resize: vertical;
-}
-
-.modal-optsdlg .modal-body .wide {
-  gap: 0.55em;
-  min-width: 0;
-  max-width: 100%;
-}
-
-.modal-optsdlg .modal-body .wide > button {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-fg);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 999px;
-  padding: 0.36em 0.85em;
-  font-size: 0.84rem;
-}
-
-.modal-optsdlg .modal-body .wide > button:hover,
-.modal-optsdlg .modal-body .wide > button:focus {
-  background: rgba(255, 255, 255, 0.16);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12);
+  line-height: 1.35;
 }
 
 .modal-optsdlg .modal-body input[type="checkbox"] {
-  margin-right: 0.45em;
+  margin-right: 0.4em;
   flex: 0 0 auto;
 }
 
+/* Users sub-dialog (owners/invitees) still uses optsdlg class */
 .modal-optsdlg .usersdesc {
   max-width: 100%;
   line-height: 1.4;
   color: rgba(220, 220, 220, 0.92);
+  margin-bottom: 0.6em;
 }
 
 .modal-optsdlg .userlist {
@@ -943,11 +961,16 @@
   background: rgba(0, 0, 0, 0.18);
   max-width: 100%;
   min-width: 0;
+  overflow: auto;
 }
 
 .modal-optsdlg .userlistitem {
   padding: 0.26em 0.4em;
   border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
 }
 
 .modal-optsdlg .userlistitem:nth-child(odd) {
@@ -960,6 +983,8 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 5px;
   padding: 0.14em 0.45em;
+  margin: 0;
+  cursor: pointer;
 }
 
 .modal-optsdlg .userlistitem button:hover,
@@ -968,91 +993,525 @@
   box-shadow: none;
 }
 
-/* Manage Owners / Invitees — own row, not mixed with checkboxes */
-.modal-optsdlg .roomopts-actions {
+/* Shell: single column stack */
+.modal-optsdlg .roomopts-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Tabs row */
+.modal-optsdlg .roomopts-tabs {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.55em;
+  gap: 0.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  padding-bottom: 0;
+  margin: 0;
+  width: 100%;
 }
 
-.modal-optsdlg .roomopts-actions > button {
+.modal-optsdlg .roomopts-tab {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: rgba(220, 220, 220, 0.72);
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 0.5em 0.95em;
+  margin: 0 0 -1px;
+  cursor: pointer;
+  border-radius: 6px 6px 0 0;
+  line-height: 1.2;
+}
+
+.modal-optsdlg .roomopts-tab:hover,
+.modal-optsdlg .roomopts-tab:focus {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+  outline: none;
+}
+
+.modal-optsdlg .roomopts-tab.active {
+  color: #fff;
+  border-bottom-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.modal-optsdlg .roomopts-help-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  margin-left: auto;
+  margin-right: 0.15rem;
+  margin-bottom: 0.2rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(240, 240, 240, 0.95);
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
-  line-height: 1;
-  padding-top: 0.26em;
-  padding-bottom: 0.26em;
-  margin-right: 0;
+  justify-content: center;
+  flex: 0 0 auto;
 }
 
-/*
- * Room option checkboxes: equal-width cells on two rows
- * (3 columns × 2 rows for the six primary options).
- */
+.modal-optsdlg .roomopts-help-btn:hover,
+.modal-optsdlg .roomopts-help-btn:focus {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: none;
+  outline: none;
+}
+
+.modal-optsdlg .roomopts-help-btn.hidden {
+  display: none !important;
+}
+
+/* Panels */
+.modal-optsdlg .roomopts-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.modal-optsdlg .roomopts-panel.hidden {
+  display: none !important;
+}
+
+.modal-optsdlg .roomopts-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.16);
+  box-sizing: border-box;
+}
+
+.modal-optsdlg .roomopts-section-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(200, 200, 200, 0.78);
+  margin: 0;
+}
+
+.modal-optsdlg .roomopts-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.modal-optsdlg .roomopts-field > label {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.modal-optsdlg .roomopts-field-hint {
+  font-weight: 500;
+  font-size: 0.82em;
+  color: rgba(190, 190, 190, 0.85);
+  margin-left: 0.25em;
+}
+
+.modal-optsdlg .roomopts-field-inline {
+  max-width: 12rem;
+}
+
+.modal-optsdlg .roomopts-hint {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  font-weight: 500;
+  color: rgba(200, 200, 200, 0.88);
+}
+
+.modal-optsdlg .roomopts-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.modal-optsdlg .roomopts-actions > button,
+.modal-optsdlg .roomopts-link-add > button,
+.modal-optsdlg .roomopts-link-editor-actions > button,
+.modal-optsdlg .roomopts-help-close {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-fg);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 0.4em 0.9em;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.modal-optsdlg .roomopts-actions > button:hover,
+.modal-optsdlg .roomopts-link-add > button:hover,
+.modal-optsdlg .roomopts-link-editor-actions > button:hover,
+.modal-optsdlg .roomopts-help-close:hover {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: none;
+}
+
 .modal-optsdlg .roomopts-checks {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55em 0.65em;
-  align-items: stretch;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem 0.85rem;
   width: 100%;
-  max-width: 100%;
   box-sizing: border-box;
 }
 
 .modal-optsdlg .roomopts-checks > label {
-  display: inline-flex;
+  display: flex;
   align-items: flex-start;
-  gap: 0.32em;
+  gap: 0.4em;
   font-weight: 600;
-  color: rgba(236, 236, 236, 0.95);
+  font-size: 0.9rem;
+  line-height: 1.3;
   white-space: normal;
-  line-height: 1.25;
+  min-width: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.modal-optsdlg .roomopts-check-with-help {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.modal-optsdlg .roomopts-check-with-help > span {
+  min-width: 0;
+}
+
+/* Small (?) after a checkbox label — does not toggle the checkbox */
+.modal-optsdlg .roomopts-inline-help {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(240, 240, 240, 0.95);
+  font-weight: 700;
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.modal-optsdlg .roomopts-inline-help:hover,
+.modal-optsdlg .roomopts-inline-help:focus {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: none;
+  outline: none;
+}
+
+.modal-optsdlg .roomopts-crosslink-help {
+  margin-top: 0.15rem;
+}
+
+.modal-optsdlg .roomopts-crosslink-help.hidden {
+  display: none !important;
+}
+
+.modal-optsdlg .roomopts-checks-mod {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Linking help panel */
+.modal-optsdlg .roomopts-link-help {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(30, 40, 48, 0.85);
+  padding: 0.75rem 0.9rem;
+  box-sizing: border-box;
+}
+
+.modal-optsdlg .roomopts-link-help.hidden {
+  display: none !important;
+}
+
+.modal-optsdlg .roomopts-link-help-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.modal-optsdlg .roomopts-link-help-body {
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: rgba(220, 220, 220, 0.94);
+  font-weight: 500;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.modal-optsdlg .roomopts-link-help-body p,
+.modal-optsdlg .roomopts-link-help-body ol,
+.modal-optsdlg .roomopts-link-help-body ul {
+  margin: 0 0 0.55em;
+}
+
+.modal-optsdlg .roomopts-link-help-body ol,
+.modal-optsdlg .roomopts-link-help-body ul {
+  padding-left: 1.25em;
+}
+
+.modal-optsdlg .roomopts-link-help-body code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.92em;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.05em 0.3em;
+  border-radius: 4px;
+}
+
+/* Link add + table */
+.modal-optsdlg .roomopts-link-add {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+}
+
+.modal-optsdlg .roomopts-link-add input[type="text"] {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.modal-optsdlg .roomopts-link-add > button {
+  flex: 0 0 auto;
+}
+
+.modal-optsdlg .roomopts-link-table-wrap {
+  width: 100%;
+  max-height: 14rem;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.modal-optsdlg .roomopts-link-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.modal-optsdlg .roomopts-link-table th,
+.modal-optsdlg .roomopts-link-table td {
+  padding: 0.45em 0.55em;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  vertical-align: top;
+}
+
+.modal-optsdlg .roomopts-link-table th {
+  font-weight: 700;
+  color: rgba(236, 236, 236, 0.95);
+  background: rgba(255, 255, 255, 0.06);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.modal-optsdlg .roomopts-link-table tr.link-row-inactive {
+  opacity: 0.75;
+}
+
+.modal-optsdlg .roomopts-link-table tr.link-status-denied .link-col-status,
+.modal-optsdlg .roomopts-link-table tr.link-status-missing .link-col-status {
+  color: #f0b070;
+  font-weight: 600;
+}
+
+.modal-optsdlg .roomopts-link-table tr.link-status-ok .link-col-status {
+  color: #8fd48f;
+  font-weight: 600;
+}
+
+.modal-optsdlg .link-source-name {
+  font-weight: 600;
+  color: rgba(240, 240, 240, 0.96);
+}
+
+.modal-optsdlg .link-source-id {
+  font-size: 0.78em;
+  color: rgba(180, 180, 180, 0.85);
+  font-family: ui-monospace, monospace;
+  margin-top: 0.15em;
+}
+
+.modal-optsdlg .link-col-rules {
+  color: rgba(210, 210, 210, 0.9);
+  max-width: 11rem;
+  word-break: break-word;
+}
+
+.modal-optsdlg .link-col-actions {
+  white-space: nowrap;
+}
+
+.modal-optsdlg .link-col-actions button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0 0.2em 0 0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 5px;
+  color: var(--text-fg);
+  padding: 0.22em 0.5em;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.modal-optsdlg .link-col-actions button:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.modal-optsdlg .roomopts-link-empty {
+  margin: 0.7em;
+  color: rgba(200, 200, 200, 0.85);
+  font-size: 0.88em;
+}
+
+/* Rule editor */
+.modal-optsdlg .roomopts-link-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+  box-sizing: border-box;
+}
+
+.modal-optsdlg .roomopts-link-editor.hidden {
+  display: none !important;
+}
+
+.modal-optsdlg .roomopts-link-editor-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.modal-optsdlg .roomopts-link-types {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 0.55em 0.7em 0.65em;
+  margin: 0;
+  display: block;
+  box-sizing: border-box;
+}
+
+.modal-optsdlg .roomopts-link-types legend {
+  padding: 0 0.35em;
+  font-weight: 600;
+  font-size: 0.85em;
+}
+
+/* 3×2 grid for the six type checkboxes (not free-wrap) */
+.modal-optsdlg .roomopts-link-types-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-optsdlg .roomopts-link-types label,
+.modal-optsdlg .roomopts-link-types-grid label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
   min-width: 0;
   margin: 0;
 }
 
-.modal-optsdlg .roomopts-linked-label {
-  white-space: normal;
-  line-height: 1.35;
-  font-weight: 600;
-}
-
-/* Back-compat if any template still uses the old single-row class */
-.modal-optsdlg .roomopts-primary-row {
+.modal-optsdlg .roomopts-link-age {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55em 0.65em;
-  align-items: start;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
 }
 
-.modal-optsdlg .roomopts-primary-row > label {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: 0.32em;
-  font-weight: 600;
-  color: rgba(236, 236, 236, 0.95);
-  white-space: normal;
-  min-width: 0;
+.modal-optsdlg .roomopts-link-age input[type="number"] {
+  overflow: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  appearance: textfield;
+  -moz-appearance: textfield;
+  line-height: 1.25;
+  max-height: 2.4em;
 }
 
-.modal-optsdlg .roomopts-primary-row > button {
-  display: inline-flex;
-  align-items: center;
-  line-height: 1;
-  padding-top: 0.26em;
-  padding-bottom: 0.26em;
-  grid-column: 1 / -1;
+.modal-optsdlg .roomopts-link-age input[type="number"]::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
-@media (max-width: 520px) {
+.modal-optsdlg .roomopts-link-age input[type="number"]::-webkit-outer-spin-button,
+.modal-optsdlg .roomopts-link-age input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+  display: none !important;
+}
+
+.modal-optsdlg .roomopts-link-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.15rem;
+}
+
+@media (max-width: 560px) {
   .modal-optsdlg {
-    width: min(100vw - 1rem, 32rem);
-    max-width: calc(100vw - 1rem);
+    width: min(100vw - 0.75rem, 36rem);
+    max-width: calc(100vw - 0.75rem);
   }
 
   .modal-optsdlg .roomopts-checks,
-  .modal-optsdlg .roomopts-primary-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .modal-optsdlg .roomopts-checks-mod,
+  .modal-optsdlg .roomopts-link-age {
+    grid-template-columns: 1fr;
   }
 }
 

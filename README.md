@@ -510,8 +510,8 @@ Additional per-room settings in **Room Options** (context menu):
 | Allow Requests | on | Request creation and the **Request board** toolbar entry |
 | Link Collection | on | Chat link archive mode |
 | Shareable deep links | **off** | When on, query/hash intents (`file`, `filter`, `sort`, `request`) apply on load. Bare gallery `#fileKey` still works when off. |
-| Allow Room Cross-Linking | **off** | When on, **other** rooms may mirror this room’s finished uploads via their Linked rooms list. Knowing a room id or name is not enough — the source owner must opt in. |
-| Linked rooms | empty | Comma-separated **source room ids or exact room names**. Finished uploads from those rooms appear here marked **Linked · &lt;name&gt;** only if each source has **Allow Room Cross-Linking** on. Download/open uses the source file; delete stays in the source room. |
+| Allow Room Cross-Linking | **off** | When on, **other** rooms may mirror this room’s finished uploads. Knowing a room id or name is not enough — the source owner must opt in. |
+| Linking tab | empty table | Room Options → **Linking**: table of source rooms (id or exact name). Per-row filters: filename/tag contains, file types, max/min age (hours). Status shows Active / Cross-link off / Missing. Mirrored files appear as **Linked · &lt;name&gt;** only when the source allows cross-linking and rules match. |
 
 Example deep link (requires Shareable deep links enabled):
 

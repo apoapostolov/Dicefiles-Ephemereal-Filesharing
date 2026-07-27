@@ -27,6 +27,12 @@
   --hairline: rgba(255, 255, 255, 0.14);
   --focus-ring: rgba(255, 255, 255, 0.32);
   --soft-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  /* Dark-theme scrollbars (native + custom scroller thumb) */
+  --scrollbar-size: 10px;
+  --scrollbar-track: rgba(0, 0, 0, 0.35);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.18);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.32);
+  --scrollbar-thumb-active: rgba(255, 255, 255, 0.42);
 }
 
 html {
@@ -38,6 +44,52 @@ html {
   height: 100%;
   padding: 0;
   margin: 0;
+  /* Firefox / modern Chromium */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/*
+ * Product-wide native scrollbars (messages, modals, tables, reader, etc.).
+ * Elements that intentionally hide the native bar (e.g. #files with a custom
+ * scroller) still win via more specific rules.
+ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background: var(--scrollbar-thumb-active);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 a {
@@ -183,31 +235,37 @@ footer > * > a {
 }
 
 .scroller {
-  width: 10px;
+  width: var(--scrollbar-size);
   height: 100%;
   z-index: 1000;
   justify-self: end;
   align-self: stretch;
   overflow: hidden;
+  background: transparent;
 }
 
+/* Custom chat/file scroller thumb — same palette as native bars */
 .scrollbar {
   position: relative;
-  background: white;
-  border-radius: 8px;
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
   display: block;
   width: 100%;
-  opacity: 0.05;
+  opacity: 0.55;
   cursor: pointer;
-  transition: 0.3s opacity ease-in;
+  transition:
+    opacity 0.2s ease,
+    background 0.15s ease;
 }
 
 .scrollbar:hover {
-  opacity: 0.7 !important;
+  opacity: 1 !important;
+  background: var(--scrollbar-thumb-hover);
 }
 
 .scroller:hover .scrollbar {
-  opacity: 0.3;
+  opacity: 0.85;
+  background: var(--scrollbar-thumb-hover);
 }
 
 #preload {

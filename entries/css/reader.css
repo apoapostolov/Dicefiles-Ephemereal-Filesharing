@@ -183,17 +183,31 @@
   gap: 0.75rem;
   padding: 1.2rem 0.6rem;
   background: #161616;
-  scrollbar-color: rgba(180, 180, 180, 0.3) transparent;
+  /* Inherits product dark scrollbar tokens from base.css */
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   scrollbar-width: thin;
 }
 
 #reader-content::-webkit-scrollbar {
-  width: 7px;
+  width: var(--scrollbar-size);
+}
+
+#reader-content::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 999px;
 }
 
 #reader-content::-webkit-scrollbar-thumb {
-  background: rgba(180, 180, 180, 0.25);
+  background: var(--scrollbar-thumb);
   border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+#reader-content::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 /* ── PDF page rendering ───────────────────────────────────────────────────── */

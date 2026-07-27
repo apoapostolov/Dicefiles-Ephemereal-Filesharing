@@ -32,25 +32,27 @@ Last updated: 2026-07-27 (v1.4.2 multi-room / board / deep links + cross-link pe
 - [x] Delete/moderation stays on **source** room
 - [x] Linked rooms accept **room id or exact room name** (comma-separated; multi-word names OK)
 - [x] Source opt-in gate: without **Allow Room Cross-Linking**, destination lists zero files from that source (knowing id/name is not enough)
-- [ ] Optional filters (e.g. docs/images only; tag/date filters on the link)
+- [x] Optional filters / rules per link — filename contains, tag contains, allowed type(s), max age (no older than), min age (older than); empty = all finished files
 - [x] TTL / pruning follow **source** room (no second disk copy — view/fetch-through)
 - [ ] ACL: richer rules (who can see linked rows, hellban/private rooms beyond source opt-in)
 - [x] List noise / virtualization when A pulls many from B — general large-room virtualization applies to merged list
 - [x] Explicit non-goal for v1: open requests cross-room (files only)
-- [ ] Failures: B gone / unlinked → grey out then drop (today: missing/denied source simply contributes no rows)
+- [x] Failures: B gone / cross-link off → Linking table status (Missing / Cross-link off); file list contributes zero until fixed
 - [ ] Automation API: list / create / remove links
-- [x] Design / pure helpers + unit tests (`lib/room/room-links.js`, `sourceAllowsCrossLink`, `resolveLinkedRoomTokens`)
+- [x] Design / pure helpers + unit tests (`lib/room/room-links.js`: entries, rules match, status, resolve)
+- [x] Room Options **Linking** tab with table of linked rooms (add/edit/remove + per-row rules editor)
 
 **v1 sketch (shipped)**
 
 | Piece | v1 (shipped) |
 |-------|----------------|
-| Who configures | Owner/mod of A sets **Linked rooms**; B owner must enable **Allow Room Cross-Linking** (default off) |
-| What appears | Finished uploads from B in A’s list, `linked` + source room name — only if B allows cross-linking |
+| Who configures | Owner/mod of A: **Linking** tab table; B owner enables **Allow Room Cross-Linking** (default off) |
+| What appears | Finished uploads from B matching per-link rules, `linked` + source room name — only if B allows cross-linking |
 | What doesn’t | Chat, users, bans, open requests |
 | Actions in A | Open, Read Now, download, filter; trash stays source-owned |
 | Storage model | View / metadata mirror, not a second filesystem |
 | Link tokens | Room ids **or** exact room names (resolved on save) |
+| Per-link rules | nameContains, tagContains, types[], maxAgeHours, minAgeHours |
 
 ---
 

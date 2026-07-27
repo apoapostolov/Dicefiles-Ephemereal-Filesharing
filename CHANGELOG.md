@@ -3,27 +3,25 @@
 
 ## [1.4.2] - 2026-07-27 [Multi-room links, request board, deep links]
 
-Owner-gated room features for multi-room file mirrors, a first-class request board, and optional shareable deep links — plus toolbar and Room Options polish.
+Owner-gated multi-room file mirrors, a first-class request board, shareable deep links, and a redesigned Room Options Linking experience.
 
 ### Added
 
-- **Multi-room linking:** Room Options → *Linked rooms* (source room **ids or exact names**, comma-separated). Finished uploads appear in the destination list marked **Linked · &lt;name&gt;**. Open/download/read use the source file; trash stays source-owned. Destination users need not join the source room.
-- **Allow Room Cross-Linking** (source opt-in, default off): other rooms may mirror this room’s finished uploads only when enabled. Knowing a room id/name is not enough.
-- **Request board:** first-class board (when Allow Requests is on) with open/fulfilled filters and Open → request view. **Create Request** + **Request board** are a segmented toolbar pill.
-- **Shareable deep links (admin toggle, default off):** When *Shareable deep links* is enabled, load intents from query/hash: `file`, `filter`, `sort`, `request`. Bare gallery `#fileKey` still works when the option is off.
+- **Multi-room linking:** Destination rooms list finished uploads from other rooms (view/fetch-through, not a second disk copy), marked **Linked · &lt;name&gt;**. Open, Read Now, and download use the source file; trash and moderation stay with the source room.
+- **Allow room cross-linking** (source opt-in, default off): other rooms may mirror this room’s finished uploads only when enabled. Knowing a room id or name alone is not enough.
+- **Linking tab (Room Options):** Table of linked sources (add by room id or exact name, edit, remove). Per-link filters/rules: filename contains (comma-separated, match any), tag contains, file types (3×2 grid; none = all), no older than / at least this old (hours). Status column: Active, Cross-link off, or Missing. In-panel **?** help for power users.
+- **Request board:** First-class open/fulfilled board when Allow Requests is on, with Create Request and Request board as a segmented toolbar pill.
+- **Shareable deep links** (room option, default off): query/hash intents for `file`, `filter`, `sort`, and `request` when enabled. Bare gallery `#fileKey` still works when the option is off.
 
-### Improvements
+### Improved
 
-- **Toolbar presentation:** shared control height/icon/radius/gap tokens; uniform spacing between pills/buttons/fields; filter field flex-grows to the action pills; clear (X) sits **inside** the filter field (no width jump).
-- **Room Options layout:** checkbox options in a two-row equal-width grid; dialog max-width capped so it does not stretch with long labels.
+- **Room Options:** Tabbed General / Linking layout, capped dialog width, section cards, and compact **?** help next to cross-linking.
+- **Toolbar:** Uniform control height, icon size, and gaps; filter field fills space to the action pills; clear (X) sits inside the filter field.
+- **Dark-theme scrollbars** for native and custom scrollers across the product.
 
 ### Docs / tests
 
-- README room options section; unit tests for shipped `lib/room/room-links.js` (incl. cross-link gate + name resolve), `deep-links.js`, `request-board.js`; feature creep proposal checkmarks updated.
-
-### Fixes
-
-- **Deep-link open race:** file/request open intents no longer mark complete before the file list is ready (config arrives before files). Open targets retry on list replace via `resolveDeepLinkOpenPlan`.
+- README room options; unit coverage for shipped link helpers (entries, rules, status, resolve), deep-links, and request-board.
 
 ## [1.4.1] - 2026-07-27 [Room UI polish]
 
