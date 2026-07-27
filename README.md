@@ -1,118 +1,162 @@
-# Dicefiles
-
-**Ephemeral file sharing for hobby communities** — real-time rooms where chat and files live side by side.
+# Dicefiles - Ephemereal Filesharing for Hobby Communities
 
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Version](https://img.shields.io/badge/version-1.4.2-blue)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-339933)
 ![Redis](https://img.shields.io/badge/redis-v4%20client-DC382D)
 ![Package manager](https://img.shields.io/badge/package%20manager-yarn%201.x-2C8EBB)
+![Status](https://img.shields.io/badge/status-active-brightgreen)
 
-Dicefiles is self-hosted software you run for a group that already knows how to share a room link: RPG tables, map packs, board-game PDFs, STL dumps, fiction, session recordings. Files expire on a timer so the host stays lean; accounts, moderation, requests, and automation are there when you need them. It descends from Volafile and Kregfile, rebuilt for long-lived communities and operators who care about control.
+Dicefiles is a self-hosted, open-source file sharing platform for hobby communities, forked from Volafile and Kregfile, and extended with automation, multi-room linking, guest invites, plugins (including Mega Autoshare), quick archival downloads, and an improved in-room request flow. It is ideal for sharing roleplaying books, digital maps, board games, STL models, fiction, and more.
 
-There is **no public Dicefiles cloud**. You host it, you own the disk, you choose who gets in.
+### What's new in 1.4.2
+
+**Rooms that link, invite, and run bots.** Multi-room file linking (source opt-in), a first-class request board, shareable deep links, guest invite links, and in-process plugins with cyan **BOT** identity — including **Mega Autoshare** for folder watch + auto-share. Room Options is tabbed: General, Invites, Linking, Plugins. Built on the 1.4.0 platform overhaul (Node ≥20, Yarn-only, Redis v4, virtualized large rooms). Full notes: [CHANGELOG.md](CHANGELOG.md).
 
 <p align="center">
   <img src="images/dicefiles_01.png" width="47.5%" />
   <img src="images/dicefiles_02.png" width="47.5%" />
 </p>
 
-### From 1.3 to 1.4.2 — what actually changed for people who use rooms
+> **Note:** This is a self-hosted application. You must host it yourself - there is no public service provided.
 
-**1.4 is the “daily driver” release.** If you left off on 1.3.x, the automation API and room model are still familiar. What improved is how the room *feels* when it is busy, and how much an owner can wire without leaving the UI.
+## Features
 
-Rooms with hundreds of files no longer drag the browser into the mud: the list **virtualizes** once it grows large, and heavy tools (PDF/comic readers, archive browser) load only when you open them. Operators run **Node 20+** and **Yarn 1.x** against Redis with a modern client; `/healthz` is honest about Redis, disk, and preview backlog so you know whether the host is fine before your players arrive.
+### Rooms & chat
 
-In the room itself, filters and sort **remember your choices** for that room. Gallery **Read Now** gives clear feedback (and **R** on the keyboard). Batch download and archive browsing stop pretending when the queue is empty. GIF search is **Giphy only** — Tenor’s public API is gone.
+- Real-time chat rooms with file sharing, inline media embedding, and Giphy GIF search
+- User accounts and moderation with login lockout protection
+- Room creation and management, invite-only rooms, flood control, and retention policies
+- **Guest invite links** — single-use, max uses, and/or max hours; mint, copy, and revoke from Room Options → **Invites**; redeem via `/r/:id?invite=TOKEN`
+- Sticky type filters, text filter, show-new, and sort per room across reloads
+- NEW badges for unseen files and requests
 
-**1.4.2** is the power-user tooling drop. You can **link other rooms into this one**: finished files appear as **Linked · source name**, open and download through the source, while trash and bans stay where the file was uploaded. The source owner must flip **Allow room cross-linking** first; knowing an id is not consent. Destinations use Room Options → **Linking** (id or exact name, filters by filename, tag, type, age; status Active / Cross-link off / Missing).
+### Files, reading & archives
 
-The toolbar is tighter: requests open as a **create + board** pill, the filter field fills the middle, and optional **shareable deep links** can land someone on a file, filter, sort, or open request via the URL. Room Options is tabbed so General, Invites, Linking, and Plugins each have a proper home.
+- File previews for images, videos, audio, PDFs, and book covers
+- **In-page streaming reader** for PDF, ePub, MOBI, and comics (CBZ/CBR/CB7) with progress persistence, focus mode, typography options, and A5 paginated layout
+- **Archive Viewer** for browsing and selective downloading from ZIP, RAR, 7Z, TAR, and multi-part archives
+- Batch download (All/New) with progress, concurrency control, and resumable queues
+- Large-room file list virtualization and on-demand reader/archive bundles
 
-Full notes live in [CHANGELOG.md](CHANGELOG.md). Performance detail: [docs/PERF_NOTES.md](docs/PERF_NOTES.md).
+### Requests, links & multi-room
+
+- Request system with fulfillment workflow, optional links/images, status pills, and room-level enable/disable
+- **Request board** — open/fulfilled board; Create + Board as a segmented toolbar pill
+- Links Archive with automatic URL capture and optional opengraph.io title enrichment
+- **Multi-room linking** — mirror finished files from other rooms (view/fetch-through); source must enable **Allow room cross-linking**
+- **Linking tab** — sources by room id or exact name; filters (name, tag, type, age); status Active / Cross-link off / Missing
+- **Shareable deep links** (optional) — URL intents for `file` / `filter` / `sort` / `request`
+
+### Profiles & discovery
+
+- Expanded profiles with editable messages, achievement tracks (uploads, downloads, requests), and Latest Activity
+- **Public Room Directory** when enabled, with live stats
+- Automatic room pruning for inactive rooms
+
+### Automation, bots & ops
+
+- Automation REST API with scoped keys, rate limiting, webhooks, and MCP server for AI clients
+- Webhook events including `file_uploaded`, `request_*`, `file_deleted`, `linked_file_appeared`, `guest_invite_*`
+- **Plugins & bots** — invite from Room Options → **Plugins**; uploads show a cyan **BOT** pill and bot name
+- **Mega Autoshare** — monitor a Mega.nz folder, download new files over time, auto-share into the room ([operator guide](core/plugins/MEGA_FOLDER.md))
+- Health endpoint (`/healthz`) with Redis latency, storage, disk, preview-queue, and operational metrics
+- TLS/HTTPS support with Helmet security headers
+
+## In-Page Document and Comic Reader
+
+Dicefiles includes a built-in streaming reader for **PDF**, **ePub**, **MOBI**, and **comic** files. It requires no additional server-side tooling — all parsing and rendering runs entirely in the browser.
+
+### How it works
+
+1. Switch to gallery mode (grid icon in the toolbar) and click a PDF or ePub file.
+2. The cover image appears in the gallery overlay.
+3. A persistent **Read Now** button is visible in the lower area of the cover.
+4. Clicking **Read Now** closes the overlay and opens the reader, which fills the file-list area.
+
+### PDF reader
+
+- Powered by [Mozilla PDF.js](https://mozilla.github.io/pdf.js/) (`pdfjs-dist`, Apache-2.0).
+- Pages are fetched via **HTTP Range requests** — the server's existing `Accept-Ranges: bytes` configuration is sufficient, no changes needed.
+- Rendering is **lazy**: only pages within ~300 px of the viewport are decoded; all other pages are lightweight placeholders. Opening a 500-page document is instant.
+- Page scale is auto-fitted to the reader width — no CSS up-scaling artifacts.
+- **Zoom pill** (`−` / `+`) re-renders pages at the new scale in 0.25× steps.
+- **Download** button saves the file without closing the reader.
+- Page counter in the toolbar tracks the currently visible page.
+
+### ePub reader
+
+- Parsed natively in the browser using [JSZip](https://stuk.github.io/jszip/) (`jszip`, MIT) — no server-side extraction.
+- OPF manifest and spine are parsed to build the chapter list; CSS and image assets are extracted and served as `blob:` URLs so chapters render correctly without network requests.
+- Chapters render in a `srcdoc` iframe (no `sandbox` restrictions) with injected dark-theme defaults and A5 page layout via CSS multi-column.
+- Content reflows into horizontal A5-sized pages within each chapter — ← / → arrow keys and **Prev / Next** buttons scroll pages; **PageUp / PageDown** jump chapters.
+- Chapter + page counter in the toolbar.
+
+### MOBI / AZW / AZW3 reader
+
+- Parsed natively in the browser using [`@lingo-reader/mobi-parser`](https://github.com/hhk-png/lingo-reader) (MIT) — no conversion or server-side processing.
+- Spine items and chapter HTML are read directly from the MOBI binary; embedded images become `blob:` URLs automatically.
+- Same A5 paginated rendering as ePub: ← / → scroll pages, **PageUp / PageDown** change chapters.
+
+### Comic reader
+
+- Supports CBZ (ZIP), CBR (RAR), and CB7 (7Z) formats.
+- CBZ parsed client-side using [JSZip](https://stuk.github.io/jszip/) (MIT); CBR and CB7 require server-side extraction via system tools (`unrar`, `p7zip-full`).
+- Renders as a sequential image viewer with ← / → navigation for pages.
+- Page counter in the toolbar tracks the current page.
+
+### Closing the reader
+
+Press **Escape** or click the **✕** button in the toolbar to close the reader and return to the file list.
+
+### npm packages (installed automatically via `yarn install`)
+
+| Package                     | Version     | License    | Purpose                                 |
+| --------------------------- | ----------- | ---------- | --------------------------------------- |
+| `pdfjs-dist`                | `^3.11.174` | Apache-2.0 | PDF parsing and canvas rendering        |
+| `jszip`                     | `^3.10.1`   | MIT        | EPUB ZIP parsing (client-side)          |
+| `@lingo-reader/mobi-parser` | `^0.4.5`    | MIT        | MOBI / AZW / AZW3 parsing (client-side) |
+
+The PDF.js web worker is built as a separate webpack entry (`pdf.worker.js`) and served at `/pdf.worker.js`. It is only fetched the first time a user opens a PDF — ordinary room usage incurs no overhead.
+
+> **Important distinction:** the reader packages handle **in-browser reading only**. Server-side **cover thumbnail generation** for PDFs uses GraphicsMagick + Ghostscript; for EPUB it uses `jszip` (already bundled); for MOBI/AZW/AZW3 it uses a pure Node.js PalmDB binary parser (built-in, no extra tooling required). See the [Install Preview Tooling](#15-install-preview-tooling-recommended) section.
+
+## User Profiles
+
+- **Profile message**: If you are viewing your own profile while logged in, you can set a multiline markdown message for visitors.
+- **Achievement trophy room**: Achievements unlock across three tracks:
+  - Uploaded file count
+  - Uploaded total size
+  - Downloaded total size
+- **Request-based progression**: Additional achievement tracks reward fulfilled requests and a lightweight set of request-creation milestones, so the request workflow now contributes directly to profile progression.
+- **Rarity visuals**: Achievement cards use progressive MMO-style rarity colors from common tiers to mythic/ascendant tiers.
+- **Stats snapshot**: Profile cards show Total Uploaded, Total Downloaded, Files Uploaded, and unlocked achievement count.
+
+## Documentation
+
+| Document | Purpose |
+| -------- | ------- |
+| [docs/INTRODUCTION.md](docs/INTRODUCTION.md) | Complete guide to Dicefiles, use cases, and getting started |
+| [docs/README.md](docs/README.md) | Docs index |
+| [CHANGELOG.md](CHANGELOG.md) | Version history and release notes |
+| [API.md](API.md) | REST Automation API — `/api/v1` endpoints, scopes, rate limits, webhooks |
+| [MCP.md](MCP.md) | Model Context Protocol server — tools and client setup |
+| [core/plugins/DEVELOPING_PLUGINS.md](core/plugins/DEVELOPING_PLUGINS.md) | Plugin developer API (lifecycle, events, bots) |
+| [core/plugins/MEGA_FOLDER.md](core/plugins/MEGA_FOLDER.md) | Mega Autoshare operator guide |
+| [docs/FUTURE_DEVELOPMENT_PLAN.md](docs/FUTURE_DEVELOPMENT_PLAN.md) | Product backlog (shipped vs proposed) |
+| [docs/PERF_NOTES.md](docs/PERF_NOTES.md) | Performance notes (virtualization, code-splitting, workers) |
+| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Dev setup (Yarn 1.x, Node ≥20, Redis) and PR expectations |
 
 ---
 
-## What you get in a room
+## AI-Assisted Setup (OpenClaw)
 
-A Dicefiles room is chat plus a living file list. People drop media and documents; others open, download, or batch-grab what they need before TTL prunes finished files. Previews cover images, video, audio, PDFs, and book covers when preview tooling is installed on the host.
+If you are an AI agent (OpenClaw, Claude, Codex, or any MCP-capable orchestrator), paste the
+prompt below to automate the full Dicefiles installation, MCP server wiring, and skill
+registration in one shot.
 
-**Reading and archives.** PDFs, ePubs, MOBI/AZW, and comics (CBZ/CBR/CB7) open **in the page** from gallery mode — **Read Now**, zoom, keyboard navigation, no extra desktop app. Zip/Rar/7z and friends can be browsed with the **Archive Viewer** so someone can pull one STL out of a bag without downloading the whole archive.
-
-**Requests and links.** When requests are allowed, people can ask for a file and browse open/fulfilled work on a real board, not a buried chat scroll. Chat URLs can land in a **links archive** (optionally with opengraph.io for titles).
-
-**Multi-room linking.** Owners of a destination room subscribe to sources they trust; sources must opt in. Linked rows stay clearly marked so nobody confuses a mirror with a native upload.
-
-**Invites and guests.** Invite-only rooms can mint **guest invite links** (single-use, max uses, or max hours) from Room Options → **Invites**, with copy-to-clipboard and revoke. Guests redeem via `?invite=` and do not become owners.
-
-**Bots and automation.** In-process **plugins** (Room Options → **Plugins**) upload as cyan **BOT** identities — **Mega Autoshare** watches a Mega.nz folder and drops new files into the room. Outside the process you still have scoped **REST** keys, **webhooks**, and an **MCP** bridge for agents. See [Automation](#automation-api-webhooks-and-bots) below.
-
-**People and ops.** Accounts, roles, flood control, profiles with achievement tracks, optional public room directory, automatic room pruning, batch download, “new” badges, and a serious `/healthz` for operators.
-
----
-
-## Reading files in the browser
-
-Open gallery mode, click a supported book or comic, then **Read Now** (or **R**). The reader takes over the file area; **Escape** or **✕** returns you to the list.
-
-| Format | How it works |
-| ------ | ------------ |
-| **PDF** | [PDF.js](https://mozilla.github.io/pdf.js/) over HTTP range requests; lazy page decode; zoom and page counter |
-| **ePub** | Unpacked in the browser; chapter list; A5-style paging; ←/→ and chapter keys |
-| **MOBI / AZW / AZW3** | Same reading UX as ePub, no server conversion |
-| **Comics (CBZ / CBR / CB7)** | Sequential pages; CBZ in-browser, CBR/CB7 need host tools (`unrar`, `p7zip`) for best results |
-
-Reading does **not** require GraphicsMagick or Ghostscript. Those tools (plus `exiftool` / `ffmpeg`) only improve **cover thumbnails** in the gallery. See [preview tooling](#15-install-preview-tooling-recommended) under Quick Start.
-
----
-
-## Profiles
-
-Logged-in users can leave a markdown blurb on their profile. Achievements track uploads (count and size), downloads, and request create/fulfill milestones, with rarity styling from common through mythic tiers. Stats summarize totals so the “trophy room” is readable at a glance. Design notes: [docs/ACHIEVEMENT_SYSTEM.md](docs/ACHIEVEMENT_SYSTEM.md).
-
----
-
-## Documentation map
-
-| Document | When you need it |
-| -------- | ---------------- |
-| [docs/INTRODUCTION.md](docs/INTRODUCTION.md) | Longer product walkthrough |
-| [docs/README.md](docs/README.md) | Full docs index |
-| [CHANGELOG.md](CHANGELOG.md) | Every release in detail |
-| [API.md](API.md) | REST automation, scopes, webhooks |
-| [MCP.md](MCP.md) | Model Context Protocol / AI clients |
-| [core/plugins/DEVELOPING_PLUGINS.md](core/plugins/DEVELOPING_PLUGINS.md) | Writing and wiring plugins |
-| [core/plugins/MEGA_FOLDER.md](core/plugins/MEGA_FOLDER.md) | Mega Autoshare setup |
-| [docs/FUTURE_DEVELOPMENT_PLAN.md](docs/FUTURE_DEVELOPMENT_PLAN.md) | Backlog (shipped vs proposed) |
-| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Building and contributing |
-| [docs/UI_STYLE.md](docs/UI_STYLE.md) | UI conventions for contributors |
-
-Older overhaul and CI notes: [docs/archive/](docs/archive/).
-
----
-
-## Automation, API, webhooks, and bots
-
-Dicefiles is built so a careful operator can glue Discord bots, n8n, scripts, or an AI client to the same rooms humans use.
-
-- **REST** under `/api/v1` with scoped API keys, rate limits, and audit logging — full reference in [API.md](API.md).
-- **Webhooks** fire on uploads, deletes, requests, linked-file appearance, guest invites, and more, with signing and retries.
-- **MCP** (`scripts/mcp-server.js`) exposes those capabilities as tools for Claude, Cursor, Codex, and similar clients — see [MCP.md](MCP.md).
-- **Plugins** run *inside* the Dicefiles process. Invite them per room under Room Options → **Plugins**, set config, enable, and **Run now**. Uploads show a cyan **BOT** pill and a real bot name (Mega defaults to **Mega Autoshare**).
-
-### Mega Autoshare
-
-1. On the host: `yarn add megajs` (optional dependency), then restart Dicefiles.  
-2. In the room: **Room Options → Plugins → invite Mega Autoshare**.  
-3. Set the Mega folder URL, poll interval, optional name prefix; save or run once.
-
-New files land in that room under the bot identity. Prefer `MEGA_EMAIL` / `MEGA_PASSWORD` for private folders. Full guide: [core/plugins/MEGA_FOLDER.md](core/plugins/MEGA_FOLDER.md). Custom plugins and hoster roadmap: [DEVELOPING_PLUGINS.md](core/plugins/DEVELOPING_PLUGINS.md), [REMOTE_HOST_IMPORTS.md](core/plugins/REMOTE_HOST_IMPORTS.md).
-
----
-
-## AI-assisted install (optional)
-
-If you use an agent (OpenClaw, Claude, Codex, and so on) to set up the stack, paste the block below. **Humans** should prefer [Quick Start](#quick-start-choose-your-os).
+> **For humans:** skip to [Quick Start](#quick-start-choose-your-os) for the manual
+> step-by-step instructions.
 
 ````
 You are setting up Dicefiles on this machine. Work through these steps in order:
@@ -247,7 +291,7 @@ Notes:
 
 #### 2. Clone and Install
 
-**Requirements:** Node.js **≥ 20**, **Yarn 1.x** (`yarn.lock` only), and a running **Redis** server.
+**Requirements:** Node.js **≥ 20**, **Yarn 1.x** (only supported package manager — use `yarn.lock`, not npm’s lockfile), and a running **Redis** instance (compatible with the node-redis **v4** client shipped in 1.4.0).
 
 ```bash
 # Clone the repository
@@ -280,13 +324,13 @@ yarn start
 # equivalent: node server.js
 ```
 
-Open `http://127.0.0.1:<port>/` using the port from your `.config.json` (common defaults: `8080` in `defaults.js`, or whatever you set — many operators use `10005`).
+Access at `http://127.0.0.1:9090` (or your configured port).
 
-**Health check:**
+**Health check** (Redis + storage + disk + metrics):
 
 ```bash
-curl -s http://127.0.0.1:<port>/healthz | jq .
-# expect: "ok": true and checks.redis.ok true
+curl -s http://127.0.0.1:9090/healthz | jq .
+# expect: "ok": true, checks.redis.ok true
 ```
 
 ---
@@ -446,56 +490,65 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 }
 ```
 
-**Key options** (full set and comments: `.config.json.example` and `defaults.js`):
+**Key options:**
 
-| Option | Default | Notes |
+| Option | Default | Description |
 | --- | --- | --- |
 | `port` | `8080` | HTTP listen port |
-| `workers` | conservative | Override if you know your host |
-| `secret` | must change | Session signing — generate a long random value |
-| `uploads` | `"uploads"` | File store path |
-| `maxFileSize` | 10 GB | `0` = unlimited |
-| `TTL` | `48` | Hours until finished files expire |
-| `downloadMaxConcurrent` | `3` | Batch download concurrency (1–4) |
-| `requireAccounts` / `roomCreation` | false / true | Gate chat/upload and new rooms |
-| `allowRequests` / `linkCollection` | true | Defaults for new rooms (overridable per room) |
-| `allowCrossLinking` | false | Default for new rooms’ source opt-in |
-| `automationApiKeys` | `[]` | Scoped REST keys |
-| `webhooks` | `[]` | Outbound event hooks |
-| `plugins` | `[]` | Optional global plugin load (rooms can still invite bots in UI) |
-| `opengraphIoKey` | `""` | Optional link titles; never returned from admin config API |
-| `publicRooms` | false | Home page room directory |
-| `roomPruning` / `roomPruningDays` | true / 21 | Drop idle rooms |
-| `jail` | true on Linux | Firejail around preview tools; always false on Windows |
-| `profileActivity` | true | Latest activity on profiles |
+| `workers` | `CPU + 1` | Number of web workers |
+| `secret` | `"Dicefiles"` | Secret for crypto (change in production) |
+| `uploads` | `"uploads"` | Upload directory path |
+| `maxFileSize` | `10GB` | Max file size in bytes (`0` = unlimited) |
+| `requireAccounts` | `false` | Require accounts to chat/upload |
+| `roomCreation` | `true` | Allow room creation |
+| `TTL` | `48` | Hours before finished downloads expire |
+| `downloadMaxConcurrent` | `3` | Max concurrent downloads for room toolbar batch downloads (1–4) |
+| `automationApiKeys` | `[]` | API keys for automation API (supports scoped key objects) |
+| `automationApiRateLimit` | `{windowMs,max}` | Default automation API rate limit (fixed window) |
+| `automationApiRateLimitByScope` | `{}` | Per-scope rate limit overrides for automation API |
+| `automationAuditLog` | `"automation.log"` | JSONL audit log file for automation API calls |
+| `observabilityLog` | `"ops.log"` | JSONL lifecycle log for uploads/downloads/requests/previews |
+| `allowRequests` | `true` | Default for new rooms: whether request creation is enabled (room owners can override per room) |
+| `linkCollection` | `true` | Default for new rooms: whether the link archive is enabled (room owners can override per room) |
+| `allowCrossLinking` | `false` | Default for new rooms: whether other rooms may mirror this room’s finished files via multi-room linking (room owners override in Room Options) |
+| `profileActivity` | `true` | Show a Latest Activity tab on user profile pages (last 20 uploads/downloads). Set to `false` to disable for all users for privacy. Individual users cannot override this setting. |
+| `opengraphIoKey` | `""` | **Optional.** API key for [opengraph.io](https://www.opengraph.io/) enriched link-title resolution. When set, chat-link titles in the Links Archive are fetched via the opengraph.io API (follows redirects, handles JS-rendered pages, returns OG `title`). Falls back to inline HTML `<title>` scraping when unset or on API failure. Free tier: 100 req/day. Get a key at https://www.opengraph.io/.<br><br>**Setting the key:** add the value to your `.config.json` under `opengraphIoKey` and restart the server. This key is **not** returned by `/api/v1/admin/config` (intentionally excluded to avoid accidental leaks), so it cannot be changed at runtime via the admin API. |
+| `webhooks` | `[]` | Outbound webhook targets/events for upload/request lifecycle |
+| `webhookRetry` | `{...}` | Webhook retry policy defaults (retries/backoff) |
+| `webhookDeadLetterLog` | `"webhook-dead-letter.log"` | JSONL sink for failed webhook deliveries |
+| `jail` | `true` (Linux) | Use firejail for preview commands (always `false` on Windows) |
+| `publicRooms` | `false` | When enabled, the home page becomes a searchable directory of all registered rooms, ordered by file count descending. Disabled by default — rooms are private unless the server operator turns this on. |
+| `roomPruning` | `true` | Automatically delete rooms that have been inactive for more than `roomPruningDays` days. Inactivity is tracked per file upload and per chat message. Enabled by default. |
+| `roomPruningDays` | `21` | Number of days of inactivity before a room is pruned. Requires `roomPruning: true`. All room data (files, messages, metadata) is permanently deleted when the threshold is crossed. |
 
 
-### Room Options (owners and mods)
+### Room options (owner/mod)
 
-Open **Room Options** from the room chrome. Tabs:
+Additional per-room settings in **Room Options** (context menu), organized by tab:
 
-| Tab | What it is for |
-| --- | -------------- |
-| **General** | Name, MOTD, invite-only, adult, requests, link collection, deep links, allow cross-linking, mod TTL/disable |
-| **Invites** | Mint guest links (limits panel: single-use, max users, max hours), list, copy, revoke |
-| **Linking** | Subscribe to other rooms’ finished files; filters and live status |
-| **Plugins** | Invite bots from the server catalog, edit settings, run or remove |
+| Tab / option | Default | Description |
+| --- | --- | --- |
+| **General** — Allow Requests | on | Request creation and the **Request board** toolbar entry |
+| **General** — Link Collection | on | Chat link archive mode |
+| **General** — Shareable deep links | **off** | When on, query/hash intents (`file`, `filter`, `sort`, `request`) apply on load. Bare gallery `#fileKey` still works when off. |
+| **General** — Allow Room Cross-Linking | **off** | When on, **other** rooms may mirror this room’s finished uploads. Knowing a room id or name is not enough — the source owner must opt in. |
+| **Invites** | — | Guest invite links: Generate opens a limits panel (single-use / max users / max hours); list with copy and revoke; redeem at `/r/:id?invite=TOKEN` |
+| **Linking** | empty table | Table of source rooms (id or exact name). Per-row filters: filename/tag contains, file types, max/min age (hours). Status: Active / Cross-link off / Missing. Mirrored files appear as **Linked · &lt;name&gt;** only when the source allows cross-linking and rules match. |
+| **Plugins** | empty | Invite bots from the server registry, edit settings, enable/disable, **Run now**. Uploads use a cyan **BOT** pill and bot name (e.g. Mega Autoshare). |
 
-Defaults that matter for multi-room work: **Allow room cross-linking** is off until the *source* opts in; **Shareable deep links** is off until you want URL intents. Example deep link once enabled:
+Example deep link (requires Shareable deep links enabled):
 
 ```text
 /r/yourRoom?filter=maps&sort=newest&file=FILEKEY
 ```
 
-Server-wide `plugins` / `webhooks` arrays in `.config.json` still work for global wiring; most operators will prefer the per-room **Plugins** tab for Mega Autoshare. Details: [Automation](#automation-api-webhooks-and-bots).
+Server config keys `plugins` and `webhooks` can also wire global plugins/hooks in `.config.json`; most operators invite bots per room from the **Plugins** tab. See [core/plugins/DEVELOPING_PLUGINS.md](core/plugins/DEVELOPING_PLUGINS.md).
 
-## Security
+## Security Posture
 
-Internet-facing hosts should terminate **HTTPS** at a reverse proxy (or use built-in TLS). Sessions, API keys, and file bytes otherwise travel in the clear. Change `secret` before production; short or default secrets refuse to start when `NODE_ENV=production`.
+### HTTP Security Headers (Helmet 7)
 
-### HTTP security headers (Helmet)
-
-Dicefiles sets secure defaults on every response. Highlights:
+Dicefiles uses [Helmet 7](https://helmetjs.github.io/) to set secure HTTP response headers on every request. Key effective headers:
 
 | Header                       | Value                                                                 | Notes                                                            |
 | ---------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------- |
@@ -521,9 +574,11 @@ curl -sI https://your-instance/ | grep -i "content-security\|strict-transport\|x
 
 Change either in `.config.json`. If you run Dicefiles behind a reverse proxy (nginx/caddy), set the proxy to forward to the HTTP port and terminate TLS at the proxy layer.
 
-### HTTPS for production
+### HTTPS Reverse-Proxy Requirement (Production)
 
-A typical install speaks plain HTTP on `port`. For anything on the public internet, put TLS in front (or enable built-in TLS).
+> **Warning:** Dicefiles does not terminate TLS by itself in a typical deployment. Session cookies, bearer tokens (automation API keys), and all uploaded file content travel in plaintext over HTTP unless you place a TLS-terminating reverse proxy in front of the server — or configure the built-in `tlsport` listener with a valid certificate.
+
+**For any internet-facing deployment you must do one of the following:**
 
 **Option A — Reverse proxy (recommended)**
 
@@ -583,13 +638,38 @@ If Firejail is not installed, the server logs a warning and falls back to unsand
 { "jail": false }
 ```
 
-## Automation API (quick pointer)
+## Automation API
 
-Stable base path: **`/api/v1`** (legacy `/api/automation` still aliases). Discovery for agent protocols is at `/.well-known/a2a`. Full contract, scopes, and webhook payloads: **[API.md](API.md)**. MCP tool bridge: **[MCP.md](MCP.md)**. In-room bots: [Automation, API, webhooks, and bots](#automation-api-webhooks-and-bots).
+The stable automation API prefix is `/api/v1` (legacy `/api/automation` is kept as a compatibility alias).
 
-## Health endpoint
+Dicefiles is also A2A‑compliant: a discovery manifest is available at `/.well-known/a2a` for Google’s Agent‑to‑Agent protocol and other AI clients. The manifest lists the base URL, service name, version, and a few representative endpoints and scopes; agents may fetch it automatically before interacting with the REST API.
+The complete reference lives in [`API.md`](API.md), structured for agentic tools and skill generation.
 
-`GET /healthz` returns Redis and storage checks, disk free/total when available, preview-queue depth, uptime, and simple counters. **200** means ready; **503** means a dependency check failed. File **TTL** and **downloadMaxConcurrent** are server config only (not Room Options).
+For connecting AI clients (Claude Desktop, Cursor, Codex CLI, OpenClaw) via the
+Model Context Protocol, see [`MCP.md`](MCP.md). The bundled MCP server
+(`scripts/mcp-server.js`) wraps every automation endpoint as a named, schema-validated
+tool — no HTTP code required.
+
+**In-process plugins / bots** (Mega Autoshare, custom importers) are invited per room from Room Options → **Plugins**, or loaded via the `plugins` array in `.config.json`. They upload under a cyan **BOT** identity. Developer guide: [`core/plugins/DEVELOPING_PLUGINS.md`](core/plugins/DEVELOPING_PLUGINS.md). Mega setup: [`core/plugins/MEGA_FOLDER.md`](core/plugins/MEGA_FOLDER.md).
+
+## Health Endpoint
+
+Dicefiles exposes a lightweight health endpoint:
+
+- `GET /healthz`
+
+It returns:
+
+- Redis check status/latency
+- Upload storage writeability check status/latency
+- In-memory ops counters (`uploadsCreated`, `uploadsDeleted`, `downloadsServed`, `downloadsBytes`, `requestsCreated`, `requestsFulfilled`, `previewFailures`)
+
+HTTP status is:
+
+- `200` when checks pass
+- `503` when a dependency check fails
+
+`TTL` and `downloadMaxConcurrent` are administrator-only settings configured in source/config files (`defaults.js` or your `.config.json` override), not from the room UI.
 
 See `defaults.js` for all available options.
 
@@ -877,23 +957,30 @@ server {
 
 **Service fails to start:** Check the error log at `Dicefiles-err.log`.
 
-## Repository layout
+## Code Structure
 
-| Path | Role |
-| ---- | ---- |
-| `client/` | Browser app |
-| `lib/` | Server, plugins, rooms, upload |
-| `core/` | Shared product assets (GIF providers, plugin docs) |
-| `docs/` | Guides and backlog |
-| `views/` | EJS templates |
-| `static/` | Built assets |
-| `server.js` | Entry |
-| `defaults.js` | Default config reference |
+```
+Dicefiles/
+├── client/          # Client-side code
+├── common/          # Shared code between frontend and backend
+├── entries/         # Webpack entry points for client code
+├── lib/             # Server-side code
+├── static/          # Static assets and webpack bundles
+├── uploads/         # Uploaded files (configurable)
+├── views/           # EJS templates
+├── server.js        # Main server entry point
+├── webpack.config.js # Webpack configuration
+└── defaults.js      # Default configuration (reference)
+```
 
 ## Contributing
 
-See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-MIT — inspired by [volafile](https://volafile.org).
+MIT
+
+## Credits
+
+Inspired by [volafile](https://volafile.org).
