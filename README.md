@@ -13,6 +13,10 @@ designed for collections that people actively browse and discuss—roleplaying
 books, maps, board games, STL models, fiction, media, and more—without turning
 the experience into a generic cloud-drive dashboard.
 
+<p align="center">
+  <img src="images/dicefiles-room-gallery.png" alt="A living Dicefiles room with an expanded community banner, chat, filters, and a gallery of shared files" width="100%" />
+</p>
+
 ### What's new in 1.4.3
 
 **Since Your Last Visit.** Return to a room and Dicefiles gathers the uploads,
@@ -26,11 +30,6 @@ Discord/Telegram release publishers, stronger linked-room privacy controls,
 room-link and guest-invite automation, a 20-tool MCP server, more reliable
 image/PDF/archive previews, and a wide pass over desktop and mobile room UI.
 Full notes: [CHANGELOG.md](CHANGELOG.md).
-
-<p align="center">
-  <img src="images/dicefiles_01.png" width="47.5%" />
-  <img src="images/dicefiles_02.png" width="47.5%" />
-</p>
 
 > **Note:** This is a self-hosted application. You must host it yourself - there is no public service provided.
 
@@ -49,6 +48,11 @@ Full notes: [CHANGELOG.md](CHANGELOG.md).
 - **Remembered views** retain file-type filters, text search, show-new state,
   sort order, gallery/list mode, and request-board filters per room.
 
+<p align="center">
+  <img src="images/dicefiles-room-list.png" alt="A Pathfinder community room in compact file-list mode with linked-room badges and live chat" width="49%" />
+  <img src="images/dicefiles-foundry-gallery.png" alt="A Foundry VTT community room showing archive placeholders in gallery mode and signed-in chat" width="49%" />
+</p>
+
 ### Files, reading & archives
 
 - **Gallery and list views** provide generated covers for images, videos,
@@ -63,6 +67,11 @@ Full notes: [CHANGELOG.md](CHANGELOG.md).
   bounded concurrency, failure recovery, and resumable queues.
 - **Large-room virtualization** and lazy reader/archive bundles keep busy rooms
   responsive while the default five-day retention window limits storage drift.
+
+<p align="center">
+  <img src="images/dicefiles-books-gallery.png" alt="An ePub and comics community with generated book covers in the file gallery" width="49%" />
+  <img src="images/dicefiles-archive-browser.png" alt="The in-room archive browser listing the contents of a Foundry VTT package" width="49%" />
+</p>
 
 ### Requests, links & multi-room
 
@@ -83,6 +92,11 @@ Full notes: [CHANGELOG.md](CHANGELOG.md).
   Active, Cross-link off, Private consent, or Missing status.
 - **Shareable deep links** can restore a selected file, filter, sort, or
   request-board view when the room enables them.
+
+<p align="center">
+  <img src="images/dicefiles-request-board.png" alt="The Request Board with themed open requests ready to be fulfilled" width="49%" />
+  <img src="images/dicefiles-linking-rule.png" alt="Room linking options with an active Foundry source filtered to filenames containing pf2" width="49%" />
+</p>
 
 ### Profiles & discovery
 
@@ -115,9 +129,19 @@ Full notes: [CHANGELOG.md](CHANGELOG.md).
   Helmet headers, and privacy-safe public telemetry support day-to-day
   operation.
 
+<p align="center">
+  <img src="images/dicefiles-room-options.png" alt="Room Options with community identity, retention, privacy, linking, and theme controls" width="49%" />
+  <img src="images/dicefiles-status-dashboard.png" alt="The privacy-safe operator dashboard with service health, capacity, uptime, and aggregate activity" width="49%" />
+</p>
+
 ## In-Page Document and Comic Reader
 
 Dicefiles includes a built-in streaming reader for **PDF**, **ePub**, **MOBI**, and **comic** files. It requires no additional server-side tooling — all parsing and rendering runs entirely in the browser.
+
+<p align="center">
+  <img src="images/dicefiles-epub-reader.png" alt="An ePub chapter open in the streaming in-room reader" width="49%" />
+  <img src="images/dicefiles-pdf-reader.png" alt="An illustrated PDF open in the streaming in-room reader" width="49%" />
+</p>
 
 ### How it works
 
@@ -156,6 +180,11 @@ Dicefiles includes a built-in streaming reader for **PDF**, **ePub**, **MOBI**, 
 - CBZ parsed client-side using [JSZip](https://stuk.github.io/jszip/) (MIT); CBR and CB7 require server-side extraction via system tools (`unrar`, `p7zip-full`).
 - Renders as a sequential image viewer with ← / → navigation for pages.
 - Page counter in the toolbar tracks the current page.
+
+<p align="center">
+  <img src="images/dicefiles-comic-reader.png" alt="A full artwork page open in the in-room comic reader" width="49%" />
+  <img src="images/dicefiles-archive-browser.png" alt="The archive browser used to inspect comic and package contents before opening or downloading them" width="49%" />
+</p>
 
 ### Closing the reader
 
