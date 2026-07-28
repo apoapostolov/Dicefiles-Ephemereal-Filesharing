@@ -10,6 +10,11 @@
     : requestCurrent.fulfillmentPercent;
   const insights = status.insights;
   const percent = disk.usedPercent == null ? 0 : disk.usedPercent;
+  const refreshSeconds = Math.max(
+    60,
+    Number(locals.statusRefreshSec) || 5 * 60,
+  );
+  const refreshMinutes = Math.max(1, Math.round(refreshSeconds / 60));
   const number = value => new Intl.NumberFormat("en").format(Number(value) || 0);
   const bytes = value => {
     const n = Number(value);
@@ -30,13 +35,14 @@
   class="status-page"
   data-service-status="<%= status.service.status %>"
   data-status-api="<%= statusApiHref %>"
+  data-status-refresh-seconds="<%= refreshSeconds %>"
 >
   <nav class="status-nav">
     <a class="status-wordmark" href="/" aria-label="<%= NAME %> home">
       <span class="status-wordmark-mark" aria-hidden="true">D</span>
       <span><%= NAME %></span>
     </a>
-    <a class="status-nav-link" href="/healthz">Raw health</a>
+    <a class="status-nav-link" href="/healthz">System health details</a>
   </nav>
 
   <main class="status-shell">
@@ -52,7 +58,7 @@
           <span class="status-live-pulse" aria-hidden="true"></span>
           <strong data-field="service.status"><%= status.service.status %></strong>
         </div>
-        <small>Database, storage, capacity, and previews</small>
+        <small>Database, file storage, drive space, and previews</small>
       </div>
       <div class="availability-history">
         <div class="availability-history-heading">
@@ -71,7 +77,7 @@
         </div>
         <div class="availability-scale">
           <span>24 hours ago</span>
-          <span>5-minute samples</span>
+          <span>Checked every 5 minutes</span>
           <span>Now</span>
         </div>
       </div>
@@ -80,14 +86,15 @@
     <section class="capacity-stage" aria-labelledby="capacity-heading">
       <div class="capacity-heading-row">
         <div>
-          <p class="status-section-index">01 / Capacity</p>
-          <h2 id="capacity-heading">Drive horizon</h2>
+          <p class="status-section-index">01 / Storage</p>
+          <h2 id="capacity-heading">Drive storage</h2>
         </div>
         <p class="capacity-updated">
-          Updated
+          Last updated
           <time data-field="generatedAt" datetime="<%= status.generatedAt %>">
             just now
           </time>
+          · refreshes every <%= refreshMinutes %> minutes
         </p>
       </div>
 
@@ -154,11 +161,14 @@
       <div class="status-story-heading">
         <div>
           <p class="status-section-index">02 / History</p>
-          <h2 id="history-heading">Usage over time</h2>
+          <h2 id="history-heading">Transfer history</h2>
+          <p class="status-chart-subtitle">
+            Data transferred in each two-hour period over the last five days.
+          </p>
         </div>
         <div class="chart-legend" aria-label="Chart legend">
-          <span><i class="legend-storage"></i> Shared content</span>
-          <span><i class="legend-people"></i> People online</span>
+          <span><i class="legend-uploaded"></i> Uploaded</span>
+          <span><i class="legend-downloaded"></i> Downloaded</span>
         </div>
       </div>
       <div class="history-chart-wrap">
@@ -169,19 +179,21 @@
           role="img"
           aria-labelledby="history-chart-title history-chart-desc"
         >
-          <title id="history-chart-title">Dicefiles usage history</title>
+          <title id="history-chart-title">Uploaded and downloaded data</title>
           <desc id="history-chart-desc">
-            Historic aggregate shared content and online people. No identities
-            are recorded.
+            Uploaded and downloaded data in two-hour periods over the last
+            five days.
           </desc>
         </svg>
         <div class="history-empty" data-history-empty hidden>
-          History is beginning now. The line will gain detail as samples arrive.
+          No transfers have been recorded in this five-day window.
         </div>
       </div>
       <div class="history-range">
-        <span data-history-start>First sample</span>
-        <span data-history-count><%= status.history.points.length %> samples</span>
+        <span data-history-start>5 days ago</span>
+        <span data-history-count>
+          <%= status.history.traffic.points.length %> two-hour periods
+        </span>
         <span data-history-end>Now</span>
       </div>
     </section>
@@ -190,10 +202,13 @@
       <div class="request-story-heading">
         <div>
           <p class="status-section-index">03 / Requests</p>
-          <h2 id="request-heading">Request pulse</h2>
+          <h2 id="request-heading">Requests</h2>
+          <p class="status-chart-subtitle">
+            Requests available in each two-hour period over the last five days.
+          </p>
         </div>
         <div class="chart-legend" aria-label="Request chart legend">
-          <span><i class="legend-request-opened"></i> New</span>
+          <span><i class="legend-request-unfulfilled"></i> Unfulfilled</span>
           <span><i class="legend-request-fulfilled"></i> Fulfilled</span>
         </div>
       </div>
@@ -208,10 +223,12 @@
               role="img"
               aria-labelledby="request-chart-title request-chart-desc"
             >
-              <title id="request-chart-title">Requests opened and fulfilled</title>
+              <title id="request-chart-title">
+                Available requests by fulfillment state
+              </title>
               <desc id="request-chart-desc">
-                Hourly aggregate request activity across all rooms during the
-                last 24 hours.
+                Stacked request availability in two-hour periods over the last
+                five days.
               </desc>
             </svg>
             <div class="history-empty" data-request-empty hidden>
@@ -219,9 +236,9 @@
             </div>
           </div>
           <div class="history-range">
-            <span data-request-start>24 hours ago</span>
+            <span data-request-start>5 days ago</span>
             <span data-request-count>
-              <%= requests.timeline.points.length %> hourly buckets
+              <%= requests.timeline.points.length %> two-hour periods
             </span>
             <span data-request-end>Now</span>
           </div>
@@ -234,7 +251,7 @@
             role="img"
             aria-label="<%= requestCurrent.fulfillmentPercent == null
               ? 'No current requests'
-              : `${requestPercent}% of current requests fulfilled globally` %>"
+              : `${requestPercent}% of current requests fulfilled across all rooms` %>"
           >
             <span data-field="requests.current.fulfillmentPercent">
               <%= requestCurrent.fulfillmentPercent == null
@@ -244,7 +261,7 @@
             <small>fulfilled</small>
           </div>
           <div class="request-score-copy">
-            <p class="availability-label">Global fulfillment</p>
+            <p class="availability-label">Overall completion</p>
             <h3 id="request-score-heading">
               <strong data-field="requests.current.fulfilled">
                 <%= number(requestCurrent.fulfilled) %>
@@ -255,14 +272,14 @@
               </strong>
             </h3>
             <p>
-              Current request records across every room, aggregated without
-              request text or requester identity.
+              Requests across every room. Request text and requester names are
+              not shown.
             </p>
           </div>
         </aside>
       </div>
 
-      <div class="request-ledger" aria-label="Global request facts">
+      <div class="request-ledger" aria-label="Request totals across all rooms">
         <div>
           <span data-field="requests.current.open">
             <%= number(requestCurrent.open) %>
@@ -287,13 +304,13 @@
               ? "—"
               : `${Math.round(requestCurrent.medianFulfillmentSec / 60)}m` %>
           </span>
-          <small>median fulfillment</small>
+          <small>typical completion time</small>
         </div>
         <div>
           <span data-field="requests.current.activeClaims">
             <%= number(requestCurrent.activeClaims) %>
           </span>
-          <small>actively claimed</small>
+          <small>being handled</small>
         </div>
         <div>
           <span data-field="requests.current.oldestOpenSec">
@@ -308,10 +325,10 @@
 
     <section class="status-columns">
       <div class="activity-flow" aria-labelledby="activity-heading">
-        <p class="status-section-index">04 / Flow</p>
-        <h2 id="activity-heading">Content in motion</h2>
+        <p class="status-section-index">04 / Activity</p>
+        <h2 id="activity-heading">Uploads and downloads</h2>
         <p class="status-section-copy">
-          Aggregate transfer counters collected since
+          Totals collected since
           <time data-field="activity.since" datetime="<%= status.activity.since %>">
             <%= new Date(status.activity.since).toLocaleString() %>
           </time>.
@@ -361,8 +378,8 @@
       </div>
 
       <div class="service-circuit" aria-labelledby="service-heading">
-        <p class="status-section-index">05 / Service</p>
-        <h2 id="service-heading">Service circuit</h2>
+        <p class="status-section-index">05 / System</p>
+        <h2 id="service-heading">System checks</h2>
         <ul class="component-list">
           <% for (const check of status.components) { %>
           <li data-component="<%= check.id %>" data-status="<%= check.status %>">
@@ -376,7 +393,7 @@
           <% } %>
           <li data-component="previews" data-status="<%= status.pipeline.status %>">
             <span class="component-light" aria-hidden="true"></span>
-            <span class="component-name">Preview pipeline</span>
+            <span class="component-name">File previews</span>
             <span class="component-latency">
               <span data-field="pipeline.active"><%= status.pipeline.active %></span> active
               · <span data-field="pipeline.pending"><%= status.pipeline.pending %></span> waiting
@@ -385,7 +402,7 @@
           </li>
         </ul>
         <p class="uptime-line">
-          Service process has been available for
+          Dicefiles has been running for
           <strong data-field="service.uptimeSec"><%= status.service.uptimeSec %> seconds</strong>.
         </p>
       </div>
@@ -393,15 +410,15 @@
 
     <section class="status-signals" aria-labelledby="signals-heading">
       <div class="signals-heading">
-        <p class="status-section-index">06 / Signals</p>
-        <h2 id="signals-heading">Operational ratios</h2>
+        <p class="status-section-index">06 / Averages</p>
+        <h2 id="signals-heading">Useful averages</h2>
       </div>
       <div class="signal-grid">
         <div>
           <span data-field="insights.averageDownloadBytes">
             <%= bytes(insights.averageDownloadBytes) %>
           </span>
-          <small>average delivery size</small>
+          <small>average download size</small>
         </div>
         <div>
           <span data-field="insights.downloadsPerUpload">
@@ -419,7 +436,7 @@
           <span data-field="insights.previewFailures">
             <%= number(insights.previewFailures) %>
           </span>
-          <small>preview failures</small>
+          <small>failed previews</small>
         </div>
       </div>
     </section>
@@ -427,13 +444,13 @@
     <aside class="privacy-band">
       <span class="privacy-mark" aria-hidden="true">∅</span>
       <div>
-        <strong>Useful telemetry, deliberately anonymous.</strong>
+        <strong>Useful service totals, with private details removed.</strong>
         <p>
-          This status feed contains totals and time samples only. It excludes
+          This page shows totals and trends only. It excludes
           room names, user names, file names, addresses, and internal paths.
         </p>
       </div>
-      <a href="<%= statusApiHref %>">View status JSON</a>
+      <a href="<%= statusApiHref %>">View raw status data</a>
     </aside>
   </main>
 

@@ -21,14 +21,11 @@ outbound push fan-out and guided key rotation remaining follow-up work.
 - [x] Multi-room linking (files mirror, one-way, badge, source ownership) — **v1.4.2**; source must **Allow Room Cross-Linking**
 - [x] Deep links with intent (`filter` / `sort` / `request` / file open) — room option — **v1.4.2**
 - [x] Resume strip + “what’s new since last visit” productization — **v1.4.3**
-- [ ] Session kit pack (select → zip + index)
 - [ ] Multi-volume storage with balanced and threshold-based placement —
   proposal: `docs/MULTI_VOLUME_STORAGE.md`
 - [ ] Password-protected rooms with rotating shared and personal credentials —
   proposal: `docs/PASSWORD_PROTECTED_ROOMS.md`
 - [x] Request board polish — **v1.4.2** first-class board + filters + segmented toolbar pill
-- [ ] Spoiler / delayed reveal
-- [ ] Room templates + clone
 - [x] Guest invite links (single-use / max X / max Y hours) — Room Options → **Invites** — **v1.4.2**
 - [x] Privacy-safe operator dashboard beyond `/healthz`, protected by a generated capability link by default — **v1.4.3**
 - [x] Webhooks + plugin system (Mega.nz Autoshare, BOT pills, Room Options → **Plugins**) — **v1.4.2**
@@ -51,7 +48,8 @@ outbound push fan-out and guided key rotation remaining follow-up work.
 - [x] Delete/moderation stays on **source** room
 - [x] Linked rooms accept **room id or exact room name**
 - [x] Source opt-in gate
-- [x] Per-link filters: filename (comma OR), tag, types grid, max/min age hours
+- [x] Per-link filters: filename, tag, and uploader username expressions
+  (comma/OR, AND, or regex), types grid, max/min age hours
 - [x] TTL follows source (view/fetch-through, no second disk copy)
 - [x] Status **Active** / **Cross-link off** / **Missing**
 - [x] Linking tab UI + **?** help; General **?** on cross-linking
@@ -82,17 +80,8 @@ outbound push fan-out and guided key rotation remaining follow-up work.
 
 ---
 
-## Packs & exports
-
-- [ ] **Session kit pack** — multi-select → zip + short index (titles, tags, room)
-- [ ] Kit pack includes linked-row awareness (export native only vs fetch-through — decide)
-
----
-
 ## Room ops & privacy
 
-- [ ] **Spoiler / delayed reveal**
-- [ ] **Room templates + clone** (tools, rules pin, requests, linking, invited plugins snapshot?)
 - [x] **Guest join friction** — guest invite links — **v1.4.2**
 
 ### Guest invite links (shipped — v1.4.2)

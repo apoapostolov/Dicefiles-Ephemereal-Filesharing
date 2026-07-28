@@ -216,13 +216,23 @@ Create body:
   "visibility": "members",
   "allowPrivateSource": false,
   "rules": {
-    "nameContains": "map, handout",
-    "tagContains": "pf2e",
+    "nameContains": "map OR handout",
+    "tagContains": "pf2e AND remaster",
+    "userContains": "/^(alice|bob)$/i",
     "types": ["image", "document"],
     "maxAgeHours": 168
   }
 }
 ```
+
+The filename, tag, and uploader username fields accept case-insensitive plain
+substring terms. Commas and uppercase `OR` match any term; uppercase `AND`
+requires every term and is evaluated before OR. Slash-delimited JavaScript
+regular expressions such as `/^pf2.*\.pdf$/i` are also supported and can be
+combined with AND/OR. When several rule fields are present, every field must
+match. Tag operands may match any tag key or value; uploader operands match
+the recorded user/usernick or bot display name. Regex flags are limited to
+`i`, `m`, `s`, and `u`.
 
 `visibility` is one of `all`, `authenticated`, `members`, `owners`, or `mods`.
 The source must enable **Allow Room Cross-Linking**. Invite-only sources require
@@ -448,6 +458,7 @@ Response:
   },
   "metrics": {
     "uploadsCreated": 10,
+    "uploadsBytes": 987654321,
     "uploadsDeleted": 3,
     "downloadsServed": 55,
     "downloadsBytes": 123456789,
@@ -482,11 +493,13 @@ Set `statusPagePrivate` to `false` and restart to restore the public routes:
 - `GET /api/public/status`
 
 The JSON response contains only aggregate capacity, activity, community,
-service-component, queue, bounded history, and global request-flow data. Request
-telemetry includes hourly opened/fulfilled buckets, current open and fulfilled
-counts, fulfillment percentage, active claim count, and aggregate timing. It
-does not include request text, room names, user names, file names, addresses,
-internal paths, or process IDs.
+service-component, queue, bounded history, and global request-flow data.
+`history.traffic` contains 60 two-hour buckets spanning five days, with
+`uploadedBytes` and `downloadedBytes` totals. Request telemetry uses the same
+five-day, two-hour window; every bucket reports available requests split into
+`unfulfilled` and `fulfilled`, alongside current counts, fulfillment percentage,
+active claims, and aggregate timing. It does not include request text, room
+names, user names, file names, addresses, internal paths, or process IDs.
 
 ## 8. Webhooks
 

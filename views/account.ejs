@@ -1,44 +1,89 @@
 <!doctype html>
 <%- include("head"); %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" />
 <body id="page" class="account-page-legacy">
   <nav>
     <h1 id="name">Welcome again, <%=user.name%></h1>
   </nav>
-  <article>
-    <h2>Edit your account settings</h2>
-    <form id="account" autocomplete="off" action="javascript:">
-      <input type="hidden" id="token" name="token" value="<%=token%>">
-      <label for="email">Your gravatar email:</label>
-      <input type="email" id="email" name="email" value="<%=user.email || ""%>">
-      <label for="pubmail">Display email publicly:</label>
-      <input type="checkbox" id="pubmail" name="pubmail" <%=(user.pubmail ? "checked" : "")%>>
-      <div id="msg">
-        <h3>Say something (stupid):</h3>
-        <textarea name="msg" id="message" maxlength="2000"><%=user.message || ""%></textarea>
-      </div>
-      <input type="submit" id="submit" value="Update your data">
-    </form>
-    <form autocomplete="off" action="javascript:">
-      <div class="account-tfa-header">
-        <h3>Two factor authentication</h3>
-        <button id="tfa" data-enabled="<%=!!user.twofactor%>"><%=user.twofactor ? "Disable" : "Enable"%></button>
-      </div>
-      <div id="challenger" style="display: none;">
-        <figure>
-          <figcaption>
-            Scan this QR code with Google Authenticator, Authy, MS Authenticator<br>
-            or any other compatible 2fa app
-          </figcaption>
-          <canvas id="qr" width="400" height="400"></canvas>
-        </figure>
-        <div>
-          <label>Your response? <input id="challenged" type="text" size="6"></label>
+  <article id="accountpage">
+    <nav class="account-tabs" role="tablist" aria-label="Account sections">
+      <button
+        id="account-tab-settings"
+        class="account-tab active"
+        type="button"
+        role="tab"
+        aria-selected="true"
+        aria-controls="account-panel-settings"
+        data-tab="settings">Settings</button>
+      <button
+        id="account-tab-achievements"
+        class="account-tab"
+        type="button"
+        role="tab"
+        aria-selected="false"
+        aria-controls="account-panel-achievements"
+        data-tab="achievements">
+        Achievements
+        <span class="tab-badge"><%=achievements.unlocked%> / <%=achievements.total%></span>
+      </button>
+    </nav>
+
+    <section
+      id="account-panel-settings"
+      class="account-panel account-settings-section"
+      role="tabpanel"
+      aria-labelledby="account-tab-settings">
+      <h2>Edit your account settings</h2>
+      <form id="account" autocomplete="off" action="javascript:">
+        <input type="hidden" id="token" name="token" value="<%=token%>">
+        <label for="email">Your gravatar email:</label>
+        <input type="email" id="email" name="email" value="<%=user.email || ""%>">
+        <label for="pubmail">Display email publicly:</label>
+        <input type="checkbox" id="pubmail" name="pubmail" <%=(user.pubmail ? "checked" : "")%>>
+        <div id="msg">
+          <h3>Say something (stupid):</h3>
+          <textarea name="msg" id="message" maxlength="2000"><%=user.message || ""%></textarea>
         </div>
-        <div>
-          <input id="tfasubmit" type="submit" value="Do it!">
+        <input type="submit" id="submit" value="Update your data">
+      </form>
+      <form autocomplete="off" action="javascript:">
+        <div class="account-tfa-header">
+          <h3>Two factor authentication</h3>
+          <button id="tfa" data-enabled="<%=!!user.twofactor%>"><%=user.twofactor ? "Disable" : "Enable"%></button>
         </div>
-      </div>
-    </form>
+        <div id="challenger" style="display: none;">
+          <figure>
+            <figcaption>
+              Scan this QR code with Google Authenticator, Authy, MS Authenticator<br>
+              or any other compatible 2fa app
+            </figcaption>
+            <canvas id="qr" width="400" height="400"></canvas>
+          </figure>
+          <div>
+            <label>Your response? <input id="challenged" type="text" size="6"></label>
+          </div>
+          <div>
+            <input id="tfasubmit" type="submit" value="Do it!">
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section
+      id="account-panel-achievements"
+      class="account-panel account-achievements-panel"
+      role="tabpanel"
+      aria-labelledby="account-tab-achievements"
+      hidden>
+      <header class="account-achievements-header">
+        <div>
+          <h2>Your achievements</h2>
+          <p><strong><%=achievements.unlocked%></strong> of <%=achievements.total%> milestones unlocked</p>
+        </div>
+        <a class="account-profile-link" href="/u/<%=user.account%>">View public profile</a>
+      </header>
+      <%- include("achievement-cards", { achievementInfo: achievements }) %>
+    </section>
   </article>
   <%- include("footer"); %>
   <script src="/account.js?v=<%=v%>"></script>

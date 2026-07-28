@@ -52,6 +52,7 @@ export default new (class ChatBox extends EventEmitter {
     this.gifPagNext = null;
     this.gifPagLoading = false;
     this.ondocclick = this.ondocclick.bind(this);
+    this.onPickerViewportChange = this.syncPickerPlacement.bind(this);
     this.text.addEventListener("keypress", this.onpress.bind(this));
     this.text.addEventListener("paste", this.onpaste.bind(this));
     this.text.addEventListener("drop", this.ondrop.bind(this));
@@ -118,6 +119,8 @@ export default new (class ChatBox extends EventEmitter {
         type: "button",
         title: "Insert emoji",
         "aria-label": "Insert emoji",
+        "aria-controls": "emoji-menu",
+        "aria-expanded": "false",
       },
       classes: ["emoji-toggle"],
       text: "🙂",
@@ -129,7 +132,7 @@ export default new (class ChatBox extends EventEmitter {
 
     this.emojiMenu = dom("div", {
       classes: ["emoji-menu", "hidden"],
-      attrs: { "aria-hidden": "true" },
+      attrs: { id: "emoji-menu", "aria-hidden": "true" },
     });
     this.emojiSearchEl = dom("input", {
       classes: ["emoji-search"],
@@ -155,6 +158,10 @@ export default new (class ChatBox extends EventEmitter {
     anchor.appendChild(this.emojiMenu);
     this.installGifMenu();
     this.status.insertBefore(anchor, this.status.firstChild);
+    this.syncPickerPlacement();
+    window.addEventListener("resize", this.onPickerViewportChange, {
+      passive: true,
+    });
     document.addEventListener("click", this.ondocclick, { passive: true });
   }
 
@@ -237,9 +244,11 @@ export default new (class ChatBox extends EventEmitter {
       return;
     }
     this.hideGifMenu();
+    this.syncPickerPlacement();
     this.emojiMenuOpen = true;
     this.emojiMenu.classList.remove("hidden");
     this.emojiMenu.setAttribute("aria-hidden", "false");
+    this.emojiToggle.setAttribute("aria-expanded", "true");
     if (this.emojiSearchEl) {
       this.emojiSearchEl.value = "";
       this.renderEmojiGrid();
@@ -254,6 +263,23 @@ export default new (class ChatBox extends EventEmitter {
     }
     this.emojiMenu.classList.add("hidden");
     this.emojiMenu.setAttribute("aria-hidden", "true");
+    this.emojiToggle.setAttribute("aria-expanded", "false");
+  }
+
+  syncPickerPlacement() {
+    if (!this.gifMenu || !this.chat || !this.status) {
+      return;
+    }
+    const opensDown =
+      window.matchMedia && window.matchMedia("(max-width: 860px)").matches;
+    const gifParent = opensDown ? this.status : this.chat;
+    if (this.gifMenu.parentElement !== gifParent) {
+      gifParent.appendChild(this.gifMenu);
+    }
+    if (this.emojiMenu) {
+      this.emojiMenu.classList.toggle("emoji-menu-down", opensDown);
+    }
+    this.gifMenu.classList.toggle("gif-menu-down", opensDown);
   }
 
   installGifMenu() {
@@ -267,6 +293,8 @@ export default new (class ChatBox extends EventEmitter {
         title: "Search GIFs (Giphy)",
         "aria-label": "Search GIFs",
         "aria-pressed": "false",
+        "aria-controls": "gif-menu",
+        "aria-expanded": "false",
       },
       classes: ["gif-toggle-btn"],
     });
@@ -288,7 +316,7 @@ export default new (class ChatBox extends EventEmitter {
 
     this.gifMenu = dom("div", {
       classes: ["gif-menu", "hidden"],
-      attrs: { "aria-hidden": "true" },
+      attrs: { id: "gif-menu", "aria-hidden": "true" },
     });
     this.gifSearchEl = dom("input", {
       classes: ["gif-search"],
@@ -324,6 +352,7 @@ export default new (class ChatBox extends EventEmitter {
       return;
     }
     this.hideEmojiMenu();
+    this.syncPickerPlacement();
     this.gifMenuOpen = true;
     this.gifMenu.classList.remove("hidden");
     this.gifMenu.setAttribute("aria-hidden", "false");
@@ -354,6 +383,10 @@ export default new (class ChatBox extends EventEmitter {
     this.gifToggleBtn.classList.toggle("active", this.gifMenuOpen);
     this.gifToggleBtn.setAttribute(
       "aria-pressed",
+      this.gifMenuOpen ? "true" : "false",
+    );
+    this.gifToggleBtn.setAttribute(
+      "aria-expanded",
       this.gifMenuOpen ? "true" : "false",
     );
   }

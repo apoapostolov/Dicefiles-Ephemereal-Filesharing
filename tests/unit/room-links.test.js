@@ -6,6 +6,8 @@ const {
   normalizeLinkedRooms,
   normalizeLinkedRoomEntries,
   normalizeLinkRules,
+  validateLinkRuleExpression,
+  validateLinkRules,
   splitLinkedRoomInput,
   resolveLinkedRoomTokens,
   resolveLinkedRoomEntries,
@@ -137,6 +139,19 @@ describe("room-links (shipped)", () => {
     expect(isEmptyLinkRules(null)).toBe(true);
   });
 
+  test("validates linked-file expression syntax and unsafe regex", () => {
+    expect(validateLinkRuleExpression("map OR dungeon").valid).toBe(true);
+    expect(validateLinkRuleExpression("/^pf2.*\\.pdf$/i").valid).toBe(true);
+    expect(validateLinkRuleExpression("/unterminated").valid).toBe(false);
+    expect(validateLinkRuleExpression("/(a+)+$/").valid).toBe(false);
+    expect(
+      validateLinkRules({ userContains: "/^(alice|bob)$/i" }),
+    ).toMatchObject({ valid: true });
+    expect(validateLinkRules({ tagContains: "/[/i" }).errors).toHaveProperty(
+      "tagContains",
+    );
+  });
+
   test("serializeLinkedRoomEntries stable re-normalize", () => {
     const raw = [
       { roomId: "roomAlpha01", rules: { tagContains: "rpg" } },
@@ -195,6 +210,20 @@ describe("room-links (shipped)", () => {
       name: "Campaign Maps",
     });
     expect(entries[1].rules).toBeUndefined();
+  });
+
+  test("resolveLinkedRoomEntries rejects invalid expressions before storage", () => {
+    expect(() =>
+      resolveLinkedRoomEntries(
+        [
+          {
+            roomId: "sourceRoomA1",
+            rules: { nameContains: "/unterminated" },
+          },
+        ],
+        [{ roomid: "sourceRoomA1", name: "Dump Room" }],
+      ),
+    ).toThrow(/Filename rule/);
   });
 
   test("add / remove / upsert entries", () => {
@@ -293,6 +322,36 @@ describe("room-links (shipped)", () => {
       expect(fileMatchesLinkRules(base, rules, now)).toBe(true);
     });
 
+    test("supports explicit AND/OR with AND precedence", () => {
+      expect(
+        fileMatchesLinkRules(
+          base,
+          { nameContains: "video OR session3 AND map" },
+          now,
+        ),
+      ).toBe(true);
+      expect(
+        fileMatchesLinkRules(
+          base,
+          { nameContains: "session3 AND city OR video" },
+          now,
+        ),
+      ).toBe(false);
+    });
+
+    test("supports regular expressions for filename", () => {
+      expect(
+        fileMatchesLinkRules(
+          base,
+          { nameContains: "/^session3.*\\.pdf$/i" },
+          now,
+        ),
+      ).toBe(true);
+      expect(
+        fileMatchesLinkRules(base, { nameContains: "/\\.epub$/i" }, now),
+      ).toBe(false);
+    });
+
     test("tagContains match key or value", () => {
       expect(fileMatchesLinkRules(base, { tagContains: "dnd" }, now)).toBe(
         true,
@@ -303,6 +362,49 @@ describe("room-links (shipped)", () => {
       expect(fileMatchesLinkRules(base, { tagContains: "zzz" }, now)).toBe(
         false,
       );
+    });
+
+    test("tag AND terms may match different tag keys or values", () => {
+      expect(
+        fileMatchesLinkRules(
+          base,
+          { tagContains: "user AND dnd5e" },
+          now,
+        ),
+      ).toBe(true);
+      expect(
+        fileMatchesLinkRules(
+          base,
+          { tagContains: "/^alice$/i AND /^system$/" },
+          now,
+        ),
+      ).toBe(true);
+    });
+
+    test("matches uploader usernames and bot display names", () => {
+      expect(
+        fileMatchesLinkRules(base, { userContains: "alice" }, now),
+      ).toBe(true);
+      expect(
+        fileMatchesLinkRules(base, { userContains: "bob" }, now),
+      ).toBe(false);
+      expect(
+        fileMatchesLinkRules(
+          {
+            ...base,
+            tags: {},
+            meta: { botName: "Telegram Releases" },
+          },
+          { userContains: "/telegram/i" },
+          now,
+        ),
+      ).toBe(true);
+    });
+
+    test("invalid expressions fail closed", () => {
+      expect(
+        fileMatchesLinkRules(base, { nameContains: "/unterminated" }, now),
+      ).toBe(false);
     });
 
     test("types filter", () => {
@@ -332,6 +434,7 @@ describe("room-links (shipped)", () => {
           base,
           {
             nameContains: "map",
+            userContains: "alice",
             types: ["document"],
             maxAgeHours: 48,
             minAgeHours: 1,
@@ -424,8 +527,12 @@ describe("room-links (shipped)", () => {
   test("summarizeLinkRules", () => {
     expect(summarizeLinkRules(null)).toMatch(/All finished/i);
     expect(
-      summarizeLinkRules({ nameContains: "map", types: ["document"] }),
-    ).toMatch(/name~/);
+      summarizeLinkRules({
+        nameContains: "map",
+        userContains: "alice",
+        types: ["document"],
+      }),
+    ).toMatch(/uploader~"alice"/);
   });
 
   test("private sources report explicit status and access summaries", () => {

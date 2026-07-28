@@ -9,6 +9,7 @@ import {
   saveProgress,
   saveReaderOpts,
 } from "./opts";
+import { resolveBookPageTurn } from "../../../common/reader-page-turn";
 
 function dbg(label, ...args) { console.log(`[Reader] ${label}`, ...args); }
 function dbgErr(label, err) { console.error(`[Reader] ${label}`, err); }
@@ -250,6 +251,8 @@ async function parseEpubChapters(zip) {
  */
 /** Vertical gap (px) between the A5 page frame and the container edges. */
 const BOOK_VMARGIN = 10;
+const PAGE_TURN_HALF_MS = 230;
+const PAGE_TURN_LOAD_WAIT_MS = 700;
 /**
  * Top/bottom padding (px) inside the book iframe.
  * This IS the book's top and bottom page margin — the CSS column height is
@@ -376,9 +379,12 @@ class BookReader {
     this._pageHeight = 0;
     this._pageInChapter = 0;
     this._totalPagesInChapter = 1;
+    this._stage = null;
     this._iframe = null;
     this._loaded = false; // true once current chapter iframe fires 'load'
     this._destroyed = false;
+    this._turning = false;
+    this._queuedTurn = null;
     this._fileKey = null;
     this._opts = null; // reader typography options (set in open())
     this.onPageChange = null; // callback(chapterIdx) — set by Reader
@@ -485,7 +491,13 @@ class BookReader {
 
     const { html, css } = await this._getChapter(idx);
     this.container.textContent = "";
+    this._stage = null;
     this._iframe = null;
+
+    const stage = dom("div", { classes: ["reader-book-stage"] });
+    stage.style.width = `${this._pageWidth}px`;
+    stage.style.height = `${this._pageHeight}px`;
+    this._stage = stage;
 
     const iframe = dom("iframe", { classes: ["reader-book-iframe"] });
     iframe.style.width = `${this._pageWidth}px`;
@@ -586,7 +598,8 @@ class BookReader {
       this._pageHeight,
       this._opts,
     );
-    this.container.appendChild(iframe);
+    stage.appendChild(iframe);
+    this.container.appendChild(stage);
     this._updateInfo();
   }
 
@@ -605,6 +618,216 @@ class BookReader {
         pageIdx === 0 ? "" : `translateX(${-pageIdx * this._pageWidth}px)`;
     } catch (ex) {
       dbgErr("_scrollToPage", ex);
+    }
+  }
+
+  _prefersReducedMotion() {
+    return Boolean(
+      window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    );
+  }
+
+  _canAnimatePageTurn() {
+    return Boolean(
+      this._type === "epub" &&
+        this._stage &&
+        this._iframe &&
+        typeof this._iframe.animate === "function" &&
+        !this._prefersReducedMotion(),
+    );
+  }
+
+  _makeCurlLayer(direction) {
+    const curl = dom("div", {
+      classes: ["reader-page-curl", `reader-page-curl-${direction}`],
+    });
+    curl.setAttribute("aria-hidden", "true");
+    return curl;
+  }
+
+  _frameMotion(direction, phase) {
+    const sign = direction === "next" ? -1 : 1;
+    if (phase === "out") {
+      return [
+        {
+          transform: "perspective(1400px) rotateY(0deg) translateX(0) scaleX(1)",
+          filter: "brightness(1)",
+          opacity: 1,
+        },
+        {
+          transform: `perspective(1400px) rotateY(${sign * 42}deg) translateX(${sign * 6}%) scaleX(0.94)`,
+          filter: "brightness(0.72)",
+          opacity: 0.18,
+        },
+      ];
+    }
+    return [
+      {
+        transform: `perspective(1400px) rotateY(${-sign * 32}deg) translateX(${-sign * 5}%) scaleX(0.96)`,
+        filter: "brightness(0.78)",
+        opacity: 0.28,
+      },
+      {
+        transform: "perspective(1400px) rotateY(0deg) translateX(0) scaleX(1)",
+        filter: "brightness(1)",
+        opacity: 1,
+      },
+    ];
+  }
+
+  _curlMotion(direction, phase) {
+    const next = direction === "next";
+    if (phase === "out") {
+      return [
+        {
+          transform: `translateX(${next ? "175%" : "-175%"}) scaleX(0.28) skewY(${next ? "-3deg" : "3deg"})`,
+          opacity: 0,
+        },
+        {
+          transform: `translateX(${next ? "36%" : "-36%"}) scaleX(1) skewY(${next ? "-1deg" : "1deg"})`,
+          opacity: 1,
+        },
+      ];
+    }
+    return [
+      {
+        transform: `translateX(${next ? "36%" : "-36%"}) scaleX(1) skewY(${next ? "-1deg" : "1deg"})`,
+        opacity: 1,
+      },
+      {
+        transform: `translateX(${next ? "-175%" : "175%"}) scaleX(0.28) skewY(${next ? "3deg" : "-3deg"})`,
+        opacity: 0,
+      },
+    ];
+  }
+
+  async _animateTurnPhase(direction, phase) {
+    const stage = this._stage;
+    const iframe = this._iframe;
+    if (!stage || !iframe || this._destroyed) {
+      return;
+    }
+
+    const curl = this._makeCurlLayer(direction);
+    stage.appendChild(curl);
+    iframe.style.transformOrigin =
+      direction === "next" ? "left center" : "right center";
+
+    const options = {
+      duration: PAGE_TURN_HALF_MS,
+      easing: phase === "out" ?
+        "cubic-bezier(0.55, 0, 1, 0.45)" :
+        "cubic-bezier(0.16, 1, 0.3, 1)",
+      fill: "forwards",
+    };
+    const frameAnimation = iframe.animate(
+      this._frameMotion(direction, phase),
+      options,
+    );
+    const curlAnimation = curl.animate(
+      this._curlMotion(direction, phase),
+      options,
+    );
+
+    await Promise.allSettled([
+      frameAnimation.finished,
+      curlAnimation.finished,
+    ]);
+    frameAnimation.cancel();
+    curlAnimation.cancel();
+    curl.remove();
+    iframe.style.transformOrigin = "";
+  }
+
+  async _waitForCurrentFrame() {
+    if (this._loaded || this._destroyed) {
+      return;
+    }
+    const started = performance.now();
+    await new Promise(resolve => {
+      const check = () => {
+        if (
+          this._loaded ||
+          this._destroyed ||
+          performance.now() - started >= PAGE_TURN_LOAD_WAIT_MS
+        ) {
+          resolve();
+          return;
+        }
+        requestAnimationFrame(check);
+      };
+      requestAnimationFrame(check);
+    });
+  }
+
+  async _applyPageTurn(target) {
+    if (target.crossesChapter) {
+      await this._renderChapter(target.chapter, target.page);
+      await this._waitForCurrentFrame();
+      return;
+    }
+    this._pageInChapter = target.page;
+    this._scrollToPage(target.page);
+    this._updateInfo();
+  }
+
+  async _runPageTurn(direction, target) {
+    this._turning = true;
+    let applied = false;
+    try {
+      if (!this._canAnimatePageTurn()) {
+        applied = true;
+        await this._applyPageTurn(target);
+        return;
+      }
+
+      await this._animateTurnPhase(direction, "out");
+      if (this._destroyed) {
+        return;
+      }
+      applied = true;
+      await this._applyPageTurn(target);
+      if (this._destroyed) {
+        return;
+      }
+      await this._animateTurnPhase(direction, "in");
+    }
+    catch (ex) {
+      dbgErr("page turn animation", ex);
+      if (!this._destroyed && !applied) {
+        await this._applyPageTurn(target);
+      }
+    }
+    finally {
+      this._turning = false;
+      const queued = this._queuedTurn;
+      this._queuedTurn = null;
+      if (queued && !this._destroyed) {
+        this._requestPageTurn(queued);
+      }
+    }
+  }
+
+  _requestPageTurn(direction) {
+    if (!this._loaded || this._destroyed) {
+      return;
+    }
+    if (this._turning) {
+      this._queuedTurn = direction;
+      return;
+    }
+    const target = resolveBookPageTurn(
+      {
+        chapter: this._currentIdx,
+        page: this._pageInChapter,
+        pagesInChapter: this._totalPagesInChapter,
+        chapters: this._total,
+      },
+      direction,
+    );
+    if (target) {
+      this._runPageTurn(direction, target);
     }
   }
 
@@ -634,36 +857,12 @@ class BookReader {
 
   /** Navigate one page forward; wraps to next chapter at chapter end. */
   nextPage() {
-    if (!this._loaded) {
-      return;
-    }
-    const newPage = this._pageInChapter + 1;
-    if (newPage >= this._totalPagesInChapter) {
-      if (this._currentIdx < this._total - 1) {
-        this._renderChapter(this._currentIdx + 1, 0);
-      }
-      return;
-    }
-    this._pageInChapter = newPage;
-    this._scrollToPage(newPage);
-    this._updateInfo();
+    this._requestPageTurn("next");
   }
 
   /** Navigate one page back; wraps to prev chapter (last page) at chapter start. */
   prevPage() {
-    if (!this._loaded) {
-      return;
-    }
-    const newPage = this._pageInChapter - 1;
-    if (newPage < 0) {
-      if (this._currentIdx > 0) {
-        this._renderChapter(this._currentIdx - 1, -1);
-      }
-      return;
-    }
-    this._pageInChapter = newPage;
-    this._scrollToPage(newPage);
-    this._updateInfo();
+    this._requestPageTurn("prev");
   }
 
   /** Jump to the next chapter (first page). */
@@ -705,7 +904,9 @@ class BookReader {
     this._blobUrls = [];
     this._chapters = [];
     this._mobiSpine = [];
+    this._stage = null;
     this._iframe = null;
+    this._queuedTurn = null;
     this.container.textContent = "";
   }
 }

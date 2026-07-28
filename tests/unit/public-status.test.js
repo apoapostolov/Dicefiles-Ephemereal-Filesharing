@@ -1,13 +1,29 @@
 "use strict";
 
 const {
+  CACHE_MS,
+  HISTORY_POINTS,
+  HISTORY_WINDOW_SEC,
+  REQUEST_BUCKETS,
+  REQUEST_WINDOW_SEC,
+  SAMPLE_INTERVAL_SEC,
+  TRAFFIC_BUCKETS,
+  TRAFFIC_INTERVAL_SEC,
   buildSnapshot,
   buildInsights,
   historyPoint,
+  overlayRequestHistory,
   sanitizeHealth,
   summarizeRequests,
+  summarizeTrafficHistory,
   summarizeUploads,
 } = require("../../lib/public-status");
+const {
+  formatByteTick,
+  niceByteAxis,
+  niceNumberAxis,
+  smoothPointPath,
+} = require("../../common/status-charts");
 
 function health(overrides = {}) {
   return Object.assign(
@@ -54,19 +70,19 @@ describe("public status aggregation", () => {
     expect(safe.components).toEqual([
       {
         id: "database",
-        label: "Realtime database",
+        label: "Database",
         status: "operational",
         latencyMs: 2,
       },
       {
         id: "storage",
-        label: "Upload storage",
+        label: "File storage",
         status: "operational",
         latencyMs: 4,
       },
       {
         id: "capacity",
-        label: "Drive capacity",
+        label: "Drive storage",
         status: "operational",
         latencyMs: 1,
       },
@@ -74,6 +90,17 @@ describe("public status aggregation", () => {
     expect(JSON.stringify(safe)).not.toContain("/secret/");
     expect(JSON.stringify(safe)).not.toContain("PONG");
     expect(JSON.stringify(safe)).not.toContain("4321");
+  });
+
+  test("status snapshots are reused for the full five-minute sample period", () => {
+    expect(SAMPLE_INTERVAL_SEC).toBe(5 * 60);
+    expect(CACHE_MS).toBe(SAMPLE_INTERVAL_SEC * 1000);
+    expect(HISTORY_WINDOW_SEC).toBe(5 * 24 * 60 * 60);
+    expect(HISTORY_POINTS).toBe(1441);
+    expect(TRAFFIC_INTERVAL_SEC).toBe(2 * 60 * 60);
+    expect(TRAFFIC_BUCKETS).toBe(60);
+    expect(REQUEST_WINDOW_SEC).toBe(HISTORY_WINDOW_SEC);
+    expect(REQUEST_BUCKETS).toBe(60);
   });
 
   test("snapshot contains aggregate values and no room, user, file, or path identity", () => {
@@ -120,6 +147,7 @@ describe("public status aggregation", () => {
           downloadsServed: 11,
           downloadsBytes: 700,
           uploadsCreated: 4,
+          uploadsBytes: 500,
         },
       },
     });
@@ -137,6 +165,7 @@ describe("public status aggregation", () => {
       registeredUsers: 8,
     });
     expect(snapshot.activity.totals.downloadsServed).toBe(11);
+    expect(snapshot.activity.totals.uploadsBytes).toBe(500);
     expect(historyPoint(snapshot)).toEqual(
       expect.objectContaining({
         status: "operational",
@@ -144,6 +173,9 @@ describe("public status aggregation", () => {
         files: 1,
         rooms: 2,
         usersOnline: 5,
+        uploadsBytes: 500,
+        requestsOpen: 1,
+        requestsFulfilled: 0,
       }),
     );
 
@@ -212,12 +244,137 @@ describe("public status aggregation", () => {
       oldestOpenSec: 2400,
     });
     expect(summary.last24h).toEqual({ opened: 2, fulfilled: 1 });
-    expect(summary.timeline.points).toHaveLength(24);
-    expect(
-      summary.timeline.points.reduce((sum, point) => sum + point.opened, 0),
-    ).toBe(2);
+    expect(summary.timeline.intervalSec).toBe(2 * 60 * 60);
+    expect(summary.timeline.windowSec).toBe(5 * 24 * 60 * 60);
+    expect(summary.timeline.points).toHaveLength(60);
+    expect(summary.timeline.points.at(-1)).toMatchObject({
+      unfulfilled: 2,
+      fulfilled: 1,
+    });
     expect(JSON.stringify(summary)).not.toContain("private");
     expect(JSON.stringify(summary)).not.toContain("secret-room");
+  });
+
+  test("traffic history becomes five-day two-hour transfer totals", () => {
+    const summary = summarizeTrafficHistory(
+      [
+        {
+          at: "2026-07-28T08:00:00.000Z",
+          uploadsBytes: 100,
+          downloadsBytes: 200,
+          storageBytes: 100,
+        },
+        {
+          at: "2026-07-28T09:00:00.000Z",
+          uploadsBytes: 150,
+          downloadsBytes: 260,
+          storageBytes: 150,
+        },
+        {
+          at: "2026-07-28T11:00:00.000Z",
+          uploadsBytes: 450,
+          downloadsBytes: 360,
+          storageBytes: 450,
+        },
+      ],
+      Date.parse("2026-07-28T12:00:00.000Z"),
+      2,
+      4 * 60 * 60,
+    );
+    expect(summary.intervalSec).toBe(2 * 60 * 60);
+    expect(summary.points).toEqual([
+      {
+        at: "2026-07-28T08:00:00.000Z",
+        uploadedBytes: 50,
+        downloadedBytes: 60,
+      },
+      {
+        at: "2026-07-28T10:00:00.000Z",
+        uploadedBytes: 300,
+        downloadedBytes: 100,
+      },
+    ]);
+  });
+
+  test("legacy history estimates uploads from positive stored-data changes", () => {
+    const summary = summarizeTrafficHistory(
+      [
+        {
+          at: "2026-07-28T10:00:00.000Z",
+          storageBytes: 100,
+          downloadsBytes: 200,
+        },
+        {
+          at: "2026-07-28T11:00:00.000Z",
+          storageBytes: 175,
+          downloadsBytes: 225,
+        },
+      ],
+      Date.parse("2026-07-28T12:00:00.000Z"),
+      1,
+      2 * 60 * 60,
+    );
+    expect(summary.points[0]).toMatchObject({
+      uploadedBytes: 75,
+      downloadedBytes: 25,
+    });
+  });
+
+  test("recorded request snapshots preserve period state", () => {
+    const timeline = {
+      intervalSec: 7200,
+      points: [
+        {
+          at: "2026-07-28T08:00:00.000Z",
+          unfulfilled: 0,
+          fulfilled: 0,
+        },
+        {
+          at: "2026-07-28T10:00:00.000Z",
+          unfulfilled: 1,
+          fulfilled: 0,
+        },
+      ],
+    };
+    const overlaid = overlayRequestHistory(timeline, [
+      {
+        at: "2026-07-28T09:30:00.000Z",
+        requestsOpen: 3,
+        requestsFulfilled: 2,
+      },
+    ]);
+    expect(overlaid.points[0]).toMatchObject({
+      unfulfilled: 3,
+      fulfilled: 2,
+    });
+    expect(overlaid.points[1]).toMatchObject({
+      unfulfilled: 1,
+      fulfilled: 0,
+    });
+  });
+
+  test("chart scales use readable round values and smooth paths", () => {
+    const bytes = niceByteAxis(73 * 1000 * 1000, 5);
+    expect(bytes.step).toBe(20 * 1000 * 1000);
+    expect(bytes.max).toBe(80 * 1000 * 1000);
+    expect(bytes.ticks.map(formatByteTick)).toEqual([
+      "0",
+      "20 MB",
+      "40 MB",
+      "60 MB",
+      "80 MB",
+    ]);
+    expect(niceNumberAxis(11, 4, 1)).toMatchObject({
+      step: 5,
+      max: 15,
+    });
+    expect(
+      smoothPointPath([
+        { x: 0, y: 10 },
+        { x: 20, y: 5 },
+        { x: 40, y: 8 },
+      ]),
+    ).toMatch(/^M0,10 C/);
   });
 
   test("operational insights derive privacy-safe efficiency ratios", () => {

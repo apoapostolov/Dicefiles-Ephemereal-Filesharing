@@ -119,21 +119,7 @@
 
     <section class="profile-achievements">
       <h3>Achievements</h3>
-      <div class="achievement-grid">
-        <% for (const a of info.achievements.all) { %>
-        <article class="achievement <%=a.unlocked ? "unlocked" : "locked"%> rarity-<%=a.rarity%>" title="<%=a.description%>">
-          <span class="achievement-icon" aria-hidden="true"><i class="<%=a.icon%>"></i></span>
-          <h4><%=a.title%></h4>
-          <p><%=a.description%></p>
-          <% if (!a.unlocked) { %>
-          <div class="achievement-progress">
-            <div class="achievement-progress-bar" style="width:<%=Math.min(100, Math.round(a.current / a.required * 100))%>%"></div>
-          </div>
-          <% } %>
-          <small><%=a.unlocked ? "Unlocked" : Math.round(a.current / a.required * 100) + "% complete"%></small>
-        </article>
-        <% } %>
-      </div>
+      <%- include("achievement-cards", { achievementInfo: info.achievements }) %>
     </section>
 
     <% if (info.activity != null) { %>

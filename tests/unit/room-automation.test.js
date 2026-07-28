@@ -126,6 +126,29 @@ describe("room automation helpers", () => {
     expect(removed.links).toEqual([]);
   });
 
+  test("accepts advanced linked-file rules and rejects invalid regex", async () => {
+    const room = makeRoom();
+    const created = await createRoomLink(room, {
+      source: "Campaign Maps",
+      rules: {
+        nameContains: "pf2 AND /\\.pdf$/i",
+        userContains: "alice OR bob",
+      },
+    });
+    expect(created.links[0].rules).toMatchObject({
+      nameContains: "pf2 AND /\\.pdf$/i",
+      userContains: "alice OR bob",
+    });
+
+    const anotherRoom = makeRoom();
+    await expect(
+      createRoomLink(anotherRoom, {
+        source: "Campaign Maps",
+        rules: { tagContains: "/[/" },
+      }),
+    ).rejects.toMatchObject({ status: 400 });
+  });
+
   test("rejects duplicate links and reports missing removal", async () => {
     const room = makeRoom();
     await createRoomLink(room, { source: "Campaign Maps" });

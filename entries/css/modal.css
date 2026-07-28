@@ -2069,6 +2069,56 @@
   font-weight: 700;
 }
 
+.modal-optsdlg .roomopts-rule-syntax-help {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(220, 220, 220, 0.92);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.modal-optsdlg .roomopts-rule-syntax-help summary {
+  padding: 0.48rem 0.62rem;
+  color: var(--text-fg);
+  font-weight: 650;
+  cursor: pointer;
+  user-select: none;
+}
+
+.modal-optsdlg .roomopts-rule-syntax-help summary span {
+  color: rgba(155, 210, 230, 0.95);
+  font-weight: 750;
+}
+
+.modal-optsdlg .roomopts-rule-syntax-help > div {
+  padding: 0 0.68rem 0.58rem;
+}
+
+.modal-optsdlg .roomopts-rule-syntax-help p {
+  margin: 0.35rem 0 0;
+}
+
+.modal-optsdlg .roomopts-rule-syntax-help code {
+  color: rgba(180, 225, 240, 0.98);
+}
+
+.modal-optsdlg .roomopts-rule-error {
+  margin: 0;
+  padding: 0.48rem 0.62rem;
+  border: 1px solid rgba(240, 135, 135, 0.5);
+  border-radius: 6px;
+  background: rgba(125, 30, 30, 0.22);
+  color: rgba(255, 215, 215, 0.98);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.modal-optsdlg .roomopts-link-editor input[aria-invalid="true"] {
+  border-color: rgba(245, 135, 135, 0.9);
+  box-shadow: 0 0 0 1px rgba(245, 135, 135, 0.3);
+}
+
 .modal-optsdlg .roomopts-link-types {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 6px;

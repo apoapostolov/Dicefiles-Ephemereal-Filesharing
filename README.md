@@ -59,7 +59,7 @@ Full notes: [CHANGELOG.md](CHANGELOG.md).
   audio, PDFs, books, and clear archive placeholders.
 - **Streaming readers** open PDF, ePub, MOBI/AZW, and CBZ/CBR/CB7 comics inside
   the room with remembered progress, focus mode, typography controls, and A5
-  pagination.
+  pagination. ePub page changes use a soft book-curl transition.
 - **Archive Viewer** browses ZIP, RAR, 7Z, TAR, multi-part archives, and comics
   without downloading the whole container; individual entries remain
   selectable.
@@ -88,7 +88,9 @@ Full notes: [CHANGELOG.md](CHANGELOG.md).
   signatures; room consent, remote TTL, ranged streaming, and privacy-safe
   metadata remain enforced by the source
   ([operator and protocol guide](docs/FEDERATION.md)).
-- **Link rules** filter by filename terms, tags, file types, and age, with live
+- **Link rules** filter by filename, tags, uploader username, file type, and
+  age. Plain terms support comma/OR and AND logic, while regex handles complex
+  requirements. Links show live
   Active, Cross-link off, Private consent, or Missing status.
 - **Shareable deep links** can restore a selected file, filter, sort, or
   request-board view when the room enables them.
@@ -124,7 +126,8 @@ Full notes: [CHANGELOG.md](CHANGELOG.md).
   ([operator guide](core/plugins/RELEASE_PUBLISHERS.md)).
 - **Protected status dashboard** shows storage, uptime history, traffic,
   users, files, downloads, requests, and service health through a generated
-  capability link; operators may explicitly make it public.
+  capability link. Transfer and request charts use five-day, two-hour periods;
+  operators may explicitly make the dashboard public.
 - `/healthz`, structured operational metrics, preview diagnostics, TLS support,
   Helmet headers, and privacy-safe public telemetry support day-to-day
   operation.
@@ -166,6 +169,8 @@ Dicefiles includes a built-in streaming reader for **PDF**, **ePub**, **MOBI**, 
 - OPF manifest and spine are parsed to build the chapter list; CSS and image assets are extracted and served as `blob:` URLs so chapters render correctly without network requests.
 - Chapters render in a `srcdoc` iframe (no `sandbox` restrictions) with injected dark-theme defaults and A5 page layout via CSS multi-column.
 - Content reflows into horizontal A5-sized pages within each chapter — ← / → arrow keys and **Prev / Next** buttons scroll pages; **PageUp / PageDown** jump chapters.
+- ePub page turns use a soft curl animation, queue rapid navigation safely,
+  and become instant when the browser requests reduced motion.
 - Chapter + page counter in the toolbar.
 
 ### MOBI / AZW / AZW3 reader
@@ -686,10 +691,13 @@ To make the dashboard intentionally public, set the following and restart:
 
 Public mode restores `/status` and `/api/public/status`.
 
-The dashboard includes aggregate drive capacity, service availability, usage
-history, request flow, global request fulfillment, current backlog, fulfillment
-timing, transfer ratios, and preview failures. Request charts use hourly totals
-only; room names, request text, user names, and file names are never included.
+The dashboard includes aggregate drive capacity, service availability,
+five-day transfer history, global request fulfillment, current backlog,
+fulfillment timing, transfer ratios, and preview failures. Transfer lines show
+uploaded and downloaded bytes per two-hour period; request bars show how many
+requests were available in each two-hour period, stacked by unfulfilled and
+fulfilled state. Room names, request text, user names, and file names are never
+included.
 
 
 ### Room options (owner/mod)
@@ -704,7 +712,7 @@ Additional per-room settings in **Room Options** (context menu), organized by ta
 | **General** — Allow Room Cross-Linking | **off** | When on, **other** rooms may mirror this room’s finished uploads. Knowing a room id or name is not enough — the source owner must opt in. |
 | **General** — Allow Private Linking | **off** | Second source-owned consent for an invite-only room. Private mirroring works only when this and the destination link’s private-source request are both enabled. |
 | **Invites** | — | Guest invite links: Generate opens a limits panel (single-use / max users / max hours); list with copy and revoke; recent privacy-safe activity; redeem at `/r/:id?invite=TOKEN` |
-| **Linking** | empty table | Table of source rooms (id or exact name). Per-row filters: filename/tag contains, file types, max/min age (hours), viewer visibility, and a private-source request. Invite-only mirroring requires bilateral consent from source and destination. Status: Active / Cross-link off / Private source / Missing. Hidden rows and request cards never mirror. |
+| **Linking** | empty table | Table of source rooms (id or exact name). Per-row filters: filename, tag, and uploader username expressions (comma/OR, AND, or regex), file types, max/min age (hours), viewer visibility, and a private-source request. Invite-only mirroring requires bilateral consent from source and destination. Status: Active / Cross-link off / Private source / Missing. Hidden rows and request cards never mirror. |
 | **Plugins** | empty | Invite bots from the server registry, edit settings, enable/disable, **Run now**. Uploads use a cyan **BOT** pill and bot name (e.g. Mega.nz Autoshare). |
 
 Example deep link (requires Shareable deep links enabled):

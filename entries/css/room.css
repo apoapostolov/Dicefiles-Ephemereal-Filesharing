@@ -828,6 +828,11 @@ a.r::before {
   position: relative;
 }
 
+#status:has(.emoji-menu:not(.hidden)),
+#status:has(.gif-menu:not(.hidden)) {
+  z-index: 60;
+}
+
 #status > * {
   margin-left: 3ex;
 }
@@ -946,6 +951,14 @@ a.r::before {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.42);
 }
 
+.emoji-menu-down {
+  top: calc(100% + 0.4rem);
+  bottom: auto;
+  width: min(18.5rem, calc(100vw - 1rem));
+  max-height: min(16.5rem, 42dvh);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.48);
+}
+
 .emoji-search {
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 6px;
@@ -1044,6 +1057,21 @@ a.r::before {
 
 .gif-menu.has-results {
   max-height: 20rem;
+}
+
+.gif-menu-down {
+  top: calc(100% + 0.4rem);
+  right: 0.5rem;
+  bottom: auto;
+  left: 0.5rem;
+  width: auto;
+  margin-left: 0;
+  max-height: min(4.2rem, 42dvh);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.48);
+}
+
+.gif-menu-down.has-results {
+  max-height: min(20rem, 45dvh);
 }
 
 .gif-search {

@@ -1,0 +1,16 @@
+<div class="achievement-grid">
+  <% for (const a of achievementInfo.all) { %>
+  <% const progress = a.required > 0 ? Math.min(100, Math.round(a.current / a.required * 100)) : 0; %>
+  <article class="achievement <%=a.unlocked ? "unlocked" : "locked"%> rarity-<%=a.rarity%>" title="<%=a.description%>">
+    <span class="achievement-icon" aria-hidden="true"><i class="<%=a.icon%>"></i></span>
+    <h4><%=a.title%></h4>
+    <p><%=a.description%></p>
+    <% if (!a.unlocked) { %>
+    <div class="achievement-progress" aria-hidden="true">
+      <div class="achievement-progress-bar" style="width:<%=progress%>%"></div>
+    </div>
+    <% } %>
+    <small><%=a.unlocked ? "Unlocked" : progress + "% complete"%></small>
+  </article>
+  <% } %>
+</div>

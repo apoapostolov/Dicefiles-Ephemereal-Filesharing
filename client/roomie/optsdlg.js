@@ -5,7 +5,7 @@ import registry from "../registry";
 import { UsersModal } from "./usersdlg";
 import {
   normalizeLinkedRoomEntries,
-  normalizeLinkRules,
+  validateLinkRules,
   serializeLinkedRoomEntries,
   summarizeLinkRules,
   summarizeLinkAccess,
@@ -108,6 +108,8 @@ export class OptionsModal extends Modal {
       "linkeditorlabel",
       "rule_name",
       "rule_tag",
+      "rule_user",
+      "linkruleerror",
       "rule_maxage",
       "rule_minage",
       "linkvisibility",
@@ -1553,6 +1555,10 @@ export class OptionsModal extends Modal {
     if (this.rule_tag) {
       this.rule_tag.value = rules.tagContains || "";
     }
+    if (this.rule_user) {
+      this.rule_user.value = rules.userContains || "";
+    }
+    this.clearRuleError();
     if (this.rule_maxage) {
       this.rule_maxage.value =
         rules.maxAgeHours != null ? String(rules.maxAgeHours) : "";
@@ -1583,7 +1589,7 @@ export class OptionsModal extends Modal {
     }
   }
 
-  readEditorRules() {
+  readEditorRulesRaw() {
     const types = [];
     for (const t of LINK_FILE_TYPES) {
       const box = this.ruleTypeBoxes[t];
@@ -1594,18 +1600,63 @@ export class OptionsModal extends Modal {
     const raw = {
       nameContains: this.rule_name ? this.rule_name.value : "",
       tagContains: this.rule_tag ? this.rule_tag.value : "",
+      userContains: this.rule_user ? this.rule_user.value : "",
       types,
       maxAgeHours: this.rule_maxage ? this.rule_maxage.value : "",
       minAgeHours: this.rule_minage ? this.rule_minage.value : "",
     };
-    return normalizeLinkRules(raw);
+    return raw;
+  }
+
+  clearRuleError() {
+    if (this.linkruleerror) {
+      this.linkruleerror.textContent = "";
+      this.linkruleerror.classList.add("hidden");
+    }
+    for (const input of [this.rule_name, this.rule_tag, this.rule_user]) {
+      if (input) {
+        input.removeAttribute("aria-invalid");
+      }
+    }
+  }
+
+  showRuleErrors(errors) {
+    const fieldMap = {
+      nameContains: this.rule_name,
+      tagContains: this.rule_tag,
+      userContains: this.rule_user,
+    };
+    const messages = Object.values(errors);
+    if (this.linkruleerror) {
+      this.linkruleerror.textContent = messages.join(" ");
+      this.linkruleerror.classList.remove("hidden");
+    }
+    let firstInvalid = null;
+    for (const [field, input] of Object.entries(fieldMap)) {
+      if (!input || !errors[field]) {
+        continue;
+      }
+      input.setAttribute("aria-invalid", "true");
+      if (!firstInvalid) {
+        firstInvalid = input;
+      }
+    }
+    if (firstInvalid) {
+      firstInvalid.focus();
+    }
   }
 
   onApplyRules() {
     if (!this.editingRoomId) {
       return;
     }
-    const rules = this.readEditorRules();
+    this.clearRuleError();
+    const validation = validateLinkRules(this.readEditorRulesRaw());
+    if (!validation.valid) {
+      this.showRuleErrors(validation.errors);
+      return;
+    }
+    const rules = validation.rules;
     this.linkEntries = this.linkEntries.map((e) => {
       if (e.roomId !== this.editingRoomId) {
         return e;
@@ -1647,6 +1698,7 @@ export class OptionsModal extends Modal {
       delete next.rules;
       return next;
     });
+    this.clearRuleError();
     this.openEditor(this.editingRoomId);
     this.renderLinkTable();
   }

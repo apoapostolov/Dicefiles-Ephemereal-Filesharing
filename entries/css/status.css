@@ -454,7 +454,11 @@
   background: var(--status-amber);
 }
 
-.chart-legend .legend-request-opened {
+.chart-legend .legend-downloaded {
+  background: var(--status-amber);
+}
+
+.chart-legend .legend-request-unfulfilled {
   height: 8px;
   background: var(--status-amber);
 }
@@ -473,6 +477,14 @@
   border-block: 1px solid var(--status-line);
 }
 
+.status-chart-subtitle {
+  max-width: 42rem;
+  margin: 0.65rem 0 0 !important;
+  color: var(--status-muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
 .history-chart {
   display: block;
   width: 100%;
@@ -485,38 +497,27 @@
   stroke-width: 1;
 }
 
-.chart-storage-area {
-  fill: url("#status-storage-gradient");
-  fill: rgba(100, 181, 214, 0.1);
+.chart-axis-label {
+  fill: var(--status-muted);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 9px;
 }
 
-.chart-storage-line,
-.chart-people-line {
+.chart-traffic-line {
   fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
   vector-effect: non-scaling-stroke;
+  mix-blend-mode: screen;
 }
 
-.chart-storage-line {
+.chart-uploaded-line {
   stroke: var(--status-cyan);
-  stroke-width: 3;
 }
 
-.chart-people-line {
+.chart-downloaded-line {
   stroke: var(--status-amber);
-  stroke-width: 2;
-  stroke-dasharray: 6 6;
-}
-
-.chart-storage-dot {
-  fill: var(--status-cyan);
-  stroke: var(--status-void);
-  stroke-width: 3;
-}
-
-.chart-people-dot {
-  fill: var(--status-amber);
-  stroke: var(--status-void);
-  stroke-width: 3;
 }
 
 .history-empty {
@@ -581,7 +582,7 @@
   overflow: visible;
 }
 
-.request-opened-bar {
+.request-unfulfilled-bar {
   fill: var(--status-amber);
 }
 

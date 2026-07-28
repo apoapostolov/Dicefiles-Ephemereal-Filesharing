@@ -446,8 +446,18 @@ function registerTools(srv) {
         .describe("Destination consent for an invite-only source"),
       rules: z
         .object({
-          nameContains: z.string().optional(),
-          tagContains: z.string().optional(),
+          nameContains: z
+            .string()
+            .optional()
+            .describe("Filename rule using comma/OR, AND, or /regex/flags"),
+          tagContains: z
+            .string()
+            .optional()
+            .describe("Tag key/value rule using comma/OR, AND, or /regex/flags"),
+          userContains: z
+            .string()
+            .optional()
+            .describe("Uploader username rule using comma/OR, AND, or /regex/flags"),
           types: z.array(z.string()).optional(),
           maxAgeHours: z.number().optional(),
           minAgeHours: z.number().optional(),

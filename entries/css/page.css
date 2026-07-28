@@ -713,7 +713,69 @@ body#page {
   padding: 2rem 1rem 3rem;
 }
 
-#page.account-page-legacy > article > h2 {
+#page.account-page-legacy .account-tabs {
+  display: flex;
+  gap: 0;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  border-bottom: 1px solid var(--hairline);
+  background: transparent;
+}
+
+#page.account-page-legacy .account-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 -1px;
+  padding: 0.65rem 1.1rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--dark-fg);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+#page.account-page-legacy .account-tab:hover,
+#page.account-page-legacy .account-tab:focus-visible {
+  color: var(--text-fg);
+}
+
+#page.account-page-legacy .account-tab:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+#page.account-page-legacy .account-tab.active {
+  border-bottom-color: var(--accent, #7c93ff);
+  color: var(--text-fg);
+  font-weight: 600;
+}
+
+#page.account-page-legacy .tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.3em;
+  height: 1.3em;
+  padding: 0 0.3em;
+  border-radius: 999px;
+  background: rgba(124, 147, 255, 0.18);
+  color: var(--text-fg);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+#page.account-page-legacy .account-panel {
+  min-width: 0;
+}
+
+#page.account-page-legacy .account-settings-section > h2 {
   margin: 0 0 1.5rem;
 }
 
@@ -810,7 +872,7 @@ body#page {
   outline-offset: 2px;
 }
 
-#page.account-page-legacy > article > form:not(#account) {
+#page.account-page-legacy .account-settings-section > form:not(#account) {
   box-sizing: border-box;
   margin-top: 1.5rem;
   padding: 1.25rem;
@@ -858,6 +920,31 @@ body#page {
   text-align: center;
 }
 
+#page.account-page-legacy .account-achievements-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+#page.account-page-legacy .account-achievements-header h2,
+#page.account-page-legacy .account-achievements-header p {
+  margin: 0;
+}
+
+#page.account-page-legacy .account-achievements-header p {
+  margin-top: 0.35rem;
+  color: var(--dark-fg);
+  font-size: 0.9rem;
+}
+
+#page.account-page-legacy .account-profile-link {
+  flex: 0 0 auto;
+  color: var(--text-fg);
+  font-size: 0.86rem;
+}
+
 @media (max-width: 620px) {
   #page.account-page-legacy > nav {
     min-height: 5rem;
@@ -890,7 +977,7 @@ body#page {
     margin-top: 0.5rem;
   }
 
-  #page.account-page-legacy > article > form:not(#account) {
+  #page.account-page-legacy .account-settings-section > form:not(#account) {
     padding: 1rem;
   }
 
@@ -906,6 +993,20 @@ body#page {
   #page.account-page-legacy .account-tfa-header > #tfa {
     min-height: 2.25rem;
     padding: 0.4rem 0.75rem;
+  }
+
+  #page.account-page-legacy .account-tabs {
+    justify-content: center;
+  }
+
+  #page.account-page-legacy .account-tab {
+    justify-content: center;
+    padding-inline: 0.75rem;
+  }
+
+  #page.account-page-legacy .account-achievements-header {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 
@@ -1069,7 +1170,7 @@ body#page {
   color: var(--dark-fg);
 }
 
-#page #userprofile .achievement-grid {
+#page :is(#userprofile, #account-panel-achievements) .achievement-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
@@ -1077,7 +1178,7 @@ body#page {
   align-items: stretch;
 }
 
-#page #userprofile .achievement {
+#page :is(#userprofile, #account-panel-achievements) .achievement {
   --rarity-glow: rgba(145, 153, 163, 0.3);
   --rarity-edge: rgba(145, 153, 163, 0.52);
   --rarity-fg: #d4d8de;
@@ -1104,17 +1205,17 @@ body#page {
   text-align: center;
 }
 
-#page #userprofile .achievement:hover {
+#page :is(#userprofile, #account-panel-achievements) .achievement:hover {
   transform: translateY(-2px);
   border-color: var(--rarity-fg);
 }
 
-#page #userprofile .achievement.locked {
+#page :is(#userprofile, #account-panel-achievements) .achievement.locked {
   opacity: 0.56;
   filter: saturate(0.7);
 }
 
-#page #userprofile .achievement-icon {
+#page :is(#userprofile, #account-panel-achievements) .achievement-icon {
   display: inline-flex;
   width: 3rem;
   height: 3rem;
@@ -1126,12 +1227,12 @@ body#page {
   color: var(--rarity-fg);
 }
 
-#page #userprofile .achievement-icon i {
+#page :is(#userprofile, #account-panel-achievements) .achievement-icon i {
   font-size: 1.45rem;
   line-height: 1;
 }
 
-#page #userprofile .achievement-progress {
+#page :is(#userprofile, #account-panel-achievements) .achievement-progress {
   width: 100%;
   height: 4px;
   background: rgba(255, 255, 255, 0.08);
@@ -1140,7 +1241,7 @@ body#page {
   overflow: hidden;
 }
 
-#page #userprofile .achievement-progress-bar {
+#page :is(#userprofile, #account-panel-achievements) .achievement-progress-bar {
   height: 100%;
   background: var(--rarity-fg);
   border-radius: 999px;
@@ -1148,61 +1249,61 @@ body#page {
   transition: width 0.4s ease;
 }
 
-#page #userprofile .achievement h4 {
+#page :is(#userprofile, #account-panel-achievements) .achievement h4 {
   margin: 0.55rem 0 0.35rem;
   font-size: 0.98rem;
   text-align: center;
   color: var(--rarity-fg);
 }
 
-#page #userprofile .achievement p {
+#page :is(#userprofile, #account-panel-achievements) .achievement p {
   margin: 0 0 0.4rem;
   font-size: 0.82rem;
   color: var(--dark-fg);
   text-align: center;
 }
 
-#page #userprofile .achievement small {
+#page :is(#userprofile, #account-panel-achievements) .achievement small {
   color: var(--dark-fg);
 }
 
-#page #userprofile .achievement.rarity-common {
+#page :is(#userprofile, #account-panel-achievements) .achievement.rarity-common {
   --rarity-glow: rgba(129, 137, 148, 0.26);
   --rarity-edge: rgba(129, 137, 148, 0.5);
   --rarity-fg: #c6ccd4;
 }
 
-#page #userprofile .achievement.rarity-uncommon {
+#page :is(#userprofile, #account-panel-achievements) .achievement.rarity-uncommon {
   --rarity-glow: rgba(65, 166, 96, 0.25);
   --rarity-edge: rgba(65, 166, 96, 0.5);
   --rarity-fg: #bfecca;
 }
 
-#page #userprofile .achievement.rarity-rare {
+#page :is(#userprofile, #account-panel-achievements) .achievement.rarity-rare {
   --rarity-glow: rgba(72, 124, 219, 0.24);
   --rarity-edge: rgba(72, 124, 219, 0.5);
   --rarity-fg: #c2d5ff;
 }
 
-#page #userprofile .achievement.rarity-epic {
+#page :is(#userprofile, #account-panel-achievements) .achievement.rarity-epic {
   --rarity-glow: rgba(136, 86, 204, 0.24);
   --rarity-edge: rgba(136, 86, 204, 0.5);
   --rarity-fg: #dec4ff;
 }
 
-#page #userprofile .achievement.rarity-legendary {
+#page :is(#userprofile, #account-panel-achievements) .achievement.rarity-legendary {
   --rarity-glow: rgba(208, 138, 53, 0.24);
   --rarity-edge: rgba(208, 138, 53, 0.5);
   --rarity-fg: #ffe0ae;
 }
 
-#page #userprofile .achievement.rarity-mythic {
+#page :is(#userprofile, #account-panel-achievements) .achievement.rarity-mythic {
   --rarity-glow: rgba(199, 52, 87, 0.23);
   --rarity-edge: rgba(199, 52, 87, 0.5);
   --rarity-fg: #ffc7d5;
 }
 
-#page #userprofile .achievement.rarity-ascendant {
+#page :is(#userprofile, #account-panel-achievements) .achievement.rarity-ascendant {
   --rarity-glow: rgba(75, 207, 194, 0.24);
   --rarity-edge: rgba(75, 207, 194, 0.52);
   --rarity-fg: #bcfff8;
@@ -1416,6 +1517,16 @@ body#page {
   }
 
   #page #userprofile .profile-stats {
+    grid-template-columns: 1fr;
+  }
+
+  #page #account-panel-achievements .achievement-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  #page #account-panel-achievements .achievement-grid {
     grid-template-columns: 1fr;
   }
 }

@@ -57,6 +57,7 @@ function makeStatus(overrides = {}) {
         since: "2026-07-28T10:00:00.000Z",
         totals: {
           uploadsCreated: 14,
+          uploadsBytes: 750000,
           uploadsDeleted: 2,
           downloadsServed: 30,
           downloadsBytes: 900000,
@@ -77,12 +78,12 @@ function makeStatus(overrides = {}) {
         },
         last24h: { opened: 4, fulfilled: 3 },
         timeline: {
-          intervalSec: 3600,
-          windowSec: 86400,
+          intervalSec: 7200,
+          windowSec: 432000,
           points: [
             {
-              at: "2026-07-28T11:00:00.000Z",
-              opened: 4,
+              at: "2026-07-28T10:00:00.000Z",
+              unfulfilled: 2,
               fulfilled: 3,
             },
           ],
@@ -110,6 +111,7 @@ function makeStatus(overrides = {}) {
       ],
       history: {
         intervalSec: 300,
+        windowSec: 86400,
         maxPoints: 288,
         points: [
           {
@@ -122,6 +124,17 @@ function makeStatus(overrides = {}) {
             downloadsServed: 30,
           },
         ],
+        traffic: {
+          intervalSec: 7200,
+          windowSec: 432000,
+          points: [
+            {
+              at: "2026-07-28T10:00:00.000Z",
+              uploadedBytes: 750000,
+              downloadedBytes: 900000,
+            },
+          ],
+        },
       },
       privacy: { aggregationOnly: true, excluded: [] },
     },
@@ -147,6 +160,27 @@ function makeUser(overrides = {}) {
   );
 }
 
+function makeAchievements(overrides = {}) {
+  return Object.assign(
+    {
+      files: 0,
+      uploaded: 0,
+      downloaded: 0,
+      unlocked: 0,
+      total: 0,
+      all: [],
+      unlockedList: [],
+      lockedList: [],
+      filesOnly: [],
+      bytesOnly: [],
+      downloadsOnly: [],
+      requestsOnly: [],
+      requestsCreatedOnly: [],
+    },
+    overrides,
+  );
+}
+
 function makeInfo(overrides = {}) {
   return Object.assign(
     {
@@ -157,19 +191,7 @@ function makeInfo(overrides = {}) {
       uploaded: "0 B",
       files: "0",
       downloaded: "0 B",
-      achievements: {
-        files: 0,
-        uploaded: 0,
-        downloaded: 0,
-        unlocked: 0,
-        total: 0,
-        all: [],
-        unlockedList: [],
-        lockedList: [],
-        filesOnly: [],
-        bytesOnly: [],
-        downloadsOnly: [],
-      },
+      achievements: makeAchievements(),
       messageHtml: "",
       canEditMessage: false,
     },
@@ -212,6 +234,9 @@ test("room.ejs renders without error", async () => {
   // Key UI elements present
   expect(html).toContain('id="filter"');
   expect(html).toContain('id="menu"');
+  expect(html).toContain('id="roomopts-rule-user"');
+  expect(html).toContain("Rule syntax");
+  expect(html).toContain("ask an AI to convert your");
   // Continuity/discovery chrome
   expect(html).toContain('id="continuity"');
   expect(html).toContain('id="continuity-resume"');
@@ -335,11 +360,15 @@ test("account.ejs renders without error", async () => {
   const html = await render("account.ejs", {
     pagename: "Your Account",
     user,
+    achievements: makeAchievements(),
   });
   expect(html).toContain("TestUser");
   expect(html).toContain('<form id="account"');
   expect(html).toContain('class="account-page-legacy"');
   expect(html).toContain("Edit your account settings");
+  expect(html).toContain('id="account-tab-settings"');
+  expect(html).toContain('id="account-tab-achievements"');
+  expect(html).toContain('id="account-panel-achievements"');
   expect(html).not.toContain("TestSite PRO");
   expect(html).not.toContain("Of course!");
   expect(html).toMatch(
@@ -351,20 +380,60 @@ test("account.ejs renders without error", async () => {
 
 test("account.ejs reflects user email when set", async () => {
   const user = makeUser({ email: "user@example.com" });
-  const html = await render("account.ejs", { pagename: "Your Account", user });
+  const html = await render("account.ejs", {
+    pagename: "Your Account",
+    user,
+    achievements: makeAchievements(),
+  });
   expect(html).toContain("user@example.com");
 });
 
 test("account.ejs shows 2FA enable button when twofactor is falsy", async () => {
   const user = makeUser({ twofactor: false });
-  const html = await render("account.ejs", { pagename: "Your Account", user });
+  const html = await render("account.ejs", {
+    pagename: "Your Account",
+    user,
+    achievements: makeAchievements(),
+  });
   expect(html).toContain("Enable");
 });
 
 test("account.ejs shows 2FA disable button when twofactor is set", async () => {
   const user = makeUser({ twofactor: "JBSWY3DPEHPK3PXP" });
-  const html = await render("account.ejs", { pagename: "Your Account", user });
+  const html = await render("account.ejs", {
+    pagename: "Your Account",
+    user,
+    achievements: makeAchievements(),
+  });
   expect(html).toContain("Disable");
+});
+
+test("account.ejs renders the same achievement cards as the public profile", async () => {
+  const user = makeUser();
+  const achievements = makeAchievements({
+    unlocked: 1,
+    total: 80,
+    all: [
+      {
+        title: "First Stack",
+        description: "Upload 10 files",
+        current: 10,
+        required: 10,
+        unlocked: true,
+        rarity: "common",
+        icon: "fa-solid fa-file",
+      },
+    ],
+  });
+  const html = await render("account.ejs", {
+    pagename: "Your Account",
+    user,
+    achievements,
+  });
+  expect(html).toContain("1 / 80");
+  expect(html).toContain("First Stack");
+  expect(html).toContain("Upload 10 files");
+  expect(html).toContain(`href="/u/${user.account}"`);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -485,21 +554,27 @@ test("status.ejs renders the public infographic and privacy contract", async () 
     pagename: "Service status",
     statusPage: true,
     statusApiHref: "/api/public/status/test-status-token",
+    statusRefreshSec: 5 * 60,
     status,
     statusJSON: JSON.stringify(status),
   });
-  expect(html).toContain("Drive horizon");
+  expect(html).toContain("Drive storage");
+  expect(html).toContain("refreshes every 5 minutes");
+  expect(html).not.toContain("Drive horizon");
   expect(html).toContain('class="service-availability"');
   expect(html).toContain("Service history");
   expect(html).toContain("24 hours ago");
   expect((html.match(/data-status="unknown"/g) || []).length).toBe(48);
-  expect(html).toContain("Usage over time");
-  expect(html).toContain("Request pulse");
-  expect(html).toContain("Global fulfillment");
-  expect(html).toContain("Operational ratios");
-  expect(html).toContain("Content in motion");
-  expect(html).toContain("Service circuit");
-  expect(html).toContain("deliberately anonymous");
+  expect(html).toContain("Transfer history");
+  expect(html).toContain("Uploaded");
+  expect(html).toContain("Downloaded");
+  expect(html).toContain("two-hour period");
+  expect(html).toContain("Unfulfilled");
+  expect(html).toContain("Overall completion");
+  expect(html).toContain("Useful averages");
+  expect(html).toContain("Uploads and downloads");
+  expect(html).toContain("System checks");
+  expect(html).toContain("private details removed");
   expect(html).toContain("/api/public/status");
   expect(html).toContain("/status.css");
 });

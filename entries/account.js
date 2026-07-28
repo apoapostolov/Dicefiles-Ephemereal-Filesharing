@@ -2,6 +2,39 @@
 
 import qrcode from "qrcode";
 
+const accountTabs = Array.from(document.querySelectorAll(".account-tab"));
+const accountPanels = Array.from(document.querySelectorAll(".account-panel"));
+
+function selectAccountTab(target, focus) {
+  accountTabs.forEach(tab => {
+    const active = tab.dataset.tab === target;
+    tab.classList.toggle("active", active);
+    tab.setAttribute("aria-selected", active ? "true" : "false");
+    tab.tabIndex = active ? 0 : -1;
+    if (active && focus) {
+      tab.focus();
+    }
+  });
+  accountPanels.forEach(panel => {
+    panel.hidden = panel.id !== `account-panel-${target}`;
+  });
+}
+
+accountTabs.forEach((tab, index) => {
+  tab.addEventListener("click", () => {
+    selectAccountTab(tab.dataset.tab, false);
+  });
+  tab.addEventListener("keydown", event => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+      return;
+    }
+    event.preventDefault();
+    const direction = event.key === "ArrowRight" ? 1 : -1;
+    const next = (index + direction + accountTabs.length) % accountTabs.length;
+    selectAccountTab(accountTabs[next].dataset.tab, true);
+  });
+});
+
 const acct = document.querySelector("#account");
 acct.addEventListener("submit", async e => {
   e.preventDefault();

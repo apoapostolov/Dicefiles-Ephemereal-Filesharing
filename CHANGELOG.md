@@ -4,6 +4,14 @@
 
 ### Added
 
+- **EPUB page curls:** page navigation now uses a soft, book-like curl
+  transition that also works across chapter boundaries. Rapid turns are
+  safely queued, while reduced-motion preferences retain instant navigation.
+- **Advanced linked-file rules:** destination links can now filter filename,
+  tag keys/values, and uploader usernames with backward-compatible comma/OR
+  terms, explicit AND logic, or validated regular expressions. Inline syntax
+  help and API/MCP validation keep complex rules understandable and fail
+  closed when an expression is invalid.
 - **Trusted-host federation:** independent Dicefiles servers can form a small,
   manually pinned trust group and link approved remote rooms without sharing
   Redis, accounts, or storage. RFC 9421 signatures, replay protection,
@@ -17,6 +25,15 @@
 
 ### Changed
 
+- **Mobile chat pickers:** emoji and Giphy selectors now open below the chat
+  toolbar in the stacked mobile layout, keeping the upper chat history clear.
+- **Clearer status charts:** the operator dashboard now shows five days of
+  uploaded and downloaded transfer volume in smooth, solid two-hour lines with
+  readable MB/GB/TB axes. Request history uses two-hour stacked availability
+  bars split into unfulfilled and fulfilled requests.
+- **Account achievements:** `/account` now exposes the existing achievement
+  trophy room as a first-class tab, using the same milestone progress, rarity
+  styling, and public-profile cards as `/u/:username`.
 - **Safer bulk deletion:** deleting every visible file from the room header now
   requires an explicit confirmation that includes the affected file count. The
   dialog gives keyboard focus to Cancel, while the server continues to enforce

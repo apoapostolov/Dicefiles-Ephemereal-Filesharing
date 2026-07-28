@@ -874,10 +874,10 @@
             <p><strong>Filters / rules (Edit on a row)</strong></p>
             <ul>
               <li>
-                Filename contains — comma-separated, match any (e.g.
-                <code>map, dungeon</code>)
+                Filename, tag, and uploader username rules support comma or
+                <code>OR</code>, <code>AND</code>, and regular expressions
               </li>
-              <li>Tag contains — matches any tag key or value</li>
+              <li>Tag rules match any tag key or value</li>
               <li>File types — image, video, document, … (empty = all)</li>
               <li>No older than (hours) — only recent uploads</li>
               <li>At least this old (hours) — only older uploads</li>
@@ -976,31 +976,64 @@
             Edit rules —
             <span name="linkeditorlabel"></span>
           </div>
+          <details class="roomopts-rule-syntax-help">
+            <summary>
+              Rule syntax <span aria-hidden="true">(?)</span>
+            </summary>
+            <div>
+              <p>
+                Use commas or uppercase <code>OR</code> to match any term:
+                <code>map, dungeon</code> or <code>map OR dungeon</code>.
+                Use uppercase <code>AND</code> to require every term:
+                <code>pf2 AND remaster</code>. AND is evaluated before OR.
+              </p>
+              <p>
+                For complex matching, enter a JavaScript-style regular
+                expression such as <code>/^pf2.*\.pdf$/i</code>. You can
+                combine regex with AND and OR. Filename, tag, and uploader
+                fields must all match when more than one field is filled.
+              </p>
+              <p>
+                If you do not know regex, you can ask an AI to convert your
+                desired outcome into a regex, then review it before saving.
+              </p>
+            </div>
+          </details>
           <div class="roomopts-field">
-            <label for="roomopts-rule-name"
-              >Filename contains
-              <span class="roomopts-field-hint"
-                >(comma-separated; match any)</span
-              ></label
-            >
+            <label for="roomopts-rule-name">Filename rule</label>
             <input
               id="roomopts-rule-name"
               name="rule_name"
               type="text"
               autocomplete="off"
-              placeholder="e.g. map, dungeon, city"
+              placeholder="Comma, AND, OR, or /regex/i"
             />
           </div>
           <div class="roomopts-field">
-            <label for="roomopts-rule-tag">Tag contains</label>
+            <label for="roomopts-rule-tag">Tag rule</label>
             <input
               id="roomopts-rule-tag"
               name="rule_tag"
               type="text"
               autocomplete="off"
-              placeholder="e.g. dnd"
+              placeholder="Comma, AND, OR, or /regex/i"
             />
           </div>
+          <div class="roomopts-field">
+            <label for="roomopts-rule-user">Uploader username rule</label>
+            <input
+              id="roomopts-rule-user"
+              name="rule_user"
+              type="text"
+              autocomplete="off"
+              placeholder="Comma, AND, OR, or /regex/i"
+            />
+          </div>
+          <p
+            name="linkruleerror"
+            class="roomopts-rule-error hidden"
+            role="alert"
+          ></p>
           <fieldset class="roomopts-link-types">
             <legend>File types (none selected = all types)</legend>
             <div class="roomopts-link-types-grid">

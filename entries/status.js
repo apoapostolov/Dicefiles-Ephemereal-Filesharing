@@ -5,13 +5,27 @@ const {
   availabilitySegments,
   availabilitySummary,
 } = require("../common/status-history");
+const {
+  formatByteTick,
+  niceByteAxis,
+  niceNumberAxis,
+  smoothPointPath,
+} = require("../common/status-charts");
 
 const initialNode = document.getElementById("status-initial-data");
 const chart = document.getElementById("status-history-chart");
 const requestChart = document.getElementById("status-request-chart");
 const { statusApi } = document.body.dataset;
+const STATUS_REFRESH_MS = Math.max(
+  60,
+  Number(document.body.dataset.statusRefreshSeconds) || 5 * 60,
+) * 1000;
 const SVG_NS = "http://www.w3.org/2000/svg";
 let lastStatus = null;
+let lastRefreshAttemptAt = Date.now();
+let refreshInFlight = null;
+let refreshTimer = null;
+let refreshStopped = false;
 
 function atPath(data, path) {
   return path.split(".").reduce((value, key) => value && value[key], data);
@@ -101,10 +115,10 @@ function svg(tag, attributes = {}) {
   return node;
 }
 
-function pointPath(points, x, y) {
-  return points.
-    map((point, index) => `${index ? "L" : "M"}${x(point, index)},${y(point)}`).
-    join(" ");
+function svgText(attributes, text) {
+  const node = svg("text", attributes);
+  node.textContent = text;
+  return node;
 }
 
 function renderChart(points) {
@@ -116,81 +130,92 @@ function renderChart(points) {
   chart.append(plot);
 
   const empty = document.querySelector("[data-history-empty]");
-  empty.hidden = points.length > 1;
-  if (!points.length) {
-    return;
-  }
-
   const width = 900;
   const height = 260;
-  const left = 18;
-  const right = 18;
-  const top = 22;
-  const bottom = 34;
+  const left = 76;
+  const right = 16;
+  const top = 18;
+  const bottom = 28;
   const innerWidth = width - left - right;
   const innerHeight = height - top - bottom;
-  const storageMax = Math.max(...points.map(point => point.storageBytes || 0), 1);
-  const peopleMax = Math.max(...points.map(point => point.usersOnline || 0), 1);
+  const totalTraffic = points.reduce(
+    (sum, point) =>
+      sum +
+      (Number(point.uploadedBytes) || 0) +
+      (Number(point.downloadedBytes) || 0),
+    0,
+  );
+  empty.hidden = totalTraffic > 0;
+  const maxValue = Math.max(
+    ...points.map(point =>
+      Math.max(
+        Number(point.uploadedBytes) || 0,
+        Number(point.downloadedBytes) || 0,
+      ),
+    ),
+    0,
+  );
+  const axis = niceByteAxis(maxValue, 5);
   const x = (_point, index) =>
     left + (points.length === 1 ? innerWidth / 2 : (index / (points.length - 1)) * innerWidth);
-  const yStorage = point =>
-    top + innerHeight - ((point.storageBytes || 0) / storageMax) * innerHeight;
-  const yPeople = point =>
-    top + innerHeight - ((point.usersOnline || 0) / peopleMax) * innerHeight;
+  const y = value =>
+    top + innerHeight - ((Number(value) || 0) / axis.max) * innerHeight;
 
-  for (let row = 0; row <= 4; row++) {
-    const y = top + (row / 4) * innerHeight;
+  for (const tick of axis.ticks) {
+    const gridY = y(tick);
     plot.append(
       svg("line", {
         class: "chart-grid",
         x1: left,
         x2: width - right,
-        y1: y,
-        y2: y,
+        y1: gridY,
+        y2: gridY,
       }),
+      svgText(
+        {
+          "class": "chart-axis-label",
+          "x": left - 10,
+          "y": gridY + 3,
+          "text-anchor": "end",
+        },
+        formatByteTick(tick),
+      ),
     );
   }
 
   if (points.length > 1) {
-    const storageLine = pointPath(points, x, yStorage);
-    const area = `${storageLine} L${x(points.at(-1), points.length - 1)},${height - bottom} L${x(points[0], 0)},${height - bottom} Z`;
-    plot.append(svg("path", { class: "chart-storage-area", d: area }));
-    plot.append(svg("path", { class: "chart-storage-line", d: storageLine }));
+    const uploadedCoordinates = points.map((point, index) => ({
+      x: x(point, index),
+      y: y(point.uploadedBytes),
+    }));
+    const downloadedCoordinates = points.map((point, index) => ({
+      x: x(point, index),
+      y: y(point.downloadedBytes),
+    }));
     plot.append(
       svg("path", {
-        class: "chart-people-line",
-        d: pointPath(points, x, yPeople),
+        class: "chart-traffic-line chart-uploaded-line",
+        d: smoothPointPath(uploadedCoordinates),
+      }),
+      svg("path", {
+        class: "chart-traffic-line chart-downloaded-line",
+        d: smoothPointPath(downloadedCoordinates),
       }),
     );
   }
 
-  const latest = points.at(-1);
-  const latestX = x(latest, points.length - 1);
-  plot.append(
-    svg("circle", {
-      class: "chart-storage-dot",
-      cx: latestX,
-      cy: yStorage(latest),
-      r: 5,
-    }),
-  );
-  plot.append(
-    svg("circle", {
-      class: "chart-people-dot",
-      cx: latestX,
-      cy: yPeople(latest),
-      r: 4,
-    }),
-  );
-
-  document.querySelector("[data-history-start]").textContent = new Date(
-    points[0].at,
-  ).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-  document.querySelector("[data-history-end]").textContent = new Date(
-    latest.at,
-  ).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  document.querySelector("[data-history-start]").textContent = "5 days ago";
+  document.querySelector("[data-history-end]").textContent = "Now";
   document.querySelector("[data-history-count]").textContent =
-    `${points.length} ${points.length === 1 ? "sample" : "samples"}`;
+    `${points.length} two-hour periods`;
+  document.getElementById("history-chart-desc").textContent =
+    `${formatBytes(points.reduce(
+      (sum, point) => sum + (Number(point.uploadedBytes) || 0),
+      0,
+    ))} uploaded and ${formatBytes(points.reduce(
+      (sum, point) => sum + (Number(point.downloadedBytes) || 0),
+      0,
+    ))} downloaded during the last five days.`;
 }
 
 function renderRequestChart(points) {
@@ -202,37 +227,41 @@ function renderRequestChart(points) {
   requestChart.append(plot);
 
   const empty = document.querySelector("[data-request-empty]");
-  const opened = points.reduce((sum, point) => sum + (point.opened || 0), 0);
-  const fulfilled = points.reduce(
-    (sum, point) => sum + (point.fulfilled || 0),
+  const unfulfilledPeak = Math.max(
+    ...points.map(point => Number(point.unfulfilled) || 0),
     0,
   );
-  const hasActivity = opened + fulfilled > 0;
+  const fulfilledPeak = Math.max(
+    ...points.map(point => Number(point.fulfilled) || 0),
+    0,
+  );
+  const hasActivity = unfulfilledPeak + fulfilledPeak > 0;
   empty.hidden = hasActivity;
-  if (!points.length) {
-    return;
-  }
 
   const width = 900;
   const height = 260;
-  const left = 18;
-  const right = 18;
-  const top = 22;
-  const bottom = 34;
+  const left = 52;
+  const right = 16;
+  const top = 18;
+  const bottom = 28;
   const innerWidth = width - left - right;
   const innerHeight = height - top - bottom;
   const countMax = Math.max(
-    ...points.map(point => Math.max(point.opened || 0, point.fulfilled || 0)),
-    1,
+    ...points.map(
+      point =>
+        (Number(point.unfulfilled) || 0) + (Number(point.fulfilled) || 0),
+    ),
+    0,
   );
+  const axis = niceNumberAxis(countMax, 4, 1);
   const groupWidth = innerWidth / points.length;
-  const barWidth = Math.max(3, Math.min(13, groupWidth * 0.3));
+  const barWidth = Math.max(3, Math.min(12, groupWidth * 0.72));
   const baseline = height - bottom;
   const y = value =>
-    top + innerHeight - ((Number(value) || 0) / countMax) * innerHeight;
+    top + innerHeight - ((Number(value) || 0) / axis.max) * innerHeight;
 
-  for (let row = 0; row <= 4; row++) {
-    const gridY = top + (row / 4) * innerHeight;
+  for (const tick of axis.ticks) {
+    const gridY = y(tick);
     plot.append(
       svg("line", {
         class: "chart-grid",
@@ -241,52 +270,71 @@ function renderRequestChart(points) {
         y1: gridY,
         y2: gridY,
       }),
+      svgText(
+        {
+          "class": "chart-axis-label",
+          "x": left - 10,
+          "y": gridY + 3,
+          "text-anchor": "end",
+        },
+        formatNumber(tick),
+      ),
     );
   }
 
   points.forEach((point, index) => {
     const center = left + index * groupWidth + groupWidth / 2;
-    const openedY = y(point.opened);
-    const fulfilledY = y(point.fulfilled);
-    plot.append(
+    const unfulfilled = Number(point.unfulfilled) || 0;
+    const fulfilled = Number(point.fulfilled) || 0;
+    const unfulfilledHeight = (unfulfilled / axis.max) * innerHeight;
+    const fulfilledHeight = (fulfilled / axis.max) * innerHeight;
+    const unfulfilledY = baseline - unfulfilledHeight;
+    const fulfilledY = unfulfilledY - fulfilledHeight;
+    const group = svg("g", { class: "request-period" });
+    group.append(
       svg("rect", {
-        class: "request-opened-bar",
-        x: center - barWidth - 1,
-        y: openedY,
+        class: "request-unfulfilled-bar",
+        x: center - barWidth / 2,
+        y: unfulfilledY,
         width: barWidth,
-        height: Math.max(0, baseline - openedY),
+        height: Math.max(0, unfulfilledHeight),
         rx: 1,
       }),
-    );
-    plot.append(
       svg("rect", {
         class: "request-fulfilled-bar",
-        x: center + 1,
+        x: center - barWidth / 2,
         y: fulfilledY,
         width: barWidth,
-        height: Math.max(0, baseline - fulfilledY),
+        height: Math.max(0, fulfilledHeight),
         rx: 1,
       }),
     );
+    const title = svg("title");
+    title.textContent =
+      `${new Date(point.at).toLocaleString()}: ${unfulfilled} unfulfilled, ` +
+      `${fulfilled} fulfilled`;
+    group.append(title);
+    plot.append(group);
   });
 
+  if (!points.length) {
+    document.querySelector("[data-request-start]").textContent = "5 days ago";
+    document.querySelector("[data-request-end]").textContent = "Now";
+    document.querySelector("[data-request-count]").textContent =
+      "0 two-hour periods";
+    document.getElementById("request-chart-desc").textContent =
+      "No request availability has been recorded in this five-day window.";
+    return;
+  }
   const first = points[0];
-  const latest = points.at(-1);
-  document.querySelector("[data-request-start]").textContent = new Date(
-    first.at,
-  ).toLocaleString([], {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  document.querySelector("[data-request-start]").textContent = "5 days ago";
   document.querySelector("[data-request-end]").textContent = "Now";
   document.querySelector("[data-request-count]").textContent =
-    `${points.length} ${points.length === 1 ? "bucket" : "hourly buckets"}`;
+    `${points.length} two-hour periods`;
   document.getElementById("request-chart-desc").textContent =
-    `${opened} requests opened and ${fulfilled} fulfilled across all rooms ` +
-    `between ${new Date(first.at).toLocaleString()} and ` +
-    `${new Date(latest.at).toLocaleString()}.`;
+    "Request availability across all rooms in two-hour periods during the " +
+    `last five days, from ${new Date(first.at).toLocaleString()}. Yellow is ` +
+    "unfulfilled and green is fulfilled.";
 }
 
 function renderComponents(data) {
@@ -362,7 +410,7 @@ function render(data) {
   fill.style.width = `${used == null ? 0 : used}%`;
   fill.parentElement.setAttribute(
     "aria-label",
-    used == null ? "Drive usage unavailable" : `${used}% of drive used`,
+    used == null ? "Storage use unavailable" : `${used}% of drive used`,
   );
   document.querySelector(".capacity-orbit").style.setProperty(
     "--capacity-used",
@@ -378,34 +426,66 @@ function render(data) {
     "aria-label",
     requestPercent == null ?
       "No current requests" :
-      `${requestPercent}% of current requests fulfilled globally`,
+      `${requestPercent}% of current requests fulfilled across all rooms`,
   );
   renderComponents(data);
   renderAvailability(data);
-  renderChart((data.history && data.history.points) || []);
+  renderChart(
+    (data.history &&
+      data.history.traffic &&
+      data.history.traffic.points) ||
+      [],
+  );
   renderRequestChart(
     (data.requests && data.requests.timeline && data.requests.timeline.points) ||
       [],
   );
 }
 
-async function refresh() {
-  try {
-    const response = await fetch(statusApi, {
-      headers: { Accept: "application/json" },
-      cache: "no-store",
-    });
-    if (!response.ok) {
-      throw new Error(`Status request failed (${response.status})`);
-    }
-    render(await response.json());
+function refresh() {
+  if (refreshInFlight) {
+    return refreshInFlight;
   }
-  catch (ex) {
-    console.warn(ex);
-    if (lastStatus) {
-      document.body.dataset.serviceStatus = "stale";
+  refreshInFlight = (async () => {
+    lastRefreshAttemptAt = Date.now();
+    try {
+      const response = await fetch(statusApi, {
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        throw new Error(`Status request failed (${response.status})`);
+      }
+      render(await response.json());
     }
+    catch (ex) {
+      console.warn(ex);
+      if (lastStatus) {
+        document.body.dataset.serviceStatus = "stale";
+      }
+    }
+  })().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+function scheduleRefresh(delay = STATUS_REFRESH_MS) {
+  if (refreshStopped) {
+    return;
   }
+  if (refreshTimer !== null) {
+    window.clearTimeout(refreshTimer);
+  }
+  refreshTimer = window.setTimeout(async () => {
+    refreshTimer = null;
+    if (!document.hidden) {
+      await refresh();
+    }
+    if (!refreshStopped) {
+      scheduleRefresh();
+    }
+  }, Math.max(1000, delay));
 }
 
 try {
@@ -416,17 +496,24 @@ catch (ex) {
   refresh();
 }
 
-const timer = window.setInterval(() => {
-  if (!document.hidden) {
-    refresh();
-  }
-}, 30 * 1000);
+scheduleRefresh();
 
-window.addEventListener("pagehide", () => window.clearInterval(timer), {
-  once: true,
-});
+window.addEventListener(
+  "pagehide",
+  () => {
+    refreshStopped = true;
+    window.clearTimeout(refreshTimer);
+  },
+  { once: true },
+);
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) {
-    refresh();
+    const elapsed = Date.now() - lastRefreshAttemptAt;
+    if (elapsed >= STATUS_REFRESH_MS) {
+      refresh().finally(() => scheduleRefresh());
+    }
+    else {
+      scheduleRefresh(STATUS_REFRESH_MS - elapsed);
+    }
   }
 });

@@ -707,6 +707,12 @@ Add a linked source to a destination room.
 - **Input**: `roomid`, `source` (room ID or exact name), with optional `name`,
   `visibility`, `allowPrivateSource`, and `rules`
 
+`rules.nameContains`, `rules.tagContains`, and `rules.userContains` accept
+plain substring expressions. Commas or uppercase `OR` match any term;
+uppercase `AND` requires all terms and takes precedence. Complex rules may use
+slash-delimited JavaScript regex such as `/^pf2.*\.pdf$/i`. Multiple populated
+fields are combined with AND.
+
 The source room must allow cross-linking. Invite-only sources require explicit
 bilateral consent; agents should not set `allowPrivateSource` unless the operator
 has approved that trust relationship.
