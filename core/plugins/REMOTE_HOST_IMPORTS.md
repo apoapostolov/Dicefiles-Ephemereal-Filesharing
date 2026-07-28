@@ -4,6 +4,12 @@ How Dicefiles should grow beyond **Mega.nz** toward the hosts hobby communities 
 
 This is a **design note**, not a shipped feature. The first-party path today is `mega-folder` + injectable downloaders ([MEGA_FOLDER.md](./MEGA_FOLDER.md)).
 
+This is intentionally separate from shipped
+[Dicefiles trusted-host federation](../../docs/FEDERATION.md). Federation
+authenticates another operator-pinned Dicefiles server and streams an approved
+room without copying it. Remote host import treats a third-party file locker as
+an untrusted download source and materializes its bytes into local storage.
+
 **Library research** (GitHub/npm candidates, embed vs product boundary, shell/debrid options): [REMOTE_HOST_LIBRARY_RESEARCH.md](../../docs/plugins/REMOTE_HOST_LIBRARY_RESEARCH.md).
 
 ---

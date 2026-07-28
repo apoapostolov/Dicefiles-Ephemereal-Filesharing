@@ -9,6 +9,9 @@ Plugin system docs live under **`../core/plugins/`** (design + operator guides).
 | [INTRODUCTION.md](./INTRODUCTION.md) | What Dicefiles is, use cases, getting started |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | Dev setup, PR expectations, quality bar |
 | [FUTURE_DEVELOPMENT_PLAN.md](./FUTURE_DEVELOPMENT_PLAN.md) | Product backlog — checked = shipped, open = proposed |
+| [FEDERATION.md](./FEDERATION.md) | Shipped trusted-host federation protocol, setup, and security model |
+| [MULTI_VOLUME_STORAGE.md](./MULTI_VOLUME_STORAGE.md) | Proposal: balanced and fallback multi-volume storage |
+| [PASSWORD_PROTECTED_ROOMS.md](./PASSWORD_PROTECTED_ROOMS.md) | Proposal: rotating shared and personal room access credentials |
 | [UI_STYLE.md](./UI_STYLE.md) | Room UI components and styling rules |
 | [AI_UI_SKILLS.md](./AI_UI_SKILLS.md) | Agent guide for UI audit / polish / themes |
 | [PERF_NOTES.md](./PERF_NOTES.md) | Virtualization and performance notes (1.4.x) |

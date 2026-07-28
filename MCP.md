@@ -83,7 +83,7 @@ Add a `dicefiles` entry under `mcpServers`:
 }
 ```
 
-Restart Claude Desktop. All 20 tools appear in the tool picker. Try: _"Use the
+Restart Claude Desktop. All 24 tools appear in the tool picker. Try: _"Use the
 `server_health` tool to check my Dicefiles instance."_
 
 ---
@@ -161,7 +161,7 @@ tools will be listed.
 }
 ```
 
-Save and reload. The 20 tools are now available to Antigravity's agent.
+Save and reload. The 24 tools are now available to Antigravity's agent.
 
 ---
 
@@ -287,7 +287,7 @@ cp /path/to/Dicefiles/scripts/openclaw-dicefiles-skill/SKILL.md \
    ~/.claude/skills/dicefiles/
 ```
 
-The skill teaches the agent the full 20-tool inventory, recommended call sequences,
+The skill teaches the agent the full 24-tool inventory, recommended call sequences,
 error handling, and fulfillment loop patterns. See
 `scripts/openclaw-dicefiles-skill/SKILL.md` for the full skill definition.
 
@@ -336,6 +336,10 @@ beyond localhost.
 | 18  | `list_guest_invites`    | `guest-invites:read` | No |
 | 19  | `create_guest_invite`   | `guest-invites:write` | No |
 | 20  | `revoke_guest_invite`   | `guest-invites:write` | No |
+| 21  | `list_federated_room_links` | `federation-links:read` | No |
+| 22  | `create_federated_room_link` | `federation-links:write` | No |
+| 23  | `remove_federated_room_link` | `federation-links:write` | No |
+| 24  | `set_room_federation_policy` | `federation-links:write` | No |
 
 ---
 
@@ -752,6 +756,23 @@ Revoke one active guest invite using its full token.
 - **Maps to**: `DELETE /api/v1/rooms/:id/guest-invites/:token`
 - **Scope**: `guest-invites:write`
 - **Input**: `roomid`, `token`
+
+---
+
+### 4.21–4.24 Trusted-host federation
+
+- `list_federated_room_links` maps to
+  `GET /api/v1/rooms/:id/federation-links`.
+- `create_federated_room_link` accepts `roomid`, `peerId`, `remoteRoomId`,
+  optional `name`, and optional `visibility`.
+- `remove_federated_room_link` removes the exact peer/remote-room pair.
+- `set_room_federation_policy` opts the source room into federation; private
+  rooms additionally need `allowPrivateFederation: true`.
+
+These tools configure room consent and destination links only. Operators must
+pin peers and public keys in `.config.json`; MCP tools deliberately cannot add a
+new trusted host or read a private federation key. See
+[`docs/FEDERATION.md`](docs/FEDERATION.md).
 
 ---
 

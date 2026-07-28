@@ -2,7 +2,39 @@
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+
+- **Trusted-host federation:** independent Dicefiles servers can form a small,
+  manually pinned trust group and link approved remote rooms without sharing
+  Redis, accounts, or storage. RFC 9421 signatures, replay protection,
+  operator room allowlists, source-room consent, cursor lists, remote TTL,
+  ranged fetch-through, per-peer limits, and circuit isolation protect the
+  cross-host path.
+- **Federation controls:** Room Options can add a trusted peer room and opt a
+  source room into federation. Scoped REST and MCP operations manage links,
+  source policy, and peer health without exposing private keys to browsers or
+  automation clients.
+
+### Changed
+
+- **Safer bulk deletion:** deleting every visible file from the room header now
+  requires an explicit confirmation that includes the affected file count. The
+  dialog gives keyboard focus to Cancel, while the server continues to enforce
+  moderator/owner privileges and limits ordinary users to their own uploads.
+- **Supported runtime:** Node.js 22 or newer is now required by the federation
+  stack. Yarn 1.x and `yarn.lock` remain the supported install path.
+
+### Fixed
+
+- **Document readers:** PDF, ePub, MOBI, AZW, and AZW3 readers now import their
+  client helpers explicitly, preventing the `dom is not defined` failure when a
+  document is opened.
+
+### Documentation
+
+- Added implementation-ready, explicitly unshipped proposals for
+  [multi-volume storage](docs/MULTI_VOLUME_STORAGE.md) and
+  [password-protected rooms](docs/PASSWORD_PROTECTED_ROOMS.md).
 
 ## [1.4.3] - 2026-07-28 [Since Your Last Visit]
 

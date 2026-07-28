@@ -1223,7 +1223,7 @@ including `meta.hints`, and can match against it programmatically.
 
 ## 19. MCP Server Integration
 
-> **Quick answer on MCP:** Dicefiles ships a 20-tool MCP server at
+> **Quick answer on MCP:** Dicefiles ships a 24-tool MCP server at
 > `scripts/mcp-server.js`. It translates typed MCP calls from Claude Desktop,
 > Cursor, OpenClaw, and other clients into the scoped REST API documented here.
 > See `MCP.md` for client setup, tool schemas, and security guidance.
@@ -1273,6 +1273,10 @@ node scripts/mcp-server.js  # stdio mode for Claude Desktop / local agents
 | `list_guest_invites`    | `GET /api/v1/rooms/:id/guest-invites` | `guest-invites:read` |
 | `create_guest_invite`   | `POST /api/v1/rooms/:id/guest-invites` | `guest-invites:write` |
 | `revoke_guest_invite`   | `DELETE /api/v1/rooms/:id/guest-invites/:token` | `guest-invites:write` |
+| `list_federated_room_links` | `GET /api/v1/rooms/:id/federation-links` | `federation-links:read` |
+| `create_federated_room_link` | `POST /api/v1/rooms/:id/federation-links` | `federation-links:write` |
+| `remove_federated_room_link` | `DELETE /api/v1/rooms/:id/federation-links/:peerId/:remoteRoomId` | `federation-links:write` |
+| `set_room_federation_policy` | `PATCH /api/v1/rooms/:id/federation` | `federation-links:write` |
 
 ### 19.4 Claude Desktop integration example
 
@@ -1556,3 +1560,113 @@ Errors:
 > `archive_list_contents` MCP tool (tool #14). The single-entry extraction
 > endpoint is not wrapped as an MCP tool because binary download is better
 > served by constructing the URL directly and fetching it out-of-band.
+
+---
+
+## 23. Trusted-Host Federation (v1)
+
+The authoritative security and transport contract is
+[`docs/FEDERATION.md`](docs/FEDERATION.md). Federation uses its own
+`/api/federation/v1` namespace because peer authentication is RFC 9421 HTTP
+Message Signatures, not an automation bearer key.
+
+### 23.1 Public discovery
+
+These routes exist only when `federation.enabled` is true. They never enumerate
+rooms, files, users, or configured peers.
+
+| Route | Response |
+| --- | --- |
+| `GET /.well-known/dicefiles-federation` | Protocol version, peer id, canonical origin, capabilities, actor, RSA public JWK and fingerprint |
+| `GET /.well-known/webfinger?resource=acct:dicefiles@host` | JRD link to the service actor |
+| `GET /.well-known/nodeinfo` | NodeInfo 2.1 discovery |
+| `GET /nodeinfo/2.1` | Privacy-safe software/protocol metadata |
+| `GET /federation/actor` | ActivityStreams `Service` identity and public key |
+
+### 23.2 Signed peer endpoints
+
+Every request must contain an RFC 9421 `Signature-Input` and `Signature`. The
+signature key id must exactly match an enabled, operator-pinned peer record.
+Dicefiles never follows a request-supplied key URL. Signatures use
+`rsa-v1_5-sha256`, cover the method, target URI, authority, host and date (plus
+the content digest for a body), and carry a `dicefiles-federation` tag and
+one-time nonce.
+
+| Route | Purpose |
+| --- | --- |
+| `GET /api/federation/v1/hello` | Bilateral authentication and capability negotiation |
+| `GET /api/federation/v1/rooms/:roomId` | Authorized privacy-safe room metadata |
+| `GET /api/federation/v1/rooms/:roomId/files?cursor=&limit=` | Finished, visible files; cursor page |
+| `HEAD /api/federation/v1/files/:key?roomId=` | Stream metadata and range support |
+| `GET /api/federation/v1/files/:key?roomId=` | Original bytes; supports one HTTP byte range |
+| `POST /api/federation/v1/inbox` | ActivityStreams `Add`, `Remove`, or `Update` cache invalidation |
+
+The peer record's `allowedRooms` and the source room's `allowFederation` must
+both allow access. Invite-only rooms additionally require
+`allowPrivateFederation`. Missing and unauthorized rooms deliberately share the
+same `404 FEDERATION_ROOM_UNAVAILABLE` response.
+
+File-list responses contain only:
+
+```json
+{
+  "protocolVersion": "1.0",
+  "room": {
+    "id": "releases",
+    "name": "Releases",
+    "private": false
+  },
+  "files": [
+    {
+      "key": "opaque-key",
+      "name": "dicefiles.zip",
+      "size": 12345,
+      "type": "archive",
+      "mime": "application/zip",
+      "uploadedAt": "2026-07-28T12:00:00.000Z",
+      "expiresAt": "2026-08-02T12:00:00.000Z",
+      "digest": null
+    }
+  ],
+  "nextCursor": null
+}
+```
+
+Uploader account, nickname, IP, tags, room membership, moderation state,
+storage path, and plugin metadata are excluded.
+
+Errors have one stable shape:
+
+```json
+{
+  "error": {
+    "code": "FEDERATION_SIGNATURE_INVALID",
+    "message": "The federation request could not be authenticated.",
+    "requestId": "opaque-correlation-id"
+  }
+}
+```
+
+Important codes include `FEDERATION_DISABLED`, `FEDERATION_PEER_UNKNOWN`,
+`FEDERATION_SIGNATURE_REQUIRED`, `FEDERATION_SIGNATURE_INVALID`,
+`FEDERATION_KEY_INVALID`, `FEDERATION_REPLAY`,
+`FEDERATION_RATE_LIMITED`, `FEDERATION_ROOM_UNAVAILABLE`, and
+`FEDERATION_FILE_UNAVAILABLE`.
+
+### 23.3 Local automation endpoints
+
+These routes use the ordinary scoped automation bearer key:
+
+| Route | Scope | Purpose |
+| --- | --- | --- |
+| `GET /api/v1/rooms/:id/federation-links` | `federation-links:read` | List destination peer-room links and live status |
+| `POST /api/v1/rooms/:id/federation-links` | `federation-links:write` | Add `{peerId, roomId, name?, visibility?, rules?}` |
+| `DELETE /api/v1/rooms/:id/federation-links/:peerId/:remoteRoomId` | `federation-links:write` | Remove one destination link |
+| `PATCH /api/v1/rooms/:id/federation` | `federation-links:write` | Set source `allowFederation` and `allowPrivateFederation` |
+| `GET /api/v1/federation/peers` | `admin:read` | Probe configured peers and return status/latency/capabilities |
+
+Destination status is `active`, `unreachable`, `denied`, `missing`,
+`key-invalid`, `protocol-mismatch`, or `circuit-open`. A destination streams
+remote bytes through
+`/federation/files/:destinationRoomId/:peerId/:roomId/:key/:name`; peer
+credentials and source cookies never enter the browser.

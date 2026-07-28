@@ -2544,12 +2544,37 @@ export default new (class Files extends EventEmitter {
     this._clearSelection();
   }
 
-  trash() {
+  async trash() {
     const { selection } = this;
     if (!selection.length) {
       registry.messages.addSystemMessage(
         "Select some files by (shift-, ctrl-)clicking on their icon first",
       );
+      return;
+    }
+    const deletable = selection.filter(e => e && e.key && !e.isLinked);
+    if (!deletable.length) {
+      this.trashFiles(selection);
+      return;
+    }
+    const visibleDeletable = this.visible.filter(
+      e => e && e.key && !e.isLinked,
+    );
+    const deletesAllVisible =
+      visibleDeletable.length > 0 &&
+      deletable.length === visibleDeletable.length &&
+      visibleDeletable.every(e => deletable.includes(e));
+    const count = deletable.length;
+    const itemText = count === 1 ? "item" : "items";
+    const prompt = deletesAllVisible ?
+      `Delete all ${count} visible ${itemText}? This cannot be undone.` :
+      `Delete ${count} selected ${itemText}? This cannot be undone.`;
+    const confirmed = await registry.roomie.confirmDestructive(
+      prompt,
+      "Confirm deletion",
+      deletesAllVisible ? "Delete all" : "Delete",
+    );
+    if (!confirmed) {
       return;
     }
     this.clearSelection();

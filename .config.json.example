@@ -74,6 +74,33 @@
   // Required for publisher plugins unless each room plugin sets baseUrl.
   // "publicBaseUrl": "https://files.example.org",
 
+  // --- Trusted Dicefiles federation (optional; disabled by default) ---
+  // Connects only operator-pinned Dicefiles peers. Production peers require
+  // HTTPS. On first enabled start Dicefiles generates this host's RSA-3072
+  // identity inside .config.json. Never share or commit privateKeyJwk.
+  //
+  // Exchange each host's /.well-known/dicefiles-federation document and verify
+  // its fingerprint out of band before adding the reciprocal peer record.
+  // "federation": {
+  //   "enabled": true,
+  //   "publicBaseUrl": "https://files.example.org",
+  //   "peerId": "example-files",
+  //   "displayName": "Example Files",
+  //   "peers": [{
+  //     "peerId": "friends-files",
+  //     "displayName": "Friends Files",
+  //     "baseUrl": "https://files.friends.example",
+  //     "keyId": "https://files.friends.example/federation/actor#main-key",
+  //     "publicKeyJwk": {
+  //       "kty": "RSA",
+  //       "alg": "RS256",
+  //       "n": "peer-public-modulus",
+  //       "e": "AQAB"
+  //     },
+  //     "allowedRooms": ["releases"]
+  //   }]
+  // },
+
   // ----------------------------------------------------------
   // STORAGE
   // ----------------------------------------------------------
@@ -109,6 +136,8 @@
   //   rooms:write       – post room chat messages
   //   room-links:read   – list a room's linked sources and live status
   //   room-links:write  – create/remove a room's linked sources
+  //   federation-links:read  – list trusted peer-room links and status
+  //   federation-links:write – manage peer-room links and source consent
   //   guest-invites:read  – list active guest links (includes full tokens)
   //   guest-invites:write – mint/revoke guest links
   //   mod:*             – full moderation access
@@ -127,6 +156,8 @@
         "rooms:write",
         "room-links:read",
         "room-links:write",
+        "federation-links:read",
+        "federation-links:write",
         "guest-invites:read",
         "guest-invites:write"
       ]

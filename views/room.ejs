@@ -773,6 +773,14 @@
               <input type="checkbox" name="allowprivatecrosslinking" />
               Allow private linking
             </label>
+            <label>
+              <input type="checkbox" name="allowfederation" />
+              Allow trusted peer federation
+            </label>
+            <label>
+              <input type="checkbox" name="allowprivatefederation" />
+              Allow federation for this private room
+            </label>
           </div>
           <p
             id="roomopts-crosslink-help"
@@ -921,6 +929,44 @@
             </table>
             <p class="roomopts-link-empty hidden" name="linkempty">
               No linked rooms yet. Add a source by id or exact name above.
+            </p>
+          </div>
+        </div>
+
+        <div class="roomopts-section">
+          <div class="roomopts-section-title">Federated peer rooms</div>
+          <p class="roomopts-hint">
+            Add a room from a trusted peer configured by this server’s
+            operator. Files stay on the source host and are streamed through
+            this Dicefiles server.
+          </p>
+          <div class="roomopts-link-add">
+            <select
+              name="federationpeer"
+              aria-label="Trusted federation peer"
+            ></select>
+            <input
+              name="federationroom"
+              type="text"
+              autocomplete="off"
+              placeholder="Remote room id"
+              aria-label="Remote room id"
+            />
+            <button type="button" name="federationaddbtn">Add peer room</button>
+          </div>
+          <div class="roomopts-link-table-wrap">
+            <table class="roomopts-link-table">
+              <thead>
+                <tr>
+                  <th>Peer / room</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody name="federationtbody"></tbody>
+            </table>
+            <p class="roomopts-link-empty hidden" name="federationempty">
+              No federated peer rooms yet.
             </p>
           </div>
         </div>

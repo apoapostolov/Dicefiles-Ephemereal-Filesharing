@@ -27,7 +27,7 @@ Contributions are welcome for:
 
 Prerequisites:
 
-- Node.js **≥ 20** (see `package.json` `engines`)
+- Node.js **≥ 22** (see `package.json` `engines`)
 - **Yarn 1.x only** (`yarn.lock` is the install source of truth; do not commit `package-lock.json`)
 - Redis running locally or remotely
 

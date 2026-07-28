@@ -1,7 +1,7 @@
 # AGENTS.md
 
 - Preserve unrelated user changes; this checkout commonly has a dirty working tree.
-- Node.js must be `>=20`; use Yarn 1.x and `yarn.lock`, never `package-lock.json`.
+- Node.js must be `>=22`; use Yarn 1.x and `yarn.lock`, never `package-lock.json`.
 - Run the user-test instance through WSL `Ubuntu-24.04` on port `10005`.
 - Never use hot reload, Webpack watch mode, Nodemon, or polling watchers.
 - After runtime-affecting changes: `yarn prestart`, restart the user service with `systemctl --user restart dicefiles.service`, wait for Redis restoration, then require `/healthz` HTTP `200` from WSL and Windows.

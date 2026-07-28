@@ -1,6 +1,14 @@
 "use strict";
 
-import { loadReaderOpts, saveReaderOpts, loadProgress, saveProgress } from "./opts";
+import { dom } from "../../util";
+import {
+  FONT_FAMILIES,
+  loadProgress,
+  loadReaderOpts,
+  READER_OPTS_DEFAULTS,
+  saveProgress,
+  saveReaderOpts,
+} from "./opts";
 
 function dbg(label, ...args) { console.log(`[Reader] ${label}`, ...args); }
 function dbgErr(label, err) { console.error(`[Reader] ${label}`, err); }

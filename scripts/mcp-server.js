@@ -550,6 +550,87 @@ function registerTools(srv) {
         ),
       ),
   );
+
+  // ── 21. list_federated_room_links ──────────────────────────────────────
+  srv.tool(
+    "list_federated_room_links",
+    "List a room's trusted cross-host Dicefiles links and live peer status. " +
+      "Requires federation-links:read.",
+    {
+      roomid: z.string().describe("Destination room ID"),
+    },
+    async ({ roomid }) =>
+      wrap(
+        await api(
+          "GET",
+          `/rooms/${encodeURIComponent(roomid)}/federation-links`,
+        ),
+      ),
+  );
+
+  // ── 22. create_federated_room_link ─────────────────────────────────────
+  srv.tool(
+    "create_federated_room_link",
+    "Link a room from an operator-pinned Dicefiles peer. The source peer and " +
+      "source room must independently allow access. Requires federation-links:write.",
+    {
+      roomid: z.string().describe("Destination room ID"),
+      peerId: z.string().describe("Configured federation peer ID"),
+      remoteRoomId: z.string().describe("Room ID on the remote peer"),
+      name: z.string().max(160).optional(),
+      visibility: z
+        .enum(["all", "authenticated", "members", "owners", "mods"])
+        .optional(),
+    },
+    async ({ roomid, peerId, remoteRoomId, name, visibility }) =>
+      wrap(
+        await api(
+          "POST",
+          `/rooms/${encodeURIComponent(roomid)}/federation-links`,
+          { peerId, roomId: remoteRoomId, name, visibility },
+        ),
+      ),
+  );
+
+  // ── 23. remove_federated_room_link ─────────────────────────────────────
+  srv.tool(
+    "remove_federated_room_link",
+    "Remove one peer-room link from a destination room. " +
+      "Requires federation-links:write.",
+    {
+      roomid: z.string().describe("Destination room ID"),
+      peerId: z.string().describe("Configured federation peer ID"),
+      remoteRoomId: z.string().describe("Room ID on the remote peer"),
+    },
+    async ({ roomid, peerId, remoteRoomId }) =>
+      wrap(
+        await api(
+          "DELETE",
+          `/rooms/${encodeURIComponent(roomid)}/federation-links/` +
+            `${encodeURIComponent(peerId)}/${encodeURIComponent(remoteRoomId)}`,
+        ),
+      ),
+  );
+
+  // ── 24. set_room_federation_policy ─────────────────────────────────────
+  srv.tool(
+    "set_room_federation_policy",
+    "Opt a source room into or out of trusted-peer federation. Private rooms " +
+      "need both switches. Requires federation-links:write.",
+    {
+      roomid: z.string().describe("Source room ID"),
+      allowFederation: z.boolean(),
+      allowPrivateFederation: z.boolean().optional(),
+    },
+    async ({ roomid, allowFederation, allowPrivateFederation }) =>
+      wrap(
+        await api(
+          "PATCH",
+          `/rooms/${encodeURIComponent(roomid)}/federation`,
+          { allowFederation, allowPrivateFederation },
+        ),
+      ),
+  );
 }
 
 // Register all tools on the server

@@ -46,6 +46,32 @@ module.exports = {
   statusPagePrivate: true,
   statusPageToken: "",
 
+  // Bilateral Dicefiles peer federation. Disabled until an operator supplies
+  // a canonical public origin and peer id. On first enabled start an RSA-3072
+  // identity is generated in the ignored .config.json file.
+  // See docs/FEDERATION.md for the complete trust and room opt-in model.
+  federation: {
+    enabled: false,
+    publicBaseUrl: "",
+    peerId: "",
+    displayName: "",
+    auditLog: "federation.log",
+    peers: [],
+    limits: {
+      pageSize: 100,
+      maxPageSize: 200,
+      timeoutMs: 10000,
+      maxJsonBytes: 1024 * 1024,
+      maxConcurrentStreams: 4,
+      requestsPerMinute: 600,
+      downloadsPerMinute: 120,
+      cacheTtlMs: 30000,
+      circuitBreakerThreshold: 3,
+      circuitOpenMs: 60000,
+      replayWindowSeconds: 300,
+    },
+  },
+
   // Path to upload directory
   uploads: "uploads",
 

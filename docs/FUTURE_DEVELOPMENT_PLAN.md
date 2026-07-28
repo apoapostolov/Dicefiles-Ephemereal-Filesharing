@@ -11,7 +11,8 @@ Plugin docs: `core/plugins/`. Formerly `feature_creep_proposal.md`.
 
 **Last updated:** 2026-07-28 — v1.4.3 “Since Your Last Visit” ships continuity,
 protected service telemetry, release publishers, and linked-room/guest-invite
-automation; **Federated multi-server mesh** remains a designed future feature.
+automation; the **trusted-host federation backbone** is now shipped, with
+outbound push fan-out and guided key rotation remaining follow-up work.
 
 ---
 
@@ -21,6 +22,10 @@ automation; **Federated multi-server mesh** remains a designed future feature.
 - [x] Deep links with intent (`filter` / `sort` / `request` / file open) — room option — **v1.4.2**
 - [x] Resume strip + “what’s new since last visit” productization — **v1.4.3**
 - [ ] Session kit pack (select → zip + index)
+- [ ] Multi-volume storage with balanced and threshold-based placement —
+  proposal: `docs/MULTI_VOLUME_STORAGE.md`
+- [ ] Password-protected rooms with rotating shared and personal credentials —
+  proposal: `docs/PASSWORD_PROTECTED_ROOMS.md`
 - [x] Request board polish — **v1.4.2** first-class board + filters + segmented toolbar pill
 - [ ] Spoiler / delayed reveal
 - [ ] Room templates + clone
@@ -30,7 +35,9 @@ automation; **Federated multi-server mesh** remains a designed future feature.
 - [x] Durable plugin sync skip-log (name+size, Redis, configurable retention) — **v1.4.3**
 - [ ] Multi-host remote import (MediaFire, 4shared, Pixeldrain, Gofile, …) — design: `core/plugins/REMOTE_HOST_IMPORTS.md`
 - [ ] Plugin import safety: size/file caps, worker lock, hash-level skip (see gaps below)
-- [ ] **Federated multi-server mesh** — opt-in peer Dicefiles instances; remote room link + fetch-through (see full section)
+- [x] **Federated multi-server mesh** — pinned peers, RFC 9421 authentication,
+  bilateral room consent, remote room linking, status probes, and ranged
+  fetch-through (see full section)
 
 ---
 
@@ -160,7 +167,7 @@ Design: **`core/plugins/REMOTE_HOST_IMPORTS.md`**.
 
 ---
 
-## Federated multi-server mesh (proposal — not shipped)
+## Federated multi-server mesh (v1 backbone shipped)
 
 **Idea:** Independent Dicefiles operators (each with their own Node + Redis + disk) can **opt in** to a small trust mesh so a room on host **A** can mirror finished files from a room on host **B** the way today’s multi-room linking works *within* one server — without merging databases or requiring a shared filesystem.
 
@@ -191,9 +198,9 @@ Federation reuses the **linking mental model** users already know: Linked badge,
 | ----- | -------- |
 | **Peer id** | Stable slug or UUID configured by operator (`peerId`) |
 | **Base URL** | `https://files.example.org` (TLS required for production peers) |
-| **Auth** | Long-lived peer API key (hashed at rest) **or** mutual mTLS later; v1 = Bearer peer key |
+| **Auth** | RFC 9421 HTTP Message Signatures using a pinned RSA-3072 public key; no bearer peer secret |
 | **Discovery** | Manual config only for v1 (no public peer directory) |
-| **Handshake** | `GET /.well-known/dicefiles-federation` or extend `/.well-known/a2a` with federation capability + version |
+| **Handshake** | Public `GET /.well-known/dicefiles-federation`; signed `GET /api/federation/v1/hello` confirms bilateral trust |
 | **Pairing** | Operator on A adds peer B (URL + key); operator on B allows peer A + optional room allowlist |
 
 ### What federates (v1 scope)
@@ -210,16 +217,16 @@ Federation reuses the **linking mental model** users already know: Linked badge,
 
 ### API sketch (on each peer)
 
-All under existing automation style (`/api/v1/...`) with new scopes, e.g. `federation:rooms:read`, `federation:files:read`.
+Peer traffic uses the dedicated signed `/api/federation/v1/...` namespace.
+Room-link management uses the ordinary scoped `/api/v1/...` automation API.
 
 | Endpoint (illustrative) | Role |
 | ----------------------- | ---- |
-| `GET /api/v1/federation/hello` | Version, peerId, public name, capabilities |
-| `GET /api/v1/federation/rooms/:roomId/meta` | Room display name, allowCrossLinking-equivalent, federation allow for this peer |
-| `GET /api/v1/federation/rooms/:roomId/files` | Finished files matching query (cursor page); apply remote filters server-side |
-| `GET /api/v1/federation/files/:key` | Stream or 302 to short-lived signed URL; Range support |
-| `GET /api/v1/federation/files/:key/meta` | Type, size, name, tags subset safe to expose |
-| Optional `POST /api/v1/federation/hooks` | Peer registers for `file_uploaded` on allowed rooms (push vs poll) |
+| `GET /api/federation/v1/hello` | Version, peerId, authenticated peer, capabilities |
+| `GET /api/federation/v1/rooms/:roomId` | Privacy-safe metadata after peer allowlist and room consent |
+| `GET /api/federation/v1/rooms/:roomId/files` | Finished files, cursor page, strict response shape |
+| `GET/HEAD /api/federation/v1/files/:key?roomId=` | Same-origin signed stream with Range support |
+| `POST /api/federation/v1/inbox` | Idempotent ActivityStreams invalidation receiver |
 
 Destination host stores **federation link entries** analogous to `linkedRooms`:
 
@@ -231,9 +238,9 @@ Status: **Active** / **Peer unreachable** / **Denied** / **Room missing** / **Ke
 
 ### Client / product UX
 
-- [ ] Room Options → **Linking**: add source as **Local room** *or* **Remote peer + room**
-- [ ] File rows: `Linked · peerName/roomName` (distinct from local linked)
-- [ ] Open/download/Read Now use destination proxy so browser cookies stay local
+- [x] Room Options → **Linking**: add source as **Local room** *or* **Remote peer + room**
+- [x] File rows identify the trusted peer and remote source room
+- [x] Open/download/Read Now use destination proxy so browser cookies stay local
 - [ ] Operator config UI or `.config.json` for peers (URL, key, enabled)
 - [ ] `/healthz` (or operator dashboard) includes peer reachability summary
 
@@ -249,15 +256,10 @@ Status: **Active** / **Peer unreachable** / **Denied** / **Room missing** / **Ke
       {
         "peerId": "allied-host",
         "baseUrl": "https://files.allied.example",
-        "apiKey": "...",
+        "keyId": "https://files.allied.example/federation/actor#main-key",
+        "publicKeyJwk": { "kty": "RSA", "alg": "RS256", "n": "...", "e": "AQAB" },
+        "allowedRooms": ["*"],
         "enabled": true
-      }
-    ],
-    "allowPeers": [
-      {
-        "peerId": "allied-host",
-        "roomAllowlist": ["*"],
-        "maxListPage": 200
       }
     ]
   }
@@ -270,22 +272,22 @@ Room-level: destination still needs an explicit link row (no automatic mesh of a
 
 | Phase | Deliverable |
 | ----- | ----------- |
-| **F0 — Spec & security** | Threat model (key leak, SSRF via baseUrl, open proxy abuse); scope matrix; handshake schema |
-| **F1 — Read API** | hello + room meta + file list + file stream on one host; contract tests |
-| **F2 — Destination linker** | Server-side remote list merge into room file list; status probe; unit tests with fake peer |
-| **F3 — Client chrome** | Linking tab peer picker; linked badge; download/Read Now path |
-| **F4 — Push optional** | Webhook or federation hook so destinations invalidate cache without polling |
-| **F5 — Ops** | Health peers, key rotation, rate limits per peer, audit log of federated fetches |
+| **F0 — Spec & security** | **Shipped:** contract, SSRF boundary, pinned keys, replay protection, scope matrix |
+| **F1 — Read API** | **Shipped:** hello, room metadata, cursor list, ranged file stream |
+| **F2 — Destination linker** | **Shipped:** remote list merge, TTL enforcement, cache, status probe |
+| **F3 — Client chrome** | **Shipped:** trusted-peer picker and local fetch-through URL |
+| **F4 — Push optional** | **Partial:** signed inbox/invalidation receiver shipped; durable outbound fan-out remains |
+| **F5 — Ops** | **Partial:** peer probe API, limits and circuit breaker shipped; guided key rotation and richer audit UI remain |
 
 ### Security checklist (non-negotiable)
 
-- [ ] SSRF: only operator-configured peer base URLs; no user-supplied fetch targets
-- [ ] Rate limit federated list/download per peer key
-- [ ] Cap max concurrent remote range streams; timeout + circuit breaker
-- [ ] Do not expose private rooms unless allowlisted and source flag on
-- [ ] Strip sensitive meta (uploader IP, accounts) from federated list by default
-- [ ] TLS for peer traffic outside lab
-- [ ] Signed short-lived download URLs if redirecting browsers to origin host
+- [x] SSRF: only operator-configured peer base URLs; no user-supplied fetch targets
+- [x] Rate limit federated list/download per peer identity
+- [x] Cap max concurrent remote range streams; timeout + circuit breaker
+- [x] Do not expose private rooms unless allowlisted and source flag on
+- [x] Strip sensitive meta (uploader IP, accounts) from federated list
+- [x] TLS for peer traffic outside explicit local/lab exceptions
+- [x] Destination proxy keeps peer credentials and source cookies out of browsers
 
 ### Explicit non-goals
 
@@ -308,14 +310,15 @@ Room-level: destination still needs an explicit link row (no automatic mesh of a
 
 ### Checklist (implementation backlog)
 
-- [ ] F0 threat model + OpenAPI-ish contract in `API.md` (or `docs/FEDERATION.md` when coding starts)
-- [ ] F1 federation read endpoints + scopes
-- [ ] F2 destination remote link entries + list merge + probe
-- [ ] F3 Linking UI + client fetch-through
-- [ ] F4 optional push invalidation
-- [ ] F5 ops: health, rotation, limits, audit
-- [ ] Unit tests with fake peer; integration test two processes in CI-less manual recipe
-- [ ] README “Federation (optional)” section when F3 lands
+- [x] F0 threat model and contract in `docs/FEDERATION.md` + `API.md`
+- [x] F1 signed federation read endpoints
+- [x] F2 destination remote link entries + list merge + probe
+- [x] F3 Linking UI + server-side client fetch-through
+- [ ] F4 durable outbound push fan-out (signed inbox receiver is shipped)
+- [ ] F5 guided key rotation and federation audit UI (limits/probe API shipped)
+- [x] Unit tests for config, identity, link mapping, signatures, and MCP tools
+- [ ] Two-process federation integration recipe/test fixture
+- [x] README “Optional trusted-host federation” section
 
 ---
 
@@ -367,10 +370,11 @@ Room-level: destination still needs an explicit link row (no automatic mesh of a
 ### Still open (product)
 
 - Session kits; spoiler/reveal; room templates + clone
-- Operator dashboard (include plugin health **and federation peer status**)
+- Operator dashboard additions for plugin health and federation peer status
 - Multi-host import ladder
 - Plugin production-hardening gaps table above
-- **Federated multi-server mesh** (full section; F0–F5 phases)
+- Federation outbound invalidation fan-out, guided key rotation, richer audit UI,
+  and a two-process integration fixture
 ### Config worth remembering
 
 | Key | Default | Role |

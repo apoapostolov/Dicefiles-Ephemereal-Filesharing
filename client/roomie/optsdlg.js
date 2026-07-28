@@ -89,6 +89,8 @@ export class OptionsModal extends Modal {
       "deeplinks",
       "allowcrosslinking",
       "allowprivatecrosslinking",
+      "allowfederation",
+      "allowprivatefederation",
       "linkedrooms",
       "disabled",
       "disablereports",
@@ -97,6 +99,11 @@ export class OptionsModal extends Modal {
       "linkaddbtn",
       "linktbody",
       "linkempty",
+      "federationpeer",
+      "federationroom",
+      "federationaddbtn",
+      "federationtbody",
+      "federationempty",
       "linkeditor",
       "linkeditorlabel",
       "rule_name",
@@ -154,6 +161,8 @@ export class OptionsModal extends Modal {
     }
 
     this.linkEntries = [];
+    this.federationLinks = [];
+    this.federationPeers = [];
     this.editingRoomId = null;
     this.activeTab = "general";
     this.pluginCatalog = [];
@@ -181,6 +190,19 @@ export class OptionsModal extends Modal {
         if (ev.key === "Enter") {
           ev.preventDefault();
           this.onAddLink();
+        }
+      });
+    }
+    if (this.federationaddbtn) {
+      this.federationaddbtn.addEventListener("click", () =>
+        this.onAddFederationLink(),
+      );
+    }
+    if (this.federationroom) {
+      this.federationroom.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") {
+          ev.preventDefault();
+          this.onAddFederationLink();
         }
       });
     }
@@ -283,6 +305,14 @@ export class OptionsModal extends Modal {
         "allowPrivateCrossLinking",
       );
     }
+    if (this.allowfederation) {
+      this.allowfederation.checked = !!c.get("allowFederation");
+    }
+    if (this.allowprivatefederation) {
+      this.allowprivatefederation.checked = !!c.get(
+        "allowPrivateFederation",
+      );
+    }
     this.disabled.checked = !!c.get("disabled");
     this.disablereports.checked = !!c.get("disableReports");
     this.ttl.value = c.get("fileTTL") || 0;
@@ -297,6 +327,20 @@ export class OptionsModal extends Modal {
     );
     this.renderLinkTable();
     this.probeLinkStatuses();
+    this.federationPeers = Array.isArray(c.get("federationPeers"))
+      ? c.get("federationPeers")
+      : [];
+    this.federationLinks = Array.isArray(c.get("federatedRooms"))
+      ? c.get("federatedRooms").map((row) =>
+          Object.assign({ status: "unknown" }, row),
+        )
+      : [];
+    this._initialFederationSerialized = JSON.stringify(
+      this.federationLinks.map(({ status, error, ...row }) => row),
+    );
+    this.renderFederationPeerOptions();
+    this.renderFederationTable();
+    this.probeFederationStatuses();
     this.guestInvites = [];
     this.guestInviteAudit = [];
     this.refreshGuestInvites();
@@ -1229,6 +1273,139 @@ export class OptionsModal extends Modal {
     }
   }
 
+  renderFederationPeerOptions() {
+    if (!this.federationpeer) {
+      return;
+    }
+    this.federationpeer.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = this.federationPeers.length
+      ? "Choose trusted peer"
+      : "No trusted peers configured";
+    this.federationpeer.appendChild(placeholder);
+    for (const peer of this.federationPeers) {
+      const option = document.createElement("option");
+      option.value = peer.peerId;
+      option.textContent = `${peer.displayName || peer.peerId} (${peer.peerId})`;
+      this.federationpeer.appendChild(option);
+    }
+    if (this.federationaddbtn) {
+      this.federationaddbtn.disabled = !this.federationPeers.length;
+    }
+  }
+
+  onAddFederationLink() {
+    const peerId = String(this.federationpeer?.value || "").trim();
+    const roomId = String(this.federationroom?.value || "").trim();
+    if (!peerId || !roomId) {
+      return;
+    }
+    if (
+      this.federationLinks.some(
+        (row) => row.peerId === peerId && row.roomId === roomId,
+      )
+    ) {
+      return;
+    }
+    const peer = this.federationPeers.find((row) => row.peerId === peerId);
+    this.federationLinks.push({
+      peerId,
+      roomId,
+      name: `${(peer && peer.displayName) || peerId} / ${roomId}`,
+      status: "unknown",
+    });
+    this.federationroom.value = "";
+    this.renderFederationTable();
+    this.probeFederationStatuses();
+  }
+
+  removeFederationLink(peerId, roomId) {
+    this.federationLinks = this.federationLinks.filter(
+      (row) => row.peerId !== peerId || row.roomId !== roomId,
+    );
+    this.renderFederationTable();
+  }
+
+  async probeFederationStatuses() {
+    if (!registry.socket || !this.federationLinks.length) {
+      return;
+    }
+    try {
+      const rv = await registry.socket.makeCall("probefederationlinks");
+      const rows = (rv && rv.links) || [];
+      const byKey = new Map(
+        rows.map((row) => [`${row.peerId}\0${row.roomId}`, row]),
+      );
+      this.federationLinks = this.federationLinks.map((row) =>
+        Object.assign(
+          {},
+          row,
+          byKey.get(`${row.peerId}\0${row.roomId}`) || {},
+        ),
+      );
+      this.renderFederationTable();
+    } catch (ex) {
+      console.warn("probefederationlinks", ex);
+    }
+  }
+
+  renderFederationTable() {
+    if (!this.federationtbody) {
+      return;
+    }
+    this.federationtbody.innerHTML = "";
+    if (this.federationempty) {
+      this.federationempty.classList.toggle(
+        "hidden",
+        this.federationLinks.length > 0,
+      );
+    }
+    for (const entry of this.federationLinks) {
+      const tr = document.createElement("tr");
+      const source = document.createElement("td");
+      source.className = "link-col-source";
+      const peer = this.federationPeers.find(
+        (row) => row.peerId === entry.peerId,
+      );
+      const title = document.createElement("div");
+      title.className = "link-source-name";
+      title.textContent =
+        entry.name ||
+        `${(peer && peer.displayName) || entry.peerId} / ${entry.roomId}`;
+      const id = document.createElement("div");
+      id.className = "link-source-id";
+      id.textContent = `${entry.peerId} · ${entry.roomId}`;
+      source.append(title, id);
+
+      const status = document.createElement("td");
+      status.className = "link-col-status";
+      const labels = {
+        active: "Active",
+        unreachable: "Unreachable",
+        denied: "Denied",
+        missing: "Missing",
+        "key-invalid": "Key invalid",
+        "protocol-mismatch": "Protocol mismatch",
+        "circuit-open": "Temporarily paused",
+        unknown: "Checking…",
+      };
+      status.textContent = labels[entry.status] || entry.status || "Checking…";
+
+      const actions = document.createElement("td");
+      actions.className = "link-col-actions";
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "Remove";
+      remove.addEventListener("click", () =>
+        this.removeFederationLink(entry.peerId, entry.roomId),
+      );
+      actions.appendChild(remove);
+      tr.append(source, status, actions);
+      this.federationtbody.appendChild(tr);
+    }
+  }
+
   renderLinkTable() {
     const tbody = this.linktbody;
     const empty = this.linkempty;
@@ -1585,6 +1762,13 @@ will NOT be aborted, and they also retain their chat histories.`,
       const allowPrivateCrossLinking = !!(
         this.allowprivatecrosslinking && this.allowprivatecrosslinking.checked
       );
+      const allowFederation = !!(
+        this.allowfederation && this.allowfederation.checked
+      );
+      const allowPrivateFederation = !!(
+        this.allowprivatefederation &&
+        this.allowprivatefederation.checked
+      );
       const linkedPayload = this.buildLinkedRoomsPayload();
       const { checked: disabled } = this.disabled;
       const { checked: disableReports } = this.disablereports;
@@ -1629,6 +1813,22 @@ will NOT be aborted, and they also retain their chat histories.`,
           allowPrivateCrossLinking,
         );
       }
+      if (allowFederation !== !!c.get("allowFederation")) {
+        await socket.makeCall(
+          "setconfig",
+          "allowFederation",
+          allowFederation,
+        );
+      }
+      if (
+        allowPrivateFederation !== !!c.get("allowPrivateFederation")
+      ) {
+        await socket.makeCall(
+          "setconfig",
+          "allowPrivateFederation",
+          allowPrivateFederation,
+        );
+      }
 
       const nowSerialized = serializeLinkedRoomEntries(this.linkEntries);
       const needSaveLinks =
@@ -1636,6 +1836,19 @@ will NOT be aborted, and they also retain their chat histories.`,
         this.linkEntries.some((e) => e._token);
       if (needSaveLinks) {
         await socket.makeCall("setconfig", "linkedRooms", linkedPayload);
+      }
+      const federationPayload = this.federationLinks.map(
+        ({ status, error, peerName, roomName, ...row }) => row,
+      );
+      if (
+        JSON.stringify(federationPayload) !==
+        this._initialFederationSerialized
+      ) {
+        await socket.makeCall(
+          "setconfig",
+          "federatedRooms",
+          federationPayload,
+        );
       }
 
       if (registry.chatbox.role === "mod") {

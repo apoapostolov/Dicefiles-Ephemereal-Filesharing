@@ -114,9 +114,9 @@ function parseResult(result) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("registerTools", () => {
-  it("registers exactly 20 tools", () => {
+  it("registers exactly 24 tools", () => {
     const tools = buildToolMap();
-    expect(Object.keys(tools)).toHaveLength(20);
+    expect(Object.keys(tools)).toHaveLength(24);
   });
 
   it("registers every expected tool name", () => {
@@ -142,6 +142,10 @@ describe("registerTools", () => {
       "list_guest_invites",
       "create_guest_invite",
       "revoke_guest_invite",
+      "list_federated_room_links",
+      "create_federated_room_link",
+      "remove_federated_room_link",
+      "set_room_federation_policy",
     ];
     for (const name of expected) {
       expect(tools).toHaveProperty(name);
@@ -613,6 +617,50 @@ describe("guest invite tools", () => {
       "/api/v1/rooms/Room1/guest-invites/secret%2Ftoken",
     );
     expect(revokeCall[1].method).toBe("DELETE");
+  });
+});
+
+describe("federation link tools", () => {
+  it("manages peer-room links and source policy through the v1 API", async () => {
+    const tools = buildToolMap();
+    global.fetch = mockFetchJson({ ok: true, links: [] });
+
+    await tools.list_federated_room_links({ roomid: "Dest Room" });
+    expect(global.fetch.mock.calls[0][0]).toContain(
+      "/api/v1/rooms/Dest%20Room/federation-links",
+    );
+
+    await tools.create_federated_room_link({
+      roomid: "Dest",
+      peerId: "friends",
+      remoteRoomId: "Releases",
+      visibility: "members",
+    });
+    expect(JSON.parse(global.fetch.mock.calls[1][1].body)).toMatchObject({
+      peerId: "friends",
+      roomId: "Releases",
+      visibility: "members",
+    });
+
+    await tools.remove_federated_room_link({
+      roomid: "Dest",
+      peerId: "friends/files",
+      remoteRoomId: "Release Room",
+    });
+    expect(global.fetch.mock.calls[2][0]).toContain(
+      "/federation-links/friends%2Ffiles/Release%20Room",
+    );
+
+    await tools.set_room_federation_policy({
+      roomid: "Source",
+      allowFederation: true,
+      allowPrivateFederation: false,
+    });
+    expect(global.fetch.mock.calls[3][1].method).toBe("PATCH");
+    expect(JSON.parse(global.fetch.mock.calls[3][1].body)).toEqual({
+      allowFederation: true,
+      allowPrivateFederation: false,
+    });
   });
 });
 

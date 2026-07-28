@@ -6,7 +6,7 @@
   "author": "RealDolos <dolos@cock.li>",
   "license": "MIT",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "packageManager": "yarn@1.22.22",
   "scripts": {
@@ -20,12 +20,13 @@
     "start": "node server.js",
     "restart": "sh ./scripts/restart-server.sh",
     "lint": "eslint .",
-    "test": "node ./node_modules/.bin/jest",
-    "test:unit": "node ./node_modules/.bin/jest tests/unit tests/views",
-    "test:integration": "node ./node_modules/.bin/jest tests/integration",
-    "test:coverage": "node ./node_modules/.bin/jest --coverage"
+    "test": "node --experimental-vm-modules ./node_modules/.bin/jest",
+    "test:unit": "node --experimental-vm-modules ./node_modules/.bin/jest tests/unit tests/views",
+    "test:integration": "node --experimental-vm-modules ./node_modules/.bin/jest tests/integration",
+    "test:coverage": "node --experimental-vm-modules ./node_modules/.bin/jest --coverage"
   },
   "dependencies": {
+    "@fedify/fedify": "^2.3.3",
     "@lingo-reader/mobi-parser": "^0.4.5",
     "@modelcontextprotocol/sdk": "^1.6.0",
     "body-parser": "^1.20.3",

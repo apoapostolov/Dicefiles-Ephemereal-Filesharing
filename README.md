@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Version](https://img.shields.io/badge/version-1.4.3-blue)
-![Node](https://img.shields.io/badge/node-%3E%3D20-339933)
+![Node](https://img.shields.io/badge/node-%3E%3D22-339933)
 ![Redis](https://img.shields.io/badge/redis-v4%20client-DC382D)
 ![Package manager](https://img.shields.io/badge/package%20manager-yarn%201.x-2C8EBB)
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
@@ -74,6 +74,11 @@ Full notes: [CHANGELOG.md](CHANGELOG.md).
   storage. Sources must opt in; invite-only sources require consent from both
   rooms; per-link visibility can target everyone, accounts, members, owners, or
   moderators.
+- **Trusted-host federation** extends that linking model across independent
+  Dicefiles servers. Peers use pinned RSA-3072 identities and RFC 9421 request
+  signatures; room consent, remote TTL, ranged streaming, and privacy-safe
+  metadata remain enforced by the source
+  ([operator and protocol guide](docs/FEDERATION.md)).
 - **Link rules** filter by filename terms, tags, file types, and age, with live
   Active, Cross-link off, Private consent, or Missing status.
 - **Shareable deep links** can restore a selected file, filter, sort, or
@@ -92,8 +97,9 @@ Full notes: [CHANGELOG.md](CHANGELOG.md).
 
 - **Automation REST API** uses scoped keys, per-scope rate limits, audit logs,
   webhooks, room-link operations, and guest-invite operations.
-- **20-tool MCP server** gives AI clients typed tools for discovery, metadata,
-  requests, uploads, archives, linked rooms, and guest invites.
+- **24-tool MCP server** gives AI clients typed tools for discovery, metadata,
+  requests, uploads, archives, local links, federated peer links, and guest
+  invites.
 - **Reactive plugins** receive room lifecycle events through stable HTTP,
   event-lease, room/file read, chat-write, and upload capabilities rather than
   importing server internals.
@@ -190,9 +196,12 @@ The PDF.js web worker is built as a separate webpack entry (`pdf.worker.js`) and
 | [core/plugins/DEVELOPING_PLUGINS.md](core/plugins/DEVELOPING_PLUGINS.md) | Plugin developer API (lifecycle, events, bots) |
 | [core/plugins/MEGA_FOLDER.md](core/plugins/MEGA_FOLDER.md) | Mega.nz Autoshare operator guide |
 | [core/plugins/RELEASE_PUBLISHERS.md](core/plugins/RELEASE_PUBLISHERS.md) | Discord and Telegram release bot setup |
+| [docs/FEDERATION.md](docs/FEDERATION.md) | Trusted-host federation setup, protocol, security, and troubleshooting |
+| [docs/MULTI_VOLUME_STORAGE.md](docs/MULTI_VOLUME_STORAGE.md) | Proposal: balanced and fallback multi-volume storage |
+| [docs/PASSWORD_PROTECTED_ROOMS.md](docs/PASSWORD_PROTECTED_ROOMS.md) | Proposal: rotating shared and personal room credentials |
 | [docs/FUTURE_DEVELOPMENT_PLAN.md](docs/FUTURE_DEVELOPMENT_PLAN.md) | Product backlog (shipped vs proposed) |
 | [docs/PERF_NOTES.md](docs/PERF_NOTES.md) | Performance notes (virtualization, code-splitting, workers) |
-| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Dev setup (Yarn 1.x, Node ≥20, Redis) and PR expectations |
+| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Dev setup (Yarn 1.x, Node ≥22, Redis) and PR expectations |
 | [dev/README.md](dev/README.md) | AI/human development workflow, generated files, review, and release checks |
 | [SECURITY.md](SECURITY.md) | Private vulnerability reporting and repository security policy |
 
@@ -214,7 +223,7 @@ You are setting up Dicefiles on this machine. Work through these steps in order:
 ```bash
 git clone https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing.git Dicefiles
 cd Dicefiles
-# Node >= 20 required. Yarn 1.x is the only supported package manager (yarn.lock).
+# Node >= 22 required. Yarn 1.x is the only supported package manager (yarn.lock).
 yarn install
 ```
 
@@ -275,7 +284,7 @@ mkdir -p ~/.claude/skills/dicefiles
 cp /absolute/path/to/Dicefiles/scripts/openclaw-dicefiles-skill/SKILL.md \
    ~/.claude/skills/dicefiles/
 ```
-The skill teaches OpenClaw the full 20-tool inventory, startup sequence, and
+The skill teaches OpenClaw the full 24-tool inventory, startup sequence, and
 fulfillment loop. Full skill definition: `scripts/openclaw-dicefiles-skill/SKILL.md`.
 
 ## 6 — Verify
@@ -345,7 +354,7 @@ Notes:
 
 #### 2. Clone and Install
 
-**Requirements:** Node.js **≥ 20**, **Yarn 1.x** (only supported package manager — use `yarn.lock`, not npm’s lockfile), and a running **Redis** instance (compatible with the node-redis **v4** client shipped in 1.4.0).
+**Requirements:** Node.js **≥ 22**, **Yarn 1.x** (only supported package manager — use `yarn.lock`, not npm’s lockfile), and a running **Redis** instance (compatible with the node-redis **v4** client shipped in 1.4.0).
 
 ```bash
 # Clone the repository
@@ -373,6 +382,45 @@ cp .config.json.example .config.json
 At minimum set `"secret"` to a long random string and choose a `"port"`. See
 [Configuration](#configuration) below or the inline comments in `.config.json.example`
 for a full description of every option.
+
+#### Optional trusted-host federation
+
+Federation is off by default. It connects a small, manually trusted group of
+Dicefiles hosts; it is not a public server directory. Configure a stable HTTPS
+origin, peer id, and each peer's public key/room allowlist:
+
+```json
+{
+  "federation": {
+    "enabled": true,
+    "publicBaseUrl": "https://files.example.org",
+    "peerId": "example-files",
+    "displayName": "Example Files",
+    "peers": [
+      {
+        "peerId": "friends-files",
+        "baseUrl": "https://files.friends.example",
+        "keyId": "https://files.friends.example/federation/actor#main-key",
+        "publicKeyJwk": {
+          "kty": "RSA",
+          "alg": "RS256",
+          "n": "peer-public-modulus",
+          "e": "AQAB"
+        },
+        "allowedRooms": ["releases"]
+      }
+    ]
+  }
+}
+```
+
+The first enabled start writes this host's RSA-3072 identity into the ignored
+`.config.json`; never copy its private JWK into documentation or peer records.
+Exchange discovery documents and fingerprints out of band, add the reciprocal
+peer record on the other host, then enable **Allow trusted peer federation** on
+the source room. The destination room can add the peer and remote room in Room
+Options → Linking. See [Dicefiles Federation](docs/FEDERATION.md) for the
+security model, local-lab HTTP exceptions, endpoints, and troubleshooting.
 
 #### 4. Start the Server
 

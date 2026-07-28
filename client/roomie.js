@@ -463,6 +463,31 @@ export default new (class Roomie extends EventEmitter {
     );
   }
 
+  async confirmDestructive(text, caption, confirmText) {
+    const modal = new MessageBox(
+      caption || "Confirm action",
+      text,
+      "i-warning",
+      {
+        id: "confirm",
+        text: confirmText || "Delete",
+        cls: "modal-button-danger",
+      },
+      {
+        id: "cancel",
+        text: "Cancel",
+        cancel: true,
+        default: true,
+      },
+    );
+    try {
+      return (await this.showModal(modal)) === "confirm";
+    }
+    catch (ex) {
+      return false;
+    }
+  }
+
   async showOptionsModal() {
     try {
       await this.showModal(new OptionsModal(this));

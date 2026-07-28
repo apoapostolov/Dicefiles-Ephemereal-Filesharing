@@ -198,6 +198,19 @@
   opacity: 0.9;
 }
 
+.modal-button-danger {
+  background: rgba(160, 60, 60, 0.24);
+  border-color: rgba(220, 90, 90, 0.5);
+  color: rgba(255, 190, 190, 0.98);
+}
+
+.modal-button-danger:hover,
+.modal-button-danger:focus {
+  background: rgba(180, 65, 65, 0.38);
+  border-color: rgba(235, 110, 110, 0.72);
+  color: #ffe5e5;
+}
+
 .modal-messagebox .modal-body {
   display: grid;
   grid-template-columns: auto auto;
@@ -1898,6 +1911,14 @@
 .modal-optsdlg .roomopts-link-add input[type="text"] {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.modal-optsdlg .roomopts-link-add select {
+  flex: 0 1 42%;
+  min-width: 9rem;
+  max-width: 16rem;
+  color: var(--text-color, #eee);
+  background: var(--input-background, #262626);
 }
 
 .modal-optsdlg .roomopts-link-add > button {
