@@ -9,6 +9,11 @@ const {
   revokeGuestInvite,
   guestInvitePath,
   serializeGuestInvite,
+  countActiveGuestInvites,
+  guestInviteCapacity,
+  inviteTokenHint,
+  normalizeGuestInviteAudit,
+  appendGuestInviteAudit,
 } = require("../../lib/room/guest-invites");
 
 describe("guest-invites (shipped)", () => {
@@ -93,5 +98,72 @@ describe("guest-invites (shipped)", () => {
     const ser = serializeGuestInvite(a, { fullToken: true });
     expect(ser.tokenFull).toBe("abc12345tokenXX");
     expect(ser.remaining).toBe(2);
+  });
+
+  test("active invite count excludes exhausted and expired links", () => {
+    const active = createGuestInvite({
+      now,
+      token: "active_invite_token",
+      maxUses: 2,
+    });
+    const exhausted = Object.assign({}, active, {
+      token: "usedup_invite_token",
+      uses: 2,
+    });
+    const expired = createGuestInvite({
+      now: now - 2 * 3600 * 1000,
+      token: "expired_invite_tok",
+      maxAgeHours: 1,
+    });
+    expect(countActiveGuestInvites([active, exhausted, expired], now)).toBe(1);
+    expect(guestInviteCapacity([active], 1, now)).toEqual({
+      ok: false,
+      active: 1,
+      max: 1,
+      remaining: 0,
+    });
+  });
+
+  test("audit is bounded and stores token hints rather than full tokens", () => {
+    let audit = appendGuestInviteAudit(
+      [],
+      "created",
+      {
+        at: now,
+        token: "super_secret_invite_token",
+        actor: "owner",
+        maxUses: 3,
+      },
+      2,
+    );
+    audit = appendGuestInviteAudit(
+      audit,
+      "redeemed",
+      {
+        at: now + 1,
+        token: "super_secret_invite_token",
+        uses: 1,
+        maxUses: 3,
+      },
+      2,
+    );
+    audit = appendGuestInviteAudit(
+      audit,
+      "revoked",
+      {
+        at: now + 2,
+        token: "super_secret_invite_token",
+        uses: 1,
+        maxUses: 3,
+      },
+      2,
+    );
+    expect(audit).toHaveLength(2);
+    expect(audit[0].event).toBe("redeemed");
+    expect(audit[0].tokenHint).toBe(
+      inviteTokenHint("super_secret_invite_token"),
+    );
+    expect(JSON.stringify(audit)).not.toContain("super_secret_invite_token");
+    expect(normalizeGuestInviteAudit([{ event: "bad", at: now }])).toEqual([]);
   });
 });

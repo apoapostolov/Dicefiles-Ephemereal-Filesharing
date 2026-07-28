@@ -5,6 +5,7 @@ const {
   convertSetArgs,
   resolveCommand,
   invokeCommand,
+  legacyScoreReply,
 } = require("../../lib/broker/redis-client");
 
 describe("redis adapter surface (shipped)", () => {
@@ -69,10 +70,36 @@ describe("redis adapter surface (shipped)", () => {
         return "val";
       },
     };
-    await expect(invokeCommand(client, "set", ["k", "v", "EX", 5])).resolves.toBe(
-      "OK",
-    );
+    await expect(
+      invokeCommand(client, "set", ["k", "v", "EX", 5]),
+    ).resolves.toBe("OK");
     expect(calls[0][1]).toEqual(["k", "v", { EX: 5 }]);
     await expect(invokeCommand(client, "get", ["k"])).resolves.toBe("val");
+  });
+
+  test("zrevrange adapts modern zRange methods to the legacy reply shape", async () => {
+    const calls = [];
+    const client = {
+      async zRange(key, start, stop, options) {
+        calls.push(["range", key, start, stop, options]);
+        return ["bob", "alice"];
+      },
+      async zRangeWithScores(key, start, stop, options) {
+        calls.push(["scores", key, start, stop, options]);
+        return [
+          { value: "bob", score: 20 },
+          { value: "alice", score: 10 },
+        ];
+      },
+    };
+    await expect(
+      invokeCommand(client, "zrevrange", ["rank", 0, 24]),
+    ).resolves.toEqual(["bob", "alice"]);
+    await expect(
+      invokeCommand(client, "zrevrange", ["rank", 0, 24, "WITHSCORES"]),
+    ).resolves.toEqual(["bob", "20", "alice", "10"]);
+    expect(calls[0][4]).toEqual({ REV: true });
+    expect(calls[1][4]).toEqual({ REV: true });
+    expect(legacyScoreReply([{ value: "x", score: 1 }])).toEqual(["x", "1"]);
   });
 });

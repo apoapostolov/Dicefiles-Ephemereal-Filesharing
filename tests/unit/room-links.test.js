@@ -14,14 +14,20 @@ const {
   removeLinkedRoomEntry,
   upsertLinkedRoomEntry,
   markLinkedClientFile,
+  linkedContentExclusionReason,
   isLinkableSourceFile,
   includeLinkedForRole,
+  LINK_VISIBILITIES,
+  normalizeLinkVisibility,
+  linkVisibilityAllows,
   sourceAllowsCrossLink,
+  sourceAllowsPrivateCrossLink,
   linkSourceStatus,
   fileMatchesLinkRules,
   filterLinkedSourceFiles,
   serializeLinkedRoomEntries,
   summarizeLinkRules,
+  summarizeLinkAccess,
   isEmptyLinkRules,
   MS_PER_HOUR,
 } = require("../../lib/room/room-links");
@@ -38,9 +44,13 @@ describe("room-links (shipped)", () => {
     expect(isCrossLinkingAllowed(true)).toBe(true);
   });
 
-  test("sourceAllowsCrossLink / linkSourceStatus", () => {
+  test("source permissions and link status default to denied", () => {
     expect(sourceAllowsCrossLink({ allowCrossLinking: true })).toBe(true);
     expect(sourceAllowsCrossLink({ get: () => false })).toBe(false);
+    expect(
+      sourceAllowsPrivateCrossLink({ allowPrivateCrossLinking: true }),
+    ).toBe(true);
+    expect(sourceAllowsPrivateCrossLink({ get: () => undefined })).toBe(false);
     expect(linkSourceStatus({ exists: false })).toBe("missing");
     expect(linkSourceStatus({ exists: true, allowCrossLinking: false })).toBe(
       "denied",
@@ -84,6 +94,41 @@ describe("room-links (shipped)", () => {
     expect(rich[0].rules.types).toEqual(["document"]);
     expect(rich[0].rules.maxAgeHours).toBe(48);
     expect(rich[0].rules.minAgeHours).toBeUndefined();
+  });
+
+  test("normalizes visibility and private-source opt-in", () => {
+    expect(LINK_VISIBILITIES).toContain("members");
+    expect(normalizeLinkVisibility("OWNERS")).toBe("owners");
+    expect(normalizeLinkVisibility("invalid")).toBe("all");
+    expect(
+      normalizeLinkedRoomEntries([
+        {
+          roomId: "sourceRoomA1",
+          visibility: "members",
+          allowPrivateSource: true,
+        },
+      ]),
+    ).toEqual([
+      {
+        roomId: "sourceRoomA1",
+        visibility: "members",
+        allowPrivateSource: true,
+      },
+    ]);
+  });
+
+  test("destination link ACL supports signed-in, member, owner, and mod tiers", () => {
+    expect(linkVisibilityAllows("all", {})).toBe(true);
+    expect(linkVisibilityAllows("authenticated", { authenticated: true })).toBe(
+      true,
+    );
+    expect(linkVisibilityAllows("members", { authenticated: true })).toBe(
+      false,
+    );
+    expect(linkVisibilityAllows("members", { member: true })).toBe(true);
+    expect(linkVisibilityAllows("owners", { owner: true })).toBe(true);
+    expect(linkVisibilityAllows("mods", { owner: true })).toBe(false);
+    expect(linkVisibilityAllows("mods", { role: "mod" })).toBe(true);
   });
 
   test("normalizeLinkRules empty → null", () => {
@@ -154,13 +199,13 @@ describe("room-links (shipped)", () => {
 
   test("add / remove / upsert entries", () => {
     expect(addLinkedRoom([], "sourceRoom1")).toEqual(["sourceRoom1"]);
-    expect(removeLinkedRoom(["roomAlpha1", "roomBeta22"], "roomAlpha1")).toEqual([
-      "roomBeta22",
-    ]);
-    let list = upsertLinkedRoomEntry(
-      [],
-      { roomId: "sourceRoomA1", rules: { nameContains: "a" } },
-    );
+    expect(
+      removeLinkedRoom(["roomAlpha1", "roomBeta22"], "roomAlpha1"),
+    ).toEqual(["roomBeta22"]);
+    let list = upsertLinkedRoomEntry([], {
+      roomId: "sourceRoomA1",
+      rules: { nameContains: "a" },
+    });
     list = upsertLinkedRoomEntry(list, {
       roomId: "sourceRoomA1",
       rules: { tagContains: "b" },
@@ -183,13 +228,29 @@ describe("room-links (shipped)", () => {
     expect(
       includeLinkedForRole({ key: "1", meta: {}, hidden: true }, "white"),
     ).toBe(false);
+    expect(
+      includeLinkedForRole({ key: "1", meta: {}, hidden: true }, "mod"),
+    ).toBe(false);
   });
 
   test("isLinkableSourceFile excludes requests", () => {
     expect(isLinkableSourceFile({ key: "1", meta: {} })).toBe(true);
+    expect(isLinkableSourceFile({ key: "1", meta: { request: true } })).toBe(
+      false,
+    );
     expect(
-      isLinkableSourceFile({ key: "1", meta: { request: true } }),
-    ).toBe(false);
+      linkedContentExclusionReason({
+        key: "rq1",
+        meta: { request: true },
+        status: "fulfilled",
+      }),
+    ).toBe("request");
+    expect(
+      linkedContentExclusionReason({
+        key: "upload1",
+        meta: { requesterNick: "alice" },
+      }),
+    ).toBeNull();
   });
 
   describe("fileMatchesLinkRules (shipped path)", () => {
@@ -208,12 +269,12 @@ describe("room-links (shipped)", () => {
     });
 
     test("nameContains match / non-match", () => {
-      expect(
-        fileMatchesLinkRules(base, { nameContains: "MAP" }, now),
-      ).toBe(true);
-      expect(
-        fileMatchesLinkRules(base, { nameContains: "video" }, now),
-      ).toBe(false);
+      expect(fileMatchesLinkRules(base, { nameContains: "MAP" }, now)).toBe(
+        true,
+      );
+      expect(fileMatchesLinkRules(base, { nameContains: "video" }, now)).toBe(
+        false,
+      );
     });
 
     test("nameContains comma-delimited OR terms", () => {
@@ -233,15 +294,15 @@ describe("room-links (shipped)", () => {
     });
 
     test("tagContains match key or value", () => {
-      expect(
-        fileMatchesLinkRules(base, { tagContains: "dnd" }, now),
-      ).toBe(true);
-      expect(
-        fileMatchesLinkRules(base, { tagContains: "USER" }, now),
-      ).toBe(true);
-      expect(
-        fileMatchesLinkRules(base, { tagContains: "zzz" }, now),
-      ).toBe(false);
+      expect(fileMatchesLinkRules(base, { tagContains: "dnd" }, now)).toBe(
+        true,
+      );
+      expect(fileMatchesLinkRules(base, { tagContains: "USER" }, now)).toBe(
+        true,
+      );
+      expect(fileMatchesLinkRules(base, { tagContains: "zzz" }, now)).toBe(
+        false,
+      );
     });
 
     test("types filter", () => {
@@ -365,5 +426,39 @@ describe("room-links (shipped)", () => {
     expect(
       summarizeLinkRules({ nameContains: "map", types: ["document"] }),
     ).toMatch(/name~/);
+  });
+
+  test("private sources report explicit status and access summaries", () => {
+    expect(
+      linkSourceStatus({
+        exists: true,
+        allowCrossLinking: true,
+        privateSource: true,
+        allowPrivateSource: false,
+      }),
+    ).toBe("private");
+    expect(
+      linkSourceStatus({
+        exists: true,
+        allowCrossLinking: true,
+        privateSource: true,
+        allowPrivateSource: true,
+      }),
+    ).toBe("private");
+    expect(
+      linkSourceStatus({
+        exists: true,
+        allowCrossLinking: true,
+        privateSource: true,
+        allowPrivateSource: true,
+        allowPrivateCrossLinking: true,
+      }),
+    ).toBe("ok");
+    expect(
+      summarizeLinkAccess({
+        visibility: "members",
+        allowPrivateSource: true,
+      }),
+    ).toMatch(/Room members.*invite-only source allowed/i);
   });
 });

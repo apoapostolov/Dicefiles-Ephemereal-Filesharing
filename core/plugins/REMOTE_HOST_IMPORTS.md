@@ -10,7 +10,7 @@ This is a **design note**, not a shipped feature. The first-party path today is 
 
 ## 1. Goal
 
-Operators (or trusted bots) paste a **folder or file URL** from a common hoster → Dicefiles pulls bytes into a room via the same `uploadFile` / `ingestFromBuffer` path used by Mega.
+Operators (or trusted bots) paste a **folder or file URL** from a common hoster → Dicefiles pulls bytes into a room via the same `uploadFile` / `ingestFromBuffer` path used by Mega.nz.
 
 Constraints that match Dicefiles:
 
@@ -22,7 +22,7 @@ Constraints that match Dicefiles:
 
 ## 2. Shared contract (do not fork per host)
 
-Every remote hoster implements the same thin interface already used by Mega:
+Every remote hoster implements the same thin interface already used by Mega.nz:
 
 ```ts
 // Logical shape (JS in practice)
@@ -54,7 +54,7 @@ Orchestration (shared, not per-plugin):
 4. `uploadFile({ roomId, name, body, size, meta: { plugin, sourceUrl, host } })`.
 5. Emit normal `file_uploaded` webhooks; optional plugin events later.
 
-Refactor target: rename mental model from `ctx.megaDownloader` → `ctx.remoteDownloader` (or a **map** of downloaders), keep Mega as one implementation.
+Refactor target: rename mental model from `ctx.megaDownloader` → `ctx.remoteDownloader` (or a **map** of downloaders), keep Mega.nz as one implementation.
 
 ---
 
@@ -65,7 +65,7 @@ Refactor target: rename mental model from `ctx.megaDownloader` → `ctx.remoteDo
 | **Mega.nz** | Native JS SDK | **[megajs](https://www.npmjs.com/package/megajs)** ([mega.js.org](https://mega.js.org/)); CLI **[megajs-cli](https://github.com/qgustavor/megajs-cli)**; optional official **[MEGAcmd](https://github.com/meganz/MEGAcmd)** shell-out | Already optionalDep + `createMegaDownloader`. Prefer megajs in-process; MEGAcmd if operators already install it. |
 | **MediaFire** | HTML/API scrape or premium API | No first-class maintained Node SDK; common pattern is **Python/Go scrapers** or shell tools that resolve the final CDN URL then HTTP GET | Fragile free-tier; captcha/wait timers. Prefer stream-after-resolve; document breakage risk. Account cookies optional. |
 | **4shared** (“4storage” in some communities) | Link resolve + HTTP | Sparse Node libs; same class as MediaFire — often **plowshare**-class modules or custom resolve | Free downloads often throttled / wait. Treat as best-effort adapter. |
-| **Pixeldrain** | Official HTTP API | Direct REST (`pixeldrain.com/api/...`) — thin native adapter, no heavy SDK | Good first “easy host” after Mega (stable API, community-popular). |
+| **Pixeldrain** | Official HTTP API | Direct REST (`pixeldrain.com/api/...`) — thin native adapter, no heavy SDK | Good first “easy host” after Mega.nz (stable API, community-popular). |
 | **Gofile.io** | Public API | Thin REST client (folder/content tokens) | Good second easy host. |
 | **Catbox / Litterbox** | Direct file URL or upload API | Direct GET for public links; upload API for reverse direction | Import is usually single-file URL. |
 | **Workupload** | Resolve + GET | Site-specific scrape or community scripts | Same fragility class as MediaFire. |
@@ -78,7 +78,7 @@ Refactor target: rename mental model from `ctx.megaDownloader` → `ctx.remoteDo
 
 ## 4. Integration shapes (pick deliberately)
 
-### A. First-party thin adapters (recommended for Mega, Pixeldrain, Gofile)
+### A. First-party thin adapters (recommended for Mega.nz, Pixeldrain, Gofile)
 
 - `lib/plugins/remote-import/` or one plugin id `remote-import` with `providers/*.js`.
 - Config:
@@ -115,7 +115,7 @@ Refactor target: rename mental model from `ctx.megaDownloader` → `ctx.remoteDo
 
 ## 5. Suggested build order
 
-1. **Normalize** Mega adapter onto a shared `RemoteDownloader` interface (rename/docs only if behavior stable).
+1. **Normalize** Mega.nz adapter onto a shared `RemoteDownloader` interface (rename/docs only if behavior stable).
 2. **Pixeldrain + Gofile** single-file / folder adapters (official APIs, low drama).
 3. **`remote-import` plugin** — multi-URL list, caps, shared `uploadFile`.
 4. **`shell-import` plugin** — plowshare/MEGAcmd allowlist for MediaFire/4shared/long tail.
@@ -127,7 +127,7 @@ Refactor target: rename mental model from `ctx.megaDownloader` → `ctx.remoteDo
 
 - Size / file-count caps per run; prefer streaming into temp then `ingestFromBuffer` (or stream-aware ingest later).
 - No automatic crawl of arbitrary user-pasted hosts without owner enable + allowlist.
-- Secrets (premium cookies, Mega password) only via env / server config, never room chat.
+- Secrets (premium cookies, Mega.nz password) only via env / server config, never room chat.
 - Log source URL + host id on uploaded `meta` for audit.
 - Document that free hosters break often; adapters are **best-effort**.
 - Respect host ToS and copyright — product is a sync tool for operators, not a piracy appliance.
@@ -139,11 +139,11 @@ Refactor target: rename mental model from `ctx.megaDownloader` → `ctx.remoteDo
 | Piece | Today |
 |-------|--------|
 | Registry / lifecycle | `lib/plugins/registry.js` |
-| Mega plugin | `lib/plugins/mega-folder/` |
+| Mega.nz plugin | `lib/plugins/mega-folder/` |
 | Production wiring | `lib/plugins/runtime-adapters.js` (`uploadFile` + `megaDownloader`) |
 | Docs | `DEVELOPING_PLUGINS.md`, `MEGA_FOLDER.md` |
 
-Next code step when scheduled: extract `RemoteDownloader` + register Mega as first provider; add Pixeldrain without new npm deps.
+Next code step when scheduled: extract `RemoteDownloader` + register Mega.nz as first provider; add Pixeldrain without new npm deps.
 
 ---
 

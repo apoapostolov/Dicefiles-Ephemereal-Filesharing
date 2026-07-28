@@ -1,8 +1,21 @@
 # Developing Dicefiles plugins
 
-This guide explains how to build **first-party plugins** that hook Dicefiles’ event bus and automation surface. The shipped example is **Mega Autoshare** (`mega-folder`): monitor a Mega.nz folder, download new files over time, and auto-share into a room **as a bot** (cyan **BOT** pill). For a multi-host roadmap (MediaFire, 4shared, Pixeldrain, Gofile, plowshare shell bridge), see **[REMOTE_HOST_IMPORTS.md](./REMOTE_HOST_IMPORTS.md)**. Library/GitHub research for embeddable downloaders (not standalone products): **[REMOTE_HOST_LIBRARY_RESEARCH.md](../../docs/plugins/REMOTE_HOST_LIBRARY_RESEARCH.md)**.
+This guide explains how to build **first-party plugins** that hook Dicefiles’
+event bus and automation surface. Shipped examples include **Mega.nz Autoshare**
+(`mega-folder`) plus the Discord and Telegram release publishers. See
+**[RELEASE_PUBLISHERS.md](./RELEASE_PUBLISHERS.md)** for operator setup.
 
 Audience: operators and developers who already run a self-hosted Dicefiles instance.
+
+---
+
+## 1.4.3 runtime contract
+
+Release 1.4.3 makes event-driven plugins a supported first-party integration path:
+plugins can subscribe to room lifecycle events, call bounded Dicefiles adapters,
+perform timeout-limited JSON requests, and acquire Redis-backed one-time event
+leases before publishing to an external service. Discord and Telegram release
+publishers are the reference implementations.
 
 ---
 
@@ -13,7 +26,8 @@ Audience: operators and developers who already run a self-hosted Dicefiles insta
 | **Webhook events** | Outbound HTTP notifications (`lib/webhooks.js`) for bots and external automation |
 | **Plugin registry** | In-process loader for modules under `lib/plugins/<id>/` (`lib/plugins/registry.js`) |
 | **Plugin hooks** | Optional `onStart` / `onStop` / `onEvent` callbacks |
-| **Plugin `run()`** | Imperative entry point (e.g. “sync Mega folder now”) |
+| **Event subscriptions** | Declarative room-scoped lifecycle events handled by a plugin |
+| **Plugin `run()`** | Imperative entry point (e.g. “sync Mega.nz folder now”) |
 | **Automation API** | REST `/api/v1/*` with scoped API keys (unchanged; plugins complement it) |
 
 Plugins run **inside the Dicefiles Node worker**, with the same trust as core code. Do not load untrusted third-party code without your own sandboxing.
@@ -68,6 +82,8 @@ module.exports = {
   botName: "My Bot",         // optional; file-list BOT pill label
   version: "1.0.0",
   description: "…",
+  capabilities: ["events:read", "rooms:read", "network:write"],
+  eventSubscriptions: ["file_uploaded"],
   configSchema: { /* JSON-Schema-like object for docs */ },
 
   /** @returns {{ ok: boolean, errors?: string[] }} */
@@ -110,6 +126,16 @@ Provided by the registry:
 | `log` | `{ info, warn, error }` (when started from httpserver) |
 | `scheduleRun(id, args)` | Queue `run()` without blocking the event path |
 | `uploadFile` / `megaDownloader` | **Production:** attached by `buildPluginRuntimeCtx` in the HTTP worker (`lib/plugins/runtime-adapters.js`). **Tests:** inject fakes the same way. Uploads are bot-attributed. |
+| `publicBaseUrl` | Operator-configured public Dicefiles origin for external links |
+| `http.requestJson(url, options)` | Timeout-bounded JSON HTTP client whose errors do not echo secret-bearing URLs |
+| `events.begin/complete/fail` | Redis-backed one-time event lease for multi-worker idempotency |
+| `dicefiles.getRoomSummary(roomId)` | Stable room identity/read surface |
+| `dicefiles.listFiles({roomId, since?, limit?})` | Stable, bounded file read surface |
+| `dicefiles.postMessage({roomId, text})` | Post bot-attributed room chat without importing Broker internals |
+
+`capabilities` are documentation and catalog metadata, not a sandbox. First-
+party plugins still run as trusted server code. The injected adapters make the
+contract testable and reduce accidental coupling to core modules.
 
 ### Room Options → Plugins (operators)
 
@@ -158,7 +184,9 @@ In `.config.json`:
 2. `defaultRegistry.loadFromConfig(CONFIG.plugins)`  
 3. `defaultRegistry.startAll(ctx)` → each enabled plugin `hooks.onStart`  
 4. On every `WEBHOOKS.dispatch(event, payload)`:
-   - plugins `hooks.onEvent` (async, errors isolated)
+   - global plugins receive `hooks.onEvent`
+   - invited room plugins whose `eventSubscriptions` include the event receive
+     `hooks.onEvent`, scoped to `payload.roomid`
    - matching HTTP webhooks queued/delivered  
 5. Process exit → optional `stopAll()` (not always called on SIGKILL)
 
@@ -169,7 +197,7 @@ v1 does not expose a public REST route for arbitrary plugins (trust boundary). O
 - call `defaultRegistry.run("mega-folder", args)` from a trusted maintenance script in-process, or  
 - add a scoped automation route in a future release.
 
-The Mega plugin’s `run()` **requires** `ctx.uploadFile` and `ctx.megaDownloader`. Production `startAll` always supplies both via `buildPluginRuntimeCtx` (`uploadFile` → `ingestFromBuffer`; `megaDownloader` → optional `megajs`). Tests inject fakes so they never hit the network; without `megajs` installed, live `listFolder` fails with an install hint rather than a missing-adapter crash.
+The Mega.nz plugin’s `run()` **requires** `ctx.uploadFile` and `ctx.megaDownloader`. Production `startAll` always supplies both via `buildPluginRuntimeCtx` (`uploadFile` → `ingestFromBuffer`; `megaDownloader` → optional `megajs`). Tests inject fakes so they never hit the network; without `megajs` installed, live `listFolder` fails with an install hint rather than a missing-adapter crash.
 
 ---
 
@@ -178,7 +206,9 @@ The Mega plugin’s `run()` **requires** `ctx.uploadFile` and `ctx.megaDownloade
 1. **Pick an id** (`lib/plugins/my-tool/index.js`).
 2. **Define `configSchema` + `validateConfig`** — fail closed on bad URLs/rooms.
 3. **Implement `run(ctx, args)`** for the main work; keep side effects behind injectables (`download`, `uploadFile`).
-4. **Optional `onEvent`** — only for light reactions; heavy work via `ctx.scheduleRun`.
+4. **Optional `onEvent`** — declare `eventSubscriptions`; use
+   `ctx.events` when an external side effect must happen only once across
+   multiple workers.
 5. **Unit tests** that `require` the real module and inject fakes (see `tests/unit/plugins.test.js`).
 6. **Document** operator config in this folder or README.
 7. **Enable** in `.config.json` and restart.
@@ -186,7 +216,9 @@ The Mega plugin’s `run()` **requires** `ctx.uploadFile` and `ctx.megaDownloade
 ### Permissions & safety
 
 - Plugins inherit server filesystem and network access.
-- Prefer **secrets in env** (`MEGA_PASSWORD`) over config files.
+- Prefer **secrets in env** (`MEGA_PASSWORD`,
+  `DICEFILES_DISCORD_WEBHOOK_URL`, `DICEFILES_TELEGRAM_BOT_TOKEN`) over config
+  files.
 - Never log full invite tokens or API keys.
 - Validate `roomId` exists before upload.
 - Rate-limit external downloads yourself.
@@ -212,7 +244,7 @@ External bots usually use **webhooks only** (no plugin code on the server):
 2. Verify `x-dicefiles-signature` if `secret` is set.  
 3. Call the **Automation API** (`API.md`) with a scoped key to upload, list files, create requests, etc.
 
-Plugins are for **in-server** work (Mega import, future cron-like jobs). Webhooks are for **out-of-server** bots.
+Plugins are for **in-server** work (Mega.nz import, future cron-like jobs). Webhooks are for **out-of-server** bots.
 
 ---
 
@@ -229,7 +261,7 @@ Recommended bot flow:
 
 1. Subscribe to `file_uploaded` / `linked_file_appeared` / `request_*`.  
 2. On event, call Automation API to fetch metadata or download.  
-3. For bulk import from Mega, enable `mega-folder` plugin and run sync with credentials in env.
+3. For bulk import from Mega.nz, enable `mega-folder` plugin and run sync with credentials in env.
 
 ---
 
@@ -256,11 +288,15 @@ UI: Room Options → **Invites** tab.
 | Path | Purpose |
 |------|---------|
 | `lib/plugins/registry.js` | Registry, load, emit, run |
-| `lib/plugins/mega-folder/index.js` | Mega example plugin |
+| `lib/plugins/mega-folder/index.js` | Mega.nz example plugin |
+| `lib/plugins/discord-release/index.js` | Discord release publisher |
+| `lib/plugins/telegram-release/index.js` | Telegram release publisher |
+| `lib/plugins/runtime-adapters.js` | Stable Dicefiles, HTTP, and upload adapters |
+| `lib/plugins/event-lease.js` | Cross-worker one-time event leases |
 | `lib/webhooks.js` | Event dispatch + HTTP delivery |
 | `lib/room/guest-invites.js` | Pure invite create/redeem |
-| `core/plugins/MEGA_FOLDER.md` | Operator guide for Mega |
-| `tests/unit/plugins.test.js` | Registry + Mega inject tests |
+| `core/plugins/MEGA_FOLDER.md` | Operator guide for Mega.nz |
+| `tests/unit/plugins.test.js` | Registry + Mega.nz inject tests |
 | `tests/unit/guest-invites.test.js` | Invite pure tests |
 
 ---

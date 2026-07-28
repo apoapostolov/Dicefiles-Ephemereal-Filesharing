@@ -4,9 +4,13 @@ Thanks for contributing to Dicefiles.
 
 This document defines the expected workflow and quality bar for code, documentation, and UX changes.
 
+AI-assisted contributors should also read [`AGENTS.md`](../AGENTS.md) and the
+project-specific [`dev/README.md`](../dev/README.md) workflow index.
+
 ## Scope
 
 Contributions are welcome for:
+
 - Bug fixes
 - Performance and reliability improvements
 - Security hardening
@@ -22,6 +26,7 @@ Contributions are welcome for:
 ## Development Setup
 
 Prerequisites:
+
 - Node.js **≥ 20** (see `package.json` `engines`)
 - **Yarn 1.x only** (`yarn.lock` is the install source of truth; do not commit `package-lock.json`)
 - Redis running locally or remotely
@@ -39,13 +44,21 @@ Run the server:
 node server.js
 ```
 
-The app defaults to port `9090` in this project setup.
+The app uses the port configured in `.config.json` (the maintained WSL
+user-test service uses port `10005`).
 
 Optional preview tooling (recommended for richer file previews):
+
 - `exiftool`
 - `ffmpeg`
 - `graphicsmagick` (`gm` command)
 - `ghostscript`
+- Poppler (`pdftoppm` command)
+- `file`
+- 7-Zip (`7z` command)
+
+Run `yarn check:preview-tools` to verify the toolchain. On Ubuntu/WSL,
+`yarn setup:ubuntu` installs the supported dependencies.
 
 ## Branching and Commits
 
@@ -54,6 +67,7 @@ Optional preview tooling (recommended for richer file previews):
 - Use clear, imperative commit messages.
 
 Examples:
+
 - `fix: handle request-image decode failures`
 - `upload: support resumable hashing without state snapshots`
 - `docs: clarify preview dependencies`
@@ -61,6 +75,7 @@ Examples:
 ## Pull Request Expectations
 
 A PR should include:
+
 - Problem statement (what is broken or missing)
 - Proposed solution (what changed and why)
 - Risk assessment (possible regressions)
@@ -68,6 +83,7 @@ A PR should include:
 - Screenshots/video for UI changes
 
 Keep PRs reviewable:
+
 - Prefer small to medium PRs over very large bundles.
 - Split major efforts into incremental PRs when possible.
 
@@ -86,6 +102,7 @@ Keep PRs reviewable:
 ## UI/UX Change Requirements
 
 For room or account UI changes:
+
 - Preserve existing interaction patterns unless intentionally redesigned.
 - Keep visual changes consistent with the current greytone theme.
 - Validate desktop and mobile behavior.
@@ -101,6 +118,7 @@ For room or account UI changes:
 ## Documentation Changes
 
 If your change modifies user-facing behavior or setup:
+
 - Update `README.md`.
 - Update `CHANGELOG.md`.
 - Add migration notes when behavior changes can affect existing deployments.
@@ -109,6 +127,7 @@ If your change modifies user-facing behavior or setup:
 ## Review Criteria
 
 Maintainers will evaluate:
+
 - Correctness
 - Reliability under edge cases
 - Backward compatibility
@@ -116,4 +135,3 @@ Maintainers will evaluate:
 - Operational impact (deploy/run/debug)
 
 PRs that do not meet the baseline may be asked to revise before merge.
-

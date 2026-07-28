@@ -10,7 +10,8 @@
   </nav>
 
   <nav id="tools" class="layer">
-    <div class="btn-pill filter-pill">
+    <div class="tools-row tools-filters-row" role="group" aria-label="File filters">
+      <div class="btn-pill filter-pill">
       <button
         id="filter-image"
         class="filterbtn i-image-b"
@@ -51,31 +52,33 @@
         class="btn i-arrow-up"
         title="Show only files newer than your last visit"
       ></button>
+      </div>
+      <div class="filter-field">
+        <input
+          id="filter"
+          placeholder="Filter files…"
+          type="text"
+          autocomplete="off"
+          required
+        />
+        <button
+          type="button"
+          id="filter-clear"
+          class="disabled i-clear"
+          title="Reset filters and show everything again"
+          aria-label="Clear filter"
+        ></button>
+      </div>
+      <div id="filter-status" class="hidden i-filter"></div>
+      <div
+        id="new-status"
+        class="hidden blink i-arrow-up"
+        title="New files at the top"
+      ></div>
     </div>
-    <div class="filter-field">
-      <input
-        id="filter"
-        placeholder="Filter files…"
-        type="text"
-        autocomplete="off"
-        required
-      />
-      <button
-        type="button"
-        id="filter-clear"
-        class="disabled i-clear"
-        title="Reset filters and show everything again"
-        aria-label="Clear filter"
-      ></button>
-    </div>
-    <div id="filter-status" class="hidden i-filter"></div>
-    <div
-      id="new-status"
-      class="hidden blink i-arrow-up"
-      title="New files at the top"
-    ></div>
     <div class="spacer"></div>
-    <div class="btn-pill request-pill">
+    <div class="tools-row tools-modes-row" role="group" aria-label="File modes and actions">
+      <div class="btn-pill request-pill">
       <div id="createrequest" class="btn" title="Create Request">
         <span class="i-question"></span>
       </div>
@@ -212,6 +215,7 @@
     <label for="upload-button" id="up" class="btn" title="Upload something!">
       <span class="i-upload"></span> Upload
     </label>
+    </div>
   </nav>
 
   <nav id="presets-row" class="layer hidden">
@@ -293,6 +297,43 @@
   </section>
 
   <section id="filelist" class="layer">
+    <section
+      id="continuity"
+      class="hidden"
+      aria-label="Continue and discover room activity"
+    >
+      <div id="continuity-actions">
+        <button id="continuity-resume" class="hidden" type="button">
+          <span class="continuity-kicker">Continue reading</span>
+          <span id="continuity-resume-name"></span>
+        </button>
+        <div id="continuity-digest-control" class="hidden">
+          <button
+            id="continuity-digest-toggle"
+            type="button"
+            aria-expanded="false"
+          >
+            <span class="continuity-kicker">Since your last visit</span>
+            <span id="continuity-digest-count"></span>
+          </button>
+          <button
+            id="continuity-download-all"
+            class="i-download"
+            type="button"
+            title="Download all uploads since your last visit"
+            aria-label="Download all uploads since your last visit"
+          ></button>
+        </div>
+        <button
+          id="continuity-mark-seen"
+          class="hidden i-clear"
+          type="button"
+          title="Mark seen"
+          aria-label="Mark seen"
+        ></button>
+      </div>
+      <div id="continuity-digest" class="hidden"></div>
+    </section>
     <section id="files" class="listmode"></section>
     <section id="links" class="listmode hidden">
       <div id="links-header">
@@ -496,36 +537,54 @@
   </form>
 
   <form id="report-tmpl" class="tmpl">
-    <span class="icon i-report"></span>
+    <span class="icon i-report" aria-hidden="true"></span>
     <section id="report-rules">
       <h4>Report rules</h4>
       <ul>
-        <li>Do not spam! Send one report!</li>
+        <li>Send one report. Repeated reports are treated as spam.</li>
         <li>
-          Do only report <strong>obvious</strong> illegal or rule violating
-          content. This specifically does <em>not</em> include any copyright
-          claims!<br />
-          Nudity and porn may be illegal in your jurisdication, but that does
-          not mean it's illegal everywhere.
+          Use this form only for clearly illegal content or clear violations of
+          the site rules. Copyright claims are not handled here.
         </li>
         <li>
-          If you have something to report that is not obviously illegal or rule
-          violating, use other support channels, but dn <strong>not</strong> use
-          this report function!
+          Content may be restricted in your jurisdiction without being illegal
+          everywhere.
         </li>
-        <li>Be descriptive in your report!</li>
-        <li>Violators will be banned!</li>
+        <li>For anything else, use the normal support channels.</li>
+        <li>Describe what is wrong and where it appears.</li>
       </ul>
     </section>
-    <label>Room</label>
-    <input name="room" type="text" disabled />
-    <label>Report message</label>
-    <textarea name="msg" rows="5" cols="30"></textarea>
+    <div class="report-fields">
+      <label for="report-room">Room</label>
+      <input
+        id="report-room"
+        name="room"
+        type="text"
+        readonly
+        aria-readonly="true"
+      />
+      <label for="report-message">Report message</label>
+      <textarea
+        id="report-message"
+        name="msg"
+        rows="5"
+        maxlength="2000"
+        required
+        placeholder="Describe the content and the rule it violates…"
+      ></textarea>
+    </div>
     <label id="report-agreement">
-      <input type="checkbox" name="agreement" />
-      I followed the above rules, and recognize I can be banned for abusing the
-      report function
+      <input
+        id="report-agreement-checkbox"
+        type="checkbox"
+        name="agreement"
+      />
+      <span>
+        I followed these rules and understand that abusing reports may result
+        in a ban.
+      </span>
     </label>
+    <p id="report-error" class="report-error" role="alert" hidden></p>
   </form>
 
   <form id="changepw-tmpl" class="tmpl">
@@ -710,6 +769,10 @@
                 ?
               </button>
             </label>
+            <label>
+              <input type="checkbox" name="allowprivatecrosslinking" />
+              Allow private linking
+            </label>
           </div>
           <p
             id="roomopts-crosslink-help"
@@ -719,7 +782,10 @@
           >
             <strong>Allow room cross-linking</strong> is an opt-in on
             <em>this</em> room so other rooms can mirror its finished uploads.
-            To pull files <em>into</em> this room, use the Linking tab.
+            Invite-only rooms also require
+            <strong>Allow private linking</strong>. To pull
+            private files <em>into</em> this room, the destination link must
+            request private-source access too.
           </p>
         </div>
 
@@ -791,6 +857,10 @@
                 <em>Cross-link off</em> — source has not opted in (row stays;
                 zero files until fixed).
               </li>
+              <li>
+                <em>Private source</em> — source is invite-only; explicitly
+                allow private-source mirroring on that link before rows appear.
+              </li>
               <li><em>Missing</em> — room id not found.</li>
             </ul>
             <p><strong>Filters / rules (Edit on a row)</strong></p>
@@ -803,6 +873,10 @@
               <li>File types — image, video, document, … (empty = all)</li>
               <li>No older than (hours) — only recent uploads</li>
               <li>At least this old (hours) — only older uploads</li>
+              <li>
+                Visibility — everyone, signed-in users, room members/guests,
+                room owners, or moderators
+              </li>
             </ul>
             <p><strong>Examples</strong></p>
             <ul>
@@ -942,6 +1016,30 @@
               />
             </div>
           </div>
+          <div class="roomopts-link-access">
+            <div class="roomopts-field">
+              <label for="roomopts-link-visibility">Visible to</label>
+              <select id="roomopts-link-visibility" name="linkvisibility">
+                <option value="all">Everyone</option>
+                <option value="authenticated">Signed-in users</option>
+                <option value="members">Room members and invited guests</option>
+                <option value="owners">Room owners</option>
+                <option value="mods">Moderators only</option>
+              </select>
+            </div>
+            <label class="roomopts-invite-check roomopts-link-private">
+              <input type="checkbox" name="linkprivate" />
+              Request private-source access for this link
+            </label>
+            <p class="roomopts-hint">
+              The invite-only source room must separately allow private
+              cross-linking. Both rooms must consent.
+            </p>
+            <p class="roomopts-hint">
+              Hidden and hellbanned source uploads never cross room boundaries,
+              including for moderators.
+            </p>
+          </div>
           <div class="roomopts-link-editor-actions">
             <button type="button" name="linkeditorapply">Apply rules</button>
             <button type="button" name="linkeditorclear">Clear rules</button>
@@ -970,15 +1068,26 @@
               >Generated link</label
             >
             <div class="roomopts-invite-gen-row">
-              <input
-                id="roomopts-inviteurl"
-                name="inviteurlfield"
-                type="text"
-                readonly
-                autocomplete="off"
-                placeholder="Generate a guest invite link…"
-                aria-label="Generated guest invite link"
-              />
+              <div class="roomopts-invite-field">
+                <input
+                  id="roomopts-inviteurl"
+                  name="inviteurlfield"
+                  type="text"
+                  readonly
+                  autocomplete="off"
+                  placeholder="Generate a guest invite link…"
+                  aria-label="Generated guest invite link"
+                />
+                <button
+                  type="button"
+                  class="roomopts-invite-copy icon i-copy"
+                  name="invitecopy"
+                  title="Copy link"
+                  aria-label="Copy invite link to clipboard"
+                  hidden
+                  disabled
+                ></button>
+              </div>
               <button
                 type="button"
                 class="roomopts-invite-limits-btn"
@@ -990,14 +1099,6 @@
               >
                 Generate
               </button>
-              <a
-                class="roomopts-invite-copy icon i-copy"
-                name="invitecopy"
-                href="#"
-                title="Copy link"
-                role="button"
-                aria-label="Copy invite link to clipboard"
-              ></a>
             </div>
           </div>
 
@@ -1059,7 +1160,10 @@
         </div>
 
         <div class="roomopts-section">
-          <div class="roomopts-section-title">Active invites</div>
+          <div class="roomopts-section-title">
+            Active invites
+            <span class="roomopts-section-count" name="invitecap"></span>
+          </div>
           <div class="roomopts-invite-list-wrap">
             <table class="roomopts-link-table roomopts-invite-table">
               <thead>
@@ -1074,6 +1178,31 @@
             </table>
             <p class="roomopts-link-empty" name="inviteempty">
               No guest invites yet.
+            </p>
+          </div>
+        </div>
+
+        <div class="roomopts-section">
+          <div class="roomopts-section-title">Invite activity</div>
+          <p class="roomopts-hint">
+            Recent create, redeem, and revoke events. Tokens and guest
+            identifiers are not stored in this audit.
+          </p>
+          <div class="roomopts-invite-list-wrap">
+            <table class="roomopts-link-table roomopts-invite-audit-table">
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Invite</th>
+                  <th>Uses</th>
+                  <th>Actor</th>
+                  <th>When</th>
+                </tr>
+              </thead>
+              <tbody name="inviteaudittbody"></tbody>
+            </table>
+            <p class="roomopts-link-empty" name="inviteauditempty">
+              No guest invite activity yet.
             </p>
           </div>
         </div>
@@ -1105,26 +1234,6 @@
           </div>
         </div>
 
-        <div class="roomopts-section">
-          <div class="roomopts-section-title">Invited in this room</div>
-          <div class="roomopts-plugin-list-wrap">
-            <table class="roomopts-link-table roomopts-plugin-table">
-              <thead>
-                <tr>
-                  <th>Bot</th>
-                  <th>Status</th>
-                  <th>Settings</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody name="plugintbody"></tbody>
-            </table>
-            <p class="roomopts-link-empty" name="pluginempty">
-              No bots invited yet. Pick one from the catalog above.
-            </p>
-          </div>
-        </div>
-
         <div class="roomopts-plugin-editor hidden" name="plugineditor">
           <div class="roomopts-link-editor-title">
             Bot settings —
@@ -1143,7 +1252,31 @@
             <button type="button" name="pluginrevoke">Remove</button>
             <button type="button" name="pluginclose">Close</button>
           </div>
-          <p class="roomopts-hint roomopts-plugin-status" name="pluginstatus"></p>
+          <p
+            class="roomopts-hint roomopts-plugin-status"
+            name="pluginstatus"
+            aria-live="polite"
+          ></p>
+        </div>
+
+        <div class="roomopts-section">
+          <div class="roomopts-section-title">Invited in this room</div>
+          <div class="roomopts-plugin-list-wrap">
+            <table class="roomopts-link-table roomopts-plugin-table">
+              <thead>
+                <tr>
+                  <th>Bot</th>
+                  <th>Status</th>
+                  <th>Settings</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody name="plugintbody"></tbody>
+            </table>
+            <p class="roomopts-link-empty" name="pluginempty">
+              No bots invited yet. Pick one from the catalog above.
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -1211,46 +1344,61 @@
 
   <template id="welcome">
     <section class="welcome">
-      <h4>Welcome to <%=NAME%></h4>
-      <h5><%=MOTTO%></h5>
-      <form class="welcome_namewrap hidden" action="javascript:">
-        <p class="welcome_namelabel">Name this room</p>
-        <p class="welcome_namecont">
-          <input
-            class="welcome_nameinput"
-            type="text"
-            maxlength="20"
-            placeholder="Name this room"
-            aria-label="Name this room"
-          />
-          <button
-            class="welcome_namebtn icon i-upload-done"
-            type="submit"
-            title="Set room name"
-            aria-label="Set room name"
-          ></button>
+      <button
+        class="welcome_toggle"
+        type="button"
+        aria-controls="welcome-details"
+        aria-expanded="true"
+        aria-label="Minimize room banner"
+        title="Minimize room banner"
+      >
+        <span class="welcome_toggle_icon" aria-hidden="true">−</span>
+      </button>
+      <div class="welcome_header">
+        <h4>Welcome to <%=NAME%></h4>
+        <h5><%=MOTTO%></h5>
+      </div>
+      <div id="welcome-details" class="welcome_details">
+        <form class="welcome_namewrap hidden" action="javascript:">
+          <p class="welcome_namelabel">Name this room</p>
+          <p class="welcome_namecont">
+            <input
+              class="welcome_nameinput"
+              type="text"
+              maxlength="20"
+              placeholder="Name this room"
+              aria-label="Name this room"
+            />
+            <button
+              class="welcome_namebtn icon i-upload-done"
+              type="submit"
+              title="Set room name"
+              aria-label="Set room name"
+            ></button>
+          </p>
+        </form>
+        <p class="welcome_intro">
+          This room combines chat and temporary file sharing. Files auto-expire
+          after <span class="welcome_ttl"></span> hours. Until then, everyone
+          here can view, download, and link them. Share this room link to
+          collaborate:
         </p>
-      </form>
-      <p class="welcome_intro">
-        This room combines chat with temporary file sharing. Shared files
-        auto-expire after <span class="welcome_ttl"></span> hours. Until then,
-        everyone in the room can view, download, and link them. Share this room
-        link to start collaborating:
-      </p>
-      <div class="welcome_linkwrap">
-        <p class="welcome_linkcont">
-          <span class="welcome_link"></span>
-          <a class="welcome_copy icon i-copy" title="Copy link"></a>
+        <div class="welcome_linkwrap">
+          <p class="welcome_linkcont">
+            <span class="welcome_link"></span>
+            <a class="welcome_copy icon i-copy" title="Copy link"></a>
+          </p>
+        </div>
+        <div class="welcome_motd_wrap hidden">
+          <div class="welcome_motd"></div>
+        </div>
+        <p class="welcome_tos">
+          By using <%=NAME%> you agree to our
+          <a href="/terms" target="_blank"
+            >Terms of Service and Privacy policy</a
+          >, and our <a href="/rules" target="_blank">Rules</a>.
         </p>
       </div>
-      <div class="welcome_motd_wrap hidden">
-        <div class="welcome_motd"></div>
-      </div>
-      <p class="welcome_tos">
-        By using <%=NAME%> you agree to our
-        <a href="/terms" target="_blank">Terms of Service and Privacy policy</a
-        >, and our <a href="/rules" target="_blank">Rules</a>.
-      </p>
     </section>
   </template>
 

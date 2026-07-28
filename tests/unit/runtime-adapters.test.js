@@ -12,7 +12,7 @@ describe("plugin runtime adapters (shipped)", () => {
   test("createUploadFileAdapter uses getRoom + ingestFromBuffer as bot", async () => {
     const ingested = [];
     const uploadFile = createUploadFileAdapter({
-      botName: "Mega Autoshare",
+      botName: "Mega.nz Autoshare",
       async getRoom(id) {
         expect(id).toBe("destRoom99");
         return { fileTTL: 12 };
@@ -41,9 +41,9 @@ describe("plugin runtime adapters (shipped)", () => {
     expect(ingested[0].name).toBe("from-mega.pdf");
     expect(ingested[0].ttl).toBe(12);
     expect(ingested[0].role).toBe("bot");
-    expect(ingested[0].user).toBe("Mega Autoshare");
+    expect(ingested[0].user).toBe("Mega.nz Autoshare");
     expect(ingested[0].meta.bot).toBe(true);
-    expect(ingested[0].meta.botName).toBe("Mega Autoshare");
+    expect(ingested[0].meta.botName).toBe("Mega.nz Autoshare");
     expect(ingested[0].meta.plugin).toBe("mega-folder");
     expect(Buffer.isBuffer(ingested[0].buffer)).toBe(true);
   });

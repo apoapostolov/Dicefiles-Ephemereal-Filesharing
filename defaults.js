@@ -40,6 +40,12 @@ module.exports = {
   //   { "secret": "your-long-random-secret-here" }
   secret: "dicefiles",
 
+  // Protect the operator dashboard with an unguessable capability link.
+  // On first startup the token is generated and saved to .config.json.
+  // Set this to false to expose /status and /api/public/status publicly.
+  statusPagePrivate: true,
+  statusPageToken: "",
+
   // Path to upload directory
   uploads: "uploads",
 
@@ -111,9 +117,14 @@ module.exports = {
   // JSON-lines dead-letter sink for permanently failed webhook deliveries.
   webhookDeadLetterLog: "webhook-dead-letter.log",
 
+  // Public origin used by bots when they publish clickable room/file URLs.
+  // No trailing slash. Per-plugin baseUrl overrides this value.
+  publicBaseUrl: "",
+
   // First-party plugins (see core/plugins/DEVELOPING_PLUGINS.md).
-  // Mega Autoshare example — monitors a Mega.nz folder and uploads new files
-  // into a room as the cyan "Mega Autoshare" bot pill:
+  // Available ids: mega-folder, discord-release, telegram-release.
+  // Mega.nz Autoshare example — monitors a Mega.nz folder and uploads new files
+  // into a room as the cyan "Mega.nz Autoshare" bot pill:
   // plugins: [{
   //   id: "mega-folder",
   //   enabled: true,
@@ -122,7 +133,7 @@ module.exports = {
   //     roomId: "yourRoomId",
   //     namePrefix: "mega-",
   //     pollIntervalMinutes: 15,
-  //     botName: "Mega Autoshare"
+  //     botName: "Mega.nz Autoshare"
   //   }
   // }]
   plugins: [],
@@ -163,7 +174,7 @@ module.exports = {
 
   // Number of hours a finished download takes to expire
   // Mods can override this per room
-  TTL: 48,
+  TTL: 5 * 24,
 
   // Number of simultaneous client-side downloads for "Download New/All" (1-4)
   downloadMaxConcurrent: 3,
@@ -228,6 +239,10 @@ module.exports = {
   // For further checking the file type, if exiftool fails
   filetool: "file",
 
+  // Poppler fallback for PDF cover generation when GraphicsMagick is missing
+  // or cannot render a particular document.
+  pdftoppm: "pdftoppm",
+
   // Max number of concurrent asset generators
   maxAssetsProcesses: 2,
 
@@ -269,9 +284,25 @@ module.exports = {
   // to list; without this flag, linked sources contribute zero files.
   allowCrossLinking: false,
 
+  // Invite-only source rooms require this second, source-owned opt-in in
+  // addition to allowCrossLinking. Destination links must also request private
+  // source access, so neither room can enable private mirroring alone.
+  allowPrivateCrossLinking: false,
+
+  // Bound active guest links per room. Expired/exhausted links do not count.
+  maxActiveGuestInvitesPerRoom: 25,
+
+  // Privacy-safe create/redeem/revoke records retained per room.
+  guestInviteAuditLimit: 100,
+
   // Show a Latest Activity tab on user profiles listing the last 20 uploads/downloads.
   // Set to false to disable for all users (privacy).
   profileActivity: true,
+
+  // Show a "new to this room" icon on uploader pills until this many days
+  // have elapsed since that account/browser first joined the room. Set to 0
+  // to disable the indicator.
+  newRoomMemberDays: 7,
 
   /*****************************/
   /* Server Directory          */

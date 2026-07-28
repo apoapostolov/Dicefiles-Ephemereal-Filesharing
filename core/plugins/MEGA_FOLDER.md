@@ -1,8 +1,8 @@
-# Mega Autoshare (`mega-folder`)
+# Mega.nz Autoshare (`mega-folder`)
 
 First-party plugin that **monitors a Mega.nz folder**, downloads new files over time, and **auto-shares** them into a Dicefiles room.
 
-Uploads appear under the **Mega Autoshare** bot with a cyan **BOT** pill in the file list (not a human account).
+Uploads appear under the **Mega.nz Autoshare** bot with a cyan **BOT** pill in the file list (not a human account).
 
 See [DEVELOPING_PLUGINS.md](./DEVELOPING_PLUGINS.md) for the full plugin contract.
 
@@ -10,7 +10,7 @@ See [DEVELOPING_PLUGINS.md](./DEVELOPING_PLUGINS.md) for the full plugin contrac
 
 ## Enable (recommended: Room Options → Plugins)
 
-1. Install the optional Mega SDK (once per host):
+1. Install the optional Mega.nz SDK (once per host):
 
 ```bash
 yarn add megajs
@@ -19,11 +19,11 @@ yarn add megajs
 2. Restart Dicefiles so the plugin catalog can load `mega-folder`.
 
 3. Open the room → **Room Options** → **Plugins** tab:
-   - Select **Mega Autoshare** from *Available bots* → **Invite**
+   - Select **Mega.nz Autoshare** from *Available bots* → **Invite**
    - Set **folder URL**, **poll interval** (minutes), optional prefix / bot name
    - **Save settings** (and **Run now** to sync immediately)
 
-The bot is invited **into this room only**. Settings live in room config (`roomPlugins`); uploads appear under the cyan **BOT · Mega Autoshare** pill.
+The bot is invited **into this room only**. Settings live in room config (`roomPlugins`); uploads appear under the cyan **BOT · Mega.nz Autoshare** pill.
 
 ### Legacy: process-wide `.config.json` plugins
 
@@ -40,7 +40,7 @@ Still supported for headless/global wiring (requires explicit `roomId`):
         "roomId": "YourRoomId12",
         "namePrefix": "mega-",
         "pollIntervalMinutes": 15,
-        "botName": "Mega Autoshare",
+        "botName": "Mega.nz Autoshare",
         "pollEvents": []
       }
     }
@@ -63,7 +63,7 @@ Optional account credentials (private folders):
 
 ### Already-synced files (durable skip log)
 
-After a successful upload, Mega Autoshare records **name + size** for that room and folder in a **Redis-backed sync log**. Later polls (and **process restarts**) skip those entries until the log entry ages out.
+After a successful upload, Mega.nz Autoshare records **name + size** for that room and folder in a **Redis-backed sync log**. Later polls (and **process restarts**) skip those entries until the log entry ages out.
 
 | App config | Default | Meaning |
 |------------|---------|---------|
@@ -72,7 +72,7 @@ After a successful upload, Mega Autoshare records **name + size** for that room 
 Expired entries are pruned on sync. Within a process lifetime an in-memory cache mirrors the log for speed.
 | `pollEvents` | Optional webhook event names (e.g. `linked_file_appeared`) that call `scheduleRun`. |
 
-Dedupe is process-local: after restart, existing Mega entries may upload again if they still appear in the folder listing. Use `namePrefix` and room cleanup as needed.
+Dedupe is process-local: after restart, existing Mega.nz entries may upload again if they still appear in the folder listing. Use `namePrefix` and room cleanup as needed.
 
 ---
 
@@ -83,12 +83,12 @@ Dedupe is process-local: after restart, existing Mega entries may upload again i
 | `folderUrl` | yes | Must contain `mega.nz` |
 | `roomId` | yes | Destination room id (≥ 4 chars) |
 | `namePrefix` | no | Prefix for uploaded filenames |
-| `botName` | no | Uploader pill label (default **Mega Autoshare**) |
+| `botName` | no | Uploader pill label (default **Mega.nz Autoshare**) |
 | `pollIntervalMinutes` | no | Folder monitor interval; `0` = off |
-| `email` / `password` | no | Mega account (prefer env for password) |
+| `email` / `password` | no | Mega.nz account (prefer env for password) |
 | `pollEvents` | no | Event names that schedule a `run()` |
 
-`validateConfig()` rejects missing URL/room or non-Mega URLs.
+`validateConfig()` rejects missing URL/room or non-Mega.nz URLs.
 
 ---
 
@@ -125,7 +125,7 @@ await defaultRegistry.run("mega-folder", {});
 
 | Field | Value |
 |-------|--------|
-| Display name | `botName` or **Mega Autoshare** |
+| Display name | `botName` or **Mega.nz Autoshare** |
 | `meta.role` | `bot` |
 | UI | Cyan **BOT** pill + name on the file row |
 
@@ -135,7 +135,7 @@ Plugins always upload as bots so room members can tell automation from people. S
 
 ## Security notes
 
-- Treat Mega passwords as secrets (env, not git).  
+- Treat Mega.nz passwords as secrets (env, not git).
 - Only enable for rooms you control.  
 - Large folders can flood a room — start with a longer poll interval and `namePrefix`.  
 - Plugin code runs with full server privileges.

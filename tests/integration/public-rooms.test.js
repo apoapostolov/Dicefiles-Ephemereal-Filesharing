@@ -3,13 +3,14 @@
 /**
  * Integration tests for the public room directory (publicRooms feature).
  *
- * These tests run against the live Dicefiles server at http://127.0.0.1:9090.
+ * These tests run against the live Dicefiles server selected by
+ * DICEFILES_TEST_BASE (default http://127.0.0.1:10005).
  * They require that the server is started with `publicRooms: true` in the
  * project configuration file (.config.json).
  * All tests are skipped automatically if the server is unreachable.
  */
 
-const BASE = "http://127.0.0.1:9090";
+const BASE = process.env.DICEFILES_TEST_BASE || "http://127.0.0.1:10005";
 
 async function get(path) {
   const res = await fetch(BASE + path);

@@ -4,6 +4,9 @@
   <a href="/new">New Room</a>
   <a href="/terms">ToS & Privacy policy</a>
   <a href="/rules">Rules</a>
+  <% if (locals.STATUS_HREF) { %>
+  <a href="<%= STATUS_HREF %>">Status</a>
+  <% } %>
   <a href="/top/uploaded">Top Users</a>
   <a
     href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing"

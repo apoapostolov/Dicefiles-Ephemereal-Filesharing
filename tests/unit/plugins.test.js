@@ -37,7 +37,7 @@ describe("plugin registry (shipped)", () => {
     expect(validatePluginShape(res.plugin).ok).toBe(true);
   });
 
-  test("registry loadFromConfig + emitEvent + run with injectable mega I/O", async () => {
+  test("registry loadFromConfig + emitEvent + run with injectable Mega.nz I/O", async () => {
     const registry = new PluginRegistry();
     const { loaded, errors } = registry.loadFromConfig(
       [

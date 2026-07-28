@@ -102,6 +102,19 @@ body#room {
   flex-shrink: 0;
 }
 
+/*
+ * These wrappers become deliberate toolbar rows on narrow screens. Keeping
+ * them out of the desktop box tree preserves the existing single-row layout.
+ */
+#tools > .tools-row {
+  display: contents;
+}
+
+#tools > .tools-row > * {
+  margin: 0;
+  flex-shrink: 0;
+}
+
 /* ── Shared control chrome (buttons, filter type keys) ───────────── */
 #tools .btn,
 #tools label.btn,
@@ -544,12 +557,40 @@ body.noreports #ctx-report {
     width: 2.4ex;
   }
 
-  #tools .filter-field {
-    min-width: 0;
+  #room > #tools {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(2, var(--tools-control-h));
+    align-content: center;
+    align-items: center;
+    gap: var(--tools-gap);
+    height: auto;
+  }
+
+  #tools > .tools-row {
+    display: flex;
+    align-items: center;
+    justify-content: safe center;
+    gap: var(--tools-gap);
     width: 100%;
-    flex: 1 1 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    overscroll-behavior-inline: contain;
+  }
+
+  #tools > .tools-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  #tools .tools-filters-row .filter-field {
+    min-width: 4rem;
+    width: auto;
+    flex: 1 1 8rem;
     max-width: none;
-    order: 20;
+    order: initial;
   }
 
   #filter {
@@ -559,6 +600,58 @@ body.noreports #ctx-report {
 
   #tools .spacer {
     display: none;
+  }
+
+  #tools .tools-modes-row .sort-pill {
+    order: 1;
+  }
+
+  #tools .tools-modes-row .viewmode-pill {
+    order: 2;
+  }
+
+  #tools .tools-modes-row .request-pill {
+    order: 3;
+  }
+
+  #tools .tools-modes-row .download-pill {
+    order: 4;
+  }
+
+  #tools .tools-modes-row .selection-pill {
+    order: 5;
+  }
+
+  #tools .tools-modes-row .modctrl {
+    order: 6;
+  }
+
+  #tools .tools-modes-row #up {
+    order: 7;
+  }
+
+  #tools .tools-modes-row form {
+    order: 8;
+  }
+
+  /*
+   * In the stacked layout, distinguish files from the chat composer without
+   * boxing either section. This boundary applies to list and gallery modes.
+   */
+  #filelist {
+    border-block-start: 1px solid var(--hairline);
+    box-shadow:
+      0 -7px 16px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  }
+
+  #messages {
+    scrollbar-gutter: stable;
+  }
+
+  #messages .welcome {
+    width: calc(100% - 1.5rem);
+    margin-inline: auto;
   }
 }
 
@@ -1099,6 +1192,8 @@ a.r::before {
 }
 
 .welcome {
+  position: relative;
+  box-sizing: border-box;
   background: linear-gradient(
     180deg,
     rgba(138, 138, 138, 0.16),
@@ -1111,6 +1206,56 @@ a.r::before {
   text-align: center;
   padding: 1.2em 1.1em 0.85em;
   margin-bottom: 0.2em;
+}
+
+.welcome .welcome_header {
+  min-width: 0;
+  padding: 0 1.75rem;
+}
+
+.welcome .welcome_toggle {
+  position: absolute;
+  z-index: 2;
+  top: 0.45rem;
+  right: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: rgba(244, 244, 244, 0.72);
+  background: rgba(0, 0, 0, 0.16);
+  box-shadow: none;
+  cursor: pointer;
+  opacity: 0.72;
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.welcome .welcome_toggle:hover,
+.welcome .welcome_toggle:focus-visible {
+  color: var(--text-fg);
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.24);
+  opacity: 1;
+}
+
+.welcome .welcome_toggle:focus-visible {
+  outline: 2px solid rgba(205, 230, 255, 0.78);
+  outline-offset: 2px;
+}
+
+.welcome .welcome_toggle_icon {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1;
+  transform: translateY(-0.04em);
 }
 
 .welcome * {
@@ -1127,6 +1272,48 @@ a.r::before {
   margin-bottom: 0.9em;
   color: rgba(244, 244, 244, 0.9);
   font-weight: 500;
+}
+
+.welcome.welcome-compact {
+  min-height: 2.4rem;
+  padding: 0.45rem 2.65rem 0.45rem 0.8rem;
+  display: flex;
+  align-items: center;
+  text-align: left;
+}
+
+.welcome.welcome-compact .welcome_header {
+  width: 100%;
+  padding: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  overflow: hidden;
+}
+
+.welcome.welcome-compact h4,
+.welcome.welcome-compact h5 {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.welcome.welcome-compact h4 {
+  flex: 0 1 auto;
+  font-size: 0.88rem;
+}
+
+.welcome.welcome-compact h5 {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: rgba(244, 244, 244, 0.7);
+  font-size: 0.76rem;
+}
+
+.welcome.welcome-compact .welcome_toggle {
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .welcome_intro {

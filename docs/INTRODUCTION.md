@@ -23,7 +23,7 @@ Unlike general-purpose file hosts, Dicefiles focuses on ephemeral, community-dri
 
 ### Ephemeral by Design
 
-- Files have configurable expiration times (default: 48 hours)
+- Files have configurable expiration times (default: 5 days)
 - Encourages active sharing rather than permanent file dumps
 - Reduces storage requirements and keeps content fresh
 
@@ -124,7 +124,7 @@ Dicefiles is highly configurable via `.config.json`:
   "motto": "Ephemereal Filesharing for Hobby Communities",
   "port": 9090,
   "maxFileSize": 10737418240,
-  "TTL": 48,
+  "TTL": 120,
   "requireAccounts": false,
   "roomCreation": true,
   "jail": false
@@ -135,7 +135,7 @@ Dicefiles is highly configurable via `.config.json`:
 
 - **port**: HTTP listen port (default: 8080)
 - **maxFileSize**: Maximum file upload size in bytes (default: 10GB)
-- **TTL**: Hours before files expire (default: 48)
+- **TTL**: Hours before files expire (default: 120, or 5 days)
 - **requireAccounts**: Require accounts to chat/upload (default: false)
 - **roomCreation**: Allow creating new rooms (default: true)
 - **jail**: Use firejail for preview commands (Linux only, default: true)

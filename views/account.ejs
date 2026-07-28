@@ -1,15 +1,13 @@
 <!doctype html>
 <%- include("head"); %>
-<body id="page">
+<body id="page" class="account-page-legacy">
   <nav>
     <h1 id="name">Welcome again, <%=user.name%></h1>
   </nav>
   <article>
     <h2>Edit your account settings</h2>
-    <form id="account" autocomplete="false" action="javascript:">
+    <form id="account" autocomplete="off" action="javascript:">
       <input type="hidden" id="token" name="token" value="<%=token%>">
-      <label><%=NAME%> PRO</label>
-      <div>Of course!</div>
       <label for="email">Your gravatar email:</label>
       <input type="email" id="email" name="email" value="<%=user.email || ""%>">
       <label for="pubmail">Display email publicly:</label>
@@ -20,9 +18,11 @@
       </div>
       <input type="submit" id="submit" value="Update your data">
     </form>
-    <form autocomplete="false" action="javascript:">
-      <h3>Two factor authentication</h3>
-      <button id="tfa" data-enabled="<%=!!user.twofactor%>"><%=user.twofactor ? "Disable" : "Enable"%></button>
+    <form autocomplete="off" action="javascript:">
+      <div class="account-tfa-header">
+        <h3>Two factor authentication</h3>
+        <button id="tfa" data-enabled="<%=!!user.twofactor%>"><%=user.twofactor ? "Disable" : "Enable"%></button>
+      </div>
       <div id="challenger" style="display: none;">
         <figure>
           <figcaption>
@@ -32,9 +32,10 @@
           <canvas id="qr" width="400" height="400"></canvas>
         </figure>
         <div>
-          <label>Your response? <input id="challenged" type="text" width="6"></label>
+          <label>Your response? <input id="challenged" type="text" size="6"></label>
         </div>
-        <div><input id="tfasubmit" type="submit" value="Do it!">
+        <div>
+          <input id="tfasubmit" type="submit" value="Do it!">
         </div>
       </div>
     </form>

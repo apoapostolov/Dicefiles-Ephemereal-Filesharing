@@ -2,7 +2,7 @@
 /**
  * scripts/mcp-server.js — Dicefiles MCP server wrapper
  *
- * Wraps the Dicefiles REST API as 14 MCP tools, allowing any MCP-compatible
+ * Wraps the Dicefiles REST API as 20 MCP tools, allowing any MCP-compatible
  * AI client (Claude Desktop, Cursor, Continue, OpenClaw, AutoGen) to interact with
  * a Dicefiles instance directly.
  *
@@ -79,7 +79,7 @@ function wrap(data) {
 
 // ── Tool registration ──────────────────────────────────────────────────────
 
-const server = new McpServer({ name: "dicefiles", version: "1.2.0" });
+const server = new McpServer({ name: "dicefiles", version: "1.4.3" });
 
 /**
  * Register all Dicefiles tools on an McpServer (or mock server for tests).
@@ -407,6 +407,148 @@ function registerTools(srv) {
     },
     async ({ key }) =>
       wrap(await api("GET", `/archive/${encodeURIComponent(key)}/ls`)),
+  );
+
+  // ── 15. list_room_links ─────────────────────────────────────────────────
+  srv.tool(
+    "list_room_links",
+    "List a destination room's linked source rooms, rules, visibility, " +
+      "private-source consent, and live status. Requires room-links:read.",
+    {
+      roomid: z.string().describe("Destination room ID"),
+    },
+    async ({ roomid }) =>
+      wrap(
+        await api(
+          "GET",
+          `/rooms/${encodeURIComponent(roomid)}/links`,
+        ),
+      ),
+  );
+
+  // ── 16. create_room_link ────────────────────────────────────────────────
+  srv.tool(
+    "create_room_link",
+    "Add a source room to a destination room's linked-file view. " +
+      "The source must allow cross-linking; private sources require bilateral consent. " +
+      "Requires room-links:write.",
+    {
+      roomid: z.string().describe("Destination room ID"),
+      source: z.string().describe("Source room ID or exact room name"),
+      name: z.string().optional().describe("Optional display label"),
+      visibility: z
+        .enum(["all", "authenticated", "members", "owners", "mods"])
+        .optional()
+        .describe("Who may see files from this link"),
+      allowPrivateSource: z
+        .boolean()
+        .optional()
+        .describe("Destination consent for an invite-only source"),
+      rules: z
+        .object({
+          nameContains: z.string().optional(),
+          tagContains: z.string().optional(),
+          types: z.array(z.string()).optional(),
+          maxAgeHours: z.number().optional(),
+          minAgeHours: z.number().optional(),
+        })
+        .optional(),
+    },
+    async ({
+      roomid,
+      source,
+      name,
+      visibility,
+      allowPrivateSource,
+      rules,
+    }) =>
+      wrap(
+        await api(
+          "POST",
+          `/rooms/${encodeURIComponent(roomid)}/links`,
+          { source, name, visibility, allowPrivateSource, rules },
+        ),
+      ),
+  );
+
+  // ── 17. remove_room_link ────────────────────────────────────────────────
+  srv.tool(
+    "remove_room_link",
+    "Remove one linked source room from a destination room. " +
+      "Requires room-links:write.",
+    {
+      roomid: z.string().describe("Destination room ID"),
+      sourceRoomId: z.string().describe("Source room ID"),
+    },
+    async ({ roomid, sourceRoomId }) =>
+      wrap(
+        await api(
+          "DELETE",
+          `/rooms/${encodeURIComponent(roomid)}/links/${encodeURIComponent(
+            sourceRoomId,
+          )}`,
+        ),
+      ),
+  );
+
+  // ── 18. list_guest_invites ──────────────────────────────────────────────
+  srv.tool(
+    "list_guest_invites",
+    "List active guest invite links and recent privacy-safe invite activity " +
+      "for a room. Responses include full active tokens; treat them as secrets. " +
+      "Requires guest-invites:read.",
+    {
+      roomid: z.string().describe("Room ID"),
+    },
+    async ({ roomid }) =>
+      wrap(
+        await api(
+          "GET",
+          `/rooms/${encodeURIComponent(roomid)}/guest-invites`,
+        ),
+      ),
+  );
+
+  // ── 19. create_guest_invite ─────────────────────────────────────────────
+  srv.tool(
+    "create_guest_invite",
+    "Mint a guest invite with optional use and age limits. " +
+      "The returned token is secret. Requires guest-invites:write.",
+    {
+      roomid: z.string().describe("Room ID"),
+      singleUse: z.boolean().optional(),
+      maxUses: z.number().min(1).max(100000).optional(),
+      maxAgeHours: z.number().min(0.01).optional(),
+      label: z.string().max(80).optional(),
+    },
+    async ({ roomid, singleUse, maxUses, maxAgeHours, label }) =>
+      wrap(
+        await api(
+          "POST",
+          `/rooms/${encodeURIComponent(roomid)}/guest-invites`,
+          { singleUse, maxUses, maxAgeHours, label },
+        ),
+      ),
+  );
+
+  // ── 20. revoke_guest_invite ─────────────────────────────────────────────
+  srv.tool(
+    "revoke_guest_invite",
+    "Revoke one active guest invite by its full token. " +
+      "Requires guest-invites:write.",
+    {
+      roomid: z.string().describe("Room ID"),
+      token: z.string().describe("Full guest invite token"),
+    },
+    async ({ roomid, token }) =>
+      wrap(
+        await api(
+          "DELETE",
+          `/rooms/${encodeURIComponent(roomid)}/guest-invites/${encodeURIComponent(
+            token,
+          )}`,
+        ),
+      ),
   );
 }
 

@@ -43,6 +43,12 @@
   // Then paste the output here (64 hex chars):
   "secret": "REPLACE_WITH_64_RANDOM_HEX_CHARS",
 
+  // Protect the operator dashboard with a unique capability link.
+  // On first startup Dicefiles adds statusPageToken to the local .config.json.
+  // Keep that generated token secret. Set this to false only when you
+  // intentionally want /status and /api/public/status to be public.
+  "statusPagePrivate": true,
+
   // ----------------------------------------------------------
   // NETWORK
   // ----------------------------------------------------------
@@ -63,6 +69,10 @@
   // Trust X-Forwarded-For when behind a reverse proxy.
   // Set to true only if a trusted proxy is in front.
   // "considerProxyForwardedForHeaders": false,
+
+  // Public origin used in Discord/Telegram release links.
+  // Required for publisher plugins unless each room plugin sets baseUrl.
+  // "publicBaseUrl": "https://files.example.org",
 
   // ----------------------------------------------------------
   // STORAGE
@@ -97,6 +107,10 @@
   //   uploads:write     – upload files (batch URL ingest)
   //   requests:write    – create/claim/release/fulfill requests
   //   rooms:write       – post room chat messages
+  //   room-links:read   – list a room's linked sources and live status
+  //   room-links:write  – create/remove a room's linked sources
+  //   guest-invites:read  – list active guest links (includes full tokens)
+  //   guest-invites:write – mint/revoke guest links
   //   mod:*             – full moderation access
   //
   // Full API reference: API.md
@@ -110,7 +124,11 @@
         "files:write",
         "uploads:write",
         "requests:write",
-        "rooms:write"
+        "rooms:write",
+        "room-links:read",
+        "room-links:write",
+        "guest-invites:read",
+        "guest-invites:write"
       ]
     }
     // Add more keys as needed, for example a read-only monitoring key:
@@ -157,6 +175,20 @@
   // Room owners can toggle this per room in Room Options.  Default: true.
   // "allowRequests": true,
 
+  // Default for new rooms: permit other rooms to mirror finished uploads.
+  // Invite-only rooms additionally require allowPrivateCrossLinking, and each
+  // destination link must request private-source access. Defaults: false.
+  // "allowCrossLinking": false,
+  // "allowPrivateCrossLinking": false,
+
+  // Maximum simultaneously redeemable guest links per room. Expired and
+  // exhausted links do not count toward the cap. Default: 25.
+  // "maxActiveGuestInvitesPerRoom": 25,
+
+  // Recent privacy-safe guest invite create/redeem/revoke records retained
+  // per room for the Room Options audit table. Default: 100.
+  // "guestInviteAuditLimit": 100,
+
   // Default for new rooms: enable the Links Archive (URLs shared in chat
   // are automatically captured).  Room owners can disable per room.  Default: true.
   // "linkCollection": true,
@@ -167,13 +199,17 @@
   // Default: true.
   // "profileActivity": true,
 
+  // Show a new-member icon beside uploaders who first joined this room within
+  // the configured number of days. Set to 0 to disable. Default: 7.
+  // "newRoomMemberDays": 7,
+
   // ----------------------------------------------------------
   // FILE EXPIRY
   // ----------------------------------------------------------
 
   // Hours before a completed download expires and is garbage-collected.
-  // Mods can override this per room.  Default: 48.
-  // "TTL": 48,
+  // Mods can override this per room. Default: 120 (5 days).
+  // "TTL": 120,
 
   // ----------------------------------------------------------
   // WEBHOOKS  (outbound events → external services)
@@ -193,6 +229,33 @@
   //     "events": ["file_uploaded", "request_created", "request_fulfilled"],
   //     "retries": 3,
   //     "timeoutMs": 7000
+  //   }
+  // ],
+
+  // First-party room bots are normally invited from Room Options → Plugins.
+  // They can also be configured globally here. Discord uses an incoming
+  // webhook; Telegram uses a BotFather token and destination chat id.
+  // Prefer DICEFILES_DISCORD_WEBHOOK_URL / DICEFILES_TELEGRAM_BOT_TOKEN
+  // environment variables when one global secret is sufficient.
+  // "plugins": [
+  //   {
+  //     "id": "discord-release",
+  //     "enabled": true,
+  //     "config": {
+  //       "roomId": "ROOM_ID",
+  //       "webhookUrl": "https://discord.com/api/webhooks/...",
+  //       "baseUrl": "https://files.example.org"
+  //     }
+  //   },
+  //   {
+  //     "id": "telegram-release",
+  //     "enabled": true,
+  //     "config": {
+  //       "roomId": "ROOM_ID",
+  //       "botToken": "123456:REPLACE_ME",
+  //       "chatId": "-100123456789",
+  //       "baseUrl": "https://files.example.org"
+  //     }
   //   }
   // ],
 
@@ -223,6 +286,7 @@
   // "exiftool": "exiftool",
   // "ffmpeg": "ffmpeg",
   // "filetool": "file",
+  // "pdftoppm": "pdftoppm",
 
   // Concurrency limits for background preview/metadata workers.
   // "maxAssetsProcesses": 2,

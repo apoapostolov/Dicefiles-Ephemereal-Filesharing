@@ -247,11 +247,11 @@ export default class Upload extends Removable {
             throw err;
           }
           if (this.owner.has(resp.key)) {
-            this.owner.markFileAsNew(resp.key);
+            this.owner.markOwnUpload(resp.key);
             this.remove();
           }
           else {
-            this.owner.markFileAsNew(resp.key);
+            this.owner.markOwnUpload(resp.key);
             this.owner.once(`file-added-${resp.key}`, () => {
               this.remove();
             });

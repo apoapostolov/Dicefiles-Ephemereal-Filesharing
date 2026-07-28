@@ -11,6 +11,10 @@
   z-index: 3000;
 }
 
+.modal-holder-roomopts-pinned {
+  align-items: flex-start;
+}
+
 .modal {
   background: var(--main-bg);
   max-width: 80%;
@@ -226,23 +230,205 @@
     "icon .";
 }
 
+.modal-report {
+  width: min(46rem, calc(100vw - 1.5rem));
+  max-width: calc(100vw - 1.5rem);
+}
+
 .modal-report .modal-body {
-  max-width: 50em;
-  grid-row-gap: 1.3ex;
-  grid-template-columns: auto 1fr 4fr;
+  min-width: 0;
+  max-width: none;
+  padding: 0.75rem 1rem 1rem;
+  grid-template-columns: 2.75rem minmax(0, 1fr);
   grid-template-areas:
-    "icon rules rules"
-    "icon . ."
-    "icon . ."
-    "agreement agreement agreement";
+    "icon rules"
+    ". fields"
+    ". agreement"
+    ". error";
+  gap: 0.75rem 1rem;
+  align-items: start;
+}
+
+.modal-report .icon {
+  grid-area: icon;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  margin: 0;
+  color: rgba(230, 190, 120, 0.88);
+  font-size: 2.35rem;
+  line-height: 1;
 }
 
 #report-rules {
   grid-area: rules;
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
 }
+
+#report-rules h4 {
+  margin: 0 0 0.45rem;
+  color: rgba(245, 245, 245, 0.96);
+  font-size: 0.92rem;
+}
+
+#report-rules ul {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+#report-rules li {
+  padding-left: 0.15rem;
+  color: rgba(225, 225, 225, 0.9);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.modal-report .report-fields {
+  grid-area: fields;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.modal-report .report-fields label {
+  color: rgba(238, 238, 238, 0.94);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.modal-report .report-fields label:not(:first-child) {
+  margin-top: 0.35rem;
+}
+
+.modal-report input[name="room"],
+.modal-report textarea[name="msg"] {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-fg);
+  font: inherit;
+}
+
+.modal-report input[name="room"] {
+  min-height: 2.25rem;
+  color: rgba(220, 220, 220, 0.74);
+  cursor: text;
+}
+
+.modal-report textarea[name="msg"] {
+  min-height: 7.5rem;
+  max-height: min(14rem, 32vh);
+  padding: 0.65rem 0.7rem;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.modal-report textarea[name="msg"]::placeholder {
+  color: rgba(205, 205, 205, 0.5);
+}
+
+.modal-report input[name="room"]:focus,
+.modal-report textarea[name="msg"]:focus {
+  outline: none;
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+
+.modal-report textarea[name="msg"][aria-invalid="true"],
+.modal-report input[type="checkbox"][aria-invalid="true"] {
+  border-color: rgba(239, 137, 125, 0.88);
+}
+
 #report-agreement {
-  margin-top: 1ex;
   grid-area: agreement;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(230, 230, 230, 0.9);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+#report-agreement input {
+  flex: 0 0 auto;
+  margin-top: 0.13rem;
+}
+
+.modal-report .report-error {
+  grid-area: error;
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(239, 137, 125, 0.35);
+  border-radius: 6px;
+  background: rgba(145, 55, 45, 0.16);
+  color: rgba(255, 194, 186, 0.96);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.modal-report .report-error[hidden] {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .modal-report {
+    width: calc(100vw - 0.75rem);
+    max-width: calc(100vw - 0.75rem);
+    max-height: calc(100dvh - 0.75rem);
+  }
+
+  .modal-report .modal-body {
+    padding: 0.65rem 0.75rem 0.8rem;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "rules"
+      "fields"
+      "agreement"
+      "error";
+    gap: 0.65rem;
+  }
+
+  .modal-report .icon {
+    display: none;
+  }
+
+  #report-rules {
+    padding: 0.65rem 0.75rem;
+  }
+
+  #report-rules li {
+    font-size: 0.78rem;
+  }
+
+  .modal-report textarea[name="msg"] {
+    min-height: 6.5rem;
+  }
+
+  .modal-report .modal-buttons {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .modal-report .modal-button {
+    flex: 1 1 0;
+  }
 }
 
 .modal-login .modal-body {
@@ -1113,6 +1299,13 @@
   margin: 0;
 }
 
+.modal-optsdlg .roomopts-section-count {
+  margin-left: 0.45rem;
+  color: rgba(150, 205, 225, 0.95);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 .modal-optsdlg .roomopts-field {
   display: flex;
   flex-direction: column;
@@ -1199,6 +1392,10 @@
   cursor: pointer;
 }
 
+.modal-optsdlg .roomopts-plugin-check {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .modal-optsdlg .roomopts-check-with-help {
   align-items: center;
   flex-wrap: wrap;
@@ -1250,7 +1447,7 @@
   cursor: pointer;
 }
 
-/* Invites tab: generate row (field + Generate + i-copy like welcome room URL) */
+/* Invites tab: generated-link field with an overlaid copy action */
 .modal-optsdlg .roomopts-invite-gen {
   display: flex;
   flex-direction: column;
@@ -1265,18 +1462,27 @@
 .modal-optsdlg .roomopts-invite-gen-row {
   display: flex;
   flex-wrap: nowrap;
-  align-items: center;
-  gap: 0.45rem;
+  align-items: stretch;
+  gap: 0;
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 7px;
-  padding: 0.2em 0.45em 0.2em 0.55em;
+  padding: 0;
   background: rgba(0, 0, 0, 0.25);
   box-sizing: border-box;
   width: 100%;
+  overflow: hidden;
 }
 
-.modal-optsdlg .roomopts-invite-gen-row > input[name="inviteurlfield"] {
+.modal-optsdlg .roomopts-invite-field {
   flex: 1 1 auto;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.modal-optsdlg .roomopts-invite-field > input[name="inviteurlfield"] {
+  width: 100%;
   min-width: 0;
   border: none;
   background: transparent;
@@ -1285,15 +1491,18 @@
   font-weight: 600;
   font-size: 0.9rem;
   outline: none;
-  padding: 0.25em 0;
+  padding: 0.45em 2.35rem 0.45em 0.55em;
   text-overflow: ellipsis;
+  box-sizing: border-box;
 }
 
 .modal-optsdlg .roomopts-invite-limits-btn {
   flex: 0 0 auto;
-  padding: 0.3em 0.65em;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin: 0;
+  padding: 0.45em 0.75em;
+  border-radius: 0;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.1);
   color: inherit;
   font: inherit;
@@ -1330,11 +1539,22 @@
   box-sizing: border-box;
 }
 
-.modal-optsdlg .roomopts-invite-gen-row > .roomopts-invite-copy {
-  /* Match Generate button optical height in the same row */
-  height: 1.85rem;
-  width: 1.85rem;
+.modal-optsdlg .roomopts-invite-field > .roomopts-invite-copy {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  right: 0.3rem;
+  transform: translateY(-50%);
+  height: 1.75rem;
+  width: 1.75rem;
   font-size: 1.05rem;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.modal-optsdlg .roomopts-invite-field > .roomopts-invite-copy[hidden] {
+  display: none !important;
 }
 
 .modal-optsdlg .roomopts-invite-url-line .roomopts-invite-copy {
@@ -1371,11 +1591,69 @@
 
 .modal-optsdlg .roomopts-invite-list-wrap {
   width: 100%;
+  min-width: 0;
   max-height: 14rem;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: auto;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.18);
+}
+
+.modal-optsdlg .roomopts-invite-table,
+.modal-optsdlg .roomopts-invite-audit-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.modal-optsdlg .roomopts-invite-table th,
+.modal-optsdlg .roomopts-invite-table td,
+.modal-optsdlg .roomopts-invite-audit-table th,
+.modal-optsdlg .roomopts-invite-audit-table td {
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: normal;
+  word-break: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.modal-optsdlg .roomopts-invite-table th:nth-child(1) {
+  width: 49%;
+}
+
+.modal-optsdlg .roomopts-invite-table th:nth-child(2) {
+  width: 10%;
+}
+
+.modal-optsdlg .roomopts-invite-table th:nth-child(3) {
+  width: 25%;
+}
+
+.modal-optsdlg .roomopts-invite-table th:nth-child(4) {
+  width: 16%;
+}
+
+.modal-optsdlg .roomopts-invite-audit-table th:nth-child(1) {
+  width: 14%;
+}
+
+.modal-optsdlg .roomopts-invite-audit-table th:nth-child(2) {
+  width: 24%;
+}
+
+.modal-optsdlg .roomopts-invite-audit-table th:nth-child(3) {
+  width: 10%;
+}
+
+.modal-optsdlg .roomopts-invite-audit-table th:nth-child(4) {
+  width: 22%;
+}
+
+.modal-optsdlg .roomopts-invite-audit-table th:nth-child(5) {
+  width: 30%;
 }
 
 .modal-optsdlg .roomopts-invite-url-line {
@@ -1383,7 +1661,23 @@
   align-items: center;
   gap: 0.4rem;
   min-width: 0;
-  margin-top: 0.15rem;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.modal-optsdlg .roomopts-invite-url-line .link-source-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-optsdlg .roomopts-invite-link-separator {
+  flex: 0 0 auto;
+  color: rgba(210, 210, 210, 0.62);
 }
 
 .modal-optsdlg .roomopts-invite-url-text {
@@ -1399,6 +1693,39 @@
 
 .modal-optsdlg .roomopts-invite-link-cell {
   max-width: 18rem;
+}
+
+.modal-optsdlg .roomopts-invite-table th:nth-child(2),
+.modal-optsdlg .roomopts-invite-table td:nth-child(2),
+.modal-optsdlg .roomopts-invite-audit-table th:nth-child(3),
+.modal-optsdlg .roomopts-invite-audit-table td:nth-child(3) {
+  text-align: center;
+}
+
+.modal-optsdlg .roomopts-invite-table .roomopts-link-actions {
+  padding-right: 0.35em;
+  padding-left: 0.35em;
+  text-align: center;
+}
+
+.modal-optsdlg .roomopts-invite-table .roomopts-link-actions > button {
+  appearance: none;
+  -webkit-appearance: none;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0.3em 0.52em;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--text-fg);
+  font-size: 0.75rem;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.modal-optsdlg .roomopts-invite-audit-table td:last-child {
+  font-size: 0.78rem;
 }
 
 .modal-optsdlg .roomopts-crosslink-help.hidden {
@@ -1454,9 +1781,15 @@
   padding: 0.4em 0.55em;
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(0, 0, 0, 0.28);
-  color: inherit;
+  background: var(--dark-bg);
+  color: var(--text-fg);
+  color-scheme: dark;
   font: inherit;
+}
+
+.modal-optsdlg .roomopts-plugin-invite-row > select > option {
+  background-color: var(--dark-bg);
+  color: var(--text-fg);
 }
 
 .modal-optsdlg .roomopts-plugin-invite-row > button,
@@ -1497,11 +1830,16 @@
 }
 
 .modal-optsdlg .roomopts-plugin-editor {
-  margin-top: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-  background: rgba(20, 28, 36, 0.9);
-  padding: 0.75rem 0.9rem;
+  background: var(--surface-1);
   box-sizing: border-box;
 }
 
@@ -1513,12 +1851,16 @@
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  margin-bottom: 0.65rem;
+  margin: 0;
 }
 
 .modal-optsdlg .roomopts-plugin-status {
-  margin-top: 0.5rem;
+  margin: 0;
   min-height: 1.1em;
+}
+
+.modal-optsdlg .roomopts-plugin-status:empty {
+  display: none;
 }
 
 .modal-optsdlg .roomopts-status-ok {
@@ -1594,11 +1936,35 @@
   z-index: 1;
 }
 
+/* Invite rows deliberately remain vertically centered after shared table rules. */
+.modal-optsdlg .roomopts-link-table.roomopts-invite-table th,
+.modal-optsdlg .roomopts-link-table.roomopts-invite-table td,
+.modal-optsdlg .roomopts-link-table.roomopts-invite-audit-table th,
+.modal-optsdlg .roomopts-link-table.roomopts-invite-audit-table td {
+  vertical-align: middle;
+}
+
+.modal-optsdlg
+  .roomopts-link-table.roomopts-invite-table
+  td.roomopts-link-actions {
+  text-align: center;
+}
+
+.modal-optsdlg
+  .roomopts-link-table.roomopts-invite-table
+  td.roomopts-link-actions
+  > button {
+  display: block;
+  margin-right: auto;
+  margin-left: auto;
+}
+
 .modal-optsdlg .roomopts-link-table tr.link-row-inactive {
   opacity: 0.75;
 }
 
 .modal-optsdlg .roomopts-link-table tr.link-status-denied .link-col-status,
+.modal-optsdlg .roomopts-link-table tr.link-status-private .link-col-status,
 .modal-optsdlg .roomopts-link-table tr.link-status-missing .link-col-status {
   color: #f0b070;
   font-weight: 600;
@@ -1625,6 +1991,12 @@
   color: rgba(210, 210, 210, 0.9);
   max-width: 11rem;
   word-break: break-word;
+}
+
+.modal-optsdlg .link-access-summary {
+  margin-top: 0.25rem;
+  color: rgba(170, 205, 225, 0.92);
+  font-size: 0.82em;
 }
 
 .modal-optsdlg .link-col-actions {
@@ -1716,6 +2088,26 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.65rem;
+}
+
+.modal-optsdlg .roomopts-link-access {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+}
+
+.modal-optsdlg .roomopts-link-access select {
+  width: 100%;
+  max-width: 22rem;
+  padding: 0.4em 0.55em;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.28);
+  color: inherit;
+  font: inherit;
 }
 
 .modal-optsdlg .roomopts-link-age input[type="number"] {
@@ -2190,6 +2582,20 @@
   background: rgba(255, 255, 255, 0.45);
   box-shadow: rgb(0 0 0 / 75%) 0 0 6px 0 inset;
 }
+.modal-requestboard .rb-share {
+  margin-left: auto;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  color: var(--text-fg);
+  background: var(--surface-2);
+  cursor: pointer;
+  font-size: 0.82em;
+}
+.modal-requestboard .rb-share:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
 .modal-requestboard .rb-list {
   display: flex;
   flex-direction: column;
@@ -2223,11 +2629,13 @@
   white-space: nowrap;
 }
 .modal-requestboard .rb-open {
+  align-self: stretch;
+  margin: -0.4rem -0.5rem -0.4rem 0;
   background: var(--surface-2);
   border: 1px solid var(--hairline);
   color: var(--text-fg);
-  border-radius: 6px;
-  padding: 0.25rem 0.6rem;
+  border-radius: 0 5px 5px 0;
+  padding: 0.25rem 0.75rem;
   cursor: pointer;
 }
 .modal-requestboard .rb-empty {

@@ -16,7 +16,9 @@ Plugin system docs live under **`../core/plugins/`** (design + operator guides).
 | [ARCHIVE_VIEWER.md](./ARCHIVE_VIEWER.md) | In-browser archive browser spec |
 | [MESSAGE_REMOVAL.md](./MESSAGE_REMOVAL.md) | Moderator message removal behavior |
 | [AI_AUTOMATION.md](./AI_AUTOMATION.md) | AI agent automation use cases vs REST/MCP |
-| [plugins/REMOTE_HOST_LIBRARY_RESEARCH.md](./plugins/REMOTE_HOST_LIBRARY_RESEARCH.md) | Research: embeddable multi-host download libs (not a standalone product) |
+| [REMOTE_HOST_LIBRARY_RESEARCH.md](./REMOTE_HOST_LIBRARY_RESEARCH.md) | Research: embeddable multi-host download libs (not a standalone product) |
+| [../dev/README.md](../dev/README.md) | AI/human development workflow, generated files, review, and release checks |
+| [../SECURITY.md](../SECURITY.md) | Private vulnerability reporting and repository security policy |
 
 ## Archived (historical only)
 

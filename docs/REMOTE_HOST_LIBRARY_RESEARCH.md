@@ -38,7 +38,7 @@ Constraints that match Dicefiles: self-hosted, opt-in plugins, ephemeral rooms +
 
 ## 2. Executive finding
 
-**There is no mature, all-in-one Node library** that cleanly covers Mega + MediaFire + 4shared + Pixeldrain + Gofile the way a mini multi-hoster would.
+**There is no mature, all-in-one Node library** that cleanly covers Mega.nz + MediaFire + 4shared + Pixeldrain + Gofile the way a mini multi-hoster would.
 
 What exists falls into five tiers:
 
@@ -58,7 +58,7 @@ This aligns with [REMOTE_HOST_IMPORTS.md](../../core/plugins/REMOTE_HOST_IMPORTS
 
 ## 3. Shared embed contract (reminder)
 
-Every host adapter should implement the same thin interface already used by Mega (logical TypeScript; JS in tree):
+Every host adapter should implement the same thin interface already used by Mega.nz (logical TypeScript; JS in tree):
 
 ```ts
 type RemoteEntry = {
@@ -84,7 +84,7 @@ Orchestration (shared, not per-host plugin forever):
 4. `uploadFile({ roomId, name, body, size, meta: { plugin, sourceUrl, host } })`.
 5. Normal `file_uploaded` webhooks.
 
-Refactor target over time: `ctx.megaDownloader` → `ctx.remoteDownloaders` (map) or a dispatcher; Mega remains the first implementation.
+Refactor target over time: `ctx.megaDownloader` → `ctx.remoteDownloaders` (map) or a dispatcher; Mega.nz remains the first implementation.
 
 ---
 
@@ -101,7 +101,7 @@ Refactor target over time: `ctx.megaDownloader` → `ctx.remoteDownloaders` (map
 
 **Import shape:** existing `listFolder` / per-entry `download` (buffer or stream). Prefer streams later for large files.
 
-**Docs:** [MEGA_FOLDER.md](../../core/plugins/MEGA_FOLDER.md), mega.js.org.
+**Mega.nz docs:** [MEGA_FOLDER.md](../../core/plugins/MEGA_FOLDER.md), mega.js.org.
 
 ---
 
@@ -117,7 +117,7 @@ Official HTTP API is stable enough for a thin adapter (`pixeldrain.com/api/...`)
 | [jkawamoto/go-pixeldrain](https://github.com/jkawamoto/go-pixeldrain) | Solid Go client; wrong language for in-process Node. |
 | Limit-bypass proxies / userscripts | **Avoid in core** (ToS / abuse surface). Stay on official API + operator accounts if needed. |
 
-**Verdict:** implement `providers/pixeldrain.js` with `canHandle` + list file/list album + download stream. Best second host after Mega.
+**Verdict:** implement `providers/pixeldrain.js` with `canHandle` + list file/list album + download stream. Best second host after Mega.nz.
 
 ---
 
@@ -220,7 +220,7 @@ Rough suitability for **in-process Dicefiles** (not completeness of npm):
 
 | Package | Host focus | Library-shaped? | Recommend |
 |---------|------------|-----------------|-----------|
-| `megajs` | Mega | Yes | **Yes** (already optionalDep) |
+| `megajs` | Mega.nz | Yes | **Yes** (already optionalDep) |
 | `pixeldrainjs` | Pixeldrain | Partial | Optional; prefer first-party fetch |
 | `pdb-downloader` | Pixeldrain, Bunkr | Downloader-to-disk | No as core |
 | `gofile-downloader` / `gofile-dl` | Gofile | Thin / CLI | Reference only unless audited |
@@ -235,10 +235,10 @@ Rough suitability for **in-process Dicefiles** (not completeness of npm):
 
 ## 6. Integration shapes (product boundary)
 
-### A. First-party thin adapters (default for Mega, Pixeldrain, Gofile, direct)
+### A. First-party thin adapters (default for Mega.nz, Pixeldrain, Gofile, direct)
 
 - Location sketch: `lib/plugins/remote-import/providers/*.js` or shared `lib/remote-downloaders/`.
-- Optional npm: **`megajs` only** for Mega crypto/protocol.
+- Optional npm: **`megajs` only** for Mega.nz crypto/protocol.
 - Pixeldrain/Gofile: Node 20+ `fetch`, no new deps.
 
 ### B. Shell bridge (MediaFire free, 4shared, plowshare long tail)
@@ -265,7 +265,7 @@ Rough suitability for **in-process Dicefiles** (not completeness of npm):
 
 ## 7. Suggested build order
 
-1. **Normalize** Mega onto shared `RemoteDownloader` (rename/docs; keep behavior).
+1. **Normalize** Mega.nz onto shared `RemoteDownloader` (rename/docs; keep behavior).
 2. **Pixeldrain + Gofile** first-party adapters (official/public APIs).
 3. **`remote-import` plugin** — multi-URL list, `maxBytesPerFile`, `maxFilesPerRun`, source URL in meta.
 4. **`shell-import`** — plowshare/MEGAcmd allowlist for MediaFire / 4shared / long tail.
@@ -294,21 +294,21 @@ Safety rails (non-negotiable): size/count caps; no crawl of arbitrary pastes wit
 | Piece | Location |
 |-------|----------|
 | Plugin registry | `lib/plugins/registry.js` |
-| Mega plugin | `lib/plugins/mega-folder/` |
+| Mega.nz plugin | `lib/plugins/mega-folder/` |
 | Production wiring | `lib/plugins/runtime-adapters.js` |
 | Design sketch | [core/plugins/REMOTE_HOST_IMPORTS.md](../../core/plugins/REMOTE_HOST_IMPORTS.md) |
-| Operator Mega guide | [core/plugins/MEGA_FOLDER.md](../../core/plugins/MEGA_FOLDER.md) |
+| Operator Mega.nz guide | [core/plugins/MEGA_FOLDER.md](../../core/plugins/MEGA_FOLDER.md) |
 | Plugin author guide | [core/plugins/DEVELOPING_PLUGINS.md](../../core/plugins/DEVELOPING_PLUGINS.md) |
 | This research | `docs/plugins/REMOTE_HOST_LIBRARY_RESEARCH.md` |
 | Feature backlog pointer | `docs/FUTURE_DEVELOPMENT_PLAN.md` / feature creep notes (multi-host open item) |
 
-Next code step when scheduled: extract `RemoteDownloader` + register Mega; add Pixeldrain without new npm deps.
+Next code step when scheduled: extract `RemoteDownloader` + register Mega.nz; add Pixeldrain without new npm deps.
 
 ---
 
 ## 10. Reference links
 
-### Mega
+### Mega.nz
 
 - https://www.npmjs.com/package/megajs  
 - https://mega.js.org/  

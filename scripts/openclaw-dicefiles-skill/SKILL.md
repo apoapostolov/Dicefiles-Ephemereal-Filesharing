@@ -2,8 +2,8 @@
 
 **Trigger**: Use this skill whenever the user asks you to interact with a Dicefiles
 room — listing files, uploading URLs, fulfilling requests, enriching metadata,
-checking server status, or running any multi-step file-management workflow against
-a Dicefiles instance.
+checking server status, managing linked rooms or guest invites, or running any
+multi-step file-management workflow against a Dicefiles instance.
 
 **Requires**: The `dicefiles` MCP server must be registered in mcporter. Verify with:
 `mcporter list` — `dicefiles` must appear and show status `connected`.
@@ -17,7 +17,7 @@ organised into rooms. Each room has uploads (files), requests (unfulfilled asks 
 participants), and a chat channel. Rooms are identified by a short alphanumeric
 `roomid`.
 
-The MCP server exposes 13 tools. All network calls go through the tools — never
+The MCP server exposes 20 tools. All network calls go through the tools — never
 construct raw HTTP requests.
 
 ---
@@ -39,6 +39,13 @@ construct raw HTTP requests.
 | `download_file`         | Fetch a file and return its content as base64 (≤5 MB)        |
 | `save_subscription`     | Persist a named filter preset for this API key               |
 | `list_subscriptions`    | Retrieve all saved filter presets at agent startup           |
+| `archive_list_contents` | Inspect an archive without downloading it                     |
+| `list_room_links`       | Inspect a destination room's linked sources and status         |
+| `create_room_link`      | Add a linked source with visibility and filter rules           |
+| `remove_room_link`      | Remove a linked source from a destination room                 |
+| `list_guest_invites`    | List active invite tokens and recent invite activity           |
+| `create_guest_invite`   | Mint a bounded guest invite token                              |
+| `revoke_guest_invite`   | Revoke an active guest invite token                            |
 
 ---
 
@@ -118,6 +125,27 @@ upload_file_from_urls(roomid, urls)
 → report summary: X succeeded, Y failed
 ```
 
+### F. Curate a linked room
+
+```
+list_room_links(destination)
+→ create_room_link(destination, source, visibility, rules)
+→ list_room_links(destination) and confirm status="active"
+```
+
+The source must allow cross-linking. For invite-only sources, require explicit
+operator approval before setting `allowPrivateSource`; the source must consent too.
+
+### G. Issue temporary guest access
+
+```
+create_guest_invite(roomid, singleUse=true)
+→ deliver the returned token through a private channel
+→ revoke_guest_invite(roomid, token) if access should end early
+```
+
+Guest invite tokens are bearer secrets. Never post them to room chat or logs.
+
 ---
 
 ## Error Handling
@@ -160,6 +188,8 @@ The MCP server is started by mcporter using:
 ```
 
 Scopes needed for full automation:
-`files:read`, `files:write`, `uploads:write`, `requests:write`, `rooms:write`
+`files:read`, `files:write`, `uploads:write`, `requests:write`, `rooms:write`,
+`room-links:read`, `room-links:write`, `guest-invites:read`,
+`guest-invites:write`
 
 For read-only monitoring, `files:read` alone is sufficient.

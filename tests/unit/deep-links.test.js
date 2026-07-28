@@ -6,6 +6,7 @@ const {
   parseSearch,
   resolveDeepLinkNavigation,
   applyDeepLinkIntents,
+  buildRequestBoardShareUrl,
 } = require("../../lib/room/deep-links");
 
 describe("deep-links (shipped)", () => {
@@ -39,6 +40,19 @@ describe("deep-links (shipped)", () => {
   test("parseSearch", () => {
     expect(parseSearch("?file=x&sort=bogus")).toEqual({ file: "x" });
     expect(parseSearch("sort=newest")).toEqual({ sort: "newest" });
+    expect(parseSearch("?requests=fulfilled")).toEqual({
+      requestBoard: "fulfilled",
+    });
+    expect(parseSearch("?requests=invalid")).toEqual({});
+  });
+
+  test("buildRequestBoardShareUrl keeps room context and strips other intents and invite tokens", () => {
+    expect(
+      buildRequestBoardShareUrl(
+        "https://dice.test/r/room123?file=f1&filter=pdf&invite=secret#f1",
+        "open",
+      ),
+    ).toBe("https://dice.test/r/room123?requests=open");
   });
 
   test("resolveDeepLinkNavigation option off: no query intents", () => {
@@ -72,6 +86,7 @@ describe("deep-links (shipped)", () => {
         sortMode: "newest",
         openFileKey: null,
         openRequestKey: null,
+        requestBoardStatus: null,
       },
     );
     expect(applyDeepLinkIntents(base, { filter: "a", file: "k" }, true)).toEqual(
@@ -80,8 +95,19 @@ describe("deep-links (shipped)", () => {
         sortMode: "newest",
         openFileKey: "k",
         openRequestKey: null,
+        requestBoardStatus: null,
       },
     );
+  });
+
+  test("applyDeepLinkIntents carries request-board view state", () => {
+    expect(
+      applyDeepLinkIntents(
+        { filter: "", sortMode: "newest" },
+        { requestBoard: "fulfilled" },
+        true,
+      ).requestBoardStatus,
+    ).toBe("fulfilled");
   });
 
   test("resolveDeepLinkOpenPlan: config-before-files leaves open pending", () => {

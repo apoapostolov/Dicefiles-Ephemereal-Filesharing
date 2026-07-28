@@ -55,18 +55,29 @@ describe("room-plugins (shipped)", () => {
       catalog: [
         {
           id: "mega-folder",
-          name: "Mega Autoshare",
-          botName: "Mega Autoshare",
+          name: "Mega.nz Autoshare",
+          botName: "Mega.nz Autoshare",
           available: true,
           description: "monitor folder",
         },
       ],
     });
-    expect(ser[0].botName).toBe("Mega Autoshare");
+    expect(ser[0].botName).toBe("Mega.nz Autoshare");
     expect(ser[0].available).toBe(true);
     expect(findRoomPlugin(list, "mega-folder").config.pollIntervalMinutes).toBe(
       5,
     );
+  });
+
+  test("normalizes the former Mega.nz Autoshare display name", () => {
+    const list = normalizeRoomPlugins([
+      {
+        id: "mega-folder",
+        config: { botName: "Mega Autoshare" },
+      },
+    ]);
+
+    expect(list[0].config.botName).toBe("Mega.nz Autoshare");
   });
 });
 
@@ -83,7 +94,7 @@ describe("room-runtime catalog (shipped)", () => {
     const mega = cat.find((c) => c.id === "mega-folder");
     expect(mega).toBeTruthy();
     expect(mega.available).toBe(true);
-    expect(mega.botName).toMatch(/Mega/i);
+    expect(mega.botName).toBe("Mega.nz Autoshare");
   });
 
   test("runRoomPlugin uses room config roomId", async () => {

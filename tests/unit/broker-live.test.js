@@ -28,8 +28,7 @@ describe("broker live redis (shipped)", () => {
         ),
       ]);
       available = pong === "PONG" || pong === "pong" || !!pong;
-    }
-    catch (ex) {
+    } catch (ex) {
       available = false;
       console.warn("[broker-live] Redis unavailable, skipping:", ex.message);
     }
@@ -43,8 +42,8 @@ describe("broker live redis (shipped)", () => {
       const del = BROKER.getMethod("del");
       await del(KEY);
       await del(`${KEY}:hash`);
-    }
-    catch (_e) {
+      await del(`${KEY}:zset`);
+    } catch (_e) {
       // ignore
     }
   });
@@ -69,7 +68,13 @@ describe("broker live redis (shipped)", () => {
         setTimeout(() => rej(new Error("set hung >5s")), 5000),
       ),
     ]);
-    expect(setResult === "OK" || setResult === true || setResult == null || setResult === "ok" || setResult === "OK").toBe(true);
+    expect(
+      setResult === "OK" ||
+        setResult === true ||
+        setResult == null ||
+        setResult === "ok" ||
+        setResult === "OK",
+    ).toBe(true);
 
     const got = await Promise.race([
       redis.get(KEY),
@@ -94,7 +99,9 @@ describe("broker live redis (shipped)", () => {
     // v4 returns 'OK' or null
     expect(a === "OK" || a === true || a != null).toBe(true);
     const b = await redis.set(KEY, "two", "NX", "EX", 30);
-    expect(b === null || b === undefined || b === false || b === 0 || b === "null").toBe(true);
+    expect(
+      b === null || b === undefined || b === false || b === 0 || b === "null",
+    ).toBe(true);
     expect(await redis.get(KEY)).toBe("one");
     await redis.del(KEY);
   }, 10000);
@@ -129,5 +136,23 @@ describe("broker live redis (shipped)", () => {
     expect(all.a).toBe("1");
     expect(all.b).toBe("2");
     await redis.del(hk);
+  }, 10000);
+
+  test("zrevrange supports legacy WITHSCORES on the installed Redis client", async () => {
+    if (!available) {
+      return;
+    }
+    const redis = BROKER.getMethods("zadd", "zrevrange", "del");
+    const zk = `${KEY}:zset`;
+    await redis.del(zk);
+    await redis.zadd(zk, 10, "alice");
+    await redis.zadd(zk, 20, "bob");
+    await expect(redis.zrevrange(zk, 0, -1)).resolves.toEqual(["bob", "alice"]);
+    await expect(redis.zrevrange(zk, 0, -1, "WITHSCORES")).resolves.toEqual([
+      "bob",
+      "20",
+      "alice",
+      "10",
+    ]);
   }, 10000);
 });

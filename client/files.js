@@ -15,6 +15,17 @@ import {
   resolveDeepLinkOpenPlan,
   shouldApplyDeepLinkListIntents,
 } from "../lib/room/deep-links";
+import {
+  buildActivityDigest,
+  buildResumeEntries,
+  didCompleteCatchUpDownload,
+  isLinkedDelta,
+  isLinkedFile,
+  isOwnUpload,
+  linkedSourceId,
+  normalizeVisitState,
+  wasFulfilledSince,
+} from "../lib/room/continuity";
 import ScrollState from "./files/scrollstate";
 import { REMOVALS } from "./files/tracker";
 import Upload from "./files/upload";
@@ -84,6 +95,7 @@ export default new (class Files extends EventEmitter {
       (this.createRequestEl && this.createRequestEl.closest(".btn-pill"));
     this._deepLinkListApplied = false;
     this._deepLinkOpenDone = false;
+    this._requestBoardOpened = false;
     this._legacyGalleryOpened = false;
     this._filesListReady = false;
     this.files = [];
@@ -94,10 +106,37 @@ export default new (class Files extends EventEmitter {
     this.selectionStart = null;
     this.galleryMode = false;
     this.linksMode = false;
+    this.ownUploadKeys = new Set();
     this.newFileKeys = new Set();
     this.forceNewKeys = new Set();
     this.newSinceServerTime = 0;
     this.newStateKey = null;
+    this.knownLinkedKeys = null;
+    this.knownLinkedRooms = null;
+    this.continuityDigest = null;
+    this.resumeEntries = [];
+    this._continuityRefreshVersion = 0;
+    this.continuityEl = document.querySelector("#continuity");
+    this.continuityResumeEl = document.querySelector("#continuity-resume");
+    this.continuityResumeNameEl = document.querySelector(
+      "#continuity-resume-name",
+    );
+    this.continuityDigestToggleEl = document.querySelector(
+      "#continuity-digest-toggle",
+    );
+    this.continuityDigestControlEl = document.querySelector(
+      "#continuity-digest-control",
+    );
+    this.continuityDigestCountEl = document.querySelector(
+      "#continuity-digest-count",
+    );
+    this.continuityDownloadAllEl = document.querySelector(
+      "#continuity-download-all",
+    );
+    this.continuityDigestEl = document.querySelector("#continuity-digest");
+    this.continuityMarkSeenEl = document.querySelector(
+      "#continuity-mark-seen",
+    );
     this.viewModeKey = null;
     this.viewModeRestored = false;
     this.scriptSettings = {
@@ -257,6 +296,36 @@ export default new (class Files extends EventEmitter {
         true,
       );
     }
+    if (this.continuityResumeEl) {
+      this.continuityResumeEl.addEventListener(
+        "click",
+        this.resumeReading.bind(this),
+      );
+    }
+    if (this.continuityDigestToggleEl) {
+      this.continuityDigestToggleEl.addEventListener(
+        "click",
+        this.toggleContinuityDigest.bind(this),
+      );
+    }
+    if (this.continuityDownloadAllEl) {
+      this.continuityDownloadAllEl.addEventListener(
+        "click",
+        this.downloadContinuity.bind(this),
+      );
+    }
+    if (this.continuityMarkSeenEl) {
+      this.continuityMarkSeenEl.addEventListener(
+        "click",
+        this.markContinuitySeen.bind(this),
+      );
+    }
+    if (this.continuityDigestEl) {
+      this.continuityDigestEl.addEventListener(
+        "click",
+        this.onContinuityItem.bind(this),
+      );
+    }
 
     // Virtualized list state (must be declared before seal())
     this._rowHeightHint = 52;
@@ -302,6 +371,8 @@ export default new (class Files extends EventEmitter {
     registry.socket.on("files", this.onfiles);
     registry.socket.on("files-deleted", this.onfilesdeleted);
     registry.socket.on("files-updated", this.onfilesupdated);
+    registry.socket.on("nick", () => this.refreshContinuity());
+    registry.socket.on("authed", () => this.refreshContinuity());
     registry.roomie.on("tooltip-hidden", () => this.adjustEmpty());
     registry.socket.on("config", () => {
       this.updateCapabilityButtons();
@@ -316,6 +387,10 @@ export default new (class Files extends EventEmitter {
     });
     addEventListener("pagehide", this.onleave, { passive: true });
     addEventListener("beforeunload", this.onleave, { passive: true });
+    addEventListener(
+      "dicefiles:reader-progress",
+      debounce(() => this.refreshContinuity(), 500),
+    );
   }
 
   updateCapabilityButtons() {
@@ -341,12 +416,14 @@ export default new (class Files extends EventEmitter {
     }
   }
 
-  openRequestBoard() {
+  openRequestBoard(initialStatus) {
     if (registry.config.get("allowRequests") === false) {
       return;
     }
+    const status =
+      typeof initialStatus === "string" ? initialStatus : undefined;
     registry.roomie
-      .showModal(new RequestBoardModal(this))
+      .showModal(new RequestBoardModal(this, { status }))
       .catch((ex) => {
         if (ex) {
           console.error(ex);
@@ -385,10 +462,20 @@ export default new (class Files extends EventEmitter {
         sortMode: this.sortMode,
         openFileKey: null,
         openRequestKey: null,
+        requestBoardStatus: null,
       },
       nav.intents,
       true,
     );
+
+    if (
+      next.requestBoardStatus &&
+      this._filesListReady &&
+      !this._requestBoardOpened
+    ) {
+      this._requestBoardOpened = true;
+      this.openRequestBoard(next.requestBoardStatus);
+    }
 
     if (
       shouldApplyDeepLinkListIntents({
@@ -436,32 +523,330 @@ export default new (class Files extends EventEmitter {
       const raw = localStorage.getItem(this.newStateKey);
       if (!raw) {
         this.newSinceServerTime = fallback;
-        this.persistNewState();
+        this.knownLinkedKeys = null;
+        this.knownLinkedRooms = null;
         return;
       }
-      const parsed = JSON.parse(raw);
-      const v = Number(parsed && parsed.lastSeenServerTime);
-      this.newSinceServerTime = Number.isFinite(v) && v > 0 ? v : fallback;
+      const state = normalizeVisitState(JSON.parse(raw), fallback);
+      this.newSinceServerTime = state.lastSeenServerTime;
+      this.knownLinkedKeys = state.knownLinkedKeys;
+      this.knownLinkedRooms = state.knownLinkedRooms;
     } catch (ex) {
       this.newSinceServerTime = fallback;
+      this.knownLinkedKeys = null;
+      this.knownLinkedRooms = null;
     }
   }
 
   persistNewState() {
+    const seenAt = registry.roomie.toServerTime(Date.now());
+    const linkedKeys = this.currentLinkedKeys();
+    const linkedRooms = this.currentLinkedRooms();
     try {
       localStorage.setItem(
         this.newStateKey,
         JSON.stringify({
-          lastSeenServerTime: registry.roomie.toServerTime(Date.now()),
+          lastSeenServerTime: seenAt,
+          knownLinkedKeys: linkedKeys,
+          knownLinkedRooms: linkedRooms,
         }),
       );
     } catch (ex) {
       // ignored
     }
+    return { seenAt, linkedKeys, linkedRooms };
   }
 
   onleave() {
     this.persistNewState();
+  }
+
+  currentLinkedKeys() {
+    return this.files
+      .filter((file) => isLinkedFile(file))
+      .map((file) => file.key)
+      .filter(Boolean);
+  }
+
+  currentLinkedRooms() {
+    return Array.from(
+      new Set(this.files.map(linkedSourceId).filter(Boolean)),
+    );
+  }
+
+  get continuityViewer() {
+    const chatbox = registry.chatbox || {};
+    return {
+      account: chatbox.authed || "",
+      nick:
+        chatbox.currentNick ||
+        (chatbox.nick && chatbox.nick.value) ||
+        "",
+    };
+  }
+
+  get continuityState() {
+    return {
+      lastSeenServerTime: this.newSinceServerTime,
+      knownLinkedKeys: this.knownLinkedKeys,
+      knownLinkedRooms: this.knownLinkedRooms,
+    };
+  }
+
+  async refreshContinuity() {
+    if (!this.continuityEl) {
+      return;
+    }
+    const refreshVersion = ++this._continuityRefreshVersion;
+    const viewer = this.continuityViewer;
+    let clearedOwnMarkers = false;
+    for (const file of this.files) {
+      if (
+        file &&
+        !file.isRequest &&
+        (this.ownUploadKeys.has(file.key) ||
+          isOwnUpload(file, viewer)) &&
+        (this.newFileKeys.delete(file.key) ||
+          this.forceNewKeys.delete(file.key) ||
+          file.el.classList.contains("is-new"))
+      ) {
+        this.forceNewKeys.delete(file.key);
+        file.setNew(false);
+        clearedOwnMarkers = true;
+      }
+    }
+    if (clearedOwnMarkers) {
+      this.delayedUpdateStatus();
+    }
+    const digest = buildActivityDigest(
+      this.files.filter((file) => !this.ownUploadKeys.has(file.key)),
+      this.continuityState,
+      viewer,
+    );
+    let resumeEntries;
+    try {
+      const { listProgress } = await import(
+        /* webpackChunkName: "reader" */ "./files/reader/opts"
+      );
+      resumeEntries = buildResumeEntries(
+        this.files,
+        listProgress(new Set(this.filemap.keys())),
+        3,
+      );
+    } catch (ex) {
+      resumeEntries = [];
+    }
+    // Multiple file/progress events may overlap while the reader chunk loads.
+    // Only the newest snapshot may render.
+    if (refreshVersion !== this._continuityRefreshVersion) {
+      return;
+    }
+    this.continuityDigest = digest;
+    this.resumeEntries = resumeEntries;
+
+    const resume = this.resumeEntries[0];
+    const newCount = this.continuityDigest.total;
+    const downloadCount = this.continuityDownloadable.length;
+    this.continuityResumeEl.classList.toggle("hidden", !resume);
+    this.continuityDigestControlEl.classList.toggle("hidden", !newCount);
+    this.continuityMarkSeenEl.classList.toggle("hidden", !newCount);
+    this.continuityDownloadAllEl.disabled = downloadCount === 0;
+    this.continuityDownloadAllEl.title = downloadCount
+      ? `Download all ${downloadCount} new upload${
+          downloadCount === 1 ? "" : "s"
+        }`
+      : "No downloadable uploads";
+    this.continuityDownloadAllEl.setAttribute(
+      "aria-label",
+      this.continuityDownloadAllEl.title,
+    );
+    if (resume) {
+      this.continuityResumeNameEl.textContent = resume.file.name;
+      this.continuityResumeEl.title = `Resume ${resume.file.name}`;
+    }
+    if (newCount) {
+      this.continuityDigestCountEl.textContent = `${newCount} new ${
+        newCount === 1 ? "upload" : "uploads"
+      }`;
+    } else {
+      this.continuityDigestEl.classList.add("hidden");
+      this.continuityDigestToggleEl.setAttribute("aria-expanded", "false");
+    }
+
+    this.renderContinuityDigest();
+    const visible = !!resume || newCount > 0;
+    this.continuityEl.classList.toggle("hidden", !visible);
+    const filelist = this.continuityEl.closest("#filelist");
+    if (filelist) {
+      filelist.classList.toggle("continuity-visible", visible);
+    }
+  }
+
+  get continuityDownloadable() {
+    if (!this.continuityDigest) {
+      return [];
+    }
+    return this.continuityDigest.keys
+      .map((key) => this.filemap.get(key))
+      .filter(
+        (file) =>
+          file &&
+          !file.expired &&
+          !file.isRequest &&
+          !(file.meta && file.meta.request),
+      );
+  }
+
+  renderContinuityDigest() {
+    if (!this.continuityDigestEl || !this.continuityDigest) {
+      return;
+    }
+    this.continuityDigestEl.textContent = "";
+    const sections = [
+      ["fulfilledRequests", "Fulfilled requests"],
+      ["requests", "New requests"],
+      ["linked", "Linked-room arrivals"],
+      ["bots", "Bot uploads"],
+      ["uploads", "Uploads"],
+    ];
+    for (const [key, label] of sections) {
+      const files = this.continuityDigest[key];
+      if (!files.length) {
+        continue;
+      }
+      const section = dom("section", { classes: ["continuity-section"] });
+      section.appendChild(
+        dom("h3", {
+          classes: ["continuity-section-title"],
+          text: `${label} · ${files.length}`,
+        }),
+      );
+      for (const file of files) {
+        const source =
+          key === "linked"
+            ? (file.meta &&
+                (file.meta.linkedRoomName || file.meta.linkedFrom)) ||
+              file.linkedFrom ||
+              "linked room"
+            : key === "bots"
+              ? (file.meta &&
+                  (file.meta.botName || file.meta.plugin)) ||
+                "bot"
+              : key === "fulfilledRequests"
+                ? file.fulfilledByNick || "fulfilled"
+                : "";
+        const row = dom("button", {
+          attrs: {
+            type: "button",
+            "data-file-key": file.key,
+          },
+          classes: ["continuity-item"],
+        });
+        row.appendChild(
+          dom("span", {
+            classes: ["continuity-item-name"],
+            text: file.name || file.key,
+          }),
+        );
+        if (source) {
+          row.appendChild(
+            dom("span", {
+              classes: ["continuity-item-source"],
+              text: source,
+            }),
+          );
+        }
+        section.appendChild(row);
+      }
+      this.continuityDigestEl.appendChild(section);
+    }
+  }
+
+  toggleContinuityDigest() {
+    if (!this.continuityDigestEl || !this.continuityDigestToggleEl) {
+      return;
+    }
+    const open = this.continuityDigestEl.classList.contains("hidden");
+    this.continuityDigestEl.classList.toggle("hidden", !open);
+    this.continuityDigestToggleEl.setAttribute(
+      "aria-expanded",
+      open ? "true" : "false",
+    );
+  }
+
+  async resumeReading() {
+    const entry = this.resumeEntries[0];
+    if (!entry || !entry.file) {
+      return;
+    }
+    try {
+      await this.gallery.read(entry.file);
+    } catch (ex) {
+      console.error(ex);
+    }
+  }
+
+  async downloadContinuity() {
+    const targets = this.continuityDownloadable;
+    if (!targets.length) {
+      return;
+    }
+    const result = await this.downloadBatch(
+      targets,
+      "Download Since Your Last Visit",
+      { autoStart: true },
+    );
+    if (didCompleteCatchUpDownload(result)) {
+      this.markContinuitySeen();
+    }
+  }
+
+  onContinuityItem(e) {
+    const item = e.target.closest("[data-file-key]");
+    if (!item || !this.continuityDigestEl.contains(item)) {
+      return;
+    }
+    const file = this.get(item.dataset.fileKey);
+    if (!file) {
+      return;
+    }
+    if (file.isRequest) {
+      registry.roomie.showModal(new RequestViewModal(file)).catch(() => {});
+      return;
+    }
+    if (this.linksMode) {
+      this.linkMode();
+    }
+    if (this.showingNewOnly) {
+      this.showingNewOnly = false;
+      this.showNewBtnEl.classList.remove("active");
+    }
+    if (this.filter && this.filter.value) {
+      this.filter.value = "";
+    }
+    this.doFilter();
+    requestAnimationFrame(() => {
+      file.el.scrollIntoView({ block: "center", behavior: "smooth" });
+      file.el.classList.remove("continuity-focus");
+      requestAnimationFrame(() => file.el.classList.add("continuity-focus"));
+    });
+    this.continuityDigestEl.classList.add("hidden");
+    this.continuityDigestToggleEl.setAttribute("aria-expanded", "false");
+  }
+
+  markContinuitySeen() {
+    const { seenAt, linkedKeys, linkedRooms } = this.persistNewState();
+    this.newSinceServerTime = seenAt;
+    this.knownLinkedKeys = linkedKeys;
+    this.knownLinkedRooms = linkedRooms;
+    this.newFileKeys.clear();
+    this.forceNewKeys.clear();
+    this.ownUploadKeys.clear();
+    for (const file of this.files) {
+      file.setNew(false);
+    }
+    this.delayedUpdateStatus();
+    this.refreshContinuity();
   }
 
   getRoomId() {
@@ -510,6 +895,15 @@ export default new (class Files extends EventEmitter {
   }
 
   isFileNew(file, existing) {
+    if (
+      this.ownUploadKeys.has(file.key) ||
+      (!((file.meta && file.meta.request) || file.isRequest) &&
+        isOwnUpload(file, this.continuityViewer))
+    ) {
+      this.forceNewKeys.delete(file.key);
+      this.newFileKeys.delete(file.key);
+      return false;
+    }
     if (existing && existing.el.classList.contains("is-new")) {
       return true;
     }
@@ -518,6 +912,18 @@ export default new (class Files extends EventEmitter {
     }
     if (this.forceNewKeys.has(file.key)) {
       this.forceNewKeys.delete(file.key);
+      this.newFileKeys.add(file.key);
+      return true;
+    }
+    const state = {
+      lastSeenServerTime: this.newSinceServerTime,
+      knownLinkedKeys: this.knownLinkedKeys,
+      knownLinkedRooms: this.knownLinkedRooms,
+    };
+    if (
+      wasFulfilledSince(file, this.newSinceServerTime) ||
+      isLinkedDelta(file, state)
+    ) {
       this.newFileKeys.add(file.key);
       return true;
     }
@@ -532,15 +938,16 @@ export default new (class Files extends EventEmitter {
     return isNew;
   }
 
-  markFileAsNew(key) {
+  markOwnUpload(key) {
     if (!key) {
       return;
     }
-    this.forceNewKeys.add(key);
-    this.newFileKeys.add(key);
+    this.ownUploadKeys.add(key);
+    this.forceNewKeys.delete(key);
+    this.newFileKeys.delete(key);
     const existing = this.filemap.get(key);
     if (existing) {
-      existing.setNew(true);
+      existing.setNew(false);
     }
     this.delayedUpdateStatus();
   }
@@ -1146,6 +1553,9 @@ export default new (class Files extends EventEmitter {
     const modalPromise = registry.roomie.showModal(modal).catch(() => {
       modal.cancelRequested = true;
     });
+    if (options.autoStart && modal.startBtn) {
+      modal.startBtn.click();
+    }
     try {
       const values = await modal.waitForStart();
       queueState.skipExisting = !!values.skipExisting;
@@ -1165,19 +1575,22 @@ export default new (class Files extends EventEmitter {
       this.clearBatchQueue();
       await modalPromise;
       this.batchRunning = false;
-      return;
+      return null;
     }
 
     queueState.started = true;
     queueState.startedAt = Date.now();
     this.persistBatchQueue(queueState);
 
-    const workers = this.runBatchDownload(targets, modal, queueState).catch(
-      console.error,
-    );
-    await workers;
+    let result = null;
+    try {
+      result = await this.runBatchDownload(targets, modal, queueState);
+    } catch (ex) {
+      console.error(ex);
+    }
     await modalPromise;
     this.batchRunning = false;
+    return result;
   }
 
   async runBatchDownload(targets, modal, queueState) {
@@ -1288,7 +1701,15 @@ export default new (class Files extends EventEmitter {
     if (!modal.cancelRequested) {
       this.clearBatchQueue();
     }
-    modal.finish(done, failed, skipped, modal.cancelRequested, report);
+    const result = {
+      done,
+      failed,
+      skipped,
+      cancelled: modal.cancelRequested,
+      report,
+    };
+    modal.finish(done, failed, skipped, result.cancelled, report);
+    return result;
   }
 
   async fetchAndTriggerDownload(file) {
@@ -1552,17 +1973,27 @@ export default new (class Files extends EventEmitter {
         await this.addFileElements(files);
       }
       if (replace) {
-        // Flush localStorage reading-progress entries for files no longer in the room
+        // First visit (and pre-v2 visit records) starts with the current mirrors
+        // as its baseline. Newly arriving mirrors after this point are deltas.
+        if (this.knownLinkedKeys === null) {
+          this.knownLinkedKeys = this.currentLinkedKeys();
+        }
+        if (this.knownLinkedRooms === null) {
+          this.knownLinkedRooms = this.currentLinkedRooms();
+        }
+        // Bound old reader history without erasing progress from other rooms.
         import(
-          /* webpackChunkName: "reader" */ "./files/reader"
-        ).then(({ flushStaleProgress }) => {
-          flushStaleProgress(new Set(this.filemap.keys()));
+          /* webpackChunkName: "reader" */ "./files/reader/opts"
+        ).then(({ pruneProgress }) => {
+          pruneProgress();
         }).catch(() => {});
         this.emit("replaced");
       }
     }
     this.sortFiles();
     this.tryRestoreBatchQueue().catch(console.error);
+    this.refreshContinuity();
+    this.emit("files-changed");
   }
 
   onfilesupdated(files) {
@@ -1578,6 +2009,8 @@ export default new (class Files extends EventEmitter {
       );
     }
     this.delayedUpdateStatus();
+    this.refreshContinuity();
+    this.emit("files-changed");
   }
 
   onfilesdeleted(files) {
@@ -1588,8 +2021,11 @@ export default new (class Files extends EventEmitter {
       }
       this.newFileKeys.delete(key);
       this.forceNewKeys.delete(key);
+      this.ownUploadKeys.delete(key);
       existing.remove();
     }
+    this.refreshContinuity();
+    this.emit("files-changed");
   }
 
   get(key) {

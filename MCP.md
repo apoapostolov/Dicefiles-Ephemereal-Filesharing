@@ -2,7 +2,7 @@
 
 This reference is written for developers who want to connect AI clients (Claude Desktop,
 Cursor, Continue, OpenClaw, AutoGen) to a Dicefiles instance via the
-[Model Context Protocol](https://modelcontextprotocol.io). It covers setup, all 14
+[Model Context Protocol](https://modelcontextprotocol.io). It covers setup, all 20
 exposed tools, security configuration, and worked multi-step workflows.
 
 ---
@@ -18,6 +18,8 @@ From the moment Claude Desktop is pointed at a Dicefiles MCP server:
 - Claude can list, filter, and download files without being given a URL.
 - Claude can claim and fulfil open requests in a room as part of a tool-use loop.
 - Claude can write AI captions, OCR excerpts, and structured tags back to files.
+- Claude can inspect archives, manage linked-room sources, and mint or revoke
+  bounded guest invites.
 - Every call is authenticated with your existing API key — no session tokens, no CSRF.
 
 ---
@@ -26,11 +28,11 @@ From the moment Claude Desktop is pointed at a Dicefiles MCP server:
 
 ### 2.1 Prerequisites
 
-Install the two runtime dependencies into the Dicefiles project once:
+Install the repository dependencies with the supported package manager:
 
 ```bash
 cd /path/to/Dicefiles
-npm install @modelcontextprotocol/sdk zod
+yarn install
 ```
 
 Smoke-test the server before wiring it into any client:
@@ -81,7 +83,7 @@ Add a `dicefiles` entry under `mcpServers`:
 }
 ```
 
-Restart Claude Desktop. All 14 tools appear in the tool picker. Try: _"Use the
+Restart Claude Desktop. All 20 tools appear in the tool picker. Try: _"Use the
 `server_health` tool to check my Dicefiles instance."_
 
 ---
@@ -159,7 +161,7 @@ tools will be listed.
 }
 ```
 
-Save and reload. The 13 tools are now available to Antigravity's agent.
+Save and reload. The 20 tools are now available to Antigravity's agent.
 
 ---
 
@@ -285,7 +287,7 @@ cp /path/to/Dicefiles/scripts/openclaw-dicefiles-skill/SKILL.md \
    ~/.claude/skills/dicefiles/
 ```
 
-The skill teaches the agent the full 13-tool inventory, recommended call sequences,
+The skill teaches the agent the full 20-tool inventory, recommended call sequences,
 error handling, and fulfillment loop patterns. See
 `scripts/openclaw-dicefiles-skill/SKILL.md` for the full skill definition.
 
@@ -328,6 +330,12 @@ beyond localhost.
 | 12  | `save_subscription`     | `files:read`     | No      |
 | 13  | `list_subscriptions`    | `files:read`     | No      |
 | 14  | `archive_list_contents` | `files:read`     | No      |
+| 15  | `list_room_links`       | `room-links:read` | No     |
+| 16  | `create_room_link`      | `room-links:write` | No    |
+| 17  | `remove_room_link`      | `room-links:write` | No    |
+| 18  | `list_guest_invites`    | `guest-invites:read` | No |
+| 19  | `create_guest_invite`   | `guest-invites:write` | No |
+| 20  | `revoke_guest_invite`   | `guest-invites:write` | No |
 
 ---
 
@@ -661,6 +669,92 @@ Retrieve all saved filter subscriptions for this API key.
 
 ---
 
+### 4.14 `archive_list_contents`
+
+List every entry inside a ZIP, RAR, 7z, or TAR archive stored in Dicefiles.
+
+- **Maps to**: `GET /api/v1/archive/:key/ls`
+- **Scope**: `files:read`
+- **Input**: `key` (required file key)
+- **Response**: `{ ok, key, name, format, entries: [{ path, name, size, compressedSize }] }`
+
+Use it to inspect an archive before downloading it. Archive contents are read-only
+through MCP; extraction remains available through the REST API.
+
+---
+
+### 4.15 `list_room_links`
+
+List the linked source rooms configured for a destination room, including filtering
+rules, visibility, private-source consent, and current link status.
+
+- **Maps to**: `GET /api/v1/rooms/:id/links`
+- **Scope**: `room-links:read`
+- **Input**: `roomid` (required destination room ID)
+
+---
+
+### 4.16 `create_room_link`
+
+Add a linked source to a destination room.
+
+- **Maps to**: `POST /api/v1/rooms/:id/links`
+- **Scope**: `room-links:write`
+- **Input**: `roomid`, `source` (room ID or exact name), with optional `name`,
+  `visibility`, `allowPrivateSource`, and `rules`
+
+The source room must allow cross-linking. Invite-only sources require explicit
+bilateral consent; agents should not set `allowPrivateSource` unless the operator
+has approved that trust relationship.
+
+---
+
+### 4.17 `remove_room_link`
+
+Remove one linked source from a destination room.
+
+- **Maps to**: `DELETE /api/v1/rooms/:id/links/:sourceRoomId`
+- **Scope**: `room-links:write`
+- **Input**: `roomid`, `sourceRoomId`
+
+---
+
+### 4.18 `list_guest_invites`
+
+List active guest invites and recent privacy-safe invite activity for a room.
+
+- **Maps to**: `GET /api/v1/rooms/:id/guest-invites`
+- **Scope**: `guest-invites:read`
+- **Input**: `roomid`
+
+Active entries include full tokens so they can be copied or revoked. Treat this
+read scope and every returned token as sensitive.
+
+---
+
+### 4.19 `create_guest_invite`
+
+Mint a guest invite with optional use and age limits.
+
+- **Maps to**: `POST /api/v1/rooms/:id/guest-invites`
+- **Scope**: `guest-invites:write`
+- **Input**: `roomid`, with optional `singleUse`, `maxUses`, `maxAgeHours`, `label`
+
+The returned token is a bearer secret. Prefer the narrowest useful limits and do
+not paste tokens into room chat or logs.
+
+---
+
+### 4.20 `revoke_guest_invite`
+
+Revoke one active guest invite using its full token.
+
+- **Maps to**: `DELETE /api/v1/rooms/:id/guest-invites/:token`
+- **Scope**: `guest-invites:write`
+- **Input**: `roomid`, `token`
+
+---
+
 ## 5. Security Model
 
 ### 5.1 Authentication
@@ -682,7 +776,11 @@ Recommended key setup for full agent access:
         "files:write",
         "uploads:write",
         "requests:write",
-        "rooms:write"
+        "rooms:write",
+        "room-links:read",
+        "room-links:write",
+        "guest-invites:read",
+        "guest-invites:write"
       ]
     }
   ]
@@ -757,7 +855,19 @@ Two agents running concurrently:
 2. `list_files` → `type=new&since=<lastSeenMs>` — index new arrivals
 3. `save_subscription` at startup — persists filter config serverside
 
-### 6.3 OpenClaw Pipeline — enrichment pass
+### 6.3 Linked-library and guest-access setup
+
+For a destination room that should surface a curated source:
+
+1. `list_room_links` to avoid creating duplicates.
+2. `create_room_link` with the narrowest useful visibility and filter rules.
+3. `list_room_links` again to confirm the source is active.
+4. If temporary access is needed, `create_guest_invite` with a single use or
+   bounded `maxUses` and `maxAgeHours`.
+5. Deliver the token through a private channel; later use `revoke_guest_invite`
+   if access should end early.
+
+### 6.4 OpenClaw Pipeline — enrichment pass
 
 Triggered by a `file_uploaded` webhook event:
 
@@ -790,30 +900,6 @@ await mcp.call("post_room_chat", {
   nick: "Scribe",
 });
 ```
-
----
-
-### 4.14 `archive_list_contents`
-
-List every entry inside a ZIP, RAR, 7z, or TAR archive stored in Dicefiles.
-
-- **Maps to**: `GET /api/v1/archive/:key/ls`
-- **Scope**: `files:read`
-- **Input**:
-
-| Field | Type   | Required |
-| ----- | ------ | -------- |
-| `key` | string | Yes      |
-
-- **Response**: `{ ok, key, name, format, entries: [{ path, name, size, compressedSize }] }`
-
-> **What this enables**
->
-> An agent evaluating an uploaded ZIP can call this tool before deciding to download
-> or extract anything. "Show me what's in `collection.zip`" triggers a single tool
-> call that returns the full file tree — no download, no byte streaming through the
-> context window. The agent can then select specific entries worth extracting via the
-> `GET /api/v1/archive/:key/file?path=…` endpoint documented in API.md § 22.2.
 
 ---
 

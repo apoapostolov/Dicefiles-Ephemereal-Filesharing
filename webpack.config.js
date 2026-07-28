@@ -63,6 +63,7 @@ module.exports = {
     "register": "./register.js",
     "account": "./account.js",
     "user": "./user.js",
+    "status": "./status.js",
     "sortable": "./sortable.js",
     "style": "./css/style.css",
     // PDF.js web worker — served at /pdf.worker.js, referenced by reader.js

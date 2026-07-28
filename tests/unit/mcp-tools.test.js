@@ -59,6 +59,7 @@ jest.mock(
       z: {
         string: chain,
         number: chain,
+        boolean: chain,
         array: () => chain(),
         object: () => chain(),
         enum: () => chain(),
@@ -113,9 +114,9 @@ function parseResult(result) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("registerTools", () => {
-  it("registers exactly 14 tools", () => {
+  it("registers exactly 20 tools", () => {
     const tools = buildToolMap();
-    expect(Object.keys(tools)).toHaveLength(14);
+    expect(Object.keys(tools)).toHaveLength(20);
   });
 
   it("registers every expected tool name", () => {
@@ -135,6 +136,12 @@ describe("registerTools", () => {
       "save_subscription",
       "list_subscriptions",
       "archive_list_contents",
+      "list_room_links",
+      "create_room_link",
+      "remove_room_link",
+      "list_guest_invites",
+      "create_guest_invite",
+      "revoke_guest_invite",
     ];
     for (const name of expected) {
       expect(tools).toHaveProperty(name);
@@ -528,6 +535,84 @@ describe("archive_list_contents", () => {
     await tools.archive_list_contents({ key: "a/b c" });
     const [url] = global.fetch.mock.calls[0];
     expect(url).toContain("/api/v1/archive/a%2Fb%20c/ls");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("room link tools", () => {
+  it("lists, creates, and removes room links through the v1 API", async () => {
+    const tools = buildToolMap();
+    global.fetch = mockFetchJson({ ok: true, links: [] });
+
+    await tools.list_room_links({ roomid: "Dest Room" });
+    expect(global.fetch.mock.calls[0][0]).toContain(
+      "/api/v1/rooms/Dest%20Room/links",
+    );
+    expect(global.fetch.mock.calls[0][1].method).toBe("GET");
+
+    await tools.create_room_link({
+      roomid: "Dest",
+      source: "Source",
+      visibility: "members",
+      allowPrivateSource: true,
+      rules: { types: ["document"], maxAgeHours: 168 },
+    });
+    const createCall = global.fetch.mock.calls[1];
+    expect(createCall[0]).toContain("/api/v1/rooms/Dest/links");
+    expect(createCall[1].method).toBe("POST");
+    expect(JSON.parse(createCall[1].body)).toMatchObject({
+      source: "Source",
+      visibility: "members",
+      allowPrivateSource: true,
+    });
+
+    await tools.remove_room_link({
+      roomid: "Dest",
+      sourceRoomId: "Source/One",
+    });
+    const removeCall = global.fetch.mock.calls[2];
+    expect(removeCall[0]).toContain(
+      "/api/v1/rooms/Dest/links/Source%2FOne",
+    );
+    expect(removeCall[1].method).toBe("DELETE");
+  });
+});
+
+describe("guest invite tools", () => {
+  it("lists, creates, and revokes guest invites through the v1 API", async () => {
+    const tools = buildToolMap();
+    global.fetch = mockFetchJson({ ok: true, invites: [] });
+
+    await tools.list_guest_invites({ roomid: "Room 1" });
+    expect(global.fetch.mock.calls[0][0]).toContain(
+      "/api/v1/rooms/Room%201/guest-invites",
+    );
+    expect(global.fetch.mock.calls[0][1].method).toBe("GET");
+
+    await tools.create_guest_invite({
+      roomid: "Room1",
+      maxUses: 5,
+      maxAgeHours: 24,
+      label: "Friday",
+    });
+    const createCall = global.fetch.mock.calls[1];
+    expect(createCall[1].method).toBe("POST");
+    expect(JSON.parse(createCall[1].body)).toMatchObject({
+      maxUses: 5,
+      maxAgeHours: 24,
+      label: "Friday",
+    });
+
+    await tools.revoke_guest_invite({
+      roomid: "Room1",
+      token: "secret/token",
+    });
+    const revokeCall = global.fetch.mock.calls[2];
+    expect(revokeCall[0]).toContain(
+      "/api/v1/rooms/Room1/guest-invites/secret%2Ftoken",
+    );
+    expect(revokeCall[1].method).toBe("DELETE");
   });
 });
 

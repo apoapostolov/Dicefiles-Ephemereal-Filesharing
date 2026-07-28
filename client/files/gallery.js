@@ -118,13 +118,21 @@ export default class Gallery {
     }
     this.setReadNowLoading(true);
     try {
-      const reader = await this.ensureReader();
-      this.close();
-      reader.open(file);
+      await this.read(file);
     } catch (ex) {
       console.error(ex);
       this.setReadNowLoading(false);
     }
+  }
+
+  /** Open a readable file directly, including from the continuity strip. */
+  async read(file) {
+    if (!file || !(file.getReadableType && file.getReadableType())) {
+      return false;
+    }
+    const reader = await this.ensureReader();
+    this.close();
+    return reader.open(file);
   }
 
   ontitleclick(e) {

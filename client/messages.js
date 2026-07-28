@@ -36,6 +36,8 @@ const DATE_FORMAT_SHORT = (function () {
   }
 })();
 const DATE_FORMAT_LONG = new Intl.DateTimeFormat("eu");
+const WELCOME_BANNER_STATE_KEY = "dicefiles:welcome-banner-state";
+const WELCOME_BANNER_COMPACT_QUERY = "(max-width: 1350px)";
 
 export default new (class Messages extends EventEmitter {
   constructor() {
@@ -832,6 +834,55 @@ export default new (class Messages extends EventEmitter {
   addWelcome() {
     const tpl = document.querySelector("#welcome").content.cloneNode(true);
     const root = tpl.firstElementChild;
+    const details = root.querySelector(".welcome_details");
+    const toggle = root.querySelector(".welcome_toggle");
+    const toggleIcon = root.querySelector(".welcome_toggle_icon");
+    const compactMedia = window.matchMedia(WELCOME_BANNER_COMPACT_QUERY);
+    let storedBannerState = null;
+    try {
+      storedBannerState = localStorage.getItem(WELCOME_BANNER_STATE_KEY);
+    } catch {
+      // Storage can be unavailable in privacy-restricted browser contexts.
+    }
+    let hasBannerPreference =
+      storedBannerState === "compact" || storedBannerState === "expanded";
+
+    const setBannerCompact = (compact, persist = false) => {
+      root.classList.toggle("welcome-compact", compact);
+      details.hidden = compact;
+      toggle.setAttribute("aria-expanded", compact ? "false" : "true");
+      const action = compact ? "Expand" : "Minimize";
+      toggle.setAttribute("aria-label", `${action} room banner`);
+      toggle.title = `${action} room banner`;
+      toggleIcon.textContent = compact ? "+" : "−";
+      if (!persist) {
+        return;
+      }
+      hasBannerPreference = true;
+      try {
+        localStorage.setItem(
+          WELCOME_BANNER_STATE_KEY,
+          compact ? "compact" : "expanded",
+        );
+      } catch {
+        // The current page still keeps the selected state when storage fails.
+      }
+    };
+
+    setBannerCompact(
+      hasBannerPreference
+        ? storedBannerState === "compact"
+        : compactMedia.matches,
+    );
+    toggle.addEventListener("click", () => {
+      setBannerCompact(!root.classList.contains("welcome-compact"), true);
+    });
+    compactMedia.addEventListener("change", (event) => {
+      if (!hasBannerPreference) {
+        setBannerCompact(event.matches);
+      }
+    });
+
     const link = tpl.querySelector(".welcome_link");
     const u = new URL(location.pathname, location.href);
     link.textContent = u.href;

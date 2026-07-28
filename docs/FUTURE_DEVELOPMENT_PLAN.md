@@ -9,7 +9,9 @@ Working backlog of product ideas that fit self-hosted room chat + ephemeral file
 
 Plugin docs: `core/plugins/`. Formerly `feature_creep_proposal.md`.
 
-**Last updated:** 2026-07-27 — v1.4.2 + sync log; **Federated multi-server mesh** promoted to a designed feature (not “usually skip”).
+**Last updated:** 2026-07-28 — v1.4.3 “Since Your Last Visit” ships continuity,
+protected service telemetry, release publishers, and linked-room/guest-invite
+automation; **Federated multi-server mesh** remains a designed future feature.
 
 ---
 
@@ -17,15 +19,15 @@ Plugin docs: `core/plugins/`. Formerly `feature_creep_proposal.md`.
 
 - [x] Multi-room linking (files mirror, one-way, badge, source ownership) — **v1.4.2**; source must **Allow Room Cross-Linking**
 - [x] Deep links with intent (`filter` / `sort` / `request` / file open) — room option — **v1.4.2**
-- [ ] Resume strip + “what’s new since last visit” productization
+- [x] Resume strip + “what’s new since last visit” productization — **v1.4.3**
 - [ ] Session kit pack (select → zip + index)
 - [x] Request board polish — **v1.4.2** first-class board + filters + segmented toolbar pill
 - [ ] Spoiler / delayed reveal
 - [ ] Room templates + clone
 - [x] Guest invite links (single-use / max X / max Y hours) — Room Options → **Invites** — **v1.4.2**
-- [ ] Operator dashboard beyond `/healthz`
-- [x] Webhooks + plugin system (Mega Autoshare, BOT pills, Room Options → **Plugins**) — **v1.4.2**
-- [x] Durable plugin sync skip-log (name+size, Redis, configurable retention) — post-tag code; fold into next release notes
+- [x] Privacy-safe operator dashboard beyond `/healthz`, protected by a generated capability link by default — **v1.4.3**
+- [x] Webhooks + plugin system (Mega.nz Autoshare, BOT pills, Room Options → **Plugins**) — **v1.4.2**
+- [x] Durable plugin sync skip-log (name+size, Redis, configurable retention) — **v1.4.3**
 - [ ] Multi-host remote import (MediaFire, 4shared, Pixeldrain, Gofile, …) — design: `core/plugins/REMOTE_HOST_IMPORTS.md`
 - [ ] Plugin import safety: size/file caps, worker lock, hash-level skip (see gaps below)
 - [ ] **Federated multi-server mesh** — opt-in peer Dicefiles instances; remote room link + fetch-through (see full section)
@@ -48,9 +50,9 @@ Plugin docs: `core/plugins/`. Formerly `feature_creep_proposal.md`.
 - [x] Linking tab UI + **?** help; General **?** on cross-linking
 - [x] Unit tests (`lib/room/room-links.js`)
 - [x] Explicit non-goal for v1: open requests cross-room
-- [ ] ACL: richer rules (who can see linked rows, hellban/private beyond source opt-in)
-- [ ] Automation API: list / create / remove links
-- [ ] Linked-file “NEW” / digest integration (with continuity features)
+- [x] ACL: richer destination visibility rules + bilateral private-source opt-in (source room and destination link); hidden/hellbanned rows never cross
+- [x] Automation API: list / create / remove links (`room-links:read` / `room-links:write`)
+- [x] Linked-file “NEW” / digest integration (including old files newly mirrored into the room)
 
 **v1 sketch (shipped in v1.4.2)** — see Linking tab + CHANGELOG.
 
@@ -58,18 +60,18 @@ Plugin docs: `core/plugins/`. Formerly `feature_creep_proposal.md`.
 
 ## Continuity & discovery
 
-- [ ] **Continue where I left off** — resume PDF/comic strip + “N new since last visit”
+- [x] **Continue where I left off** — most-recent reader resume + “N new since last visit”
 - [x] **Shareable deep links with intent** — **v1.4.2**; open waits for file list
-- [ ] **What’s new while I was away** digest — files, fulfilled requests, linked-room deltas
-- [ ] Digest includes **plugin bot uploads** and linked mirrors as first-class “new” sources
+- [x] **What’s new while I was away** digest — files, new/fulfilled requests, linked-room deltas
+- [x] Digest includes **plugin bot uploads** and linked mirrors as first-class “new” sources
 
 ---
 
 ## Requests
 
 - [x] **Request board that scales** — **v1.4.2**
-- [ ] Request board deep-link polish / share open board state
-- [ ] Cross-room request visibility (explicit non-goal for linking v1; reconsider only with clear product rules)
+- [x] Request board deep-link polish / share and restore open/fulfilled/all board state
+- [x] Cross-room request visibility rule: request cards remain source-room local; finished fulfillment uploads may mirror as ordinary files
 
 ---
 
@@ -95,8 +97,8 @@ Plugin docs: `core/plugins/`. Formerly `feature_creep_proposal.md`.
 - [x] HTTP + WS redeem (`?invite=` / `guestInvite`)
 - [x] Room Options → **Invites** (generate + limits panel + list + copy + revoke)
 - [x] Webhooks `guest_invite_created` / `guest_invite_redeemed`
-- [ ] Optional: max concurrent active invites per room; audit log of redemptions in UI
-- [ ] Optional: REST automation endpoints for mint/list/revoke (not only socket)
+- [x] Configurable max concurrent active invites per room; privacy-safe redemption audit in UI — **v1.4.3**
+- [x] REST automation endpoints for mint/list/revoke (`guest-invites:read` / `guest-invites:write`) — **v1.4.3**
 
 ---
 
@@ -114,10 +116,10 @@ Plugin docs: `core/plugins/`. Formerly `feature_creep_proposal.md`.
 - [ ] Optional: webhook UI in Room Options or admin (today: `.config.json` only)
 - [ ] Optional: per-room webhook overrides (global hooks only today)
 
-### Plugin system + Mega Autoshare (shipped — v1.4.2)
+### Plugin system + Mega.nz Autoshare (shipped — v1.4.2)
 
 - [x] `PluginRegistry` + lifecycle (`startAll` / `run` / `onEvent`)
-- [x] Builtin **mega-folder** (Mega Autoshare) + injectable Mega I/O + production adapters
+- [x] Builtin **mega-folder** (Mega.nz Autoshare) + injectable Mega.nz I/O + production adapters
 - [x] Room Options → **Plugins**: catalog invite, settings, enable, Run now, remove
 - [x] Per-room `roomPlugins` + `room-runtime` pollers (`pollIntervalMinutes`)
 - [x] Bot identity: cyan **BOT** pill + `botName`
@@ -134,22 +136,22 @@ These are not covered by a clear backlog item yet; add them before calling plugi
 
 | Gap | Why it matters | Suggested direction |
 | --- | -------------- | ------------------- |
-| **Skip key is name+size only** | Same name, rewritten content (same size) or rename edge cases | Optional content hash after download; or Mega node id if SDK exposes stable ids |
+| **Skip key is name+size only** | Same name, rewritten content (same size) or rename edge cases | Optional content hash after download; or Mega.nz node id if SDK exposes stable ids |
 | **No skip against existing room files** | File already uploaded by a human → bot may still import | Pre-check room list / hash registry before download |
 | **Multi-worker race** | Two HTTP workers can both miss the log and double-upload | Redis lock around sync run per scope (`SET NX` / short TTL) |
-| **Large-file memory** | Mega path buffers full file then `ingestFromBuffer` | Stream/temp-file path for big folders |
-| **Import caps** | A huge Mega folder can flood a room / disk | Config: max files per run, max bytes per file/run, cooldown |
+| **Large-file memory** | Mega.nz path buffers full file then `ingestFromBuffer` | Stream/temp-file path for big folders |
+| **Import caps** | A huge Mega.nz folder can flood a room / disk | Config: max files per run, max bytes per file/run, cooldown |
 | **Operator visibility** | No last-run, skip counts, or errors in UI | Plugins tab: last run time, last error, uploaded/skipped last run |
 | **Sync log admin** | Operators cannot clear or inspect skip log | Admin/API or Plugins tab: “clear skip memory for this bot” |
 | **REST for room plugins** | Only socket `setconfig` today | Automation scopes for list/invite/run room plugins |
 | **Cross-worker poll timers** | Each process that loads the room may schedule polls | Leader election or single “plugin runner” worker |
-| **megajs not installed** | Live Mega fails until optional dep present | Clearer Plugins-tab warning / healthz plugin readiness |
+| **megajs not installed** | Live Mega.nz sync fails until optional dep present | Clearer Plugins-tab warning / healthz plugin readiness |
 
 ### Multi-host remote import (proposal — not shipped)
 
 Design: **`core/plugins/REMOTE_HOST_IMPORTS.md`**.
 
-- [ ] Shared **`RemoteDownloader`** (`canHandle` / `listFolder` / `download`) — Mega first provider
+- [ ] Shared **`RemoteDownloader`** (`canHandle` / `listFolder` / `download`) — Mega.nz first provider
 - [ ] **`remote-import` plugin** — multi-URL list, caps, source URL in meta
 - [ ] Pixeldrain / Gofile (HTTP APIs)
 - [ ] Long-tail MediaFire / 4shared via plowshare shell bridge
@@ -170,7 +172,7 @@ This is **not** a single global network, crypto currency, or “join the public 
 | ----- | --- |
 | Multi-room linking | Same server, same Redis, same file store |
 | Automation API + webhooks | External bots can move files, but no first-class “linked row” UX across hosts |
-| Plugins (Mega Autoshare) | Pull from third-party lockers, not from another Dicefiles room |
+| Plugins (Mega.nz Autoshare) | Pull from third-party lockers, not from another Dicefiles room |
 
 Federation reuses the **linking mental model** users already know: Linked badge, fetch-through download/Read Now, source owns trash/moderation, destination never silently copies unless an explicit “materialize” tool is added later.
 
@@ -204,7 +206,7 @@ Federation reuses the **linking mental model** users already know: Linked badge,
 | Remote open **requests** | No (same non-goal as local linking v1) | Cross-host request fulfillment board |
 | Bans / hellban / owners | No (local only) | Shared ban lists (maybe later, explicit product) |
 | Guest invites | No | Cross-host invite redeem |
-| Plugins run on remote | No | Remote triggers local Mega bot |
+| Plugins run on remote | No | Remote triggers local Mega.nz bot |
 
 ### API sketch (on each peer)
 
@@ -359,21 +361,20 @@ Room-level: destination still needs an explicit link row (no automatic mesh of a
 | ------- | -------------------- |
 | **v1.4.0** | Redis v4, Yarn/Node 20, virtualized lists, lazy readers, richer `/healthz` |
 | **v1.4.1** | Sticky filters/sort, Read Now / archive / batch honesty, Giphy-only |
-| **v1.4.2** | Multi-room linking, request board, deep links, guest invites, plugins/bots/Mega, Room Options tabs, webhooks expansions, docs reorg |
+| **v1.4.2** | Multi-room linking, request board, deep links, guest invites, plugins/bots/Mega.nz, Room Options tabs, webhooks expansions, docs reorg |
+| **v1.4.3** | Since Your Last Visit continuity, protected status dashboard, Discord/Telegram release publishers, linked-room and guest-invite automation, 20-tool MCP |
 
 ### Still open (product)
 
-- Resume / “what’s new” digests (include bots + linked deltas)
 - Session kits; spoiler/reveal; room templates + clone
 - Operator dashboard (include plugin health **and federation peer status**)
 - Multi-host import ladder
 - Plugin production-hardening gaps table above
-- Multi-room ACL + automation API for links
 - **Federated multi-server mesh** (full section; F0–F5 phases)
 ### Config worth remembering
 
 | Key | Default | Role |
 | --- | ------- | ---- |
 | `pluginSyncLogRetentionDays` | `30` | Durable skip-log TTL for plugin imports |
-| `pollIntervalMinutes` | per bot (e.g. 15) | Mega (and room plugins) poll cadence; `0` = manual only |
+| `pollIntervalMinutes` | per bot (e.g. 15) | Mega.nz (and room plugins) poll cadence; `0` = manual only |
 | `plugins` / room `roomPlugins` | `[]` | Global vs per-room bot invites |

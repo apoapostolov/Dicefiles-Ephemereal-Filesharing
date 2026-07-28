@@ -1,9 +1,8 @@
 # AI Agent Automation Guide — Dicefiles
 
-This document catalogues automation use cases for AI agents operating against a Dicefiles
-instance. It serves as a living proposal file: anything here is a candidate to implement,
-not a commitment. Items marked **\[implemented\]** are available today; everything else is a
-proposal for later evaluation.
+This document catalogues automation use cases for AI agents operating against a
+Dicefiles 1.4.3 instance. Items marked **\[implemented\]** are available today;
+explicit proposals remain candidates for later evaluation.
 
 ---
 
@@ -51,7 +50,7 @@ async function poll() {
 setInterval(poll, 5000);
 ```
 
-### Proposed: webhook push **\[proposal\]**
+### Webhook push **\[implemented\]**
 
 Rather than polling, register a webhook for the `file_uploaded` event. The server will
 POST to your agent's endpoint within seconds of every upload, eliminating poll latency
@@ -237,7 +236,7 @@ classifier flags it. The server already supports mod-level deletion via the API;
 missing piece is an action webhook that includes the full `href` for the agent to
 download and inspect.
 
-### Proposed: room summary on snapshot **\[proposal\]**
+### Room summary on snapshot **\[implemented\]**
 
 `GET /api/v1/room/:id/snapshot` returns a compact summary:
 
@@ -262,16 +261,16 @@ Useful for agents that generate a human-readable digest of what's in a room.
 ("What books were uploaded this week?", "Is there a PDF of the meeting notes?",
 "Download the largest video to my laptop.").
 
-### Building blocks needed **\[proposal\]**
+### Building blocks **\[implemented\]**
 
 | Capability            | API surface needed                                               |
 | --------------------- | ---------------------------------------------------------------- |
 | List and search files | `GET /api/v1/files` with `name_contains`, `ext`, `type`, `since` |
-| Read file metadata    | `GET /api/v1/file/:hash` (not yet available — proposal)          |
+| Read file metadata    | `GET /api/v1/file/:hash`                                         |
 | Download file         | `GET /api/v1/download/:hash` or file `href`                      |
 | Upload file           | `PUT /api/v1/upload`                                             |
 | Fulfill request       | Upload with `fulfillsRequest` query param                        |
-| Post a chat message   | Not in API yet — proposal below                                  |
+| Post a chat message   | `POST /api/v1/room/:id/chat`                                     |
 
 ### Agent chat messages **\[implemented\]**
 
@@ -354,7 +353,7 @@ automation API events, newest first. See API.md §14.2.
 | Audit log API                    | Medium     | Low    | Implemented       |
 | Agent request claiming           | Medium     | Low    | Implemented       |
 | AI-generated thumbnails          | Medium     | Low    | Implemented       |
-| MCP server wrapper               | Medium     | High   | Scoped (P2)       |
+| MCP server wrapper               | Medium     | High   | Implemented       |
 | Content policy webhook agent     | High       | Low    | Proposal          |
 
 ---
@@ -363,14 +362,15 @@ automation API events, newest first. See API.md §14.2.
 
 See [`MCP.md`](../MCP.md) for the complete design and implementation guide.
 
-In brief: Dicefiles doesn't natively speak Model Context Protocol — it speaks HTTP REST.
-A thin `scripts/mcp-server.js` wrapper (~300 lines, using `@modelcontextprotocol/sdk`)
-translates MCP tool calls into Dicefiles API calls. Clients (Claude Desktop, Cursor,
-OpenClaw, etc.) connect via stdio (local) or HTTP/SSE (remote).
+In brief: Dicefiles keeps HTTP REST as the core contract and ships
+`scripts/mcp-server.js` using `@modelcontextprotocol/sdk` to translate 20 typed MCP
+tools into API calls. Clients such as Claude Desktop, Cursor, and OpenClaw connect
+via stdio locally or Streamable HTTP remotely.
 
-All the v1.1 API endpoints implemented in the P2 phase map directly to MCP tools:
+The curated tool set includes:
 `list_files`, `get_file`, `get_room_snapshot`, `upload_file_from_urls`,
 `create_request`, `claim_request`, `update_file_metadata`, `post_room_chat`,
+`archive_list_contents`, linked-room management, guest-invite management,
 `server_health`, and more.
 
 ```bash

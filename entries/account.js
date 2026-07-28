@@ -18,8 +18,8 @@ acct.addEventListener("submit", async e => {
 
   const submit = document.querySelector("#submit");
   submit.setAttribute("disabled", "disabled");
-  const oldval = submit.textContent;
-  submit.textContent = "Please wait...";
+  const oldval = submit.value;
+  submit.value = "Please wait...";
   try {
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
@@ -43,11 +43,10 @@ acct.addEventListener("submit", async e => {
     console.trace(ex);
   }
   finally {
-    submit.textContent = oldval;
+    submit.value = oldval;
     submit.removeAttribute("disabled");
   }
 });
-
 
 const tfa = document.querySelector("#tfa");
 const challenger = document.querySelector("#challenger");
@@ -185,4 +184,3 @@ async function tfaHandler(e) {
 
 tfa.addEventListener("click", tfaHandler);
 tfa.form.addEventListener("submit", tfaHandler);
-

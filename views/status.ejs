@@ -1,0 +1,443 @@
+<!doctype html>
+<%- include("head"); %>
+<%
+  const disk = status.capacity.disk;
+  const totals = status.activity.totals;
+  const requests = status.requests;
+  const requestCurrent = requests.current;
+  const requestPercent = requestCurrent.fulfillmentPercent == null
+    ? 0
+    : requestCurrent.fulfillmentPercent;
+  const insights = status.insights;
+  const percent = disk.usedPercent == null ? 0 : disk.usedPercent;
+  const number = value => new Intl.NumberFormat("en").format(Number(value) || 0);
+  const bytes = value => {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "Unavailable";
+    const units = ["B", "KB", "MB", "GB", "TB", "PB"];
+    let amount = n;
+    let unit = 0;
+    while (amount >= 1000 && unit < units.length - 1) {
+      amount /= 1000;
+      unit++;
+    }
+    const digits = amount >= 100 || unit === 0 ? 0 : amount >= 10 ? 1 : 2;
+    return `${amount.toFixed(digits)} ${units[unit]}`;
+  };
+%>
+<body
+  id="page"
+  class="status-page"
+  data-service-status="<%= status.service.status %>"
+  data-status-api="<%= statusApiHref %>"
+>
+  <nav class="status-nav">
+    <a class="status-wordmark" href="/" aria-label="<%= NAME %> home">
+      <span class="status-wordmark-mark" aria-hidden="true">D</span>
+      <span><%= NAME %></span>
+    </a>
+    <a class="status-nav-link" href="/healthz">Raw health</a>
+  </nav>
+
+  <main class="status-shell">
+    <section class="service-availability" aria-labelledby="availability-heading">
+      <div class="availability-current">
+        <p class="availability-label">Current status</p>
+        <div
+          id="availability-heading"
+          class="availability-current-state"
+          role="status"
+          aria-live="polite"
+        >
+          <span class="status-live-pulse" aria-hidden="true"></span>
+          <strong data-field="service.status"><%= status.service.status %></strong>
+        </div>
+        <small>Database, storage, capacity, and previews</small>
+      </div>
+      <div class="availability-history">
+        <div class="availability-history-heading">
+          <span>Service history</span>
+          <strong data-availability-summary>Collecting history</strong>
+        </div>
+        <div
+          class="availability-track"
+          data-status-track
+          role="img"
+          aria-label="Recent service status is loading"
+        >
+          <% for (let segment = 0; segment < 48; segment++) { %>
+          <span data-status="unknown" aria-hidden="true"></span>
+          <% } %>
+        </div>
+        <div class="availability-scale">
+          <span>24 hours ago</span>
+          <span>5-minute samples</span>
+          <span>Now</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="capacity-stage" aria-labelledby="capacity-heading">
+      <div class="capacity-heading-row">
+        <div>
+          <p class="status-section-index">01 / Capacity</p>
+          <h2 id="capacity-heading">Drive horizon</h2>
+        </div>
+        <p class="capacity-updated">
+          Updated
+          <time data-field="generatedAt" datetime="<%= status.generatedAt %>">
+            just now
+          </time>
+        </p>
+      </div>
+
+      <div class="capacity-readout">
+        <div class="capacity-primary">
+          <span class="capacity-value" data-field="capacity.disk.freeBytes">
+            <%= bytes(disk.freeBytes) %>
+          </span>
+          <span class="capacity-label">remaining drive space</span>
+        </div>
+        <div
+          class="capacity-orbit"
+          style="--capacity-used: <%= percent * 3.6 %>deg"
+          aria-hidden="true"
+        >
+          <span data-field="capacity.disk.usedPercent"><%= percent %>%</span>
+          <small>used</small>
+        </div>
+      </div>
+
+      <div class="capacity-horizon">
+        <div class="capacity-track" role="img" aria-label="<%= percent %>% of drive used">
+          <span
+            class="capacity-fill"
+            data-capacity-fill
+            style="width: <%= percent %>%"
+          ></span>
+          <span class="capacity-threshold capacity-threshold-watch">75</span>
+          <span class="capacity-threshold capacity-threshold-critical">90</span>
+        </div>
+        <div class="capacity-scale">
+          <span>0</span>
+          <span data-field="capacity.disk.totalBytes"><%= bytes(disk.totalBytes) %> total</span>
+        </div>
+      </div>
+
+      <div class="capacity-ledger" aria-label="Current storage facts">
+        <div>
+          <span data-field="capacity.uploads.logicalBytes">
+            <%= bytes(status.capacity.uploads.logicalBytes) %>
+          </span>
+          <small>shared content</small>
+        </div>
+        <div>
+          <span data-field="capacity.uploads.files">
+            <%= number(status.capacity.uploads.files) %>
+          </span>
+          <small>available files</small>
+        </div>
+        <div>
+          <span data-field="community.rooms"><%= number(status.community.rooms) %></span>
+          <small>active rooms</small>
+        </div>
+        <div>
+          <span data-field="community.usersOnline">
+            <%= number(status.community.usersOnline) %>
+          </span>
+          <small>people online</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="status-story" aria-labelledby="history-heading">
+      <div class="status-story-heading">
+        <div>
+          <p class="status-section-index">02 / History</p>
+          <h2 id="history-heading">Usage over time</h2>
+        </div>
+        <div class="chart-legend" aria-label="Chart legend">
+          <span><i class="legend-storage"></i> Shared content</span>
+          <span><i class="legend-people"></i> People online</span>
+        </div>
+      </div>
+      <div class="history-chart-wrap">
+        <svg
+          id="status-history-chart"
+          class="history-chart"
+          viewBox="0 0 900 260"
+          role="img"
+          aria-labelledby="history-chart-title history-chart-desc"
+        >
+          <title id="history-chart-title">Dicefiles usage history</title>
+          <desc id="history-chart-desc">
+            Historic aggregate shared content and online people. No identities
+            are recorded.
+          </desc>
+        </svg>
+        <div class="history-empty" data-history-empty hidden>
+          History is beginning now. The line will gain detail as samples arrive.
+        </div>
+      </div>
+      <div class="history-range">
+        <span data-history-start>First sample</span>
+        <span data-history-count><%= status.history.points.length %> samples</span>
+        <span data-history-end>Now</span>
+      </div>
+    </section>
+
+    <section class="request-story" aria-labelledby="request-heading">
+      <div class="request-story-heading">
+        <div>
+          <p class="status-section-index">03 / Requests</p>
+          <h2 id="request-heading">Request pulse</h2>
+        </div>
+        <div class="chart-legend" aria-label="Request chart legend">
+          <span><i class="legend-request-opened"></i> New</span>
+          <span><i class="legend-request-fulfilled"></i> Fulfilled</span>
+        </div>
+      </div>
+
+      <div class="request-stage">
+        <div class="request-chart-column">
+          <div class="request-chart-wrap">
+            <svg
+              id="status-request-chart"
+              class="request-chart"
+              viewBox="0 0 900 260"
+              role="img"
+              aria-labelledby="request-chart-title request-chart-desc"
+            >
+              <title id="request-chart-title">Requests opened and fulfilled</title>
+              <desc id="request-chart-desc">
+                Hourly aggregate request activity across all rooms during the
+                last 24 hours.
+              </desc>
+            </svg>
+            <div class="history-empty" data-request-empty hidden>
+              No request activity has been recorded in this window.
+            </div>
+          </div>
+          <div class="history-range">
+            <span data-request-start>24 hours ago</span>
+            <span data-request-count>
+              <%= requests.timeline.points.length %> hourly buckets
+            </span>
+            <span data-request-end>Now</span>
+          </div>
+        </div>
+
+        <aside class="request-score" aria-labelledby="request-score-heading">
+          <div
+            class="request-orbit"
+            style="--request-fulfilled: <%= requestPercent * 3.6 %>deg"
+            role="img"
+            aria-label="<%= requestCurrent.fulfillmentPercent == null
+              ? 'No current requests'
+              : `${requestPercent}% of current requests fulfilled globally` %>"
+          >
+            <span data-field="requests.current.fulfillmentPercent">
+              <%= requestCurrent.fulfillmentPercent == null
+                ? "—"
+                : `${requestPercent}%` %>
+            </span>
+            <small>fulfilled</small>
+          </div>
+          <div class="request-score-copy">
+            <p class="availability-label">Global fulfillment</p>
+            <h3 id="request-score-heading">
+              <strong data-field="requests.current.fulfilled">
+                <%= number(requestCurrent.fulfilled) %>
+              </strong>
+              of
+              <strong data-field="requests.current.total">
+                <%= number(requestCurrent.total) %>
+              </strong>
+            </h3>
+            <p>
+              Current request records across every room, aggregated without
+              request text or requester identity.
+            </p>
+          </div>
+        </aside>
+      </div>
+
+      <div class="request-ledger" aria-label="Global request facts">
+        <div>
+          <span data-field="requests.current.open">
+            <%= number(requestCurrent.open) %>
+          </span>
+          <small>open now</small>
+        </div>
+        <div>
+          <span data-field="requests.last24h.opened">
+            <%= number(requests.last24h.opened) %>
+          </span>
+          <small>new in 24 hours</small>
+        </div>
+        <div>
+          <span data-field="requests.last24h.fulfilled">
+            <%= number(requests.last24h.fulfilled) %>
+          </span>
+          <small>fulfilled in 24 hours</small>
+        </div>
+        <div>
+          <span data-field="requests.current.medianFulfillmentSec">
+            <%= requestCurrent.medianFulfillmentSec == null
+              ? "—"
+              : `${Math.round(requestCurrent.medianFulfillmentSec / 60)}m` %>
+          </span>
+          <small>median fulfillment</small>
+        </div>
+        <div>
+          <span data-field="requests.current.activeClaims">
+            <%= number(requestCurrent.activeClaims) %>
+          </span>
+          <small>actively claimed</small>
+        </div>
+        <div>
+          <span data-field="requests.current.oldestOpenSec">
+            <%= requestCurrent.oldestOpenSec == null
+              ? "—"
+              : `${Math.round(requestCurrent.oldestOpenSec / 60)}m` %>
+          </span>
+          <small>oldest open age</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="status-columns">
+      <div class="activity-flow" aria-labelledby="activity-heading">
+        <p class="status-section-index">04 / Flow</p>
+        <h2 id="activity-heading">Content in motion</h2>
+        <p class="status-section-copy">
+          Aggregate transfer counters collected since
+          <time data-field="activity.since" datetime="<%= status.activity.since %>">
+            <%= new Date(status.activity.since).toLocaleString() %>
+          </time>.
+        </p>
+        <div class="flow-line">
+          <div class="flow-node">
+            <span data-field="activity.totals.uploadsCreated">
+              <%= number(totals.uploadsCreated) %>
+            </span>
+            <small>uploads received</small>
+          </div>
+          <span class="flow-arrow" aria-hidden="true">→</span>
+          <div class="flow-node flow-node-accent">
+            <span data-field="activity.totals.downloadsServed">
+              <%= number(totals.downloadsServed) %>
+            </span>
+            <small>downloads served</small>
+          </div>
+          <span class="flow-arrow" aria-hidden="true">→</span>
+          <div class="flow-node">
+            <span data-field="activity.totals.downloadsBytes">
+              <%= bytes(totals.downloadsBytes) %>
+            </span>
+            <small>content delivered</small>
+          </div>
+        </div>
+        <div class="flow-secondary">
+          <span>
+            <strong data-field="activity.totals.requestsCreated">
+              <%= number(totals.requestsCreated) %>
+            </strong>
+            requests opened
+          </span>
+          <span>
+            <strong data-field="activity.totals.requestsFulfilled">
+              <%= number(totals.requestsFulfilled) %>
+            </strong>
+            fulfilled
+          </span>
+          <span>
+            <strong data-field="community.registeredUsers">
+              <%= number(status.community.registeredUsers) %>
+            </strong>
+            registered users
+          </span>
+        </div>
+      </div>
+
+      <div class="service-circuit" aria-labelledby="service-heading">
+        <p class="status-section-index">05 / Service</p>
+        <h2 id="service-heading">Service circuit</h2>
+        <ul class="component-list">
+          <% for (const check of status.components) { %>
+          <li data-component="<%= check.id %>" data-status="<%= check.status %>">
+            <span class="component-light" aria-hidden="true"></span>
+            <span class="component-name"><%= check.label %></span>
+            <span class="component-latency">
+              <%= check.latencyMs == null ? "—" : `${check.latencyMs} ms` %>
+            </span>
+            <span class="component-state"><%= check.status %></span>
+          </li>
+          <% } %>
+          <li data-component="previews" data-status="<%= status.pipeline.status %>">
+            <span class="component-light" aria-hidden="true"></span>
+            <span class="component-name">Preview pipeline</span>
+            <span class="component-latency">
+              <span data-field="pipeline.active"><%= status.pipeline.active %></span> active
+              · <span data-field="pipeline.pending"><%= status.pipeline.pending %></span> waiting
+            </span>
+            <span class="component-state"><%= status.pipeline.status %></span>
+          </li>
+        </ul>
+        <p class="uptime-line">
+          Service process has been available for
+          <strong data-field="service.uptimeSec"><%= status.service.uptimeSec %> seconds</strong>.
+        </p>
+      </div>
+    </section>
+
+    <section class="status-signals" aria-labelledby="signals-heading">
+      <div class="signals-heading">
+        <p class="status-section-index">06 / Signals</p>
+        <h2 id="signals-heading">Operational ratios</h2>
+      </div>
+      <div class="signal-grid">
+        <div>
+          <span data-field="insights.averageDownloadBytes">
+            <%= bytes(insights.averageDownloadBytes) %>
+          </span>
+          <small>average delivery size</small>
+        </div>
+        <div>
+          <span data-field="insights.downloadsPerUpload">
+            <%= number(insights.downloadsPerUpload) %>
+          </span>
+          <small>downloads per upload</small>
+        </div>
+        <div>
+          <span data-field="insights.filesPerRoom">
+            <%= number(insights.filesPerRoom) %>
+          </span>
+          <small>files per active room</small>
+        </div>
+        <div>
+          <span data-field="insights.previewFailures">
+            <%= number(insights.previewFailures) %>
+          </span>
+          <small>preview failures</small>
+        </div>
+      </div>
+    </section>
+
+    <aside class="privacy-band">
+      <span class="privacy-mark" aria-hidden="true">∅</span>
+      <div>
+        <strong>Useful telemetry, deliberately anonymous.</strong>
+        <p>
+          This status feed contains totals and time samples only. It excludes
+          room names, user names, file names, addresses, and internal paths.
+        </p>
+      </div>
+      <a href="<%= statusApiHref %>">View status JSON</a>
+    </aside>
+  </main>
+
+  <script id="status-initial-data" type="application/json"><%- statusJSON %></script>
+  <script src="/status.js?v=<%=v%>" defer></script>
+  <%- include("footer"); %>
+</body>

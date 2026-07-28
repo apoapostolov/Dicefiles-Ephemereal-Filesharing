@@ -11,7 +11,7 @@
  *
  * Prerequisites
  * -------------
- *   Server listening at http://127.0.0.1:9090
+ *   Server listening at http://127.0.0.1:10005
  *
  * Live tests run automatically when env vars are set:
  *   export DICEFILES_TEST_API_KEY=<key-with-files:read+rooms:write+requests:write+admin:read>
@@ -21,7 +21,8 @@
  * Without those vars the auth-boundary and schema-free tests still run.
  */
 
-const BASE = "http://127.0.0.1:9090";
+const BASE =
+  process.env.DICEFILES_TEST_BASE || "http://127.0.0.1:10005";
 const TEST_KEY = process.env.DICEFILES_TEST_API_KEY || "";
 const UPLOAD_KEY = process.env.DICEFILES_TEST_UPLOAD_KEY || TEST_KEY;
 const TEST_ROOM = process.env.DICEFILES_TEST_ROOMID || "";
@@ -151,6 +152,40 @@ describe("Auth boundaries — v1.1 endpoints reject unauthenticated requests", (
   test("DELETE /api/v1/agent/subscriptions/:name → not 200 without key", async () => {
     const { status } = await del("/api/v1/agent/subscriptions/ghost-sub");
     expect(status).not.toBe(200);
+  });
+
+  test("room link automation routes reject missing API keys", async () => {
+    expect((await get(`/api/v1/rooms/${FAKE_ROOM}/links`)).status).not.toBe(200);
+    expect(
+      (
+        await post(`/api/v1/rooms/${FAKE_ROOM}/links`, {
+          body: { source: "sourceRoom1" },
+        })
+      ).status,
+    ).not.toBe(200);
+    expect(
+      (
+        await del(`/api/v1/rooms/${FAKE_ROOM}/links/sourceRoom1`)
+      ).status,
+    ).not.toBe(200);
+  });
+
+  test("guest invite automation routes reject missing API keys", async () => {
+    expect(
+      (await get(`/api/v1/rooms/${FAKE_ROOM}/guest-invites`)).status,
+    ).not.toBe(200);
+    expect(
+      (
+        await post(`/api/v1/rooms/${FAKE_ROOM}/guest-invites`, {
+          body: { singleUse: true },
+        })
+      ).status,
+    ).not.toBe(200);
+    expect(
+      (
+        await del(`/api/v1/rooms/${FAKE_ROOM}/guest-invites/fake-token`)
+      ).status,
+    ).not.toBe(200);
   });
 });
 

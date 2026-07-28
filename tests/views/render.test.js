@@ -32,6 +32,103 @@ async function render(view, extra = {}) {
   });
 }
 
+function makeStatus(overrides = {}) {
+  return Object.assign(
+    {
+      schemaVersion: 1,
+      generatedAt: "2026-07-28T12:00:00.000Z",
+      service: {
+        name: "TestSite",
+        release: "1.4.2",
+        status: "operational",
+        uptimeSec: 3600,
+      },
+      capacity: {
+        disk: {
+          totalBytes: 1000000,
+          freeBytes: 400000,
+          usedBytes: 600000,
+          usedPercent: 60,
+        },
+        uploads: { files: 12, logicalBytes: 300000 },
+      },
+      community: { rooms: 4, usersOnline: 7, registeredUsers: 20 },
+      activity: {
+        since: "2026-07-28T10:00:00.000Z",
+        totals: {
+          uploadsCreated: 14,
+          uploadsDeleted: 2,
+          downloadsServed: 30,
+          downloadsBytes: 900000,
+          requestsCreated: 3,
+          requestsFulfilled: 1,
+          previewFailures: 0,
+        },
+      },
+      requests: {
+        current: {
+          total: 5,
+          open: 2,
+          fulfilled: 3,
+          activeClaims: 1,
+          fulfillmentPercent: 60,
+          medianFulfillmentSec: 1800,
+          oldestOpenSec: 7200,
+        },
+        last24h: { opened: 4, fulfilled: 3 },
+        timeline: {
+          intervalSec: 3600,
+          windowSec: 86400,
+          points: [
+            {
+              at: "2026-07-28T11:00:00.000Z",
+              opened: 4,
+              fulfilled: 3,
+            },
+          ],
+        },
+      },
+      insights: {
+        averageDownloadBytes: 30000,
+        downloadsPerUpload: 2.1,
+        filesPerRoom: 3,
+        previewFailures: 0,
+      },
+      pipeline: {
+        status: "operational",
+        pending: 0,
+        active: 1,
+        lastFailureAt: null,
+      },
+      components: [
+        {
+          id: "database",
+          label: "Realtime database",
+          status: "operational",
+          latencyMs: 2,
+        },
+      ],
+      history: {
+        intervalSec: 300,
+        maxPoints: 288,
+        points: [
+          {
+            at: "2026-07-28T12:00:00.000Z",
+            storageBytes: 300000,
+            files: 12,
+            rooms: 4,
+            usersOnline: 7,
+            downloadsBytes: 900000,
+            downloadsServed: 30,
+          },
+        ],
+      },
+      privacy: { aggregationOnly: true, excluded: [] },
+    },
+    overrides,
+  );
+}
+
 // ── dummy data factories ────────────────────────────────────────────────────
 
 function makeUser(overrides = {}) {
@@ -115,6 +212,42 @@ test("room.ejs renders without error", async () => {
   // Key UI elements present
   expect(html).toContain('id="filter"');
   expect(html).toContain('id="menu"');
+  // Continuity/discovery chrome
+  expect(html).toContain('id="continuity"');
+  expect(html).toContain('id="continuity-resume"');
+  expect(html).toContain('id="continuity-digest-control"');
+  expect(html).toContain('id="continuity-digest-toggle"');
+  expect(html).toMatch(
+    /id="continuity-download-all"[\s\S]*?class="i-download"/,
+  );
+  expect(html).toContain('id="continuity-mark-seen"');
+  expect(html).toMatch(
+    /id="continuity-mark-seen"[\s\S]*?class="hidden i-clear"[\s\S]*?title="Mark seen"/,
+  );
+  // Request board entry
+  expect(html).toContain('id="requestboard"');
+  // Multi-room ACL and guest-invite operations controls
+  expect(html).toContain('name="linkvisibility"');
+  expect(html).toContain('name="linkprivate"');
+  expect(html).toContain('name="allowprivatecrosslinking"');
+  expect(html).toContain('name="invitecap"');
+  expect(html).toContain('name="inviteaudittbody"');
+  expect(html).toContain('class="roomopts-invite-field"');
+  expect(html).toMatch(
+    /name="invitecopy"[\s\S]*?hidden[\s\S]*?disabled[\s\S]*?<\/button>/,
+  );
+  // Report dialog fields are explicitly labelled and validation-ready.
+  expect(html).toContain('for="report-room"');
+  expect(html).toMatch(/id="report-room"[\s\S]*?readonly/);
+  expect(html).toContain('for="report-message"');
+  expect(html).toMatch(
+    /id="report-message"[\s\S]*?maxlength="2000"[\s\S]*?required/,
+  );
+  expect(html).toMatch(
+    /id="report-error"[\s\S]*?role="alert"[\s\S]*?hidden/,
+  );
+  expect(html).not.toContain("jurisdication");
+  expect(html).not.toContain("but dn");
 });
 
 test("register.ejs renders without error", async () => {
@@ -205,6 +338,15 @@ test("account.ejs renders without error", async () => {
   });
   expect(html).toContain("TestUser");
   expect(html).toContain('<form id="account"');
+  expect(html).toContain('class="account-page-legacy"');
+  expect(html).toContain("Edit your account settings");
+  expect(html).not.toContain("TestSite PRO");
+  expect(html).not.toContain("Of course!");
+  expect(html).toMatch(
+    /class="account-tfa-header"[\s\S]*?<h3>Two factor authentication<\/h3>[\s\S]*?<button id="tfa"/,
+  );
+  expect(html).not.toContain("account-hero");
+  expect(html).not.toContain("settings-panel");
 });
 
 test("account.ejs reflects user email when set", async () => {
@@ -337,6 +479,31 @@ test("discover.ejs renders with zero active rooms", async () => {
   expect(html).toContain("0 users");
 });
 
+test("status.ejs renders the public infographic and privacy contract", async () => {
+  const status = makeStatus();
+  const html = await render("status.ejs", {
+    pagename: "Service status",
+    statusPage: true,
+    statusApiHref: "/api/public/status/test-status-token",
+    status,
+    statusJSON: JSON.stringify(status),
+  });
+  expect(html).toContain("Drive horizon");
+  expect(html).toContain('class="service-availability"');
+  expect(html).toContain("Service history");
+  expect(html).toContain("24 hours ago");
+  expect((html.match(/data-status="unknown"/g) || []).length).toBe(48);
+  expect(html).toContain("Usage over time");
+  expect(html).toContain("Request pulse");
+  expect(html).toContain("Global fulfillment");
+  expect(html).toContain("Operational ratios");
+  expect(html).toContain("Content in motion");
+  expect(html).toContain("Service circuit");
+  expect(html).toContain("deliberately anonymous");
+  expect(html).toContain("/api/public/status");
+  expect(html).toContain("/status.css");
+});
+
 test("discover.ejs renders a room row", async () => {
   const rooms = [
     {
@@ -371,9 +538,15 @@ test("head.ejs includes the CSS link", async () => {
 });
 
 test("footer.ejs renders navigation links", async () => {
-  const html = await render("footer.ejs");
+  const html = await render("footer.ejs", { STATUS_HREF: "/status" });
   expect(html).toContain("<footer");
   expect(html).toContain("/terms");
   expect(html).toContain("/rules");
   expect(html).toContain("Home");
+  expect(html).toContain('href="/status"');
+});
+
+test("footer.ejs hides the status link when the dashboard is protected", async () => {
+  const html = await render("footer.ejs", { STATUS_HREF: "" });
+  expect(html).not.toContain('href="/status"');
 });

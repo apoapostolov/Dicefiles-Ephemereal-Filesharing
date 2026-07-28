@@ -2,7 +2,13 @@
 
 /** localStorage keys and helpers for reading progress + typography options. */
 
-export const PROGRESS_PREFIX = "dicefiles:readprogress:";
+import {
+  PROGRESS_PREFIX as SHARED_PROGRESS_PREFIX,
+  listProgressRecords,
+  pruneProgressStorage,
+} from "../../../lib/room/reader-progress";
+
+export const PROGRESS_PREFIX = SHARED_PROGRESS_PREFIX;
 export const READER_OPTS_KEY = "dicefiles:readeropts";
 
 /**
@@ -60,7 +66,20 @@ export function saveProgress(fileKey, state) {
     return;
   }
   try {
-    localStorage.setItem(PROGRESS_PREFIX + fileKey, JSON.stringify(state));
+    localStorage.setItem(
+      PROGRESS_PREFIX + fileKey,
+      JSON.stringify({
+        ...state,
+        updatedAt: Date.now(),
+      }),
+    );
+    if (typeof window !== "undefined" && window.dispatchEvent) {
+      window.dispatchEvent(
+        new CustomEvent("dicefiles:reader-progress", {
+          detail: { fileKey },
+        }),
+      );
+    }
   }
   catch (_) {
     // quota / private browsing — ignore
@@ -78,5 +97,32 @@ export function loadProgress(fileKey) {
   }
   catch (_) {
     return null;
+  }
+}
+
+/**
+ * List progress records for live files, newest first. Pre-upgrade records do
+ * not have updatedAt; retain them after timestamped records so existing reader
+ * positions remain resumable.
+ */
+export function listProgress(liveKeys) {
+  try {
+    return listProgressRecords(localStorage, liveKeys);
+  }
+  catch (_) {
+    return [];
+  }
+}
+
+/**
+ * Bound global reader history by age/count without deleting another room's
+ * still-live progress merely because that room is not currently open.
+ */
+export function pruneProgress() {
+  try {
+    pruneProgressStorage(localStorage);
+  }
+  catch (_) {
+    // quota / private browsing — ignore
   }
 }

@@ -8,13 +8,14 @@
  *   DELETE /api/v1/admin/rooms/:id
  *   DELETE /api/v1/admin/rooms        (nuclear)
  *
- * Runs against the live server at http://127.0.0.1:9090.
+ * Runs against the live server selected by DICEFILES_TEST_BASE
+ * (default http://127.0.0.1:10005).
  * Requires an automation API key in the DICEFILES_TEST_KEY environment variable
  * (or falls back to reading .config.json for automationApiKeys[0]).
  * All tests are skipped automatically if the server is unreachable.
  */
 
-const BASE = "http://127.0.0.1:9090";
+const BASE = process.env.DICEFILES_TEST_BASE || "http://127.0.0.1:10005";
 
 // Resolve the API key: prefer env var, then find a key in .config.json that
 // has admin:config / admin:rooms / admin:* / mod:* / * scope.

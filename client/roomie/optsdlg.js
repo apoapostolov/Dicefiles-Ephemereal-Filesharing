@@ -8,8 +8,52 @@ import {
   normalizeLinkRules,
   serializeLinkedRoomEntries,
   summarizeLinkRules,
+  summarizeLinkAccess,
   LINK_FILE_TYPES,
 } from "../../lib/room/room-links";
+
+const INVITE_DATE_FORMAT = new Intl.DateTimeFormat(undefined, {
+  year: "2-digit",
+  month: "numeric",
+  day: "numeric",
+});
+const INVITE_TIME_FORMAT = new Intl.DateTimeFormat(undefined, {
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+function compactInviteText(value, maxLength = 12) {
+  const text = String(value || "").trim();
+  if (text.length <= maxLength) {
+    return text;
+  }
+  const visible = maxLength - 1;
+  const start = Math.ceil(visible / 2);
+  const end = Math.floor(visible / 2);
+  return `${text.slice(0, start)}…${text.slice(-end)}`;
+}
+
+function compactInviteToken(value) {
+  const token = String(value || "").trim();
+  if (!token) {
+    return "Invite";
+  }
+  if (token.includes("…") && token.length <= 12) {
+    return token;
+  }
+  return token.length > 8 ?
+      `${token.slice(0, 4)}…${token.slice(-4)}` :
+      token;
+}
+
+function compactInviteDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+  return `${INVITE_DATE_FORMAT.format(date)} ${INVITE_TIME_FORMAT.format(date)}`;
+}
 
 /**
  * Room Options — General + Linking + Plugins tabs.
@@ -44,6 +88,7 @@ export class OptionsModal extends Modal {
       "linkcollection",
       "deeplinks",
       "allowcrosslinking",
+      "allowprivatecrosslinking",
       "linkedrooms",
       "disabled",
       "disablereports",
@@ -58,6 +103,8 @@ export class OptionsModal extends Modal {
       "rule_tag",
       "rule_maxage",
       "rule_minage",
+      "linkvisibility",
+      "linkprivate",
       "linkeditorapply",
       "linkeditorclear",
       "linkeditorsclose",
@@ -78,6 +125,9 @@ export class OptionsModal extends Modal {
       "invitecopy",
       "invitetbody",
       "inviteempty",
+      "invitecap",
+      "inviteaudittbody",
+      "inviteauditempty",
       "pluginpick",
       "plugininvite",
       "plugindesc",
@@ -113,6 +163,11 @@ export class OptionsModal extends Modal {
     this.owners.addEventListener("click", this.onowners.bind(this));
     this.invitees.addEventListener("click", this.oninvitees.bind(this));
     this.inviteonly.addEventListener("change", this.oninviteonly.bind(this));
+    if (this.allowcrosslinking) {
+      this.allowcrosslinking.addEventListener("change", () =>
+        this.syncPrivateCrossLinkControl(),
+      );
+    }
 
     this.el.querySelectorAll("[data-roomopts-tab]").forEach((btn) => {
       btn.addEventListener("click", () => this.setTab(btn.dataset.roomoptsTab));
@@ -142,7 +197,9 @@ export class OptionsModal extends Modal {
       this.linkhelpbtn.addEventListener("click", () => this.toggleLinkHelp());
     }
     if (this.linkhelpclose) {
-      this.linkhelpclose.addEventListener("click", () => this.setLinkHelp(false));
+      this.linkhelpclose.addEventListener("click", () =>
+        this.setLinkHelp(false),
+      );
     }
     if (this.crosslinkhelpbtn) {
       this.crosslinkhelpbtn.addEventListener("click", (ev) => {
@@ -152,7 +209,9 @@ export class OptionsModal extends Modal {
       });
     }
     if (this.invitecreate) {
-      this.invitecreate.addEventListener("click", () => this.onCreateGuestInvite());
+      this.invitecreate.addEventListener("click", () =>
+        this.onCreateGuestInvite(),
+      );
     }
     if (this.invitelimitsbtn) {
       this.invitelimitsbtn.addEventListener("click", () =>
@@ -185,10 +244,14 @@ export class OptionsModal extends Modal {
       this.plugininvite.addEventListener("click", () => this.onInvitePlugin());
     }
     if (this.pluginpick) {
-      this.pluginpick.addEventListener("change", () => this.onPluginPickChange());
+      this.pluginpick.addEventListener("change", () =>
+        this.onPluginPickChange(),
+      );
     }
     if (this.pluginapply) {
-      this.pluginapply.addEventListener("click", () => this.onApplyPluginSettings());
+      this.pluginapply.addEventListener("click", () =>
+        this.onApplyPluginSettings(),
+      );
     }
     if (this.pluginrun) {
       this.pluginrun.addEventListener("click", () => this.onRunPlugin());
@@ -197,7 +260,9 @@ export class OptionsModal extends Modal {
       this.pluginrevoke.addEventListener("click", () => this.onRevokePlugin());
     }
     if (this.pluginclose) {
-      this.pluginclose.addEventListener("click", () => this.closePluginEditor());
+      this.pluginclose.addEventListener("click", () =>
+        this.closePluginEditor(),
+      );
     }
 
     const { config: c } = registry;
@@ -213,6 +278,11 @@ export class OptionsModal extends Modal {
     if (this.allowcrosslinking) {
       this.allowcrosslinking.checked = !!c.get("allowCrossLinking");
     }
+    if (this.allowprivatecrosslinking) {
+      this.allowprivatecrosslinking.checked = !!c.get(
+        "allowPrivateCrossLinking",
+      );
+    }
     this.disabled.checked = !!c.get("disabled");
     this.disablereports.checked = !!c.get("disableReports");
     this.ttl.value = c.get("fileTTL") || 0;
@@ -222,15 +292,95 @@ export class OptionsModal extends Modal {
     this.linkEntries = normalizeLinkedRoomEntries(c.get("linkedRooms")).map(
       (e) => Object.assign({ status: "unknown" }, e),
     );
-    this._initialLinkedSerialized = serializeLinkedRoomEntries(this.linkEntries);
+    this._initialLinkedSerialized = serializeLinkedRoomEntries(
+      this.linkEntries,
+    );
     this.renderLinkTable();
     this.probeLinkStatuses();
     this.guestInvites = [];
+    this.guestInviteAudit = [];
     this.refreshGuestInvites();
     this.refreshPlugins();
 
+    this.syncInviteCopyVisibility();
     this.oninviteonly();
+    this.syncPrivateCrossLinkControl();
     this.setTab("general");
+  }
+
+  onshown() {
+    super.onshown();
+    const holder = this.el.parentElement;
+    if (!holder) {
+      return;
+    }
+
+    this._modalPinnedTop = this.el.getBoundingClientRect().top;
+    holder.classList.add("modal-holder-roomopts-pinned");
+    this.el.style.marginTop = `${this._modalPinnedTop}px`;
+
+    this._modalViewportResize = () => this.queueModalVerticalFit();
+    addEventListener("resize", this._modalViewportResize);
+    if (typeof ResizeObserver !== "undefined") {
+      this._modalResizeObserver = new ResizeObserver(() =>
+        this.queueModalVerticalFit(),
+      );
+      this._modalResizeObserver.observe(this.el);
+    }
+    this.queueModalVerticalFit();
+  }
+
+  onhidden() {
+    if (this._modalFitFrame) {
+      cancelAnimationFrame(this._modalFitFrame);
+      this._modalFitFrame = null;
+    }
+    if (this._modalResizeObserver) {
+      this._modalResizeObserver.disconnect();
+      this._modalResizeObserver = null;
+    }
+    if (this._modalViewportResize) {
+      removeEventListener("resize", this._modalViewportResize);
+      this._modalViewportResize = null;
+    }
+    const holder = this.el.parentElement;
+    if (holder) {
+      holder.classList.remove("modal-holder-roomopts-pinned");
+    }
+    this.el.style.marginTop = "";
+  }
+
+  queueModalVerticalFit() {
+    if (!this.el.parentElement || this._modalFitFrame) {
+      return;
+    }
+    this._modalFitFrame = requestAnimationFrame(() => {
+      this._modalFitFrame = null;
+      this.fitModalVertically();
+    });
+  }
+
+  fitModalVertically() {
+    if (!this.el.parentElement) {
+      return;
+    }
+    const viewportHeight =
+      document.documentElement.clientHeight || window.innerHeight;
+    const rect = this.el.getBoundingClientRect();
+    const gutter = Math.max(6, Math.min(16, viewportHeight * 0.02));
+    const preferredTop = Number.isFinite(this._modalPinnedTop)
+      ? this._modalPinnedTop
+      : rect.top;
+    const highestAllowedTop = Math.max(
+      gutter,
+      viewportHeight - rect.height - gutter,
+    );
+    const nextTop = Math.max(
+      gutter,
+      Math.min(preferredTop, highestAllowedTop),
+    );
+    this._modalPinnedTop = nextTop;
+    this.el.style.marginTop = `${Math.round(nextTop)}px`;
   }
 
   async refreshPlugins() {
@@ -272,10 +422,11 @@ export class OptionsModal extends Modal {
     sel.appendChild(ph);
     for (const c of available) {
       const opt = document.createElement("option");
+      const catalogName = c.name || c.botName || c.id;
       opt.value = c.id;
       opt.textContent = invited.has(c.id)
-        ? `${c.botName || c.name} (already invited)`
-        : `${c.botName || c.name}`;
+        ? `${catalogName} (already invited)`
+        : catalogName;
       opt.disabled = invited.has(c.id);
       sel.appendChild(opt);
     }
@@ -367,6 +518,15 @@ export class OptionsModal extends Modal {
     if (c.botName) {
       bits.push(c.botName);
     }
+    if (c.webhookUrl) {
+      bits.push("Discord connected");
+    }
+    if (c.chatId) {
+      bits.push(`Telegram ${c.chatId}`);
+    }
+    if (c.baseUrl) {
+      bits.push("public URL set");
+    }
     return bits.length ? bits.join(" · ") : "—";
   }
 
@@ -404,6 +564,8 @@ export class OptionsModal extends Modal {
       }
       if (def && def.type === "number") {
         cfg[k] = k === "pollIntervalMinutes" ? 15 : 0;
+      } else if (def && def.type === "boolean") {
+        cfg[k] = false;
       } else if (def && def.type === "array") {
         cfg[k] = [];
       } else if (k === "botName") {
@@ -417,9 +579,7 @@ export class OptionsModal extends Modal {
 
   openPluginEditor(pluginId, forced) {
     const p =
-      forced ||
-      (this.roomPlugins || []).find((x) => x.id === pluginId) ||
-      null;
+      forced || (this.roomPlugins || []).find((x) => x.id === pluginId) || null;
     if (!p) {
       return;
     }
@@ -449,7 +609,8 @@ export class OptionsModal extends Modal {
     host.innerHTML = "";
     const schema =
       p.configSchema ||
-      ((this.pluginCatalog || []).find((c) => c.id === p.id) || {}).configSchema;
+      ((this.pluginCatalog || []).find((c) => c.id === p.id) || {})
+        .configSchema;
     const props = (schema && schema.properties) || {};
     const keys = Object.keys(props).filter((k) => k !== "roomId");
     const config = Object.assign({}, p.config || {});
@@ -473,7 +634,10 @@ export class OptionsModal extends Modal {
       input.id = `roomopts-plugin-${key}`;
       input.name = `plugin_cfg_${key}`;
       input.autocomplete = "off";
-      if (def.type === "number" || key === "pollIntervalMinutes") {
+      if (def.type === "boolean") {
+        input.type = "checkbox";
+        input.checked = config[key] === true;
+      } else if (def.type === "number" || key === "pollIntervalMinutes") {
         input.type = "number";
         input.min = "0";
         input.step = "1";
@@ -489,13 +653,26 @@ export class OptionsModal extends Modal {
         if (key === "folderUrl") {
           input.placeholder = "https://mega.nz/folder/…";
         }
-        if (key === "password") {
+        if (
+          key === "password" ||
+          def.writeOnly === true ||
+          def.format === "password"
+        ) {
           input.type = "password";
-          input.placeholder = "prefer MEGA_PASSWORD env";
+          input.placeholder =
+            def.description && /\benv\b/i.test(def.description)
+              ? "optional when configured through env"
+              : "";
         }
       }
-      wrap.appendChild(lab);
-      wrap.appendChild(input);
+      if (input.type === "checkbox") {
+        wrap.className = "roomopts-checks roomopts-plugin-check";
+        lab.prepend(input);
+        wrap.appendChild(lab);
+      } else {
+        wrap.appendChild(lab);
+        wrap.appendChild(input);
+      }
       host.appendChild(wrap);
     }
   }
@@ -508,7 +685,9 @@ export class OptionsModal extends Modal {
     }
     host.querySelectorAll("input[name^='plugin_cfg_']").forEach((input) => {
       const key = input.name.replace(/^plugin_cfg_/, "");
-      if (input.type === "number") {
+      if (input.type === "checkbox") {
+        config[key] = input.checked;
+      } else if (input.type === "number") {
         const n = Number(input.value);
         if (input.value !== "" && Number.isFinite(n)) {
           config[key] = n;
@@ -627,17 +806,29 @@ export class OptionsModal extends Modal {
       return;
     }
     try {
-      const list = await registry.socket.makeCall(
+      const state = await registry.socket.makeCall(
         "setconfig",
-        "listGuestInvites",
+        "getGuestInviteAdminState",
         null,
       );
-      this.guestInvites = Array.isArray(list) ? list : [];
+      this.guestInvites =
+        state && Array.isArray(state.invites) ? state.invites : [];
+      this.guestInviteAudit =
+        state && Array.isArray(state.audit) ? state.audit : [];
+      if (this.invitecap) {
+        this.invitecap.textContent =
+          state && Number.isFinite(state.maxActive)
+            ? `${state.activeCount || 0} of ${state.maxActive} active`
+            : "";
+      }
       this.renderGuestInvites();
+      this.renderGuestInviteAudit();
     } catch (ex) {
-      console.warn("listGuestInvites", ex);
+      console.warn("getGuestInviteAdminState", ex);
       this.guestInvites = [];
+      this.guestInviteAudit = [];
       this.renderGuestInvites();
+      this.renderGuestInviteAudit();
     }
   }
 
@@ -647,9 +838,7 @@ export class OptionsModal extends Modal {
     }
     if (inv.urlPath || inv.path) {
       const p = inv.urlPath || inv.path;
-      return p.startsWith("http")
-        ? p
-        : `${document.location.origin}${p}`;
+      return p.startsWith("http") ? p : `${document.location.origin}${p}`;
     }
     const token = inv.tokenFull || inv.token;
     if (!token) {
@@ -684,6 +873,17 @@ export class OptionsModal extends Modal {
     this.setInviteLimitsPanel(
       this.invitelimitspanel.classList.contains("hidden"),
     );
+  }
+
+  syncInviteCopyVisibility() {
+    if (!this.invitecopy) {
+      return;
+    }
+    const hasLink = !!(
+      this.inviteurlfield && this.inviteurlfield.value.trim()
+    );
+    this.invitecopy.hidden = !hasLink;
+    this.invitecopy.disabled = !hasLink;
   }
 
   /**
@@ -744,15 +944,22 @@ export class OptionsModal extends Modal {
 
       const td1 = document.createElement("td");
       td1.className = "roomopts-invite-link-cell";
-      const label = document.createElement("div");
+      const label = document.createElement("span");
       label.className = "link-source-name";
-      label.textContent =
+      const fullLabel =
         inv.label || (inv.singleUse ? "Single-use" : "Multi-use");
+      label.textContent = compactInviteText(
+        inv.label || (inv.singleUse ? "Single" : "Multi"),
+      );
+      label.title = fullLabel;
       const linkRow = document.createElement("div");
       linkRow.className = "roomopts-invite-url-line";
+      const separator = document.createElement("span");
+      separator.className = "roomopts-invite-link-separator";
+      separator.textContent = "·";
       const linkText = document.createElement("span");
       linkText.className = "roomopts-invite-url-text";
-      linkText.textContent = fullUrl || inv.token || "";
+      linkText.textContent = compactInviteToken(inv.tokenFull || inv.token);
       linkText.title = fullUrl || "";
       const copyA = document.createElement("a");
       copyA.href = "#";
@@ -765,17 +972,22 @@ export class OptionsModal extends Modal {
         e.stopPropagation();
         this.copyInviteLink(fullUrl, copyA);
       });
+      linkRow.appendChild(label);
+      linkRow.appendChild(separator);
       linkRow.appendChild(linkText);
       linkRow.appendChild(copyA);
-      td1.appendChild(label);
       td1.appendChild(linkRow);
 
       const td2 = document.createElement("td");
-      td2.textContent = `${inv.uses || 0} / ${inv.maxUses || 1}`;
+      td2.textContent = `${inv.uses || 0}/${inv.maxUses || 1}`;
+      td2.title = `${inv.uses || 0} of ${inv.maxUses || 1} uses`;
       const td3 = document.createElement("td");
       td3.textContent = inv.expiresAt
+        ? compactInviteDate(inv.expiresAt)
+        : "Never";
+      td3.title = inv.expiresAt
         ? new Date(inv.expiresAt).toLocaleString()
-        : "—";
+        : "No expiry";
       const td4 = document.createElement("td");
       td4.className = "roomopts-link-actions";
       const rev = document.createElement("button");
@@ -788,6 +1000,52 @@ export class OptionsModal extends Modal {
       tr.appendChild(td2);
       tr.appendChild(td3);
       tr.appendChild(td4);
+      tbody.appendChild(tr);
+    }
+  }
+
+  renderGuestInviteAudit() {
+    const tbody = this.inviteaudittbody;
+    if (!tbody) {
+      return;
+    }
+    tbody.innerHTML = "";
+    const list = this.guestInviteAudit || [];
+    if (this.inviteauditempty) {
+      this.inviteauditempty.classList.toggle("hidden", list.length > 0);
+    }
+    const eventLabels = {
+      created: "Create",
+      redeemed: "Redeem",
+      revoked: "Revoke",
+    };
+    for (const record of list) {
+      const tr = document.createElement("tr");
+      const event = document.createElement("td");
+      event.textContent = eventLabels[record.event] || record.event;
+      event.title = record.event || "";
+      const link = document.createElement("td");
+      const fullInviteLabel =
+        record.label || record.tokenHint || "Guest invite";
+      link.textContent = compactInviteText(fullInviteLabel);
+      link.title = record.label
+        ? `${record.label} · ${record.tokenHint || "Invite"}`
+        : record.tokenHint || "";
+      const uses = document.createElement("td");
+      uses.textContent = `${record.uses || 0}/${record.maxUses || 1}`;
+      uses.title = `${record.uses || 0} of ${record.maxUses || 1} uses`;
+      const actor = document.createElement("td");
+      const fullActor = record.actor || "Guest";
+      actor.textContent = compactInviteText(fullActor);
+      actor.title = fullActor;
+      const at = document.createElement("td");
+      at.textContent = record.at ? compactInviteDate(record.at) : "—";
+      at.title = record.at ? new Date(record.at).toLocaleString() : "";
+      tr.appendChild(event);
+      tr.appendChild(link);
+      tr.appendChild(uses);
+      tr.appendChild(actor);
+      tr.appendChild(at);
       tbody.appendChild(tr);
     }
   }
@@ -807,12 +1065,16 @@ export class OptionsModal extends Modal {
         maxAgeHours = Number(this.invitehours.value);
       }
       const label = this.invitelabel ? this.invitelabel.value.trim() : "";
-      const rv = await registry.socket.makeCall("setconfig", "createGuestInvite", {
-        singleUse,
-        maxUses,
-        maxAgeHours,
-        label,
-      });
+      const rv = await registry.socket.makeCall(
+        "setconfig",
+        "createGuestInvite",
+        {
+          singleUse,
+          maxUses,
+          maxAgeHours,
+          label,
+        },
+      );
       const path = (rv && (rv.path || rv.urlPath)) || "";
       const full =
         path && document.location
@@ -824,6 +1086,7 @@ export class OptionsModal extends Modal {
         this.inviteurlfield.value = full || "";
         this.inviteurlfield.title = full || "";
       }
+      this.syncInviteCopyVisibility();
       // Keep limits panel open so user can tweak and mint again; flash copy
       if (this.invitecopy && full) {
         this.invitecopy.classList.add("copied");
@@ -835,11 +1098,7 @@ export class OptionsModal extends Modal {
       }
       await this.refreshGuestInvites();
     } catch (ex) {
-      await this.owner.showMessage(
-        ex.message || ex,
-        "Guest invite",
-        "i-error",
-      );
+      await this.owner.showMessage(ex.message || ex, "Guest invite", "i-error");
     }
   }
 
@@ -853,19 +1112,20 @@ export class OptionsModal extends Modal {
         const url = this.guestInviteAbsoluteUrl(inv);
         if (this.inviteurlfield.value === url) {
           this.inviteurlfield.value = "";
+          this.inviteurlfield.title = "";
         }
       }
+      this.syncInviteCopyVisibility();
       await this.refreshGuestInvites();
     } catch (ex) {
-      await this.owner.showMessage(
-        ex.message || ex,
-        "Guest invite",
-        "i-error",
-      );
+      await this.owner.showMessage(ex.message || ex, "Guest invite", "i-error");
     }
   }
 
   setTab(tab) {
+    if (this.el.parentElement) {
+      this._modalPinnedTop = this.el.getBoundingClientRect().top;
+    }
     const allowed = new Set(["general", "invites", "linking", "plugins"]);
     this.activeTab = allowed.has(tab) ? tab : "general";
     this.el.querySelectorAll("[data-roomopts-tab]").forEach((btn) => {
@@ -879,10 +1139,7 @@ export class OptionsModal extends Modal {
     });
     // Help (?) only on Linking tab
     if (this.linkhelpbtn) {
-      this.linkhelpbtn.classList.toggle(
-        "hidden",
-        this.activeTab !== "linking",
-      );
+      this.linkhelpbtn.classList.toggle("hidden", this.activeTab !== "linking");
     }
     if (this.activeTab !== "linking") {
       this.setLinkHelp(false);
@@ -900,6 +1157,7 @@ export class OptionsModal extends Modal {
     } else {
       this.closePluginEditor();
     }
+    this.queueModalVerticalFit();
   }
 
   setLinkHelp(open) {
@@ -953,12 +1211,15 @@ export class OptionsModal extends Modal {
         if (!live) {
           return Object.assign({}, e, { status: e.status || "unknown" });
         }
-        return {
+        return Object.assign({}, e, live, {
           roomId: e.roomId,
           name: live.name || e.name,
           rules: e.rules || live.rules || null,
+          visibility: live.visibility || e.visibility || "all",
+          allowPrivateSource:
+            live.allowPrivateSource === true || e.allowPrivateSource === true,
           status: live.status || "unknown",
-        };
+        });
       });
       this.renderLinkTable();
     } catch (ex) {
@@ -984,7 +1245,7 @@ export class OptionsModal extends Modal {
       tr.dataset.roomId = entry.roomId;
       const status = entry.status || "unknown";
       tr.classList.add(`link-status-${status}`);
-      if (status === "missing" || status === "denied") {
+      if (status === "missing" || status === "denied" || status === "private") {
         tr.classList.add("link-row-inactive");
       }
 
@@ -1002,22 +1263,32 @@ export class OptionsModal extends Modal {
           ? "Active"
           : status === "denied"
             ? "Cross-link off"
-            : status === "missing"
-              ? "Missing"
-              : "Unknown";
+            : status === "private"
+              ? "Private source"
+              : status === "missing"
+                ? "Missing"
+                : "Unknown";
       tdStatus.textContent = label;
       tdStatus.title =
         status === "denied"
           ? "Source room has not enabled Allow Room Cross-Linking"
-          : status === "missing"
-            ? "Source room not found"
-            : status === "ok"
-              ? "Source allows cross-linking"
-              : "Status not probed yet";
+          : status === "private"
+            ? "Invite-only mirroring requires approval in both the source room and this destination link"
+            : status === "missing"
+              ? "Source room not found"
+              : status === "ok"
+                ? "Source allows cross-linking"
+                : "Status not probed yet";
 
       const tdRules = document.createElement("td");
       tdRules.className = "link-col-rules";
-      tdRules.textContent = summarizeLinkRules(entry.rules || null);
+      const filterSummary = document.createElement("div");
+      filterSummary.textContent = summarizeLinkRules(entry.rules || null);
+      const accessSummary = document.createElement("div");
+      accessSummary.className = "link-access-summary";
+      accessSummary.textContent = summarizeLinkAccess(entry);
+      tdRules.appendChild(filterSummary);
+      tdRules.appendChild(accessSummary);
 
       const tdAct = document.createElement("td");
       tdAct.className = "link-col-actions";
@@ -1113,6 +1384,12 @@ export class OptionsModal extends Modal {
       this.rule_minage.value =
         rules.minAgeHours != null ? String(rules.minAgeHours) : "";
     }
+    if (this.linkvisibility) {
+      this.linkvisibility.value = entry.visibility || "all";
+    }
+    if (this.linkprivate) {
+      this.linkprivate.checked = entry.allowPrivateSource === true;
+    }
     const types = new Set(rules.types || []);
     for (const t of LINK_FILE_TYPES) {
       const box = this.ruleTypeBoxes[t];
@@ -1162,6 +1439,19 @@ export class OptionsModal extends Modal {
       } else {
         delete next.rules;
       }
+      const visibility = this.linkvisibility
+        ? this.linkvisibility.value
+        : "all";
+      if (visibility && visibility !== "all") {
+        next.visibility = visibility;
+      } else {
+        delete next.visibility;
+      }
+      if (this.linkprivate && this.linkprivate.checked) {
+        next.allowPrivateSource = true;
+      } else {
+        delete next.allowPrivateSource;
+      }
       return next;
     });
     this.renderLinkTable();
@@ -1200,6 +1490,12 @@ export class OptionsModal extends Modal {
       if (e.rules) {
         o.rules = e.rules;
       }
+      if (e.visibility && e.visibility !== "all") {
+        o.visibility = e.visibility;
+      }
+      if (e.allowPrivateSource) {
+        o.allowPrivateSource = true;
+      }
       // If entry was added by name only, send name as token
       if (e._token) {
         o.roomId = e._token;
@@ -1233,6 +1529,19 @@ export class OptionsModal extends Modal {
     } else {
       this.el.elements.invitees.classList.add("hidden");
     }
+  }
+
+  syncPrivateCrossLinkControl() {
+    if (!this.allowprivatecrosslinking) {
+      return;
+    }
+    const enabled = !!(
+      this.allowcrosslinking && this.allowcrosslinking.checked
+    );
+    this.allowprivatecrosslinking.disabled = !enabled;
+    this.allowprivatecrosslinking.title = enabled
+      ? "Additionally allow invite-only sources to be mirrored"
+      : "Enable room cross-linking first";
   }
 
   async onowners() {
@@ -1273,6 +1582,9 @@ will NOT be aborted, and they also retain their chat histories.`,
       const allowCrossLinking = !!(
         this.allowcrosslinking && this.allowcrosslinking.checked
       );
+      const allowPrivateCrossLinking = !!(
+        this.allowprivatecrosslinking && this.allowprivatecrosslinking.checked
+      );
       const linkedPayload = this.buildLinkedRoomsPayload();
       const { checked: disabled } = this.disabled;
       const { checked: disableReports } = this.disablereports;
@@ -1308,6 +1620,13 @@ will NOT be aborted, and they also retain their chat histories.`,
           "setconfig",
           "allowCrossLinking",
           allowCrossLinking,
+        );
+      }
+      if (allowPrivateCrossLinking !== !!c.get("allowPrivateCrossLinking")) {
+        await socket.makeCall(
+          "setconfig",
+          "allowPrivateCrossLinking",
+          allowPrivateCrossLinking,
         );
       }
 

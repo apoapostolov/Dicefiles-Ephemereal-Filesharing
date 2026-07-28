@@ -1,17 +1,31 @@
 # Dicefiles - Ephemereal Filesharing for Hobby Communities
 
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Version](https://img.shields.io/badge/version-1.4.2-blue)
+![Version](https://img.shields.io/badge/version-1.4.3-blue)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-339933)
 ![Redis](https://img.shields.io/badge/redis-v4%20client-DC382D)
 ![Package manager](https://img.shields.io/badge/package%20manager-yarn%201.x-2C8EBB)
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
 
-Dicefiles is a self-hosted, open-source file sharing platform for hobby communities, forked from Volafile and Kregfile, and extended with automation, multi-room linking, guest invites, plugins (including Mega Autoshare), quick archival downloads, and an improved in-room request flow. It is ideal for sharing roleplaying books, digital maps, board games, STL models, fiction, and more.
+Dicefiles is a self-hosted, open-source room for live conversation, temporary
+file sharing, requests, linked libraries, and community automation. It is
+designed for collections that people actively browse and discuss—roleplaying
+books, maps, board games, STL models, fiction, media, and more—without turning
+the experience into a generic cloud-drive dashboard.
 
-### What's new in 1.4.2
+### What's new in 1.4.3
 
-**Rooms that link, invite, and run bots.** Multi-room file linking (source opt-in), a first-class request board, shareable deep links, guest invite links, and in-process plugins with cyan **BOT** identity — including **Mega Autoshare** for folder watch + auto-share. Room Options is tabbed: General, Invites, Linking, Plugins. Built on the 1.4.0 platform overhaul (Node ≥20, Yarn-only, Redis v4, virtualized large rooms). Full notes: [CHANGELOG.md](CHANGELOG.md).
+**Since Your Last Visit.** Return to a room and Dicefiles gathers the uploads,
+linked-room arrivals, bot releases, new requests, and fulfilled requests you
+missed—excluding your own uploads. Open the grouped digest, download every new
+file in one action, or mark the room caught up. Reading progress also follows
+you back to the last PDF, book, or comic you opened.
+
+The release also adds a privacy-protected operator status dashboard,
+Discord/Telegram release publishers, stronger linked-room privacy controls,
+room-link and guest-invite automation, a 20-tool MCP server, more reliable
+image/PDF/archive previews, and a wide pass over desktop and mobile room UI.
+Full notes: [CHANGELOG.md](CHANGELOG.md).
 
 <p align="center">
   <img src="images/dicefiles_01.png" width="47.5%" />
@@ -24,44 +38,76 @@ Dicefiles is a self-hosted, open-source file sharing platform for hobby communit
 
 ### Rooms & chat
 
-- Real-time chat rooms with file sharing, inline media embedding, and Giphy GIF search
-- User accounts and moderation with login lockout protection
-- Room creation and management, invite-only rooms, flood control, and retention policies
-- **Guest invite links** — single-use, max uses, and/or max hours; mint, copy, and revoke from Room Options → **Invites**; redeem via `/r/:id?invite=TOKEN`
-- Sticky type filters, text filter, show-new, and sort per room across reloads
-- NEW badges for unseen files and requests
+- **Live rooms** combine real-time chat, inline media, file sharing, Giphy
+  search, moderation, flood controls, and configurable retention.
+- **Invite-only rooms** can mint labeled guest links with one-use, use-count,
+  and age limits; owners can copy, audit, and revoke them from Room Options.
+- **Return awareness** separates your own activity from everything that arrived
+  since your previous visit and keeps a one-click Download All path close by.
+- **Room controls** cover requests, deep links, public-directory visibility,
+  cross-linking, plugins, and privacy without leaving the conversation.
+- **Remembered views** retain file-type filters, text search, show-new state,
+  sort order, gallery/list mode, and request-board filters per room.
 
 ### Files, reading & archives
 
-- File previews for images, videos, audio, PDFs, and book covers
-- **In-page streaming reader** for PDF, ePub, MOBI, and comics (CBZ/CBR/CB7) with progress persistence, focus mode, typography options, and A5 paginated layout
-- **Archive Viewer** for browsing and selective downloading from ZIP, RAR, 7Z, TAR, and multi-part archives
-- Batch download (All/New) with progress, concurrency control, and resumable queues
-- Large-room file list virtualization and on-demand reader/archive bundles
+- **Gallery and list views** provide generated covers for images, videos,
+  audio, PDFs, books, and clear archive placeholders.
+- **Streaming readers** open PDF, ePub, MOBI/AZW, and CBZ/CBR/CB7 comics inside
+  the room with remembered progress, focus mode, typography controls, and A5
+  pagination.
+- **Archive Viewer** browses ZIP, RAR, 7Z, TAR, multi-part archives, and comics
+  without downloading the whole container; individual entries remain
+  selectable.
+- **Batch downloads** cover All, New, or Since Your Last Visit with progress,
+  bounded concurrency, failure recovery, and resumable queues.
+- **Large-room virtualization** and lazy reader/archive bundles keep busy rooms
+  responsive while the default five-day retention window limits storage drift.
 
 ### Requests, links & multi-room
 
-- Request system with fulfillment workflow, optional links/images, status pills, and room-level enable/disable
-- **Request board** — open/fulfilled board; Create + Board as a segmented toolbar pill
-- Links Archive with automatic URL capture and optional opengraph.io title enrichment
-- **Multi-room linking** — mirror finished files from other rooms (view/fetch-through); source must enable **Allow room cross-linking**
-- **Linking tab** — sources by room id or exact name; filters (name, tag, type, age); status Active / Cross-link off / Missing
-- **Shareable deep links** (optional) — URL intents for `file` / `filter` / `sort` / `request`
+- **Request Board** separates open and fulfilled asks, supports reference links
+  and images, and lets uploaders fulfill requests directly.
+- **Links Archive** collects URLs shared in chat and can enrich them with page
+  titles through opengraph.io.
+- **Multi-room linking** presents finished source-room files without copying
+  storage. Sources must opt in; invite-only sources require consent from both
+  rooms; per-link visibility can target everyone, accounts, members, owners, or
+  moderators.
+- **Link rules** filter by filename terms, tags, file types, and age, with live
+  Active, Cross-link off, Private consent, or Missing status.
+- **Shareable deep links** can restore a selected file, filter, sort, or
+  request-board view when the room enables them.
 
 ### Profiles & discovery
 
-- Expanded profiles with editable messages, achievement tracks (uploads, downloads, requests), and Latest Activity
-- **Public Room Directory** when enabled, with live stats
-- Automatic room pruning for inactive rooms
+- **Profiles** combine editable messages, latest activity, upload/download
+  statistics, and achievement tracks for sharing and request fulfillment.
+- **New-member markers** identify recent room arrivals for a configurable
+  seven-day window.
+- **Public Room Directory** offers opt-in room discovery with aggregate live
+  statistics, while inactive rooms can be pruned automatically.
 
 ### Automation, bots & ops
 
-- Automation REST API with scoped keys, rate limiting, webhooks, and MCP server for AI clients
-- Webhook events including `file_uploaded`, `request_*`, `file_deleted`, `linked_file_appeared`, `guest_invite_*`
-- **Plugins & bots** — invite from Room Options → **Plugins**; uploads show a cyan **BOT** pill and bot name
-- **Mega Autoshare** — monitor a Mega.nz folder, download new files over time, auto-share into the room ([operator guide](core/plugins/MEGA_FOLDER.md))
-- Health endpoint (`/healthz`) with Redis latency, storage, disk, preview-queue, and operational metrics
-- TLS/HTTPS support with Helmet security headers
+- **Automation REST API** uses scoped keys, per-scope rate limits, audit logs,
+  webhooks, room-link operations, and guest-invite operations.
+- **20-tool MCP server** gives AI clients typed tools for discovery, metadata,
+  requests, uploads, archives, linked rooms, and guest invites.
+- **Reactive plugins** receive room lifecycle events through stable HTTP,
+  event-lease, room/file read, chat-write, and upload capabilities rather than
+  importing server internals.
+- **Mega.nz Autoshare** watches a Mega.nz folder and uploads new material under
+  an explicit bot identity ([operator guide](core/plugins/MEGA_FOLDER.md)).
+- **Discord and Telegram release publishers** announce direct and linked-room
+  arrivals with safe file links and one-time multi-worker delivery
+  ([operator guide](core/plugins/RELEASE_PUBLISHERS.md)).
+- **Protected status dashboard** shows storage, uptime history, traffic,
+  users, files, downloads, requests, and service health through a generated
+  capability link; operators may explicitly make it public.
+- `/healthz`, structured operational metrics, preview diagnostics, TLS support,
+  Helmet headers, and privacy-safe public telemetry support day-to-day
+  operation.
 
 ## In-Page Document and Comic Reader
 
@@ -142,10 +188,13 @@ The PDF.js web worker is built as a separate webpack entry (`pdf.worker.js`) and
 | [API.md](API.md) | REST Automation API — `/api/v1` endpoints, scopes, rate limits, webhooks |
 | [MCP.md](MCP.md) | Model Context Protocol server — tools and client setup |
 | [core/plugins/DEVELOPING_PLUGINS.md](core/plugins/DEVELOPING_PLUGINS.md) | Plugin developer API (lifecycle, events, bots) |
-| [core/plugins/MEGA_FOLDER.md](core/plugins/MEGA_FOLDER.md) | Mega Autoshare operator guide |
+| [core/plugins/MEGA_FOLDER.md](core/plugins/MEGA_FOLDER.md) | Mega.nz Autoshare operator guide |
+| [core/plugins/RELEASE_PUBLISHERS.md](core/plugins/RELEASE_PUBLISHERS.md) | Discord and Telegram release bot setup |
 | [docs/FUTURE_DEVELOPMENT_PLAN.md](docs/FUTURE_DEVELOPMENT_PLAN.md) | Product backlog (shipped vs proposed) |
 | [docs/PERF_NOTES.md](docs/PERF_NOTES.md) | Performance notes (virtualization, code-splitting, workers) |
 | [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Dev setup (Yarn 1.x, Node ≥20, Redis) and PR expectations |
+| [dev/README.md](dev/README.md) | AI/human development workflow, generated files, review, and release checks |
+| [SECURITY.md](SECURITY.md) | Private vulnerability reporting and repository security policy |
 
 ---
 
@@ -180,7 +229,8 @@ Open `.config.json` and:
 - Set `"name"` and `"motto"` to taste.
 - Set `"port"` (default 9090)
 - Add at least one automation API key under `"automationApiKeys"` with scopes
-  `["files:read","uploads:write","requests:write","rooms:write"]`.
+  `["files:read","files:write","uploads:write","requests:write","rooms:write",
+  "room-links:read","room-links:write","guest-invites:read","guest-invites:write"]`.
   Keep the key value in your secrets manager.
 
 ## 3 — Build and start
@@ -225,7 +275,7 @@ mkdir -p ~/.claude/skills/dicefiles
 cp /absolute/path/to/Dicefiles/scripts/openclaw-dicefiles-skill/SKILL.md \
    ~/.claude/skills/dicefiles/
 ```
-The skill teaches OpenClaw the full 13-tool inventory, startup sequence, and
+The skill teaches OpenClaw the full 20-tool inventory, startup sequence, and
 fulfillment loop. Full skill definition: `scripts/openclaw-dicefiles-skill/SKILL.md`.
 
 ## 6 — Verify
@@ -272,21 +322,25 @@ redis-cli ping
 # Should return: PONG
 ```
 
-#### 1.5 Install Preview Tooling (recommended)
+#### 1.5 Install Preview Tooling
 
-For reliable file previews (especially PDFs), install:
+These native tools are required for reliable gallery thumbnails. ExifTool
+classifies uploads, GraphicsMagick/Ghostscript render PDF covers, Poppler is
+the PDF fallback, FFmpeg handles media, and 7-Zip handles archives/comics.
 
 ```bash
 sudo apt update
-sudo apt install -y exiftool ffmpeg graphicsmagick ghostscript p7zip-full
-
-*If you cannot install some of these utilities, the server will still run. "Preview" assets simply won't be generated and your gallery will fall back to the generic file icon — there are no crashes. CB7 comic support requires `p7zip-full`; without it, CB7 files upload successfully but lack previews and reading capabilities.*
+sudo apt install -y libimage-exiftool-perl graphicsmagick ghostscript \
+  poppler-utils ffmpeg p7zip-full file
 ```
 
 Notes:
 
-- PDF preview generation uses GraphicsMagick; after install, verify the `gm` command is available (`gm version`).
-- If you prefer ImageMagick, install it together with Ghostscript so PDF rendering delegates are available.
+- On Ubuntu/WSL, the one-command repository setup shown below installs and
+  verifies this complete toolchain.
+- Verify an existing clone at any time with `yarn check:preview-tools`.
+- If these utilities are missing, the server still runs and uses safe fallback
+  classification where possible, but some cover assets cannot be generated.
 - **PDF/ePub/MOBI in-browser reading does not require any of the above tools.** The reader libraries (`pdfjs-dist`, `jszip`, `@lingo-reader/mobi-parser`) are bundled client-side JavaScript. These tools are only needed for generating the small cover thumbnails shown in the file list gallery.
 
 #### 2. Clone and Install
@@ -298,11 +352,14 @@ Notes:
 git clone https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing.git
 cd Dicefiles-Ephemereal-Filesharing
 
-# Install dependencies (Yarn 1.x)
-yarn install
+# Ubuntu/Debian/WSL: install native preview tools, Node dependencies,
+# verify the preview stack, and build production assets
+yarn setup:ubuntu
 
-# Build client-side code (production mode)
-yarn prestart
+# Other systems: install the native tools above, then:
+# yarn install
+# yarn check:preview-tools
+# yarn prestart
 ```
 
 #### 3. Configure
@@ -497,11 +554,13 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | `port` | `8080` | HTTP listen port |
 | `workers` | `CPU + 1` | Number of web workers |
 | `secret` | `"Dicefiles"` | Secret for crypto (change in production) |
+| `statusPagePrivate` | `true` | Protect the operator dashboard and JSON feed with a generated capability-link token. Set to `false` to expose the original `/status` routes publicly. |
+| `statusPageToken` | generated | Secret 48-character token written once to the local `.config.json` when protected mode first starts. Do not commit or share it. |
 | `uploads` | `"uploads"` | Upload directory path |
 | `maxFileSize` | `10GB` | Max file size in bytes (`0` = unlimited) |
 | `requireAccounts` | `false` | Require accounts to chat/upload |
 | `roomCreation` | `true` | Allow room creation |
-| `TTL` | `48` | Hours before finished downloads expire |
+| `TTL` | `120` | Hours before finished downloads expire (5 days) |
 | `downloadMaxConcurrent` | `3` | Max concurrent downloads for room toolbar batch downloads (1–4) |
 | `automationApiKeys` | `[]` | API keys for automation API (supports scoped key objects) |
 | `automationApiRateLimit` | `{windowMs,max}` | Default automation API rate limit (fixed window) |
@@ -511,16 +570,49 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | `allowRequests` | `true` | Default for new rooms: whether request creation is enabled (room owners can override per room) |
 | `linkCollection` | `true` | Default for new rooms: whether the link archive is enabled (room owners can override per room) |
 | `allowCrossLinking` | `false` | Default for new rooms: whether other rooms may mirror this room’s finished files via multi-room linking (room owners override in Room Options) |
+| `allowPrivateCrossLinking` | `false` | Second source-owned opt-in for invite-only rooms; the destination link must also request private-source access |
 | `profileActivity` | `true` | Show a Latest Activity tab on user profile pages (last 20 uploads/downloads). Set to `false` to disable for all users for privacy. Individual users cannot override this setting. |
+| `newRoomMemberDays` | `7` | Show a new-member icon in uploader pills until this many days have passed since that account/browser first joined the room. Set to `0` to disable. |
 | `opengraphIoKey` | `""` | **Optional.** API key for [opengraph.io](https://www.opengraph.io/) enriched link-title resolution. When set, chat-link titles in the Links Archive are fetched via the opengraph.io API (follows redirects, handles JS-rendered pages, returns OG `title`). Falls back to inline HTML `<title>` scraping when unset or on API failure. Free tier: 100 req/day. Get a key at https://www.opengraph.io/.<br><br>**Setting the key:** add the value to your `.config.json` under `opengraphIoKey` and restart the server. This key is **not** returned by `/api/v1/admin/config` (intentionally excluded to avoid accidental leaks), so it cannot be changed at runtime via the admin API. |
 | `webhooks` | `[]` | Outbound webhook targets/events for upload/request lifecycle |
 | `webhookRetry` | `{...}` | Webhook retry policy defaults (retries/backoff) |
 | `webhookDeadLetterLog` | `"webhook-dead-letter.log"` | JSONL sink for failed webhook deliveries |
+| `publicBaseUrl` | `""` | Public origin used in Discord/Telegram room and file links |
 | `jail` | `true` (Linux) | Use firejail for preview commands (always `false` on Windows) |
 | `publicRooms` | `false` | When enabled, the home page becomes a searchable directory of all registered rooms, ordered by file count descending. Disabled by default — rooms are private unless the server operator turns this on. |
 | `roomPruning` | `true` | Automatically delete rooms that have been inactive for more than `roomPruningDays` days. Inactivity is tracked per file upload and per chat message. Enabled by default. |
 | `roomPruningDays` | `21` | Number of days of inactivity before a room is pruned. Requires `roomPruning: true`. All room data (files, messages, metadata) is permanently deleted when the threshold is crossed. |
-| `pluginSyncLogRetentionDays` | `30` | How long plugin bots (e.g. Mega Autoshare) remember already-synced files (name+size) in Redis so restarts do not re-upload. Range 1–730 days. |
+| `pluginSyncLogRetentionDays` | `30` | How long plugin bots (e.g. Mega.nz Autoshare) remember already-synced files (name+size) in Redis so restarts do not re-upload. Range 1–730 days. |
+
+### Operator status dashboard
+
+The visual operator dashboard is protected by default. On first startup,
+Dicefiles generates `statusPageToken`, stores it in the local `.config.json`,
+and serves the dashboard and its JSON feed at:
+
+```text
+/status/<statusPageToken>
+/api/public/status/<statusPageToken>
+```
+
+The unkeyed routes return `404` and the protected link is omitted from the
+public footer and discovery manifest. Anyone who has the complete link can view
+the aggregate dashboard, so treat it like a password.
+
+To make the dashboard intentionally public, set the following and restart:
+
+```json
+{
+  "statusPagePrivate": false
+}
+```
+
+Public mode restores `/status` and `/api/public/status`.
+
+The dashboard includes aggregate drive capacity, service availability, usage
+history, request flow, global request fulfillment, current backlog, fulfillment
+timing, transfer ratios, and preview failures. Request charts use hourly totals
+only; room names, request text, user names, and file names are never included.
 
 
 ### Room options (owner/mod)
@@ -531,16 +623,18 @@ Additional per-room settings in **Room Options** (context menu), organized by ta
 | --- | --- | --- |
 | **General** — Allow Requests | on | Request creation and the **Request board** toolbar entry |
 | **General** — Link Collection | on | Chat link archive mode |
-| **General** — Shareable deep links | **off** | When on, query/hash intents (`file`, `filter`, `sort`, `request`) apply on load. Bare gallery `#fileKey` still works when off. |
+| **General** — Shareable deep links | **off** | When on, query/hash intents (`file`, `filter`, `sort`, `request`, `requests=all\|open\|fulfilled`) apply on load. Bare gallery `#fileKey` still works when off. |
 | **General** — Allow Room Cross-Linking | **off** | When on, **other** rooms may mirror this room’s finished uploads. Knowing a room id or name is not enough — the source owner must opt in. |
-| **Invites** | — | Guest invite links: Generate opens a limits panel (single-use / max users / max hours); list with copy and revoke; redeem at `/r/:id?invite=TOKEN` |
-| **Linking** | empty table | Table of source rooms (id or exact name). Per-row filters: filename/tag contains, file types, max/min age (hours). Status: Active / Cross-link off / Missing. Mirrored files appear as **Linked · &lt;name&gt;** only when the source allows cross-linking and rules match. |
-| **Plugins** | empty | Invite bots from the server registry, edit settings, enable/disable, **Run now**. Uploads use a cyan **BOT** pill and bot name (e.g. Mega Autoshare). |
+| **General** — Allow Private Linking | **off** | Second source-owned consent for an invite-only room. Private mirroring works only when this and the destination link’s private-source request are both enabled. |
+| **Invites** | — | Guest invite links: Generate opens a limits panel (single-use / max users / max hours); list with copy and revoke; recent privacy-safe activity; redeem at `/r/:id?invite=TOKEN` |
+| **Linking** | empty table | Table of source rooms (id or exact name). Per-row filters: filename/tag contains, file types, max/min age (hours), viewer visibility, and a private-source request. Invite-only mirroring requires bilateral consent from source and destination. Status: Active / Cross-link off / Private source / Missing. Hidden rows and request cards never mirror. |
+| **Plugins** | empty | Invite bots from the server registry, edit settings, enable/disable, **Run now**. Uploads use a cyan **BOT** pill and bot name (e.g. Mega.nz Autoshare). |
 
 Example deep link (requires Shareable deep links enabled):
 
 ```text
 /r/yourRoom?filter=maps&sort=newest&file=FILEKEY
+/r/yourRoom?requests=open
 ```
 
 Server config keys `plugins` and `webhooks` can also wire global plugins/hooks in `.config.json`; most operators invite bots per room from the **Plugins** tab. See [core/plugins/DEVELOPING_PLUGINS.md](core/plugins/DEVELOPING_PLUGINS.md).
@@ -651,7 +745,7 @@ Model Context Protocol, see [`MCP.md`](MCP.md). The bundled MCP server
 (`scripts/mcp-server.js`) wraps every automation endpoint as a named, schema-validated
 tool — no HTTP code required.
 
-**In-process plugins / bots** (Mega Autoshare, custom importers) are invited per room from Room Options → **Plugins**, or loaded via the `plugins` array in `.config.json`. They upload under a cyan **BOT** identity. Developer guide: [`core/plugins/DEVELOPING_PLUGINS.md`](core/plugins/DEVELOPING_PLUGINS.md). Mega setup: [`core/plugins/MEGA_FOLDER.md`](core/plugins/MEGA_FOLDER.md).
+**In-process plugins / bots** are invited per room from Room Options → **Plugins**, or loaded via the `plugins` array in `.config.json`. Mega.nz Autoshare uploads under a cyan **BOT** identity; the Discord and Telegram publishers announce new room releases to external communities. Developer guide: [`core/plugins/DEVELOPING_PLUGINS.md`](core/plugins/DEVELOPING_PLUGINS.md). Setup guides: [`core/plugins/MEGA_FOLDER.md`](core/plugins/MEGA_FOLDER.md) and [`core/plugins/RELEASE_PUBLISHERS.md`](core/plugins/RELEASE_PUBLISHERS.md).
 
 ## Health Endpoint
 
@@ -816,27 +910,24 @@ nssm remove Dicefiles confirm
 
 ## Development
 
-### Setting Up Development Mode
+Read [`AGENTS.md`](AGENTS.md) and the
+[`dev/README.md`](dev/README.md) development index before changing the
+maintained user-test instance.
 
-Run these commands in separate terminals:
+Install dependencies and produce a production bundle:
 
-**Terminal 1:**
-
-```bash
-yarn pack
+```sh
+yarn install
+yarn prestart
+node server.js
 ```
 
-This starts webpack in watch mode and rebuilds client code automatically when files change.
-
-**Terminal 2:**
-
-```bash
-npx nodemon server.js
-```
-
-This restarts the server automatically when server files change.
-
-Client browsers will automatically reconnect and pull new code on reload.
+For the maintained WSL workspace, use the stable user-level
+`dicefiles.service` on port `10005`. Do not run Webpack watch mode,
+Nodemon, or a second server for that user-test instance. Rebuild and restart
+only at handoff so the app remains available while files are being edited; the
+exact workflow is in
+[`dev/DEV_SERVER_WORKFLOW.md`](dev/DEV_SERVER_WORKFLOW.md).
 
 ## Usage
 
@@ -918,13 +1009,25 @@ server {
 
 ### Previews don't work
 
-1. Verify all prerequisites are installed:
+1. Run the repository diagnostic:
 
    ```bash
-   which exiftool ffmpeg file
+   yarn check:preview-tools
    ```
 
-1. If using a container/VPS/Docker, firejail may refuse to run. Disable it in config:
+2. On Ubuntu/Debian/WSL, install anything missing:
+
+   ```bash
+   yarn setup:ubuntu
+   ```
+
+3. Repair previews for files uploaded before the tools were installed:
+
+   ```bash
+   yarn backfill:previews
+   ```
+
+4. If using a container/VPS/Docker, firejail may refuse to run. Disable it in config:
 
    ```json
    {
@@ -932,9 +1035,10 @@ server {
    }
    ```
 
-1. Windows users: Ensure exiftool, ffmpeg, and imagemagick are in your PATH.
+5. Native Windows users: ensure ExifTool, FFmpeg, GraphicsMagick,
+   Ghostscript, Poppler, and 7-Zip are in `PATH`.
 
-1. Check server logs for preview-related errors.
+6. Check server logs for preview-related errors.
 
 ### Files don't upload
 
@@ -976,7 +1080,7 @@ Dicefiles/
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
 
 ## License
 

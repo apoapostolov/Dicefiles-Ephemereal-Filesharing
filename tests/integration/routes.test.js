@@ -3,18 +3,19 @@
 /**
  * Integration / end-to-end route tests.
  *
- * These tests run against the live Dicefiles server at http://127.0.0.1:9090.
+ * These tests run against the live Dicefiles server selected by
+ * DICEFILES_TEST_BASE (default http://127.0.0.1:10005).
  * They confirm that:
  *   - Every public page returns the correct HTTP status
  *   - HTML pages contain expected structural elements
  *   - JSON endpoints follow their documented error shapes
  *   - Auth, upload, and automation endpoints behave correctly at the boundary
  *
- * Prerequisites: server must be running at port 9090.
+ * Prerequisite: the selected server must be running.
  * If the server is unreachable, ALL tests in this file are skipped.
  */
 
-const BASE = "http://127.0.0.1:9090";
+const BASE = process.env.DICEFILES_TEST_BASE || "http://127.0.0.1:10005";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 

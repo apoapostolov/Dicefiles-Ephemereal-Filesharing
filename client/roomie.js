@@ -415,7 +415,16 @@ export default new (class Roomie extends EventEmitter {
       modal.onshown();
       return await modal.promise;
     } finally {
-      document.body.removeChild(holder);
+      try {
+        if (typeof modal.onhidden === "function") {
+          modal.onhidden();
+        }
+      } catch (ex) {
+        console.error("modal onhidden", ex);
+      }
+      if (holder.parentElement) {
+        holder.parentElement.removeChild(holder);
+      }
       this.modals.delete(modal);
       const newtop = Array.from(this.modals).pop();
       if (newtop) {

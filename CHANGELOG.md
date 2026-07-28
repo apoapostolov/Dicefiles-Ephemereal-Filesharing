@@ -1,9 +1,109 @@
 # Changelog
 
+## [Unreleased]
+
+No changes yet.
+
+## [1.4.3] - 2026-07-28 [Since Your Last Visit]
+
+Dicefiles now remembers the useful context around a room: what arrived while
+you were away, what you were reading, which requests changed, and which linked
+rooms contributed new material.
+
+### Highlights
+
+- **Since Your Last Visit:** a compact return strip counts only other people’s
+  uploads, bot releases, linked-room arrivals, new requests, and newly
+  fulfilled requests. The grouped digest can download every new file, mark the
+  room seen, and clears itself when the user catches up.
+- **Continue reading:** PDF, ePub, MOBI/AZW, and comic progress is timestamped
+  per room and survives the pre-1.4.3 storage format.
+- **Operator dashboard:** `/status` visualizes service health, segmented uptime
+  history, storage, files, users, downloads, traffic, preview failures, and
+  request creation/fulfillment without exposing room, account, or file names.
+  A generated capability link protects it by default.
+
+### Added
+
+- **Discord and Telegram publishers:** room owners can invite distinct release
+  bots that announce direct and linked-room arrivals with safe file links,
+  optional topic/thread targeting, bot-upload suppression, retries, and
+  Redis-backed one-time delivery.
+- **Reactive plugin API:** plugins can subscribe to room lifecycle events and
+  use injected HTTP, event-lease, room/file read, chat-write, and upload
+  capabilities instead of importing core internals.
+- **Linked-room access controls:** each destination link can be visible to
+  everyone, authenticated users, members, owners, or moderators. Invite-only
+  sources require explicit consent from both rooms.
+- **Room automation:** scoped REST and MCP operations can list, add, and remove
+  room links and list, mint, and revoke guest invites.
+- **Guest-invite operations:** configurable active-link caps and bounded,
+  privacy-safe create/redeem/revoke history now appear in Room Options.
+- **Preview installation and repair:** repository diagnostics, Ubuntu/WSL setup,
+  Poppler PDF fallback, safer media classification, backfill tooling, and
+  purposeful archive placeholders make gallery covers more reliable.
+- **New-member marker:** uploads identify users who joined the room within the
+  configurable `newRoomMemberDays` window (seven days by default).
+- **AI development scaffold:** concise agent instructions, stable-server and
+  generated-file rules, review/release checklists, decision template, and
+  security-reporting policy.
+
+### Improved
+
+- **Request Board:** filters persist per room, deep links restore board state,
+  and the fulfillment action reads **Fulfill**.
+- **Room Options:** invite tables use compact one-line values, centered rows and
+  actions, responsive columns, inline generated-link copying, stable
+  bottom-first dialog resizing, and theme-compatible plugin settings.
+- **Mobile rooms:** filters and view modes occupy two centered logical rows;
+  chat/file separation, banner scrollbar clearance, compact room banners, and
+  gallery spacing are clearer on thin displays.
+- **Account and dialogs:** the original account layout is polished without a
+  redesign; two-factor controls share one row; Report Room has clearer labels,
+  validation, spacing, and responsive sizing.
+- **Default retention:** new room content now defaults to five days (`TTL: 120`)
+  instead of 48 hours.
+- **MCP server:** the tool inventory grows from 14 to 20 and now covers linked
+  rooms and guest invites with typed schemas.
+- **Development handoff:** one stable WSL service replaces hot reload, Webpack
+  watch mode, and Nodemon for user testing.
+
+### Security
+
+- Guest credentials are removed from the address bar after capture, and
+  generated deep links discard invite tokens and unrelated intents.
+- Hidden and hellbanned rows, request cards, and unauthorized private-source
+  files never cross room-link boundaries.
+- Local configuration, environment files, credentials, uploads, Redis state,
+  logs, databases, browser artifacts, and private keys are excluded from new
+  commits; `SECURITY.md` documents private reporting.
+
+### Fixed
+
+- Own uploads no longer make the Since Your Last Visit strip appear.
+- Newly linked rooms contribute arrivals against the prior visit baseline
+  without repeatedly rediscovering older mirrors.
+- Fulfilled requests carry a fulfillment timestamp instead of being mistaken
+  for newly created requests.
+- Existing reader positions remain resumable, and opening one room no longer
+  deletes progress belonging to another.
+- Redis 5 sorted-set range compatibility restores Top Users pages.
+- Image and PDF thumbnails fall back cleanly when optional native tools are
+  missing, while archives retain recognizable gallery placeholders.
+
+### Upgrade Notes
+
+- Protected status access is enabled by default. On first start, Dicefiles
+  writes `statusPageToken` to local `.config.json`; use `/status/<token>`.
+  Set `statusPagePrivate: false` only when intentionally publishing telemetry.
+- Deployments that relied on the 48-hour default should set `"TTL": 48`
+  explicitly; otherwise the default is now 120 hours.
+- Install or verify preview tools with `yarn setup:ubuntu` and
+  `yarn check:preview-tools`. No Redis or upload migration is required.
 
 ## [1.4.2] - 2026-07-27 [Rooms that link, invite, and run bots]
 
-Multi-room file mirrors, a real request board, shareable deep links, guest invite links, in-process plugins (Mega Autoshare), and a Room Options UI that power users can live in.
+Multi-room file mirrors, a real request board, shareable deep links, guest invite links, in-process plugins (Mega.nz Autoshare), and a Room Options UI that power users can live in.
 
 ### Added
 
@@ -14,7 +114,7 @@ Multi-room file mirrors, a real request board, shareable deep links, guest invit
 - **Shareable deep links** (room option, default off): query/hash intents for `file`, `filter`, `sort`, and `request` when enabled. Bare gallery `#fileKey` still works when the option is off.
 - **Guest invite links (Invites tab):** Mint single-use, max-uses, and/or max-hours links for invite-only rooms; list active invites with copy-to-clipboard and revoke; redeem at `/r/:id?invite=TOKEN` with a guest pass so multi-use links are not re-burned on every refresh.
 - **Plugins & bots (Plugins tab):** Invite bots from the server registry into a room, set config, enable/disable, and **Run now**. Plugin uploads show a cyan **BOT** pill and bot display name (not a fake human account).
-- **Mega Autoshare:** First-party plugin that monitors a Mega.nz folder on a poll interval, downloads new files, and shares them into the room as the Mega Autoshare bot (`megajs` optional dependency).
+- **Mega.nz Autoshare:** First-party plugin that monitors a Mega.nz folder on a poll interval, downloads new files, and shares them into the room as the Mega.nz Autoshare bot (`megajs` optional dependency).
 - **Webhook events:** `linked_file_appeared`, `guest_invite_created`, `guest_invite_redeemed` (plus existing upload/request/delete events) for external bots and automation.
 
 ### Improved

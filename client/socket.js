@@ -73,6 +73,7 @@ async function addVerifier(params, verifier) {
 export default async function createSocket() {
   const params = new URLSearchParams();
   const nick = localStorage.getItem("nick");
+  let guestInvite = "";
   params.set("roomid", registry.roomid);
   const sc = document.querySelector("script[src*='client']");
   const url = new URL(sc.getAttribute("src"), document.location);
@@ -80,9 +81,11 @@ export default async function createSocket() {
   params.set("cv", cv);
   // Guest invite from room URL: /r/:id?invite=TOKEN
   try {
-    const inv = new URLSearchParams(document.location.search).get("invite");
-    if (inv) {
-      params.set("invite", inv);
+    const pageParams = new URLSearchParams(document.location.search);
+    guestInvite =
+      pageParams.get("invite") || pageParams.get("guestInvite") || "";
+    if (guestInvite) {
+      params.set("invite", guestInvite);
     }
   } catch (_) {
     /* ignore */
@@ -112,6 +115,22 @@ export default async function createSocket() {
     randomizationFactor: 0.7,
     reconnectionDelayMax: 10000,
   });
+  // The socket has captured the one-time credential. Remove it from the
+  // address bar so copying an unrelated room/deep link does not leak it.
+  if (guestInvite && window.history && window.history.replaceState) {
+    try {
+      const cleanUrl = new URL(document.location.href);
+      cleanUrl.searchParams.delete("invite");
+      cleanUrl.searchParams.delete("guestInvite");
+      window.history.replaceState(
+        window.history.state,
+        "",
+        cleanUrl.href,
+      );
+    } catch (_) {
+      /* ignore */
+    }
+  }
 
   socket.makeCall = (target, id, ...args) => {
     const callbackKey = `${target}-${id}`;

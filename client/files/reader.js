@@ -4,7 +4,11 @@ import { dom, nukeEvent } from "../util";
 import { PDFReader } from "./reader/pdf";
 import { BookReader } from "./reader/book";
 import { ComicReader, WebtoonReader } from "./reader/comic";
-import { loadReaderOpts, saveReaderOpts, PROGRESS_PREFIX } from "./reader/opts";
+import {
+  loadReaderOpts,
+  saveReaderOpts,
+  pruneProgress,
+} from "./reader/opts";
 
 /**
  * Streaming PDF / EPUB / MOBI / CBZ in-page reader.
@@ -82,24 +86,10 @@ function getReadableType(file) {
 
 // ── PDF renderer ─────────────────────────────────────────────────────────────
 
-export function flushStaleProgress(liveKeys) {
-  try {
-    const toRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith(PROGRESS_PREFIX)) {
-        const fileKey = k.slice(PROGRESS_PREFIX.length);
-        if (!liveKeys.has(fileKey)) {
-          toRemove.push(k);
-        }
-      }
-    }
-    for (const k of toRemove) {
-      localStorage.removeItem(k);
-    }
-  } catch (_) {
-    // ignore
-  }
+export function flushStaleProgress() {
+  // Backward-compatible export. The old implementation deleted every reader
+  // position not present in the currently open room, erasing other rooms.
+  pruneProgress();
 }
 
 // ── Webtoon reader ───────────────────────────────────────────────────────────

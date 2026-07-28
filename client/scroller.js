@@ -80,7 +80,7 @@ export default class Scroller {
     if (this.updating) {
       return;
     }
-    this.updating = this.adjustBar().then(() => {
+    this.updating = Promise.resolve(this.adjustBar()).then(() => {
       this.updating = null;
     });
   }

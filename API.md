@@ -19,11 +19,13 @@ endpoints with required scopes. The manifest returns:
 {
   "ok": true,
   "service": "Dicefiles",
-  "version": "1.4.0",
+  "version": "1.4.3",
   "baseUrl": "/api/v1",
   "endpoints": [
     { "path": "/api/v1/files", "scope": "files:read" },
     { "path": "/api/v1/rooms", "scope": "rooms:write" },
+    { "path": "/api/v1/rooms/:id/links", "scope": "room-links:read" },
+    { "path": "/api/v1/rooms/:id/guest-invites", "scope": "guest-invites:read" },
     { "path": "/healthz", "scope": null }
   ]
 }
@@ -113,9 +115,9 @@ Config:
 
 Response headers:
 
-- `X-Dicefiles-RateLimit-Limit`
-- `X-Dicefiles-RateLimit-Remaining`
-- `X-Dicefiles-RateLimit-Reset` (unix seconds)
+- `X-RateLimit-Limit`
+- `X-RateLimit-Remaining`
+- `X-RateLimit-Reset` (unix seconds)
 - `Retry-After` (only on `429`)
 
 Audit logs are appended as JSON lines to `automationAuditLog`.
@@ -127,6 +129,12 @@ Audit logs are appended as JSON lines to `automationAuditLog`.
 | `POST`   | `/api/v1/auth/login`          | `auth:login`     | No               |
 | `POST`   | `/api/v1/auth/logout`         | `auth:logout`    | Yes              |
 | `POST`   | `/api/v1/rooms`               | `rooms:write`    | Yes              |
+| `GET`    | `/api/v1/rooms/:id/links`     | `room-links:read` | No              |
+| `POST`   | `/api/v1/rooms/:id/links`     | `room-links:write` | No             |
+| `DELETE` | `/api/v1/rooms/:id/links/:sourceRoomId` | `room-links:write` | No   |
+| `GET`    | `/api/v1/rooms/:id/guest-invites` | `guest-invites:read` | No       |
+| `POST`   | `/api/v1/rooms/:id/guest-invites` | `guest-invites:write` | No      |
+| `DELETE` | `/api/v1/rooms/:id/guest-invites/:token` | `guest-invites:write` | No |
 | `POST`   | `/api/v1/requests`            | `requests:write` | Yes              |
 | `POST`   | `/api/v1/uploads/key`         | `uploads:write`  | Yes              |
 | `GET`    | `/api/v1/uploads/:key/offset` | `uploads:write`  | Yes              |
@@ -190,6 +198,64 @@ All automation responses are JSON.
   "href": "/r/AbCdEf1234"
 }
 ```
+
+### 6.3.1 Multi-room links
+
+These endpoints mutate a destination room’s linked sources. They use dedicated
+global automation scopes; no browser session is required.
+
+- `GET /api/v1/rooms/:id/links` — `room-links:read`
+- `POST /api/v1/rooms/:id/links` — `room-links:write`
+- `DELETE /api/v1/rooms/:id/links/:sourceRoomId` — `room-links:write`
+
+Create body:
+
+```json
+{
+  "source": "source room id or exact room name",
+  "visibility": "members",
+  "allowPrivateSource": false,
+  "rules": {
+    "nameContains": "map, handout",
+    "tagContains": "pf2e",
+    "types": ["image", "document"],
+    "maxAgeHours": 168
+  }
+}
+```
+
+`visibility` is one of `all`, `authenticated`, `members`, `owners`, or `mods`.
+The source must enable **Allow Room Cross-Linking**. Invite-only sources require
+bilateral consent: the source room must additionally enable **Allow Invite-Only
+Room Cross-Linking**, and this destination link must set
+`allowPrivateSource: true`. A destination owner cannot bypass the source
+room’s privacy setting. Hidden/hellbanned rows and request cards never cross
+room boundaries; a finished upload that fulfilled a request can mirror as an
+ordinary file.
+
+### 6.3.2 Guest invite administration
+
+- `GET /api/v1/rooms/:id/guest-invites` — `guest-invites:read`
+- `POST /api/v1/rooms/:id/guest-invites` — `guest-invites:write`
+- `DELETE /api/v1/rooms/:id/guest-invites/:token` — `guest-invites:write`
+
+Create body:
+
+```json
+{
+  "singleUse": false,
+  "maxUses": 5,
+  "maxAgeHours": 24,
+  "label": "Friday guests"
+}
+```
+
+The create response includes the newly minted full token. List responses also
+include full active-invite tokens so automation can copy or revoke an invite it
+did not mint; treat `guest-invites:read` as a sensitive scope. Audit records use
+only privacy-safe token hints and are bounded by `guestInviteAuditLimit`. The
+per-room active invite cap is configured with
+`maxActiveGuestInvitesPerRoom`.
 
 ### 6.4 Create Request
 
@@ -398,6 +464,30 @@ Status codes:
 - `200` healthy
 - `503` one or more dependency checks failed
 
+### 7.2 Aggregate operator status
+
+The operator dashboard and its privacy-safe aggregate JSON feed are protected
+with a generated capability link by default:
+
+- `GET /status/:statusPageToken`
+- `GET /api/public/status/:statusPageToken`
+
+The token is generated on first startup and stored as `statusPageToken` in the
+local `.config.json`. The unkeyed routes return `404`, and protected responses
+use `Cache-Control: private, no-store`.
+
+Set `statusPagePrivate` to `false` and restart to restore the public routes:
+
+- `GET /status`
+- `GET /api/public/status`
+
+The JSON response contains only aggregate capacity, activity, community,
+service-component, queue, bounded history, and global request-flow data. Request
+telemetry includes hourly opened/fulfilled buckets, current open and fulfilled
+counts, fulfillment percentage, active claim count, and aggregate timing. It
+does not include request text, room names, user names, file names, addresses,
+internal paths, or process IDs.
+
 ## 8. Webhooks
 
 Configure in `.config.json`:
@@ -462,7 +552,21 @@ Signature format:
 
 Retries use exponential backoff. Permanent failures are written as JSON lines to `webhookDeadLetterLog`.
 
-The same event names are fanned out to **in-process plugins** (`lib/plugins/`). See [core/plugins/DEVELOPING_PLUGINS.md](core/plugins/DEVELOPING_PLUGINS.md).
+The same event names are fanned out to global plugins and to plugins invited
+to the affected room. Room plugins opt in with `eventSubscriptions`; delivery
+is scoped to `payload.roomid`. See
+[core/plugins/DEVELOPING_PLUGINS.md](core/plugins/DEVELOPING_PLUGINS.md).
+
+External bots already have a bidirectional surface without arbitrary remote
+code execution:
+
+1. detect changes through signed webhooks;
+2. read room/file state through scoped `files:read` endpoints;
+3. execute allowed actions through narrowly scoped write keys.
+
+Trusted in-process plugins receive equivalent injected adapters (`ctx.http`,
+`ctx.events`, and `ctx.dicefiles`) rather than importing HTTP server or Redis
+internals directly.
 
 ## 8.4 Guest invite links
 
@@ -1119,12 +1223,10 @@ including `meta.hints`, and can match against it programmatically.
 
 ## 19. MCP Server Integration
 
-> **Quick answer on MCP:** Dicefiles is _almost_ an MCP server — it has exactly
-> the right HTTP API. The missing piece is a thin wrapper that speaks the
-> Model Context Protocol JSON-RPC dialect that Claude Desktop, Cursor, Continue,
-> and other MCP clients understand. That wrapper is a ~300-line Node.js script
-> that proxies MCP tool calls into Dicefiles REST calls. See `MCP.md` for
-> the full design and setup guide.
+> **Quick answer on MCP:** Dicefiles ships a 20-tool MCP server at
+> `scripts/mcp-server.js`. It translates typed MCP calls from Claude Desktop,
+> Cursor, OpenClaw, and other clients into the scoped REST API documented here.
+> See `MCP.md` for client setup, tool schemas, and security guidance.
 
 ### 19.1 What MCP means here
 
@@ -1133,11 +1235,11 @@ defines a JSON-RPC 2.0 protocol over stdio or HTTP/SSE that lets AI clients
 (Claude Desktop, Cursor IDE, Continue.dev, any agent using the MCP SDK) call
 named **tools** with typed inputs.
 
-Dicefiles **does not** speak this protocol natively — it speaks HTTP REST. But you
-can run a tiny MCP server script alongside Dicefiles that wraps every REST endpoint
-as an MCP tool. Local clients connect via stdio; remote agents connect via HTTP.
+Dicefiles keeps REST as its core automation contract and ships an MCP adapter over
+that contract. Local clients connect via stdio; remote agents connect through the
+optional Streamable HTTP transport.
 
-### 19.2 The `dicefiles-mcp` wrapper (scoped for implementation)
+### 19.2 The bundled `dicefiles-mcp` server
 
 The wrapper lives at `scripts/mcp-server.js` in the repo. Configure with two env vars:
 
@@ -1164,6 +1266,13 @@ node scripts/mcp-server.js  # stdio mode for Claude Desktop / local agents
 | `save_subscription`     | `POST /api/v1/agent/subscriptions`     | `files:read`     |
 | `list_subscriptions`    | `GET /api/v1/agent/subscriptions`      | `files:read`     |
 | `server_health`         | `GET /healthz`                         | none             |
+| `archive_list_contents` | `GET /api/v1/archive/:key/ls`          | `files:read`     |
+| `list_room_links`       | `GET /api/v1/rooms/:id/links`          | `room-links:read` |
+| `create_room_link`      | `POST /api/v1/rooms/:id/links`         | `room-links:write` |
+| `remove_room_link`      | `DELETE /api/v1/rooms/:id/links/:sourceRoomId` | `room-links:write` |
+| `list_guest_invites`    | `GET /api/v1/rooms/:id/guest-invites` | `guest-invites:read` |
+| `create_guest_invite`   | `POST /api/v1/rooms/:id/guest-invites` | `guest-invites:write` |
+| `revoke_guest_invite`   | `DELETE /api/v1/rooms/:id/guest-invites/:token` | `guest-invites:write` |
 
 ### 19.4 Claude Desktop integration example
 
@@ -1202,13 +1311,19 @@ See `MCP.md` for the full specification, security model, and deployment guide.
 
 ---
 
-## 20. Complete Endpoint Matrix (v1.0 + v1.1 + v1.2)
+## 20. Complete Endpoint Matrix (v1.0 through v1.4.3)
 
 | Method   | Path                                | Scope            | Session Required | Version |
 | -------- | ----------------------------------- | ---------------- | ---------------- | ------- |
 | `POST`   | `/api/v1/auth/login`                | `auth:login`     | No               | v1.0    |
 | `POST`   | `/api/v1/auth/logout`               | `auth:logout`    | Yes              | v1.0    |
 | `POST`   | `/api/v1/rooms`                     | `rooms:write`    | Yes              | v1.0    |
+| `GET`    | `/api/v1/rooms/:id/links`           | `room-links:read` | No              | v1.4.3  |
+| `POST`   | `/api/v1/rooms/:id/links`           | `room-links:write` | No             | v1.4.3  |
+| `DELETE` | `/api/v1/rooms/:id/links/:sourceRoomId` | `room-links:write` | No         | v1.4.3  |
+| `GET`    | `/api/v1/rooms/:id/guest-invites`   | `guest-invites:read` | No          | v1.4.3  |
+| `POST`   | `/api/v1/rooms/:id/guest-invites`   | `guest-invites:write` | No         | v1.4.3  |
+| `DELETE` | `/api/v1/rooms/:id/guest-invites/:token` | `guest-invites:write` | No    | v1.4.3  |
 | `POST`   | `/api/v1/requests`                  | `requests:write` | Yes              | v1.0    |
 | `POST`   | `/api/v1/uploads/key`               | `uploads:write`  | Yes              | v1.0    |
 | `GET`    | `/api/v1/uploads/:key/offset`       | `uploads:write`  | Yes              | v1.0    |
