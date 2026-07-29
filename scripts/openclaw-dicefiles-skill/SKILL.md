@@ -2,8 +2,9 @@
 
 **Trigger**: Use this skill whenever the user asks you to interact with a Dicefiles
 room — listing files, uploading URLs, fulfilling requests, enriching metadata,
-checking server status, managing linked rooms or guest invites, or running any
-multi-step file-management workflow against a Dicefiles instance.
+checking server status, managing local/federated links, guest invites, room
+bots, or running any multi-step file-management workflow against a Dicefiles
+instance.
 
 **Requires**: The `dicefiles` MCP server must be registered in mcporter. Verify with:
 `mcporter list` — `dicefiles` must appear and show status `connected`.
@@ -17,7 +18,7 @@ organised into rooms. Each room has uploads (files), requests (unfulfilled asks 
 participants), and a chat channel. Rooms are identified by a short alphanumeric
 `roomid`.
 
-The MCP server exposes 20 tools. All network calls go through the tools — never
+The MCP server exposes 30 tools. All network calls go through the tools — never
 construct raw HTTP requests.
 
 ---
@@ -46,6 +47,14 @@ construct raw HTTP requests.
 | `list_guest_invites`    | List active invite tokens and recent invite activity           |
 | `create_guest_invite`   | Mint a bounded guest invite token                              |
 | `revoke_guest_invite`   | Revoke an active guest invite token                            |
+| `list_federated_room_links` | Inspect trusted peer-room links and live status            |
+| `create_federated_room_link` | Add a source room from an operator-pinned peer              |
+| `remove_federated_room_link` | Remove one exact peer/remote-room link                       |
+| `set_room_federation_policy` | Opt a source room into trusted-host federation               |
+| `list_room_plugins`     | List invited bots, catalog, redacted settings, and run status    |
+| `configure_room_plugin` | Invite or partially update an installed room bot                 |
+| `remove_room_plugin`    | Remove an invited bot from a room                                 |
+| `run_room_plugin`       | Run one already invited room bot immediately                      |
 
 ---
 
@@ -146,6 +155,31 @@ create_guest_invite(roomid, singleUse=true)
 
 Guest invite tokens are bearer secrets. Never post them to room chat or logs.
 
+### H. Curate a trusted-host room
+
+```
+list_federated_room_links(destination)
+→ create_federated_room_link(destination, peerId, remoteRoomId, rules)
+→ list_federated_room_links(destination) and confirm status="active"
+```
+
+Never invent or add peer trust. The operator must pin the peer/key in local
+configuration first. Uploader/tag rules execute on the source without returning
+those private values.
+
+### I. Operate an invited room bot
+
+```
+list_room_plugins(roomid)
+→ configure_room_plugin(roomid, pluginId, config) when authorized
+→ run_room_plugin(roomid, pluginId)
+→ list_room_plugins(roomid) and inspect lastRun
+```
+
+Omit stored secret fields unless replacing them; the API preserves omitted
+credentials and never returns their values. A tool cannot install code or run
+an uninvited catalog plugin.
+
 ---
 
 ## Error Handling
@@ -190,6 +224,8 @@ The MCP server is started by mcporter using:
 Scopes needed for full automation:
 `files:read`, `files:write`, `uploads:write`, `requests:write`, `rooms:write`,
 `room-links:read`, `room-links:write`, `guest-invites:read`,
-`guest-invites:write`
+`guest-invites:write`, `federation-links:read`,
+`federation-links:write`, `room-plugins:read`, `room-plugins:write`,
+`room-plugins:run`
 
 For read-only monitoring, `files:read` alone is sufficient.

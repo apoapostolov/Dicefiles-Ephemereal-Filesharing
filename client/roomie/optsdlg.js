@@ -43,8 +43,8 @@ function compactInviteToken(value) {
     return token;
   }
   return token.length > 8 ?
-      `${token.slice(0, 4)}…${token.slice(-4)}` :
-      token;
+    `${token.slice(0, 4)}…${token.slice(-4)}` :
+    token;
 }
 
 function compactInviteDate(value) {
@@ -114,6 +114,8 @@ export class OptionsModal extends Modal {
       "rule_minage",
       "linkvisibility",
       "linkprivate",
+      "linkprivatecontainer",
+      "linkprivatehint",
       "linkeditorapply",
       "linkeditorclear",
       "linkeditorsclose",
@@ -145,9 +147,16 @@ export class OptionsModal extends Modal {
       "plugineditor",
       "plugineditorlabel",
       "plugineditorfields",
+      "pluginvalidation",
       "pluginenabled",
       "pluginapply",
       "pluginrun",
+      "pluginoperations",
+      "pluginrunstate",
+      "pluginsyncrow",
+      "pluginsyncstate",
+      "pluginsyncrefresh",
+      "pluginsyncclear",
       "pluginrevoke",
       "pluginclose",
       "pluginstatus",
@@ -166,6 +175,7 @@ export class OptionsModal extends Modal {
     this.federationLinks = [];
     this.federationPeers = [];
     this.editingRoomId = null;
+    this.editingFederationKey = null;
     this.activeTab = "general";
     this.pluginCatalog = [];
     this.roomPlugins = [];
@@ -180,7 +190,7 @@ export class OptionsModal extends Modal {
       );
     }
 
-    this.el.querySelectorAll("[data-roomopts-tab]").forEach((btn) => {
+    this.el.querySelectorAll("[data-roomopts-tab]").forEach(btn => {
       btn.addEventListener("click", () => this.setTab(btn.dataset.roomoptsTab));
     });
 
@@ -188,7 +198,7 @@ export class OptionsModal extends Modal {
       this.linkaddbtn.addEventListener("click", () => this.onAddLink());
     }
     if (this.linkaddtoken) {
-      this.linkaddtoken.addEventListener("keydown", (ev) => {
+      this.linkaddtoken.addEventListener("keydown", ev => {
         if (ev.key === "Enter") {
           ev.preventDefault();
           this.onAddLink();
@@ -201,7 +211,7 @@ export class OptionsModal extends Modal {
       );
     }
     if (this.federationroom) {
-      this.federationroom.addEventListener("keydown", (ev) => {
+      this.federationroom.addEventListener("keydown", ev => {
         if (ev.key === "Enter") {
           ev.preventDefault();
           this.onAddFederationLink();
@@ -226,7 +236,7 @@ export class OptionsModal extends Modal {
       );
     }
     if (this.crosslinkhelpbtn) {
-      this.crosslinkhelpbtn.addEventListener("click", (ev) => {
+      this.crosslinkhelpbtn.addEventListener("click", ev => {
         ev.preventDefault();
         ev.stopPropagation();
         this.toggleCrosslinkHelp();
@@ -248,7 +258,7 @@ export class OptionsModal extends Modal {
       );
     }
     if (this.invitecopy) {
-      this.invitecopy.addEventListener("click", (e) => {
+      this.invitecopy.addEventListener("click", e => {
         e.preventDefault();
         e.stopPropagation();
         this.copyInviteLink(
@@ -279,6 +289,16 @@ export class OptionsModal extends Modal {
     }
     if (this.pluginrun) {
       this.pluginrun.addEventListener("click", () => this.onRunPlugin());
+    }
+    if (this.pluginsyncrefresh) {
+      this.pluginsyncrefresh.addEventListener("click", () =>
+        this.refreshPluginOperationalState(),
+      );
+    }
+    if (this.pluginsyncclear) {
+      this.pluginsyncclear.addEventListener("click", () =>
+        this.onClearPluginSyncMemory(),
+      );
     }
     if (this.pluginrevoke) {
       this.pluginrevoke.addEventListener("click", () => this.onRevokePlugin());
@@ -322,21 +342,21 @@ export class OptionsModal extends Modal {
     this.invitees = null;
 
     this.linkEntries = normalizeLinkedRoomEntries(c.get("linkedRooms")).map(
-      (e) => Object.assign({ status: "unknown" }, e),
+      e => Object.assign({ status: "unknown" }, e),
     );
     this._initialLinkedSerialized = serializeLinkedRoomEntries(
       this.linkEntries,
     );
     this.renderLinkTable();
     this.probeLinkStatuses();
-    this.federationPeers = Array.isArray(c.get("federationPeers"))
-      ? c.get("federationPeers")
-      : [];
-    this.federationLinks = Array.isArray(c.get("federatedRooms"))
-      ? c.get("federatedRooms").map((row) =>
-          Object.assign({ status: "unknown" }, row),
-        )
-      : [];
+    this.federationPeers = Array.isArray(c.get("federationPeers")) ?
+      c.get("federationPeers") :
+      [];
+    this.federationLinks = Array.isArray(c.get("federatedRooms")) ?
+      c.get("federatedRooms").map(row =>
+        Object.assign({ status: "unknown" }, row),
+      ) :
+      [];
     this._initialFederationSerialized = JSON.stringify(
       this.federationLinks.map(({ status, error, ...row }) => row),
     );
@@ -414,9 +434,9 @@ export class OptionsModal extends Modal {
       document.documentElement.clientHeight || window.innerHeight;
     const rect = this.el.getBoundingClientRect();
     const gutter = Math.max(6, Math.min(16, viewportHeight * 0.02));
-    const preferredTop = Number.isFinite(this._modalPinnedTop)
-      ? this._modalPinnedTop
-      : rect.top;
+    const preferredTop = Number.isFinite(this._modalPinnedTop) ?
+      this._modalPinnedTop :
+      rect.top;
     const highestAllowedTop = Math.max(
       gutter,
       viewportHeight - rect.height - gutter,
@@ -443,7 +463,8 @@ export class OptionsModal extends Modal {
       this.roomPlugins = (rv && rv.roomPlugins) || [];
       this.renderPluginCatalog();
       this.renderPluginTable();
-    } catch (ex) {
+    }
+    catch (ex) {
       console.warn("listPluginCatalog", ex);
       this.pluginCatalog = [];
       this.roomPlugins = [];
@@ -457,22 +478,22 @@ export class OptionsModal extends Modal {
     if (!sel) {
       return;
     }
-    const invited = new Set((this.roomPlugins || []).map((p) => p.id));
-    const available = (this.pluginCatalog || []).filter((c) => c.available);
+    const invited = new Set((this.roomPlugins || []).map(p => p.id));
+    const available = (this.pluginCatalog || []).filter(c => c.available);
     sel.innerHTML = "";
     const ph = document.createElement("option");
     ph.value = "";
-    ph.textContent = available.length
-      ? "Select a bot…"
-      : "No plugins installed on server";
+    ph.textContent = available.length ?
+      "Select a bot…" :
+      "No plugins installed on server";
     sel.appendChild(ph);
     for (const c of available) {
       const opt = document.createElement("option");
       const catalogName = c.name || c.botName || c.id;
       opt.value = c.id;
-      opt.textContent = invited.has(c.id)
-        ? `${catalogName} (already invited)`
-        : catalogName;
+      opt.textContent = invited.has(c.id) ?
+        `${catalogName} (already invited)` :
+        catalogName;
       opt.disabled = invited.has(c.id);
       sel.appendChild(opt);
     }
@@ -481,11 +502,11 @@ export class OptionsModal extends Modal {
 
   onPluginPickChange() {
     const id = this.pluginpick && this.pluginpick.value;
-    const cat = (this.pluginCatalog || []).find((c) => c.id === id);
+    const cat = (this.pluginCatalog || []).find(c => c.id === id);
     if (this.plugindesc) {
-      this.plugindesc.textContent = cat
-        ? cat.description || cat.name || ""
-        : "Bots appear in the file list with a cyan BOT pill when they upload.";
+      this.plugindesc.textContent = cat ?
+        cat.description || cat.name || "" :
+        "Bots appear in the file list with a cyan BOT pill when they upload.";
     }
   }
 
@@ -521,11 +542,11 @@ export class OptionsModal extends Modal {
       }
 
       const stTd = document.createElement("td");
-      stTd.textContent = !p.available
-        ? "Unavailable"
-        : p.enabled
-          ? "Enabled"
-          : "Disabled";
+      stTd.textContent = !p.available ?
+        "Unavailable" :
+        p.enabled ?
+          "Enabled" :
+          "Disabled";
       stTd.className = p.enabled && p.available ? "roomopts-status-ok" : "";
 
       const setTd = document.createElement("td");
@@ -573,6 +594,9 @@ export class OptionsModal extends Modal {
     if (c.baseUrl) {
       bits.push("public URL set");
     }
+    if (c.inboundEnabled) {
+      bits.push("remote commands enabled");
+    }
     return bits.length ? bits.join(" · ") : "—";
   }
 
@@ -586,7 +610,7 @@ export class OptionsModal extends Modal {
       );
       return;
     }
-    const cat = (this.pluginCatalog || []).find((c) => c.id === id);
+    const cat = (this.pluginCatalog || []).find(c => c.id === id);
     // Open editor with defaults for new invite (save on Apply)
     this.editingPluginId = id;
     this.openPluginEditor(id, {
@@ -610,13 +634,17 @@ export class OptionsModal extends Modal {
       }
       if (def && def.type === "number") {
         cfg[k] = k === "pollIntervalMinutes" ? 15 : 0;
-      } else if (def && def.type === "boolean") {
+      }
+      else if (def && def.type === "boolean") {
         cfg[k] = false;
-      } else if (def && def.type === "array") {
+      }
+      else if (def && def.type === "array") {
         cfg[k] = [];
-      } else if (k === "botName") {
+      }
+      else if (k === "botName") {
         cfg[k] = "";
-      } else {
+      }
+      else {
         cfg[k] = "";
       }
     }
@@ -625,7 +653,7 @@ export class OptionsModal extends Modal {
 
   openPluginEditor(pluginId, forced) {
     const p =
-      forced || (this.roomPlugins || []).find((x) => x.id === pluginId) || null;
+      forced || (this.roomPlugins || []).find(x => x.id === pluginId) || null;
     if (!p) {
       return;
     }
@@ -639,12 +667,135 @@ export class OptionsModal extends Modal {
     if (this.pluginenabled) {
       this.pluginenabled.checked = p.enabled !== false;
     }
+    if (this.pluginrun) {
+      this.pluginrun.disabled = p._new === true;
+      this.pluginrun.title = p._new ? "Save this bot before running it" : "";
+    }
+    if (this.pluginoperations) {
+      this.pluginoperations.classList.toggle("hidden", p._new === true);
+    }
+    if (this.pluginvalidation) {
+      this.pluginvalidation.classList.add("hidden");
+      this.pluginvalidation.textContent = "";
+    }
     if (this.pluginstatus) {
-      this.pluginstatus.textContent = p._new
-        ? "Fill required fields and Save to invite this bot."
-        : "";
+      this.pluginstatus.textContent = p._new ?
+        "Fill required fields and Save to invite this bot." :
+        "";
     }
     this.renderPluginEditorFields(p);
+    this.renderPluginOperationalState(p);
+  }
+
+  renderPluginOperationalState(plugin) {
+    const lastRun = plugin && plugin.lastRun;
+    if (this.pluginrunstate) {
+      if (!lastRun) {
+        this.pluginrunstate.textContent = "Never run";
+        this.pluginrunstate.classList.remove("roomopts-status-error");
+      }
+      else {
+        const when = new Date(lastRun.finishedAt || lastRun.startedAt);
+        const summary = lastRun.result || {};
+        const details = [];
+        if (summary.uploaded != null) {
+          details.push(`${summary.uploaded} uploaded`);
+        }
+        if (summary.skipped != null) {
+          details.push(`${summary.skipped} skipped`);
+        }
+        this.pluginrunstate.textContent =
+          `${lastRun.ok ? "Succeeded" : "Failed"} · ` +
+          `${Number.isNaN(when.getTime()) ? "unknown time" : when.toLocaleString()}${
+            details.length ? ` · ${details.join(", ")}` : ""}`;
+        this.pluginrunstate.classList.toggle(
+          "roomopts-status-error",
+          !lastRun.ok,
+        );
+      }
+    }
+    const memory = plugin && plugin.syncMemory;
+    const supported = memory && memory.supported;
+    if (this.pluginsyncrow) {
+      this.pluginsyncrow.classList.toggle("hidden", !supported);
+    }
+    if (this.pluginsyncstate && supported) {
+      const latest = memory.latestAt ?
+        new Date(memory.latestAt).toLocaleString() :
+        "none yet";
+      this.pluginsyncstate.textContent =
+        `${memory.count || 0} remembered · latest ${latest} · ` +
+        `${memory.retentionDays || 0}-day retention`;
+    }
+  }
+
+  async refreshPluginOperationalState() {
+    const id = this.editingPluginId;
+    if (!id || !registry.socket) {
+      return;
+    }
+    if (this.pluginsyncstate) {
+      this.pluginsyncstate.textContent = "Refreshing…";
+    }
+    try {
+      const state = await registry.socket.makeCall(
+        "setconfig",
+        "inspectRoomPluginSyncMemory",
+        { id, limit: 1 },
+      );
+      const plugin = (this.roomPlugins || []).find(entry => entry.id === id);
+      if (plugin) {
+        plugin.lastRun = state.lastRun;
+        plugin.syncMemory = {
+          supported: state.supported,
+          label: state.label,
+          count: state.count,
+          latestAt: state.latestAt,
+          retentionDays: state.retentionDays,
+        };
+        this.renderPluginOperationalState(plugin);
+      }
+    }
+    catch (ex) {
+      if (this.pluginsyncstate) {
+        this.pluginsyncstate.textContent = "Could not load import memory.";
+      }
+    }
+  }
+
+  async onClearPluginSyncMemory() {
+    const id = this.editingPluginId;
+    if (!id || !registry.socket) {
+      return;
+    }
+    const confirmed = await this.owner.confirmDestructive(
+      "Forget the remote files this bot has already imported? Files still " +
+        "present in the room remain protected by content matching, but expired " +
+        "remote files may be imported again on a later run.",
+      "Forget imported files",
+      "Forget imports",
+    );
+    if (!confirmed) {
+      return;
+    }
+    try {
+      await registry.socket.makeCall(
+        "setconfig",
+        "clearRoomPluginSyncMemory",
+        { id, confirm: true },
+      );
+      await this.refreshPluginOperationalState();
+      if (this.pluginstatus) {
+        this.pluginstatus.textContent = "Import memory cleared.";
+      }
+    }
+    catch (ex) {
+      await this.owner.showMessage(
+        ex.message || ex.toString(),
+        "Import memory",
+        "i-error",
+      );
+    }
   }
 
   renderPluginEditorFields(p) {
@@ -655,17 +806,18 @@ export class OptionsModal extends Modal {
     host.innerHTML = "";
     const schema =
       p.configSchema ||
-      ((this.pluginCatalog || []).find((c) => c.id === p.id) || {})
-        .configSchema;
+      ((this.pluginCatalog || []).find(c => c.id === p.id) || {}).
+        configSchema;
     const props = (schema && schema.properties) || {};
-    const keys = Object.keys(props).filter((k) => k !== "roomId");
+    const requiredFields = new Set((schema && schema.required) || []);
+    const keys = Object.keys(props).filter(k => k !== "roomId");
     const config = Object.assign({}, p.config || {});
 
     // Always show common free-form if schema empty
     const fieldKeys =
-      keys.length > 0
-        ? keys
-        : ["folderUrl", "namePrefix", "pollIntervalMinutes", "botName"];
+      keys.length > 0 ?
+        keys :
+        ["folderUrl", "namePrefix", "pollIntervalMinutes", "botName"];
 
     for (const key of fieldKeys) {
       const def = props[key] || {};
@@ -675,27 +827,45 @@ export class OptionsModal extends Modal {
       lab.htmlFor = `roomopts-plugin-${key}`;
       lab.textContent =
         def.description ||
-        key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
+        key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
       const input = document.createElement("input");
       input.id = `roomopts-plugin-${key}`;
       input.name = `plugin_cfg_${key}`;
       input.autocomplete = "off";
+      input.required = requiredFields.has(key);
       if (def.type === "boolean") {
         input.type = "checkbox";
         input.checked = config[key] === true;
-      } else if (def.type === "number" || key === "pollIntervalMinutes") {
+      }
+      else if (def.type === "number" || key === "pollIntervalMinutes") {
         input.type = "number";
-        input.min = "0";
-        input.step = "1";
+        input.min = def.minimum != null ? String(def.minimum) : "0";
+        if (def.maximum != null) {
+          input.max = String(def.maximum);
+        }
+        input.step = def.multipleOf != null ? String(def.multipleOf) : "1";
         input.value =
-          config[key] != null && config[key] !== ""
-            ? String(config[key])
-            : key === "pollIntervalMinutes"
-              ? "15"
-              : "";
-      } else {
+          config[key] != null && config[key] !== "" ?
+            String(config[key]) :
+            key === "pollIntervalMinutes" ?
+              "15" :
+              "";
+      }
+      else {
         input.type = "text";
-        input.value = config[key] != null ? String(config[key]) : "";
+        if (def.type === "array") {
+          input.dataset.configType = "array";
+          input.value = Array.isArray(config[key]) ?
+            config[key].join(", ") :
+            "";
+          input.placeholder =
+            def.items && Array.isArray(def.items.enum) ?
+              def.items.enum.join(", ") :
+              "Comma-separated values";
+        }
+        else {
+          input.value = config[key] != null ? String(config[key]) : "";
+        }
         if (key === "folderUrl") {
           input.placeholder = "https://mega.nz/folder/…";
         }
@@ -706,16 +876,23 @@ export class OptionsModal extends Modal {
         ) {
           input.type = "password";
           input.placeholder =
-            def.description && /\benv\b/i.test(def.description)
-              ? "optional when configured through env"
-              : "";
+            def.description && /\benv\b/i.test(def.description) ?
+              "optional when configured through env" :
+              "";
         }
       }
+      input.addEventListener("input", () => {
+        input.removeAttribute("aria-invalid");
+        if (this.pluginvalidation) {
+          this.pluginvalidation.classList.add("hidden");
+        }
+      });
       if (input.type === "checkbox") {
         wrap.className = "roomopts-checks roomopts-plugin-check";
         lab.prepend(input);
         wrap.appendChild(lab);
-      } else {
+      }
+      else {
         wrap.appendChild(lab);
         wrap.appendChild(input);
       }
@@ -729,20 +906,76 @@ export class OptionsModal extends Modal {
     if (!host) {
       return config;
     }
-    host.querySelectorAll("input[name^='plugin_cfg_']").forEach((input) => {
+    host.querySelectorAll("input[name^='plugin_cfg_']").forEach(input => {
       const key = input.name.replace(/^plugin_cfg_/, "");
       if (input.type === "checkbox") {
         config[key] = input.checked;
-      } else if (input.type === "number") {
+      }
+      else if (input.type === "number") {
         const n = Number(input.value);
         if (input.value !== "" && Number.isFinite(n)) {
           config[key] = n;
         }
-      } else if (input.value.trim()) {
+      }
+      else if (input.dataset.configType === "array") {
+        config[key] = input.value.
+          split(",").
+          map(value => value.trim()).
+          filter(Boolean);
+      }
+      else if (input.value.trim()) {
         config[key] = input.value.trim();
       }
     });
     return config;
+  }
+
+  validatePluginEditor() {
+    const host = this.plugineditorfields;
+    if (!host) {
+      return true;
+    }
+    const invalid = [];
+    host.querySelectorAll("input[name^='plugin_cfg_']").forEach(input => {
+      const label = input.previousElementSibling ?
+        input.previousElementSibling.textContent :
+        "This field";
+      let message = "";
+      if (
+        input.required &&
+        input.type !== "checkbox" &&
+        !String(input.value || "").trim()
+      ) {
+        message = `${label} is required`;
+      }
+      else if (input.type === "number" && input.value) {
+        const value = Number(input.value);
+        if (!Number.isFinite(value)) {
+          message = `${label} must be a number`;
+        }
+        else if (input.min && value < Number(input.min)) {
+          message = `${label} must be at least ${input.min}`;
+        }
+        else if (input.max && value > Number(input.max)) {
+          message = `${label} must be at most ${input.max}`;
+        }
+      }
+      input.toggleAttribute("aria-invalid", !!message);
+      if (message) {
+        invalid.push({ input, message });
+      }
+    });
+    if (!invalid.length) {
+      return true;
+    }
+    if (this.pluginvalidation) {
+      this.pluginvalidation.textContent = invalid.
+        map(entry => entry.message).
+        join(". ");
+      this.pluginvalidation.classList.remove("hidden");
+    }
+    invalid[0].input.focus();
+    return false;
   }
 
   closePluginEditor() {
@@ -760,6 +993,9 @@ export class OptionsModal extends Modal {
     if (!id || !registry.socket) {
       return;
     }
+    if (!this.validatePluginEditor()) {
+      return;
+    }
     const config = this.readPluginEditorConfig();
     const enabled = this.pluginenabled ? this.pluginenabled.checked : true;
     try {
@@ -772,14 +1008,13 @@ export class OptionsModal extends Modal {
         { id, enabled, config },
       );
       this.roomPlugins = Array.isArray(list) ? list : [];
-      this.renderPluginCatalog();
-      this.renderPluginTable();
+      await this.refreshPlugins();
+      this.openPluginEditor(id);
       if (this.pluginstatus) {
         this.pluginstatus.textContent = "Saved.";
       }
-      // Re-open editor with saved row
-      this.openPluginEditor(id);
-    } catch (ex) {
+    }
+    catch (ex) {
       if (this.pluginstatus) {
         this.pluginstatus.textContent = "";
       }
@@ -805,13 +1040,16 @@ export class OptionsModal extends Modal {
       });
       const uploaded = rv && rv.uploaded;
       const skipped = rv && rv.skipped;
+      await this.refreshPlugins();
+      this.openPluginEditor(id);
       if (this.pluginstatus) {
         this.pluginstatus.textContent =
-          uploaded != null
-            ? `Done — uploaded ${uploaded}, skipped ${skipped || 0}.`
-            : "Run finished.";
+          uploaded != null ?
+            `Done — uploaded ${uploaded}, skipped ${skipped || 0}.` :
+            "Run finished.";
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       if (this.pluginstatus) {
         this.pluginstatus.textContent = "";
       }
@@ -838,7 +1076,8 @@ export class OptionsModal extends Modal {
       this.closePluginEditor();
       this.renderPluginCatalog();
       this.renderPluginTable();
-    } catch (ex) {
+    }
+    catch (ex) {
       await this.owner.showMessage(
         ex.message || ex.toString(),
         "Remove plugin",
@@ -863,13 +1102,14 @@ export class OptionsModal extends Modal {
         state && Array.isArray(state.audit) ? state.audit : [];
       if (this.invitecap) {
         this.invitecap.textContent =
-          state && Number.isFinite(state.maxActive)
-            ? `${state.activeCount || 0} of ${state.maxActive} active`
-            : "";
+          state && Number.isFinite(state.maxActive) ?
+            `${state.activeCount || 0} of ${state.maxActive} active` :
+            "";
       }
       this.renderGuestInvites();
       this.renderGuestInviteAudit();
-    } catch (ex) {
+    }
+    catch (ex) {
       console.warn("getGuestInviteAdminState", ex);
       this.guestInvites = [];
       this.guestInviteAudit = [];
@@ -892,9 +1132,9 @@ export class OptionsModal extends Modal {
     }
     // Prefer path from server; fall back to current room URL
     const roomPath = document.location.pathname || "";
-    const base = roomPath.startsWith("/r/")
-      ? roomPath
-      : `/r/${(registry.config && registry.config.get && registry.config.get("roomid")) || ""}`;
+    const base = roomPath.startsWith("/r/") ?
+      roomPath :
+      `/r/${(registry.config && registry.config.get && registry.config.get("roomid")) || ""}`;
     const path = `${base}?invite=${encodeURIComponent(token)}`;
     return `${document.location.origin}${path}`;
   }
@@ -950,7 +1190,8 @@ export class OptionsModal extends Modal {
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(value);
-      } else {
+      }
+      else {
         const i = document.createElement("input");
         i.type = "text";
         i.value = value;
@@ -963,7 +1204,8 @@ export class OptionsModal extends Modal {
         iconEl.classList.add("copied");
         setTimeout(() => iconEl.classList.remove("copied"), 2000);
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error(ex);
       await this.owner.showMessage(
         "Could not copy to clipboard.",
@@ -1013,7 +1255,7 @@ export class OptionsModal extends Modal {
       copyA.title = "Copy link";
       copyA.setAttribute("role", "button");
       copyA.setAttribute("aria-label", "Copy invite link to clipboard");
-      copyA.addEventListener("click", (e) => {
+      copyA.addEventListener("click", e => {
         e.preventDefault();
         e.stopPropagation();
         this.copyInviteLink(fullUrl, copyA);
@@ -1028,12 +1270,12 @@ export class OptionsModal extends Modal {
       td2.textContent = `${inv.uses || 0}/${inv.maxUses || 1}`;
       td2.title = `${inv.uses || 0} of ${inv.maxUses || 1} uses`;
       const td3 = document.createElement("td");
-      td3.textContent = inv.expiresAt
-        ? compactInviteDate(inv.expiresAt)
-        : "Never";
-      td3.title = inv.expiresAt
-        ? new Date(inv.expiresAt).toLocaleString()
-        : "No expiry";
+      td3.textContent = inv.expiresAt ?
+        compactInviteDate(inv.expiresAt) :
+        "Never";
+      td3.title = inv.expiresAt ?
+        new Date(inv.expiresAt).toLocaleString() :
+        "No expiry";
       const td4 = document.createElement("td");
       td4.className = "roomopts-link-actions";
       const rev = document.createElement("button");
@@ -1074,9 +1316,9 @@ export class OptionsModal extends Modal {
       const fullInviteLabel =
         record.label || record.tokenHint || "Guest invite";
       link.textContent = compactInviteText(fullInviteLabel);
-      link.title = record.label
-        ? `${record.label} · ${record.tokenHint || "Invite"}`
-        : record.tokenHint || "";
+      link.title = record.label ?
+        `${record.label} · ${record.tokenHint || "Invite"}` :
+        record.tokenHint || "";
       const uses = document.createElement("td");
       uses.textContent = `${record.uses || 0}/${record.maxUses || 1}`;
       uses.title = `${record.uses || 0} of ${record.maxUses || 1} uses`;
@@ -1123,11 +1365,11 @@ export class OptionsModal extends Modal {
       );
       const path = (rv && (rv.path || rv.urlPath)) || "";
       const full =
-        path && document.location
-          ? path.startsWith("http")
-            ? path
-            : `${document.location.origin}${path}`
-          : "";
+        path && document.location ?
+          path.startsWith("http") ?
+            path :
+            `${document.location.origin}${path}` :
+          "";
       if (this.inviteurlfield) {
         this.inviteurlfield.value = full || "";
         this.inviteurlfield.title = full || "";
@@ -1143,7 +1385,8 @@ export class OptionsModal extends Modal {
         }, 2000);
       }
       await this.refreshGuestInvites();
-    } catch (ex) {
+    }
+    catch (ex) {
       await this.owner.showMessage(ex.message || ex, "Guest invite", "i-error");
     }
   }
@@ -1163,7 +1406,8 @@ export class OptionsModal extends Modal {
       }
       this.syncInviteCopyVisibility();
       await this.refreshGuestInvites();
-    } catch (ex) {
+    }
+    catch (ex) {
       await this.owner.showMessage(ex.message || ex, "Guest invite", "i-error");
     }
   }
@@ -1174,12 +1418,12 @@ export class OptionsModal extends Modal {
     }
     const allowed = new Set(["general", "invites", "linking", "plugins"]);
     this.activeTab = allowed.has(tab) ? tab : "general";
-    this.el.querySelectorAll("[data-roomopts-tab]").forEach((btn) => {
+    this.el.querySelectorAll("[data-roomopts-tab]").forEach(btn => {
       const on = btn.dataset.roomoptsTab === this.activeTab;
       btn.classList.toggle("active", on);
       btn.setAttribute("aria-selected", on ? "true" : "false");
     });
-    this.el.querySelectorAll("[data-roomopts-panel]").forEach((panel) => {
+    this.el.querySelectorAll("[data-roomopts-panel]").forEach(panel => {
       const on = panel.dataset.roomoptsPanel === this.activeTab;
       panel.classList.toggle("hidden", !on);
     });
@@ -1195,12 +1439,14 @@ export class OptionsModal extends Modal {
     }
     if (this.activeTab === "invites") {
       this.refreshGuestInvites();
-    } else {
+    }
+    else {
       this.setInviteLimitsPanel(false);
     }
     if (this.activeTab === "plugins") {
       this.refreshPlugins();
-    } else {
+    }
+    else {
       this.closePluginEditor();
     }
     this.queueModalVerticalFit();
@@ -1251,8 +1497,8 @@ export class OptionsModal extends Modal {
     try {
       const rv = await registry.socket.makeCall("probelinks");
       const rows = (rv && rv.links) || [];
-      const byId = new Map(rows.map((r) => [r.roomId, r]));
-      this.linkEntries = this.linkEntries.map((e) => {
+      const byId = new Map(rows.map(r => [r.roomId, r]));
+      this.linkEntries = this.linkEntries.map(e => {
         const live = byId.get(e.roomId);
         if (!live) {
           return Object.assign({}, e, { status: e.status || "unknown" });
@@ -1268,7 +1514,8 @@ export class OptionsModal extends Modal {
         });
       });
       this.renderLinkTable();
-    } catch (ex) {
+    }
+    catch (ex) {
       // Non-fatal: table still shows stored links without live status
       console.warn("probelinks", ex);
       this.renderLinkTable();
@@ -1282,9 +1529,9 @@ export class OptionsModal extends Modal {
     this.federationpeer.innerHTML = "";
     const placeholder = document.createElement("option");
     placeholder.value = "";
-    placeholder.textContent = this.federationPeers.length
-      ? "Choose trusted peer"
-      : "No trusted peers configured";
+    placeholder.textContent = this.federationPeers.length ?
+      "Choose trusted peer" :
+      "No trusted peers configured";
     this.federationpeer.appendChild(placeholder);
     for (const peer of this.federationPeers) {
       const option = document.createElement("option");
@@ -1305,12 +1552,12 @@ export class OptionsModal extends Modal {
     }
     if (
       this.federationLinks.some(
-        (row) => row.peerId === peerId && row.roomId === roomId,
+        row => row.peerId === peerId && row.roomId === roomId,
       )
     ) {
       return;
     }
-    const peer = this.federationPeers.find((row) => row.peerId === peerId);
+    const peer = this.federationPeers.find(row => row.peerId === peerId);
     this.federationLinks.push({
       peerId,
       roomId,
@@ -1323,8 +1570,11 @@ export class OptionsModal extends Modal {
   }
 
   removeFederationLink(peerId, roomId) {
+    if (this.editingFederationKey === `${peerId}\0${roomId}`) {
+      this.closeEditor();
+    }
     this.federationLinks = this.federationLinks.filter(
-      (row) => row.peerId !== peerId || row.roomId !== roomId,
+      row => row.peerId !== peerId || row.roomId !== roomId,
     );
     this.renderFederationTable();
   }
@@ -1337,9 +1587,9 @@ export class OptionsModal extends Modal {
       const rv = await registry.socket.makeCall("probefederationlinks");
       const rows = (rv && rv.links) || [];
       const byKey = new Map(
-        rows.map((row) => [`${row.peerId}\0${row.roomId}`, row]),
+        rows.map(row => [`${row.peerId}\0${row.roomId}`, row]),
       );
-      this.federationLinks = this.federationLinks.map((row) =>
+      this.federationLinks = this.federationLinks.map(row =>
         Object.assign(
           {},
           row,
@@ -1347,7 +1597,8 @@ export class OptionsModal extends Modal {
         ),
       );
       this.renderFederationTable();
-    } catch (ex) {
+    }
+    catch (ex) {
       console.warn("probefederationlinks", ex);
     }
   }
@@ -1368,7 +1619,7 @@ export class OptionsModal extends Modal {
       const source = document.createElement("td");
       source.className = "link-col-source";
       const peer = this.federationPeers.find(
-        (row) => row.peerId === entry.peerId,
+        row => row.peerId === entry.peerId,
       );
       const title = document.createElement("div");
       title.className = "link-source-name";
@@ -1383,27 +1634,43 @@ export class OptionsModal extends Modal {
       const status = document.createElement("td");
       status.className = "link-col-status";
       const labels = {
-        active: "Active",
-        unreachable: "Unreachable",
-        denied: "Denied",
-        missing: "Missing",
+        "active": "Active",
+        "unreachable": "Unreachable",
+        "denied": "Denied",
+        "missing": "Missing",
         "key-invalid": "Key invalid",
         "protocol-mismatch": "Protocol mismatch",
         "circuit-open": "Temporarily paused",
-        unknown: "Checking…",
+        "unknown": "Checking…",
       };
       status.textContent = labels[entry.status] || entry.status || "Checking…";
 
+      const rules = document.createElement("td");
+      rules.className = "link-col-rules";
+      const filterSummary = document.createElement("div");
+      filterSummary.textContent = summarizeLinkRules(entry.rules || null);
+      const accessSummary = document.createElement("div");
+      accessSummary.className = "link-access-summary";
+      accessSummary.textContent = summarizeLinkAccess(entry);
+      rules.append(filterSummary, accessSummary);
+
       const actions = document.createElement("td");
       actions.className = "link-col-actions";
+      const edit = document.createElement("button");
+      edit.type = "button";
+      edit.textContent = "Edit";
+      edit.className = "link-btn-edit";
+      edit.addEventListener("click", () =>
+        this.openFederationEditor(entry.peerId, entry.roomId),
+      );
       const remove = document.createElement("button");
       remove.type = "button";
       remove.textContent = "Remove";
       remove.addEventListener("click", () =>
         this.removeFederationLink(entry.peerId, entry.roomId),
       );
-      actions.appendChild(remove);
-      tr.append(source, status, actions);
+      actions.append(edit, remove);
+      tr.append(source, status, rules, actions);
       this.federationtbody.appendChild(tr);
     }
   }
@@ -1431,33 +1698,33 @@ export class OptionsModal extends Modal {
       const tdSrc = document.createElement("td");
       tdSrc.className = "link-col-source";
       const name = entry.name || entry.roomId;
-      tdSrc.innerHTML = `<div class="link-source-name"></div><div class="link-source-id"></div>`;
+      tdSrc.innerHTML = "<div class=\"link-source-name\"></div><div class=\"link-source-id\"></div>";
       tdSrc.querySelector(".link-source-name").textContent = name;
       tdSrc.querySelector(".link-source-id").textContent = entry.roomId;
 
       const tdStatus = document.createElement("td");
       tdStatus.className = "link-col-status";
       const label =
-        status === "ok"
-          ? "Active"
-          : status === "denied"
-            ? "Cross-link off"
-            : status === "private"
-              ? "Private source"
-              : status === "missing"
-                ? "Missing"
-                : "Unknown";
+        status === "ok" ?
+          "Active" :
+          status === "denied" ?
+            "Cross-link off" :
+            status === "private" ?
+              "Private source" :
+              status === "missing" ?
+                "Missing" :
+                "Unknown";
       tdStatus.textContent = label;
       tdStatus.title =
-        status === "denied"
-          ? "Source room has not enabled Allow Room Cross-Linking"
-          : status === "private"
-            ? "Invite-only mirroring requires approval in both the source room and this destination link"
-            : status === "missing"
-              ? "Source room not found"
-              : status === "ok"
-                ? "Source allows cross-linking"
-                : "Status not probed yet";
+        status === "denied" ?
+          "Source room has not enabled Allow Room Cross-Linking" :
+          status === "private" ?
+            "Invite-only mirroring requires approval in both the source room and this destination link" :
+            status === "missing" ?
+              "Source room not found" :
+              status === "ok" ?
+                "Source allows cross-linking" :
+                "Status not probed yet";
 
       const tdRules = document.createElement("td");
       tdRules.className = "link-col-rules";
@@ -1504,7 +1771,7 @@ export class OptionsModal extends Modal {
     // Client-side: store token as roomId if it looks like one, else as pending
     // name; server resolves on save.
     const existing = this.linkEntries.find(
-      (e) =>
+      e =>
         e.roomId === token ||
         (e.name && e.name.toLowerCase() === token.toLowerCase()),
     );
@@ -1531,7 +1798,7 @@ export class OptionsModal extends Modal {
   }
 
   onRemoveLink(roomId) {
-    this.linkEntries = this.linkEntries.filter((e) => e.roomId !== roomId);
+    this.linkEntries = this.linkEntries.filter(e => e.roomId !== roomId);
     if (this.editingRoomId === roomId) {
       this.closeEditor();
     }
@@ -1539,14 +1806,33 @@ export class OptionsModal extends Modal {
   }
 
   openEditor(roomId) {
-    const entry = this.linkEntries.find((e) => e.roomId === roomId);
+    const entry = this.linkEntries.find(e => e.roomId === roomId);
     if (!entry || !this.linkeditor) {
       return;
     }
     this.editingRoomId = roomId;
+    this.editingFederationKey = null;
+    this.populateLinkEditor(entry, false);
+  }
+
+  openFederationEditor(peerId, roomId) {
+    const entry = this.federationLinks.find(
+      row => row.peerId === peerId && row.roomId === roomId,
+    );
+    if (!entry || !this.linkeditor) {
+      return;
+    }
+    this.editingRoomId = null;
+    this.editingFederationKey = `${peerId}\0${roomId}`;
+    this.populateLinkEditor(entry, true);
+  }
+
+  populateLinkEditor(entry, federated) {
     this.linkeditor.classList.remove("hidden");
     if (this.linkeditorlabel) {
-      this.linkeditorlabel.textContent = entry.name || entry.roomId;
+      this.linkeditorlabel.textContent =
+        entry.name ||
+        (federated ? `${entry.peerId} / ${entry.roomId}` : entry.roomId);
     }
     const rules = entry.rules || {};
     if (this.rule_name) {
@@ -1571,7 +1857,14 @@ export class OptionsModal extends Modal {
       this.linkvisibility.value = entry.visibility || "all";
     }
     if (this.linkprivate) {
-      this.linkprivate.checked = entry.allowPrivateSource === true;
+      this.linkprivate.checked =
+        !federated && entry.allowPrivateSource === true;
+    }
+    if (this.linkprivatecontainer) {
+      this.linkprivatecontainer.classList.toggle("hidden", federated);
+    }
+    if (this.linkprivatehint) {
+      this.linkprivatehint.classList.toggle("hidden", federated);
     }
     const types = new Set(rules.types || []);
     for (const t of LINK_FILE_TYPES) {
@@ -1584,6 +1877,7 @@ export class OptionsModal extends Modal {
 
   closeEditor() {
     this.editingRoomId = null;
+    this.editingFederationKey = null;
     if (this.linkeditor) {
       this.linkeditor.classList.add("hidden");
     }
@@ -1647,7 +1941,7 @@ export class OptionsModal extends Modal {
   }
 
   onApplyRules() {
-    if (!this.editingRoomId) {
+    if (!this.editingRoomId && !this.editingFederationKey) {
       return;
     }
     this.clearRuleError();
@@ -1656,56 +1950,95 @@ export class OptionsModal extends Modal {
       this.showRuleErrors(validation.errors);
       return;
     }
-    const rules = validation.rules;
-    this.linkEntries = this.linkEntries.map((e) => {
-      if (e.roomId !== this.editingRoomId) {
+    const {rules} = validation;
+    const updateEntry = (e, matches, federated) => {
+      if (!matches) {
         return e;
       }
       const next = Object.assign({}, e);
       if (rules) {
         next.rules = rules;
-      } else {
+      }
+      else {
         delete next.rules;
       }
-      const visibility = this.linkvisibility
-        ? this.linkvisibility.value
-        : "all";
+      const visibility = this.linkvisibility ?
+        this.linkvisibility.value :
+        "all";
       if (visibility && visibility !== "all") {
         next.visibility = visibility;
-      } else {
+      }
+      else {
         delete next.visibility;
       }
-      if (this.linkprivate && this.linkprivate.checked) {
+      if (!federated && this.linkprivate && this.linkprivate.checked) {
         next.allowPrivateSource = true;
-      } else {
+      }
+      else {
         delete next.allowPrivateSource;
       }
       return next;
-    });
-    this.renderLinkTable();
+    };
+    if (this.editingFederationKey) {
+      const target = this.editingFederationKey;
+      this.federationLinks = this.federationLinks.map(entry =>
+        updateEntry(
+          entry,
+          `${entry.peerId}\0${entry.roomId}` === target,
+          true,
+        ),
+      );
+      this.renderFederationTable();
+    }
+    else {
+      this.linkEntries = this.linkEntries.map(entry =>
+        updateEntry(entry, entry.roomId === this.editingRoomId, false),
+      );
+      this.renderLinkTable();
+    }
     this.closeEditor();
   }
 
   onClearRules() {
-    if (!this.editingRoomId) {
+    if (!this.editingRoomId && !this.editingFederationKey) {
       return;
     }
-    this.linkEntries = this.linkEntries.map((e) => {
-      if (e.roomId !== this.editingRoomId) {
-        return e;
-      }
-      const next = Object.assign({}, e);
-      delete next.rules;
-      return next;
-    });
+    if (this.editingFederationKey) {
+      const target = this.editingFederationKey;
+      this.federationLinks = this.federationLinks.map(entry => {
+        if (`${entry.peerId}\0${entry.roomId}` !== target) {
+          return entry;
+        }
+        const next = Object.assign({}, entry);
+        delete next.rules;
+        return next;
+      });
+    }
+    else {
+      this.linkEntries = this.linkEntries.map(entry => {
+        if (entry.roomId !== this.editingRoomId) {
+          return entry;
+        }
+        const next = Object.assign({}, entry);
+        delete next.rules;
+        return next;
+      });
+    }
     this.clearRuleError();
-    this.openEditor(this.editingRoomId);
-    this.renderLinkTable();
+    if (this.editingFederationKey) {
+      const [peerId, roomId] = this.editingFederationKey.split("\0");
+      this.openFederationEditor(peerId, roomId);
+      this.renderFederationTable();
+    }
+    else {
+      this.openEditor(this.editingRoomId);
+      this.renderLinkTable();
+    }
   }
 
   /** Payload for setconfig linkedRooms (server resolves names). */
   buildLinkedRoomsPayload() {
-    return this.linkEntries.map((e) => {
+    return this.linkEntries.map(e => {
       const o = {
         roomId: e._token || e.roomId,
       };
@@ -1745,7 +2078,8 @@ export class OptionsModal extends Modal {
       );
       await this.owner.showModal(usersDlg);
       this[users] = usersDlg.users;
-    } catch (ex) {
+    }
+    catch (ex) {
       if (ex) {
         console.error(ex);
       }
@@ -1755,7 +2089,8 @@ export class OptionsModal extends Modal {
   oninviteonly() {
     if (this.inviteonly.checked) {
       this.el.elements.invitees.classList.remove("hidden");
-    } else {
+    }
+    else {
       this.el.elements.invitees.classList.add("hidden");
     }
   }
@@ -1768,9 +2103,9 @@ export class OptionsModal extends Modal {
       this.allowcrosslinking && this.allowcrosslinking.checked
     );
     this.allowprivatecrosslinking.disabled = !enabled;
-    this.allowprivatecrosslinking.title = enabled
-      ? "Additionally allow invite-only sources to be mirrored"
-      : "Enable room cross-linking first";
+    this.allowprivatecrosslinking.title = enabled ?
+      "Additionally allow invite-only sources to be mirrored" :
+      "Enable room cross-linking first";
   }
 
   async onowners() {
@@ -1885,7 +2220,7 @@ will NOT be aborted, and they also retain their chat histories.`,
       const nowSerialized = serializeLinkedRoomEntries(this.linkEntries);
       const needSaveLinks =
         nowSerialized !== this._initialLinkedSerialized ||
-        this.linkEntries.some((e) => e._token);
+        this.linkEntries.some(e => e._token);
       if (needSaveLinks) {
         await socket.makeCall("setconfig", "linkedRooms", linkedPayload);
       }
@@ -1925,7 +2260,8 @@ will NOT be aborted, and they also retain their chat histories.`,
         await socket.makeCall("setconfig", "owners", this.owners);
       }
       return true;
-    } catch (ex) {
+    }
+    catch (ex) {
       await this.owner.showMessage(ex.message || ex, "Error", "i-error");
     }
     return false;

@@ -25,6 +25,9 @@ describe("plugin sync-log (shipped)", () => {
     expect(a).toBe(b);
     expect(a).not.toBe(c);
     expect(syncLogEntryKey("a.pdf", 12)).toBe("a.pdf:12");
+    expect(syncLogEntryKey("a.pdf", 12, "mega-node-1")).toMatch(
+      /^source:[a-f0-9]{32}$/,
+    );
   });
 
   test("memory log has/mark and expiry", async () => {
@@ -40,6 +43,12 @@ describe("plugin sync-log (shipped)", () => {
     expect(await log.has(scope, "old.pdf:1")).toBe(false);
     const pruned = await log.prune(scope, now);
     expect(pruned).toBeGreaterThanOrEqual(0);
+    expect(await log.count(scope)).toBe(1);
+    expect(await log.list(scope, { limit: 1 })).toEqual([
+      { entryKey: key, syncedAt: now },
+    ]);
+    expect(await log.clear(scope)).toBe(1);
+    expect(await log.count(scope)).toBe(0);
   });
 
   test("redis log uses zadd/zscore/zremrangebyscore", async () => {

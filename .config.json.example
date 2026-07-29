@@ -140,6 +140,9 @@
   //   federation-links:write – manage peer-room links and source consent
   //   guest-invites:read  – list active guest links (includes full tokens)
   //   guest-invites:write – mint/revoke guest links
+  //   room-plugins:read  – list invited bots, catalog, and last-run status
+  //   room-plugins:write – invite/update/remove room bots
+  //   room-plugins:run   – run an invited room bot immediately
   //   mod:*             – full moderation access
   //
   // Full API reference: API.md
@@ -159,7 +162,10 @@
         "federation-links:read",
         "federation-links:write",
         "guest-invites:read",
-        "guest-invites:write"
+        "guest-invites:write",
+        "room-plugins:read",
+        "room-plugins:write",
+        "room-plugins:run"
       ]
     }
     // Add more keys as needed, for example a read-only monitoring key:
@@ -269,6 +275,18 @@
   // Prefer DICEFILES_DISCORD_WEBHOOK_URL / DICEFILES_TELEGRAM_BOT_TOKEN
   // environment variables when one global secret is sufficient.
   // "plugins": [
+  //   {
+  //     "id": "mega-folder",
+  //     "enabled": true,
+  //     "config": {
+  //       "roomId": "ROOM_ID",
+  //       "folderUrl": "https://mega.nz/folder/...",
+  //       "pollIntervalMinutes": 15,
+  //       "maxFilesPerRun": 50,
+  //       "maxBytesPerFile": 268435456,
+  //       "maxBytesPerRun": 1073741824
+  //     }
+  //   },
   //   {
   //     "id": "discord-release",
   //     "enabled": true,

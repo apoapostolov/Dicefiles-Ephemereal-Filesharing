@@ -62,6 +62,8 @@ jest.mock(
         boolean: chain,
         array: () => chain(),
         object: () => chain(),
+        record: () => chain(),
+        unknown: chain,
         enum: () => chain(),
       },
     };
@@ -114,9 +116,9 @@ function parseResult(result) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("registerTools", () => {
-  it("registers exactly 24 tools", () => {
+  it("registers exactly 30 tools", () => {
     const tools = buildToolMap();
-    expect(Object.keys(tools)).toHaveLength(24);
+    expect(Object.keys(tools)).toHaveLength(30);
   });
 
   it("registers every expected tool name", () => {
@@ -146,6 +148,12 @@ describe("registerTools", () => {
       "create_federated_room_link",
       "remove_federated_room_link",
       "set_room_federation_policy",
+      "list_room_plugins",
+      "configure_room_plugin",
+      "remove_room_plugin",
+      "run_room_plugin",
+      "inspect_room_plugin_sync_memory",
+      "clear_room_plugin_sync_memory",
     ];
     for (const name of expected) {
       expect(tools).toHaveProperty(name);
@@ -635,11 +643,13 @@ describe("federation link tools", () => {
       peerId: "friends",
       remoteRoomId: "Releases",
       visibility: "members",
+      rules: { userContains: "release-bot" },
     });
     expect(JSON.parse(global.fetch.mock.calls[1][1].body)).toMatchObject({
       peerId: "friends",
       roomId: "Releases",
       visibility: "members",
+      rules: { userContains: "release-bot" },
     });
 
     await tools.remove_federated_room_link({
@@ -660,6 +670,69 @@ describe("federation link tools", () => {
     expect(JSON.parse(global.fetch.mock.calls[3][1].body)).toEqual({
       allowFederation: true,
       allowPrivateFederation: false,
+    });
+  });
+});
+
+describe("room plugin tools", () => {
+  it("manages room bots and their sync memory through the v1 API", async () => {
+    const tools = buildToolMap();
+    global.fetch = mockFetchJson({ ok: true, plugins: [] });
+
+    await tools.list_room_plugins({ roomid: "Room One" });
+    expect(global.fetch.mock.calls[0][0]).toContain(
+      "/api/v1/rooms/Room%20One/plugins",
+    );
+    expect(global.fetch.mock.calls[0][1].method).toBe("GET");
+
+    await tools.configure_room_plugin({
+      roomid: "Room One",
+      pluginId: "telegram/release",
+      enabled: true,
+      config: { chatId: "community" },
+    });
+    expect(global.fetch.mock.calls[1][0]).toContain(
+      "/plugins/telegram%2Frelease",
+    );
+    expect(global.fetch.mock.calls[1][1].method).toBe("PUT");
+    expect(JSON.parse(global.fetch.mock.calls[1][1].body)).toMatchObject({
+      enabled: true,
+      config: { chatId: "community" },
+    });
+
+    await tools.run_room_plugin({
+      roomid: "Room One",
+      pluginId: "telegram-release",
+    });
+    expect(global.fetch.mock.calls[2][0]).toContain(
+      "/plugins/telegram-release/run",
+    );
+    expect(global.fetch.mock.calls[2][1].method).toBe("POST");
+
+    await tools.remove_room_plugin({
+      roomid: "Room One",
+      pluginId: "telegram-release",
+    });
+    expect(global.fetch.mock.calls[3][1].method).toBe("DELETE");
+
+    await tools.inspect_room_plugin_sync_memory({
+      roomid: "Room One",
+      pluginId: "mega-folder",
+      limit: 20,
+    });
+    expect(global.fetch.mock.calls[4][0]).toContain(
+      "/plugins/mega-folder/sync-log?limit=20",
+    );
+    expect(global.fetch.mock.calls[4][1].method).toBe("GET");
+
+    await tools.clear_room_plugin_sync_memory({
+      roomid: "Room One",
+      pluginId: "mega-folder",
+      confirm: true,
+    });
+    expect(global.fetch.mock.calls[5][1].method).toBe("DELETE");
+    expect(JSON.parse(global.fetch.mock.calls[5][1].body)).toEqual({
+      confirm: true,
     });
   });
 });

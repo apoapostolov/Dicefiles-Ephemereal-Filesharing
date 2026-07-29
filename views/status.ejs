@@ -386,7 +386,12 @@
             <span class="component-light" aria-hidden="true"></span>
             <span class="component-name"><%= check.label %></span>
             <span class="component-latency">
-              <%= check.latencyMs == null ? "—" : `${check.latencyMs} ms` %>
+              <% if (check.id === "federation") { %>
+                <%= `${status.federation.active}/${status.federation.peers} available` %>
+                <%= check.latencyMs == null ? "" : ` · ${check.latencyMs} ms` %>
+              <% } else { %>
+                <%= check.latencyMs == null ? "—" : `${check.latencyMs} ms` %>
+              <% } %>
             </span>
             <span class="component-state"><%= check.status %></span>
           </li>

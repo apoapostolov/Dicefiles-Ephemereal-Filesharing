@@ -1,7 +1,7 @@
 # Dicefiles - Ephemereal Filesharing for Hobby Communities
 
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Version](https://img.shields.io/badge/version-1.4.3-blue)
+![Version](https://img.shields.io/badge/version-1.4.4-blue)
 ![Node](https://img.shields.io/badge/node-%3E%3D22-339933)
 ![Redis](https://img.shields.io/badge/redis-v4%20client-DC382D)
 ![Package manager](https://img.shields.io/badge/package%20manager-yarn%201.x-2C8EBB)
@@ -17,19 +17,20 @@ the experience into a generic cloud-drive dashboard.
   <img src="images/dicefiles-room-gallery.png" alt="A living Dicefiles room with an expanded community banner, chat, filters, and a gallery of shared files" width="100%" />
 </p>
 
-### What's new in 1.4.3
+### What's new in 1.4.4
 
-**Since Your Last Visit.** Return to a room and Dicefiles gathers the uploads,
-linked-room arrivals, bot releases, new requests, and fulfilled requests you
-missed—excluding your own uploads. Open the grouped digest, download every new
-file in one action, or mark the room caught up. Reading progress also follows
-you back to the last PDF, book, or comic you opened.
+**Trusted communities can now span hosts.** Operators may pin another
+Dicefiles server, explicitly allow selected source rooms, and present matching
+remote files in an ordinary destination room without sharing accounts, Redis,
+or storage. Source-side rules, remote expiry, signed requests, durable
+invalidation, and ranged reader/download traffic preserve the linking model
+across the network.
 
-The release also adds a privacy-protected operator status dashboard,
-Discord/Telegram release publishers, stronger linked-room privacy controls,
-room-link and guest-invite automation, a 20-tool MCP server, more reliable
-image/PDF/archive previews, and a wide pass over desktop and mobile room UI.
-Full notes: [CHANGELOG.md](CHANGELOG.md).
+The release also promotes Discord and Telegram publishers into opt-in remote
+assistants, adds scoped room-bot REST and MCP controls, hardens scheduled
+imports, introduces guided federation key rotation and peer diagnostics, and
+extends the MCP surface to 30 tools. Full notes:
+[CHANGELOG.md](CHANGELOG.md).
 
 > **Note:** This is a self-hosted application. You must host it yourself - there is no public service provided.
 
@@ -86,7 +87,9 @@ Full notes: [CHANGELOG.md](CHANGELOG.md).
 - **Trusted-host federation** extends that linking model across independent
   Dicefiles servers. Peers use pinned RSA-3072 identities and RFC 9421 request
   signatures; room consent, remote TTL, ranged streaming, and privacy-safe
-  metadata remain enforced by the source
+  metadata remain enforced by the source. Durable invalidation delivery,
+  bounded diagnostics, peer health probes, and guided additive key rotation
+  support long-running installations
   ([operator and protocol guide](docs/FEDERATION.md)).
 - **Link rules** filter by filename, tags, uploader username, file type, and
   age. Plain terms support comma/OR and AND logic, while regex handles complex
@@ -112,17 +115,26 @@ Full notes: [CHANGELOG.md](CHANGELOG.md).
 ### Automation, bots & ops
 
 - **Automation REST API** uses scoped keys, per-scope rate limits, audit logs,
-  webhooks, room-link operations, and guest-invite operations.
-- **24-tool MCP server** gives AI clients typed tools for discovery, metadata,
+  webhooks, room-link operations, guest-invite operations, and separately
+  scoped room-bot configuration and execution.
+- **30-tool MCP server** gives AI clients typed tools for discovery, metadata,
   requests, uploads, archives, local links, federated peer links, and guest
-  invites.
+  invites, plus room-bot administration.
 - **Reactive plugins** receive room lifecycle events through stable HTTP,
   event-lease, room/file read, chat-write, and upload capabilities rather than
   importing server internals.
 - **Mega.nz Autoshare** watches a Mega.nz folder and uploads new material under
-  an explicit bot identity ([operator guide](core/plugins/MEGA_FOLDER.md)).
+  an explicit bot identity. Per-run file and byte limits, cross-worker leases,
+  and durable run summaries keep unattended imports bounded
+  ([operator guide](core/plugins/MEGA_FOLDER.md)).
+- **Remote Host Import** applies the same streamed, size-bounded bot workflow
+  to multiple allowlisted providers. Mega.nz and Pixeldrain file/list links are
+  supported first, with stable import memory and destination content dedupe
+  ([provider plan](core/plugins/REMOTE_HOST_IMPORTS.md)).
 - **Discord and Telegram release publishers** announce direct and linked-room
-  arrivals with safe file links and one-time multi-worker delivery
+  arrivals with safe file links and one-time multi-worker delivery. An optional
+  authenticated command surface can show room status and requests, create a
+  request, or post a bot-attributed message—never arbitrary server commands
   ([operator guide](core/plugins/RELEASE_PUBLISHERS.md)).
 - **Protected status dashboard** shows storage, uptime history, traffic,
   users, files, downloads, requests, and service health through a generated
@@ -318,7 +330,7 @@ mkdir -p ~/.claude/skills/dicefiles
 cp /absolute/path/to/Dicefiles/scripts/openclaw-dicefiles-skill/SKILL.md \
    ~/.claude/skills/dicefiles/
 ```
-The skill teaches OpenClaw the full 24-tool inventory, startup sequence, and
+The skill teaches OpenClaw the full 30-tool inventory, startup sequence, and
 fulfillment loop. Full skill definition: `scripts/openclaw-dicefiles-skill/SKILL.md`.
 
 ## 6 — Verify
@@ -454,7 +466,8 @@ Exchange discovery documents and fingerprints out of band, add the reciprocal
 peer record on the other host, then enable **Allow trusted peer federation** on
 the source room. The destination room can add the peer and remote room in Room
 Options → Linking. See [Dicefiles Federation](docs/FEDERATION.md) for the
-security model, local-lab HTTP exceptions, endpoints, and troubleshooting.
+security model, local-lab HTTP exceptions, diagnostics, two-host smoke test,
+guided key rotation, endpoints, and troubleshooting.
 
 #### 4. Start the Server
 
@@ -664,7 +677,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | `publicRooms` | `false` | When enabled, the home page becomes a searchable directory of all registered rooms, ordered by file count descending. Disabled by default — rooms are private unless the server operator turns this on. |
 | `roomPruning` | `true` | Automatically delete rooms that have been inactive for more than `roomPruningDays` days. Inactivity is tracked per file upload and per chat message. Enabled by default. |
 | `roomPruningDays` | `21` | Number of days of inactivity before a room is pruned. Requires `roomPruning: true`. All room data (files, messages, metadata) is permanently deleted when the threshold is crossed. |
-| `pluginSyncLogRetentionDays` | `30` | How long plugin bots (e.g. Mega.nz Autoshare) remember already-synced files (name+size) in Redis so restarts do not re-upload. Range 1–730 days. |
+| `pluginSyncLogRetentionDays` | `30` | How long importer bots remember stable provider identities (with legacy name+size compatibility) in Redis so restarts do not re-upload. Range 1–730 days. |
 
 ### Operator status dashboard
 
@@ -713,7 +726,7 @@ Additional per-room settings in **Room Options** (context menu), organized by ta
 | **General** — Allow Private Linking | **off** | Second source-owned consent for an invite-only room. Private mirroring works only when this and the destination link’s private-source request are both enabled. |
 | **Invites** | — | Guest invite links: Generate opens a limits panel (single-use / max users / max hours); list with copy and revoke; recent privacy-safe activity; redeem at `/r/:id?invite=TOKEN` |
 | **Linking** | empty table | Table of source rooms (id or exact name). Per-row filters: filename, tag, and uploader username expressions (comma/OR, AND, or regex), file types, max/min age (hours), viewer visibility, and a private-source request. Invite-only mirroring requires bilateral consent from source and destination. Status: Active / Cross-link off / Private source / Missing. Hidden rows and request cards never mirror. |
-| **Plugins** | empty | Invite bots from the server registry, edit settings, enable/disable, **Run now**. Uploads use a cyan **BOT** pill and bot name (e.g. Mega.nz Autoshare). |
+| **Plugins** | empty | Invite bots from the server registry, edit settings, enable/disable, **Run now**, inspect the latest run and remembered imports, or explicitly forget import memory. Uploads use a cyan **BOT** pill. Discord and Telegram publishers can optionally expose narrowly allowlisted, provider-authenticated room commands. |
 
 Example deep link (requires Shareable deep links enabled):
 
@@ -732,7 +745,7 @@ Dicefiles uses [Helmet 7](https://helmetjs.github.io/) to set secure HTTP respon
 
 | Header                       | Value                                                                 | Notes                                                            |
 | ---------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `Content-Security-Policy`    | `default-src 'self' 'unsafe-inline'` + `script-src ... 'unsafe-eval'` | `unsafe-eval` required for PDF.js PostScript rendering           |
+| `Content-Security-Policy`    | `default-src 'self' 'unsafe-inline'` + same-origin scripts            | PDF.js runs with runtime code generation disabled                |
 | `Strict-Transport-Security`  | `max-age=15552000; includeSubDomains`                                 | Sent **only** when the request arrived over HTTPS (`req.secure`) |
 | `X-Frame-Options`            | `SAMEORIGIN`                                                          | Prevents clickjacking                                            |
 | `X-Content-Type-Options`     | `nosniff`                                                             | Prevents MIME-type sniffing                                      |
@@ -830,7 +843,7 @@ Model Context Protocol, see [`MCP.md`](MCP.md). The bundled MCP server
 (`scripts/mcp-server.js`) wraps every automation endpoint as a named, schema-validated
 tool — no HTTP code required.
 
-**In-process plugins / bots** are invited per room from Room Options → **Plugins**, or loaded via the `plugins` array in `.config.json`. Mega.nz Autoshare uploads under a cyan **BOT** identity; the Discord and Telegram publishers announce new room releases to external communities. Developer guide: [`core/plugins/DEVELOPING_PLUGINS.md`](core/plugins/DEVELOPING_PLUGINS.md). Setup guides: [`core/plugins/MEGA_FOLDER.md`](core/plugins/MEGA_FOLDER.md) and [`core/plugins/RELEASE_PUBLISHERS.md`](core/plugins/RELEASE_PUBLISHERS.md).
+**In-process plugins / bots** are invited per room from Room Options → **Plugins**, controlled through dedicated REST/MCP scopes, or loaded via the `plugins` array in `.config.json`. Mega.nz Autoshare and Remote Host Import stream bounded downloads under a cyan **BOT** identity; Discord and Telegram publishers announce new room releases and can accept a small, provider-authenticated allowlist of room commands. Scheduled work uses cross-worker leases and records a privacy-safe latest-run summary. Developer guide: [`core/plugins/DEVELOPING_PLUGINS.md`](core/plugins/DEVELOPING_PLUGINS.md). Setup guides: [`core/plugins/MEGA_FOLDER.md`](core/plugins/MEGA_FOLDER.md), [`core/plugins/REMOTE_HOST_IMPORTS.md`](core/plugins/REMOTE_HOST_IMPORTS.md), and [`core/plugins/RELEASE_PUBLISHERS.md`](core/plugins/RELEASE_PUBLISHERS.md).
 
 ## Health Endpoint
 

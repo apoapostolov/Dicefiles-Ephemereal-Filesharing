@@ -40,6 +40,9 @@ Still supported for headless/global wiring (requires explicit `roomId`):
         "roomId": "YourRoomId12",
         "namePrefix": "mega-",
         "pollIntervalMinutes": 15,
+        "maxFilesPerRun": 50,
+        "maxBytesPerFile": 268435456,
+        "maxBytesPerRun": 1073741824,
         "botName": "Mega.nz Autoshare",
         "pollEvents": []
       }
@@ -52,6 +55,7 @@ Optional account credentials (private folders):
 
 - `config.email` / `config.password`, or  
 - environment: `MEGA_EMAIL`, `MEGA_PASSWORD` (preferred)
+
 ---
 
 ## How monitoring works
@@ -63,16 +67,23 @@ Optional account credentials (private folders):
 
 ### Already-synced files (durable skip log)
 
-After a successful upload, Mega.nz Autoshare records **name + size** for that room and folder in a **Redis-backed sync log**. Later polls (and **process restarts**) skip those entries until the log entry ages out.
+After a successful upload, Mega.nz Autoshare records the provider's stable node
+identity in a **Redis-backed sync log**, while retaining compatibility with
+older **name + size** records. Later polls and process restarts skip those
+entries until the record ages out. A renamed Mega.nz node therefore remains
+recognized, and content already present in the destination room is rejected by
+hash before another file row is created.
 
 | App config | Default | Meaning |
 |------------|---------|---------|
 | `pluginSyncLogRetentionDays` | `30` | Keep skip records for this many days (1–730). Set in `.config.json`. |
 
-Expired entries are pruned on sync. Within a process lifetime an in-memory cache mirrors the log for speed.
-| `pollEvents` | Optional webhook event names (e.g. `linked_file_appeared`) that call `scheduleRun`. |
+Expired entries are pruned on sync. Within a process lifetime an in-memory
+cache mirrors the log for speed.
 
-Dedupe is process-local: after restart, existing Mega.nz entries may upload again if they still appear in the folder listing. Use `namePrefix` and room cleanup as needed.
+Scheduled startup, poll, and event runs also acquire a Redis lease for the
+room/plugin/time bucket. Several HTTP workers may load the room, but only one
+performs that scan. Manual **Run now** remains an explicit new run.
 
 ---
 
@@ -87,8 +98,15 @@ Dedupe is process-local: after restart, existing Mega.nz entries may upload agai
 | `pollIntervalMinutes` | no | Folder monitor interval; `0` = off |
 | `email` / `password` | no | Mega.nz account (prefer env for password) |
 | `pollEvents` | no | Event names that schedule a `run()` |
+| `maxFilesPerRun` | no | Positive whole-number cap; default `50` |
+| `maxBytesPerFile` | no | Skip known/actual oversized files; default 256 MiB (`268435456`) |
+| `maxBytesPerRun` | no | Combined import cap; default 1 GiB (`1073741824`) |
 
-`validateConfig()` rejects missing URL/room or non-Mega.nz URLs.
+`validateConfig()` rejects missing URL/room, non-Mega.nz URLs, and non-positive
+or fractional limits. Known oversized entries are skipped before download.
+Unknown-size downloads are measured before upload. The run result reports
+`uploaded`, `uploadedBytes`, `skipped`, reasoned skip counts, and effective
+limits; Dicefiles stores the bounded last result for room-bot operators.
 
 ---
 
@@ -105,7 +123,7 @@ Dedupe is process-local: after restart, existing Mega.nz entries may upload agai
 
 | Adapter | Source |
 |---------|--------|
-| `uploadFile` | Bot-attributed `ingestFromBuffer` + `Room.get` |
+| `uploadFile` | Bot-attributed streaming or buffer ingest + `Room.get` |
 | `megaDownloader` | `createMegaDownloader` → optional **`megajs`** |
 
 - **`uploadFile` is always attached.**  
@@ -137,5 +155,10 @@ Plugins always upload as bots so room members can tell automation from people. S
 
 - Treat Mega.nz passwords as secrets (env, not git).
 - Only enable for rooms you control.  
-- Large folders can flood a room — start with a longer poll interval and `namePrefix`.  
+- Keep the import caps conservative for remaining disk and transfer allowance.
+  Mega.nz streams through a bounded temporary file, so large imports do not
+  accumulate as one full in-process buffer.
+- Room owners can inspect the latest run and remembered import count in Room
+  Options → **Plugins**, and can explicitly forget the sync memory when they
+  intend to rescan old provider entries.
 - Plugin code runs with full server privileges.

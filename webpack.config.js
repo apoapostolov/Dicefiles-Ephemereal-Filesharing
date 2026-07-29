@@ -67,7 +67,7 @@ module.exports = {
     "sortable": "./sortable.js",
     "style": "./css/style.css",
     // PDF.js web worker — served at /pdf.worker.js, referenced by reader.js
-    "pdf.worker": "../node_modules/pdfjs-dist/build/pdf.worker.entry.js",
+    "pdf.worker": "../node_modules/pdfjs-dist/build/pdf.worker.mjs",
   },
   output: {
     filename: "[name].js",

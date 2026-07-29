@@ -15,9 +15,33 @@ const {
   overlayRequestHistory,
   sanitizeHealth,
   summarizeRequests,
+  summarizeFederation,
   summarizeTrafficHistory,
   summarizeUploads,
 } = require("../../lib/public-status");
+
+describe("privacy-safe federation status", () => {
+  test("reports aggregate reachability without peer identity or URLs", () => {
+    const summary = summarizeFederation([
+      {
+        peerId: "private-name",
+        baseUrl: "https://secret.example",
+        status: "active",
+        latencyMs: 40,
+      },
+      { peerId: "other", status: "unreachable", latencyMs: 90 },
+    ], true);
+    expect(summary).toEqual({
+      enabled: true,
+      peers: 2,
+      active: 1,
+      unavailable: 1,
+      status: "degraded",
+      latencyMs: 40,
+    });
+    expect(JSON.stringify(summary)).not.toMatch(/private-name|secret|other/);
+  });
+});
 const {
   formatByteTick,
   niceByteAxis,

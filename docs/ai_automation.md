@@ -1,7 +1,7 @@
 # AI Agent Automation Guide — Dicefiles
 
 This document catalogues automation use cases for AI agents operating against a
-Dicefiles 1.4.3 instance. Items marked **\[implemented\]** are available today;
+Dicefiles 1.4.4 instance. Items marked **\[implemented\]** are available today;
 explicit proposals remain candidates for later evaluation.
 
 ---

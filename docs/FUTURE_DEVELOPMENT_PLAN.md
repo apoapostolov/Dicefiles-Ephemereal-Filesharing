@@ -5,14 +5,39 @@ Working backlog of product ideas that fit self-hosted room chat + ephemeral file
 | Mark | Meaning |
 | ---- | ------- |
 | `[x]` | Shipped / done (in a released tag unless noted) |
-| `[ ]` | Proposal only — not implemented |
+| `[ ]` | Future proposal — not implemented and not a release blocker |
 
 Plugin docs: `core/plugins/`. Formerly `feature_creep_proposal.md`.
 
-**Last updated:** 2026-07-28 — v1.4.3 “Since Your Last Visit” ships continuity,
-protected service telemetry, release publishers, and linked-room/guest-invite
-automation; the **trusted-host federation backbone** is now shipped, with
-outbound push fan-out and guided key rotation remaining follow-up work.
+**Last updated:** 2026-07-29 — v1.4.4 completes the trusted-host federation
+operator lifecycle (source-side rules, durable push invalidation, peer
+telemetry, guided key rotation, audit, and two-host smoke test) and makes room
+bots remotely manageable, bounded, observable, and optionally
+provider-authenticated for safe community commands.
+
+---
+
+## v1.4.4 release gate
+
+This is the finite release backlog. Open checkboxes elsewhere in this document
+are longer-term proposals, optional extensions, or explicit non-goals; they do
+not silently expand the scope of v1.4.4.
+
+- [x] Complete trusted-host federation phases F0–F5 and the isolated two-host
+  acceptance smoke
+- [x] Expose scoped room-bot REST and 30-tool MCP administration
+- [x] Bound plugin runs with leases, streamed ingest, import caps, stable
+  identity/content dedupe, run status, and confirmed sync-memory clearing
+- [x] Ship the multi-host importer foundation with Mega.nz and Pixeldrain;
+  retain Gofile and legacy shell-bridge providers as future provider work
+- [x] Finish advanced linking rules, status charts, account achievements,
+  mobile picker/layout fixes, reader imports, and ePub page-turn polish
+- [x] Document configuration, setup, federation, plugins, APIs, MCP, upgrades,
+  rollback, and future proposals
+- [x] Complete release security/privacy scan, full tests, production rebuild,
+  stable-service restart, dual health checks, and in-app browser verification
+- [x] Prepare matching v1.4.4 package, changelog, README, tag, and GitHub
+  release metadata
 
 ---
 
@@ -29,9 +54,14 @@ outbound push fan-out and guided key rotation remaining follow-up work.
 - [x] Guest invite links (single-use / max X / max Y hours) — Room Options → **Invites** — **v1.4.2**
 - [x] Privacy-safe operator dashboard beyond `/healthz`, protected by a generated capability link by default — **v1.4.3**
 - [x] Webhooks + plugin system (Mega.nz Autoshare, BOT pills, Room Options → **Plugins**) — **v1.4.2**
-- [x] Durable plugin sync skip-log (name+size, Redis, configurable retention) — **v1.4.3**
-- [ ] Multi-host remote import (MediaFire, 4shared, Pixeldrain, Gofile, …) — design: `core/plugins/REMOTE_HOST_IMPORTS.md`
-- [ ] Plugin import safety: size/file caps, worker lock, hash-level skip (see gaps below)
+- [x] Durable plugin sync skip-log (stable provider id with legacy name+size,
+  Redis, configurable retention) — **v1.4.3**, strengthened in **v1.4.4**
+- [ ] Multi-host remote import — shared downloader registry plus Mega.nz and
+  Pixeldrain are shipped; Gofile and long-tail providers remain — design:
+  `core/plugins/REMOTE_HOST_IMPORTS.md`
+- [x] Plugin import safety: per-file/per-run caps and cross-worker run leases
+- [x] Plugin dedupe upgrade: stable provider identity plus existing-room
+  content-hash check
 - [x] **Federated multi-server mesh** — pinned peers, RFC 9421 authentication,
   bilateral room consent, remote room linking, status probes, and ranged
   fetch-through (see full section)
@@ -100,7 +130,10 @@ outbound push fan-out and guided key rotation remaining follow-up work.
 
 ## Operator & automation
 
-- [ ] **Operator dashboard** — disk, room count, prune candidates, rate-limit hits, preview queue, **plugin last-run / errors**
+- [x] **Operator dashboard** — privacy-safe service/storage/activity history,
+  request status, federation peer aggregate, and protected capability URL
+- [ ] Operator dashboard additions: prune candidates, rate-limit hits, preview
+  queue, and per-plugin last-run/error cards (last-run data is available by API)
 - [x] **Webhooks + plugin system** — **v1.4.2** (+ sync log hardening below)
 
 ### Webhooks (shipped)
@@ -122,36 +155,39 @@ outbound push fan-out and guided key rotation remaining follow-up work.
 - [x] Docs: `core/plugins/DEVELOPING_PLUGINS.md`, `MEGA_FOLDER.md`
 - [x] Unit tests: registry, adapters, room-plugins, mega inject
 - [x] `megajs` optionalDependency
-- [x] **Durable sync log** — Redis ZSET of name+size per plugin/room/source; skip re-upload across restarts (`lib/plugins/sync-log.js`)
+- [x] **Durable sync log** — Redis ZSET per plugin/room/source; stable provider
+  identities plus legacy name+size compatibility survive restarts
+  (`lib/plugins/sync-log.js`)
 - [x] **App config** `pluginSyncLogRetentionDays` (default **30**, clamp 1–730) — prune expired skip records
 - [x] In-process cache mirrors durable log for hot polls
 
-### Plugin / bot gaps (discovered — **must plan**)
+### Plugin / bot follow-ups
 
 These are not covered by a clear backlog item yet; add them before calling plugins “production-hard.”
 
 | Gap | Why it matters | Suggested direction |
 | --- | -------------- | ------------------- |
-| **Skip key is name+size only** | Same name, rewritten content (same size) or rename edge cases | Optional content hash after download; or Mega.nz node id if SDK exposes stable ids |
-| **No skip against existing room files** | File already uploaded by a human → bot may still import | Pre-check room list / hash registry before download |
-| **Multi-worker race** | Two HTTP workers can both miss the log and double-upload | Redis lock around sync run per scope (`SET NX` / short TTL) |
-| **Large-file memory** | Mega.nz path buffers full file then `ingestFromBuffer` | Stream/temp-file path for big folders |
-| **Import caps** | A huge Mega.nz folder can flood a room / disk | Config: max files per run, max bytes per file/run, cooldown |
-| **Operator visibility** | No last-run, skip counts, or errors in UI | Plugins tab: last run time, last error, uploaded/skipped last run |
-| **Sync log admin** | Operators cannot clear or inspect skip log | Admin/API or Plugins tab: “clear skip memory for this bot” |
-| **REST for room plugins** | Only socket `setconfig` today | Automation scopes for list/invite/run room plugins |
-| **Cross-worker poll timers** | Each process that loads the room may schedule polls | Leader election or single “plugin runner” worker |
-| **megajs not installed** | Live Mega.nz sync fails until optional dep present | Clearer Plugins-tab warning / healthz plugin readiness |
+| ~~Skip key is name+size only~~ | **Shipped:** provider node identity is primary; legacy name+size remains readable | Extend the same contract to each provider |
+| ~~No skip against existing room files~~ | **Shipped:** completed content hashes are checked before a new room row is created | Preserve the check in every importer |
+| ~~Multi-worker race~~ | **Shipped v1.4.4:** scheduled room and global runs share Redis event leases | Keep lease duration aligned with maximum bounded run |
+| ~~Large-file memory~~ | **Shipped:** importer streams are hashed into bounded temporary storage | Keep provider adapters stream-first |
+| ~~Import caps~~ | **Shipped v1.4.4:** max files, bytes/file, and bytes/run with reasoned skips | Consider a per-day cooldown/budget later |
+| ~~Operator visibility~~ | **Shipped:** Room Options renders last run time, success/error, and bounded counts | Add site-wide cards only if operators request them |
+| ~~Sync log admin~~ | **Shipped:** owner UI plus scoped REST/MCP inspect and confirmed clear | Keep list results bounded |
+| ~~REST for room plugins~~ | **Shipped v1.4.4:** list/configure/remove/run/sync memory plus 30-tool MCP surface | Keep credentials redacted and scopes split |
+| ~~Cross-worker poll timers~~ | **Shipped v1.4.4:** workers may schedule, but one lease-holder runs each bucket | Consider a dedicated runner only if scale requires it |
+| **megajs unavailable** | Yarn installs the optional dependency normally, but an intentionally skipped optional install disables live sync | Add Plugins-tab/health diagnostics using existing catalog availability |
 
 ### Multi-host remote import (proposal — not shipped)
 
 Design: **`core/plugins/REMOTE_HOST_IMPORTS.md`**.
 
-- [ ] Shared **`RemoteDownloader`** (`canHandle` / `listFolder` / `download`) — Mega.nz first provider
-- [ ] **`remote-import` plugin** — multi-URL list, caps, source URL in meta
-- [ ] Pixeldrain / Gofile (HTTP APIs)
+- [x] Shared **`RemoteDownloaderRegistry`** (`canHandle` / `listFolder`) —
+  Mega.nz and Pixeldrain providers
+- [x] **`remote-import` plugin** — multi-URL list, caps, streamed ingest
+- [ ] Pixeldrain shipped; Gofile remains pending
 - [ ] Long-tail MediaFire / 4shared via plowshare shell bridge
-- [ ] Reuse **durable sync log** for all import plugins (same retention config)
+- [x] Reuse **durable sync log** for all import plugins (same retention config)
 - [ ] Non-goals: untrusted scraper marketplace; Playwright captcha farms; yt-dlp as file-locker core
 
 ---
@@ -231,7 +267,8 @@ Status: **Active** / **Peer unreachable** / **Denied** / **Room missing** / **Ke
 - [x] File rows identify the trusted peer and remote source room
 - [x] Open/download/Read Now use destination proxy so browser cookies stay local
 - [ ] Operator config UI or `.config.json` for peers (URL, key, enabled)
-- [ ] `/healthz` (or operator dashboard) includes peer reachability summary
+- [x] Protected operator dashboard includes privacy-safe aggregate peer
+  reachability and latency on its five-minute sampling interval
 
 ### Config sketch
 
@@ -265,8 +302,8 @@ Room-level: destination still needs an explicit link row (no automatic mesh of a
 | **F1 — Read API** | **Shipped:** hello, room metadata, cursor list, ranged file stream |
 | **F2 — Destination linker** | **Shipped:** remote list merge, TTL enforcement, cache, status probe |
 | **F3 — Client chrome** | **Shipped:** trusted-peer picker and local fetch-through URL |
-| **F4 — Push optional** | **Partial:** signed inbox/invalidation receiver shipped; durable outbound fan-out remains |
-| **F5 — Ops** | **Partial:** peer probe API, limits and circuit breaker shipped; guided key rotation and richer audit UI remain |
+| **F4 — Push optional** | **Shipped:** signed inbox plus durable, deduplicated Redis outbox with retry/backoff |
+| **F5 — Ops** | **Shipped:** peer probes, aggregate status telemetry, bounded audit API, additive-key overlap, guided two-phase rotation |
 
 ### Security checklist (non-negotiable)
 
@@ -303,10 +340,10 @@ Room-level: destination still needs an explicit link row (no automatic mesh of a
 - [x] F1 signed federation read endpoints
 - [x] F2 destination remote link entries + list merge + probe
 - [x] F3 Linking UI + server-side client fetch-through
-- [ ] F4 durable outbound push fan-out (signed inbox receiver is shipped)
-- [ ] F5 guided key rotation and federation audit UI (limits/probe API shipped)
+- [x] F4 durable outbound push fan-out
+- [x] F5 guided key rotation, peer/key diagnostics, and bounded audit API
 - [x] Unit tests for config, identity, link mapping, signatures, and MCP tools
-- [ ] Two-process federation integration recipe/test fixture
+- [x] Isolated two-process federation smoke: trust, rules, privacy, ranged proxy
 - [x] README “Optional trusted-host federation” section
 
 ---
@@ -318,8 +355,9 @@ Room-level: destination still needs an explicit link row (no automatic mesh of a
 - [x] Room Options overhaul — tabs include **Invites** + **Plugins** (**v1.4.2**)
 - [x] Dark-theme scrollbars; Linking number-input gutters (**v1.4.2**)
 - [x] Invite generate row copy control sized to field (not modal `.icon` 64px)
-- [ ] Mobile layout pass for Room Options tabs (dense tables on small screens)
-- [ ] Plugins settings form validation UX (inline errors vs modal only)
+- [x] Mobile layout pass for Room Options tabs, plugin editor, and dense plugin
+  table
+- [x] Plugin settings form validation with inline required/range feedback
 
 ---
 
@@ -355,15 +393,13 @@ Room-level: destination still needs an explicit link row (no automatic mesh of a
 | **v1.4.1** | Sticky filters/sort, Read Now / archive / batch honesty, Giphy-only |
 | **v1.4.2** | Multi-room linking, request board, deep links, guest invites, plugins/bots/Mega.nz, Room Options tabs, webhooks expansions, docs reorg |
 | **v1.4.3** | Since Your Last Visit continuity, protected status dashboard, Discord/Telegram release publishers, linked-room and guest-invite automation, 20-tool MCP |
+| **v1.4.4** | Complete trusted-host federation operations, 30-tool MCP, scoped room-bot automation, streamed multi-host imports, import caps/leases/run status, authenticated Discord/Telegram commands |
 
 ### Still open (product)
 
 - Session kits; spoiler/reveal; room templates + clone
-- Operator dashboard additions for plugin health and federation peer status
-- Multi-host import ladder
-- Plugin production-hardening gaps table above
-- Federation outbound invalidation fan-out, guided key rotation, richer audit UI,
-  and a two-process integration fixture
+- Operator dashboard additions for per-plugin cards (federation peer aggregate is shipped)
+- Multi-host import ladder beyond Mega.nz and Pixeldrain
 ### Config worth remembering
 
 | Key | Default | Role |

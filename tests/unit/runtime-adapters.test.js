@@ -1,6 +1,7 @@
 "use strict";
 
 const path = require("path");
+const { Readable } = require("stream");
 const {
   createUploadFileAdapter,
   createMegaDownloader,
@@ -56,6 +57,40 @@ describe("plugin runtime adapters (shipped)", () => {
     await expect(
       dl.listFolder("https://mega.nz/folder/x", {}),
     ).rejects.toThrow(/megajs is not installed/);
+  });
+
+  test("createUploadFileAdapter streams without buffering in process memory", async () => {
+    const streamed = [];
+    const uploadFile = createUploadFileAdapter({
+      async getRoom() {
+        return { fileTTL: 24 };
+      },
+      async ingestFromBuffer() {
+        throw new Error("buffer ingest must not be used for a stream");
+      },
+      async ingestFromStream(opts) {
+        streamed.push(opts);
+        return {
+          key: "streamed1",
+          name: opts.name,
+          size: 6,
+          meta: opts.meta,
+        };
+      },
+    });
+    const body = Readable.from([Buffer.from("stream")]);
+    const result = await uploadFile({
+      roomId: "destRoom99",
+      name: "large.bin",
+      body,
+      maxBytes: 1024,
+      skipIfRoomHashExists: true,
+    });
+    expect(result.key).toBe("streamed1");
+    expect(streamed).toHaveLength(1);
+    expect(streamed[0].stream).toBe(body);
+    expect(streamed[0].maxBytes).toBe(1024);
+    expect(streamed[0].skipIfRoomHashExists).toBe(true);
   });
 
   test("createMegaDownloader with fake megajs lists files", async () => {

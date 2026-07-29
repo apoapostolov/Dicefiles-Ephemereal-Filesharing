@@ -55,6 +55,17 @@ An operator adds a peer to `.config.json`:
           "n": "replace-with-the-peer-modulus",
           "e": "AQAB"
         },
+        "acceptedPublicKeys": [
+          {
+            "keyId": "https://files.friends.example/federation/actor#key-next",
+            "publicKeyJwk": {
+              "kty": "RSA",
+              "alg": "RS256",
+              "n": "next-peer-modulus",
+              "e": "AQAB"
+            }
+          }
+        ],
         "allowedRooms": ["public-releases"]
       }
     ]
@@ -128,7 +139,7 @@ Only completed, non-hidden uploads are returned:
   "files": [
     {
       "key": "opaque-file-key",
-      "name": "dicefiles-1.5.0.zip",
+      "name": "dicefiles-1.4.4.zip",
       "size": 123456,
       "type": "application/zip",
       "uploadedAt": "2026-07-28T12:00:00.000Z",
@@ -156,8 +167,10 @@ A federated link is stored separately from local `linkedRooms`:
   "name": "Friends / Releases",
   "visibility": "all",
   "rules": {
-    "nameIncludes": "dicefiles",
-    "extensions": ["zip"],
+    "nameContains": "dicefiles AND /\\.zip$/i",
+    "tagContains": "release OR stable",
+    "userContains": "release-bot",
+    "types": ["archive"],
     "maxAgeHours": 168
   }
 }
@@ -165,8 +178,15 @@ A federated link is stored separately from local `linkedRooms`:
 
 The destination fetches remote metadata server-to-server and exposes a local
 streaming proxy URL. Browser clients never receive peer credentials or contact
-the source directly. Existing linked-room visibility and filtering rules apply
-again at the destination.
+the source directly. Filename, tag, uploader, type, and age rules are evaluated
+on the source against its complete private row. Only the bounded public file
+shape crosses hosts. The destination then rechecks the privacy-safe filename,
+type, and age fields. It never asks the source to reveal uploader or tag data.
+
+Rules use the same syntax as local room links: comma or `OR` for alternatives,
+explicit `AND`, and `/pattern/flags` regular expressions. Invalid rules fail at
+the Room Options, REST, and source federation boundaries rather than silently
+becoming an unfiltered link.
 
 ## Replay, limits, and failure behavior
 
@@ -180,11 +200,29 @@ again at the destination.
 - Transport retries apply only to idempotent requests and use bounded backoff.
 - Invalid signatures, replay attempts, authorization failures, peer state
   changes, and transfer failures are written to the structured audit stream.
+- Successful upload/delete changes queue durable, deduplicated `Add`/`Remove`
+  invalidations in Redis. Delivery retries six times with bounded backoff and
+  survives worker restarts; periodic pull and remote TTL remain authoritative.
 - A failed peer never prevents local files or another healthy peer from loading.
 
 Remote-link status is one of `active`, `unreachable`, `denied`, `missing`,
 `key-invalid`, `protocol-mismatch`, or `circuit-open`. Status is descriptive and
 does not leak the source's private room inventory.
+
+## Operator visibility
+
+The protected operator status page samples trusted-peer reachability on its
+existing five-minute economic interval. It exposes only aggregate totals,
+availability, and average latency—never peer IDs, origins, room IDs, or keys.
+
+An `admin:read` automation key may use:
+
+- `GET /api/v1/federation/peers` for configured peer status, current local
+  public fingerprint, and a prepared public rotation record;
+- `GET /api/v1/federation/audit?limit=100` for a bounded newest-first audit
+  view containing time, request ID, peer ID, method, path, status, and code.
+
+Private key material is never returned by either endpoint.
 
 ## Key lifecycle
 
@@ -192,10 +230,52 @@ The first start with federation enabled generates an RSA-3072 key pair and write
 it to `.config.json`. The private JWK is secret and must not be committed,
 logged, returned by an API, or sent to a browser.
 
-Automatic or guided key rotation is not shipped yet. Until rotation tooling is
-available, operators must coordinate any replacement identity and update every
-peer's pinned public key out of band. A changed, unpinned key is a hard failure,
-not trust-on-first-use; Dicefiles never silently trusts a newly discovered key.
+Rotation is intentionally guided and two-phase:
+
+```bash
+# Show public status/fingerprints only
+yarn federation:key status
+
+# Generate a pending key locally without changing the active signer
+yarn federation:key prepare
+
+# After every peer has pinned the pending public key, promote it.
+# The complete fingerprint is required as an explicit confirmation.
+yarn federation:key activate --confirm=<complete-pending-fingerprint>
+
+# Discard an unactivated pending key
+yarn federation:key cancel
+```
+
+`prepare` publishes only the pending public record through discovery and the
+admin peer endpoint. Peer operators add that record to
+`acceptedPublicKeys` while retaining the current primary key. After every peer
+confirms acceptance, `activate` promotes the pending private identity and keeps
+up to three previous public records locally. Operators may remove the retired
+peer key after the agreed overlap window.
+
+A changed, unpinned key remains a hard failure. Dicefiles never performs
+trust-on-first-use or silently replaces a pinned peer key.
+
+Pass `--config=/absolute/path/.config.json` when the service uses a non-default
+working directory. The CLI never prints a private JWK.
+
+## Two-host verification
+
+The smoke harness starts two independent Dicefiles processes against two empty,
+dedicated Redis databases, creates and opts in rooms, applies source-side
+filename and uploader rules, and verifies privacy-safe metadata plus a ranged
+download through the destination proxy:
+
+```bash
+yarn test:federation
+```
+
+Run it through Linux/WSL. By default it requires empty Redis databases 14 and
+15 on localhost and cleans them afterward. Operators may instead provide
+`DICEFILES_FEDERATION_SOURCE_REDIS` and
+`DICEFILES_FEDERATION_DEST_REDIS`. The script refuses a non-empty database and
+never uses the live Dicefiles database.
 
 ## Out of scope
 

@@ -9,13 +9,15 @@ Audience: operators and developers who already run a self-hosted Dicefiles insta
 
 ---
 
-## 1.4.3 runtime contract
+## 1.4.4 runtime contract
 
-Release 1.4.3 makes event-driven plugins a supported first-party integration path:
+Release 1.4.4 makes event-driven plugins a supported first-party integration path:
 plugins can subscribe to room lifecycle events, call bounded Dicefiles adapters,
 perform timeout-limited JSON requests, and acquire Redis-backed one-time event
-leases before publishing to an external service. Discord and Telegram release
-publishers are the reference implementations.
+leases before publishing to an external service. Scheduled runs are leased
+across workers, bounded last-run status is retained, and room bots have scoped
+REST/MCP administration. Discord and Telegram release publishers are the
+reference outbound and authenticated-inbound implementations.
 
 ---
 
@@ -97,6 +99,13 @@ module.exports = {
 
   /** Imperative entry (CLI/job/automation wrapper) */
   async run(ctx, args) { return { ok: true }; },
+
+  /** Optional provider-authenticated webhook handler */
+  inbound: {
+    async handle(request, ctx) {
+      return { status: 200, body: { ok: true } };
+    },
+  },
 };
 ```
 
@@ -125,12 +134,16 @@ Provided by the registry:
 | `enabled` | boolean |
 | `log` | `{ info, warn, error }` (when started from httpserver) |
 | `scheduleRun(id, args)` | Queue `run()` without blocking the event path |
-| `uploadFile` / `megaDownloader` | **Production:** attached by `buildPluginRuntimeCtx` in the HTTP worker (`lib/plugins/runtime-adapters.js`). **Tests:** inject fakes the same way. Uploads are bot-attributed. |
+| `uploadFile` | Bot-attributed buffer or stream ingest. Streams are written through bounded temporary storage when `maxBytes` is supplied. |
+| `megaDownloader` | Compatibility adapter for the dedicated Mega.nz bot. |
+| `remoteDownloaders` | Allowlisted provider registry used by multi-host importers (`resolve` / `listFolder`). |
 | `publicBaseUrl` | Operator-configured public Dicefiles origin for external links |
 | `http.requestJson(url, options)` | Timeout-bounded JSON HTTP client whose errors do not echo secret-bearing URLs |
 | `events.begin/complete/fail` | Redis-backed one-time event lease for multi-worker idempotency |
 | `dicefiles.getRoomSummary(roomId)` | Stable room identity/read surface |
 | `dicefiles.listFiles({roomId, since?, limit?})` | Stable, bounded file read surface |
+| `dicefiles.listRequests({roomId, status?, limit?})` | Stable, bounded request read surface |
+| `dicefiles.createRequest({roomId, text, remoteUser?})` | Create a bot-attributed request |
 | `dicefiles.postMessage({roomId, text})` | Post bot-attributed room chat without importing Broker internals |
 
 `capabilities` are documentation and catalog metadata, not a sandbox. First-
@@ -147,9 +160,25 @@ Owners/mods invite bots into a **room** from the registry (not only via `.config
 | `inviteRoomPlugin` / `updateRoomPlugin` | Invite or update settings |
 | `revokeRoomPlugin` | Remove bot from room |
 | `runRoomPlugin` | Manual “Run now” |
+| `inspectRoomPluginSyncMemory` | Latest run plus bounded remembered-import state |
+| `clearRoomPluginSyncMemory` | Confirmed reset of remembered imports |
 | `listRoomPlugins` / `setRoomPlugins` | List / replace full list |
 
 Per-room storage: `roomPlugins` on the room config. Runtime pollers sync via `lib/plugins/room-runtime.js`.
+
+The equivalent automation endpoints use dedicated least-privilege scopes:
+
+| REST route | Scope |
+| --- | --- |
+| `GET /api/v1/rooms/:id/plugins` | `room-plugins:read` |
+| `PUT /api/v1/rooms/:id/plugins/:pluginId` | `room-plugins:write` |
+| `DELETE /api/v1/rooms/:id/plugins/:pluginId` | `room-plugins:write` |
+| `POST /api/v1/rooms/:id/plugins/:pluginId/run` | `room-plugins:run` |
+| `GET /api/v1/rooms/:id/plugins/:pluginId/sync-log` | `room-plugins:read` |
+| `DELETE /api/v1/rooms/:id/plugins/:pluginId/sync-log` | `room-plugins:write` |
+
+Read responses redact secret-like configuration fields and include bounded
+last-run state. PUT merges supplied config so omitted credentials survive.
 
 ### Configuration
 
@@ -190,14 +219,25 @@ In `.config.json`:
    - matching HTTP webhooks queued/delivered  
 5. Process exit → optional `stopAll()` (not always called on SIGKILL)
 
+Room-scheduled `startup`, `poll`, and event-triggered runs acquire a Redis event
+lease keyed by room, plugin, reason, and time/event bucket. A second worker
+returns `already_running_or_completed`; manual **Run now** remains explicit.
+Success/failure records store only time, duration, reason, sanitized error, and
+bounded numeric result fields.
+
 ### Calling `run()` from automation
 
-v1 does not expose a public REST route for arbitrary plugins (trust boundary). Operators can:
+Only an already invited room plugin can be run through
+`POST /api/v1/rooms/:id/plugins/:pluginId/run` with `room-plugins:run`.
+The route cannot install modules or run a catalog entry that the room did not
+invite. Process-wide plugins may still be invoked by a trusted maintenance
+script with `defaultRegistry.run(id, args)`.
 
-- call `defaultRegistry.run("mega-folder", args)` from a trusted maintenance script in-process, or  
-- add a scoped automation route in a future release.
-
-The Mega.nz plugin’s `run()` **requires** `ctx.uploadFile` and `ctx.megaDownloader`. Production `startAll` always supplies both via `buildPluginRuntimeCtx` (`uploadFile` → `ingestFromBuffer`; `megaDownloader` → optional `megajs`). Tests inject fakes so they never hit the network; without `megajs` installed, live `listFolder` fails with an install hint rather than a missing-adapter crash.
+The Mega.nz plugin’s `run()` requires `ctx.uploadFile` and
+`ctx.megaDownloader`. Remote Host Import uses `ctx.remoteDownloaders`.
+Production supplies all three through `buildPluginRuntimeCtx`; streamed bodies
+use `ingestFromStream`, while small/fake buffers retain `ingestFromBuffer`.
+Tests inject fakes so they never hit the network.
 
 ---
 
@@ -209,9 +249,12 @@ The Mega.nz plugin’s `run()` **requires** `ctx.uploadFile` and `ctx.megaDownlo
 4. **Optional `onEvent`** — declare `eventSubscriptions`; use
    `ctx.events` when an external side effect must happen only once across
    multiple workers.
-5. **Unit tests** that `require` the real module and inject fakes (see `tests/unit/plugins.test.js`).
-6. **Document** operator config in this folder or README.
-7. **Enable** in `.config.json` and restart.
+5. **Optional inbound endpoint** — verify the provider signature/secret against
+   the exact raw body, require explicit caller/action allowlists, deduplicate
+   provider event IDs with `ctx.events`, and return a bounded provider response.
+6. **Unit tests** that `require` the real module and inject fakes (see `tests/unit/plugins.test.js`).
+7. **Document** operator config in this folder or README.
+8. **Enable** in `.config.json` and restart.
 
 ### Permissions & safety
 
@@ -222,6 +265,8 @@ The Mega.nz plugin’s `run()` **requires** `ctx.uploadFile` and `ctx.megaDownlo
 - Never log full invite tokens or API keys.
 - Validate `roomId` exists before upload.
 - Rate-limit external downloads yourself.
+- Never expose a generic remote command, shell, arbitrary URL fetch, or raw
+  automation-API proxy through `inbound.handle`.
 
 ### Testing pattern
 

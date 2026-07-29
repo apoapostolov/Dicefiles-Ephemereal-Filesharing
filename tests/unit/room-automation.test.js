@@ -5,9 +5,16 @@ const {
   listRoomLinks,
   createRoomLink,
   removeRoomLink,
+  createFederatedRoomLink,
   listGuestInvites,
   createGuestInvite,
   revokeGuestInvite,
+  listRoomPlugins,
+  upsertRoomPlugin,
+  removeRoomPlugin,
+  runRoomPlugin,
+  inspectRoomPluginSyncMemory,
+  clearRoomPluginSyncMemory,
 } = require("../../lib/http/room-automation");
 const {
   normalizeLinkedRoomEntries,
@@ -94,6 +101,81 @@ function makeRoom({ privateSourceConsent = true } = {}) {
   };
 }
 
+function makeFederatedRoom() {
+  let links = [];
+  return {
+    roomid: "destination1",
+    config: {
+      get(key) {
+        return key === "federatedRooms" ? links : undefined;
+      },
+    },
+    setFederatedRooms(raw) {
+      links = raw;
+      return links;
+    },
+    async probeFederatedRooms() {
+      return links.map((entry) => Object.assign({ status: "active" }, entry));
+    },
+  };
+}
+
+function makePluginRoom() {
+  let plugins = [{
+    id: "telegram-release",
+    enabled: true,
+    config: {
+      chatId: "community",
+      botToken: "private-token",
+      baseUrl: "https://dicefiles.example",
+    },
+  }];
+  return {
+    roomid: "destination1",
+    getRoomPlugins() {
+      return plugins;
+    },
+    listRoomPluginsDetailed() {
+      return plugins.map((entry) => Object.assign({
+        name: "Telegram Release Publisher",
+      }, entry));
+    },
+    inviteRoomPlugin(entry) {
+      plugins = plugins
+        .filter((plugin) => plugin.id !== entry.id)
+        .concat(entry);
+      return this.listRoomPluginsDetailed();
+    },
+    revokeRoomPlugin(pluginId) {
+      plugins = plugins.filter((plugin) => plugin.id !== pluginId);
+      return this.listRoomPluginsDetailed();
+    },
+    async runRoomPluginNow(pluginId) {
+      return { pluginId, delivered: 1 };
+    },
+    async inspectRoomPluginSyncMemory(pluginId) {
+      return {
+        pluginId,
+        supported: true,
+        label: "Imported files",
+        count: 3,
+        latestAt: 123,
+        retentionDays: 30,
+        entries: [{ entryKey: "source:abc", syncedAt: 123 }],
+        lastRun: null,
+      };
+    },
+    async clearRoomPluginSyncMemory(pluginId, opts) {
+      if (!opts.confirm) {
+        const error = new Error("confirm required");
+        error.status = 400;
+        throw error;
+      }
+      return { pluginId, supported: true, removed: 3, count: 0 };
+    },
+  };
+}
+
 describe("room automation helpers", () => {
   test("requires an existing room with HTTP-friendly status", async () => {
     const Room = { get: jest.fn(async () => null) };
@@ -144,6 +226,30 @@ describe("room automation helpers", () => {
     await expect(
       createRoomLink(anotherRoom, {
         source: "Campaign Maps",
+        rules: { tagContains: "/[/" },
+      }),
+    ).rejects.toMatchObject({ status: 400 });
+  });
+
+  test("validates federated rules at the automation boundary", async () => {
+    const room = makeFederatedRoom();
+    const created = await createFederatedRoomLink(room, {
+      peerId: "friends",
+      roomId: "releases",
+      rules: {
+        nameContains: "pf2 AND /\\.pdf$/i",
+        userContains: "alice OR release-bot",
+      },
+    });
+    expect(created.links[0].rules).toMatchObject({
+      nameContains: "pf2 AND /\\.pdf$/i",
+      userContains: "alice OR release-bot",
+    });
+
+    await expect(
+      createFederatedRoomLink(makeFederatedRoom(), {
+        peerId: "friends",
+        roomId: "releases",
         rules: { tagContains: "/[/" },
       }),
     ).rejects.toMatchObject({ status: 400 });
@@ -222,5 +328,45 @@ describe("room automation helpers", () => {
       caught = error;
     }
     expect(caught).toMatchObject({ status: 404 });
+  });
+
+  test("room plugin automation redacts and preserves stored secrets", async () => {
+    const room = makePluginRoom();
+    const listed = await listRoomPlugins(room);
+    expect(listed.plugins[0].config).toEqual({
+      chatId: "community",
+      baseUrl: "https://dicefiles.example",
+    });
+    expect(listed.plugins[0].secretFields).toEqual(["botToken"]);
+
+    const updated = upsertRoomPlugin(room, "telegram-release", {
+      config: { chatId: "new-community" },
+    });
+    expect(updated.plugin.config.chatId).toBe("new-community");
+    expect(room.getRoomPlugins()[0].config.botToken).toBe("private-token");
+
+    const run = await runRoomPlugin(room, "telegram-release");
+    expect(run.result.delivered).toBe(1);
+
+    const memory = await inspectRoomPluginSyncMemory(
+      room,
+      "telegram-release",
+      { limit: 10 },
+    );
+    expect(memory.syncMemory.count).toBe(3);
+    await expect(
+      clearRoomPluginSyncMemory(room, "telegram-release", {
+        confirm: false,
+      }),
+    ).rejects.toMatchObject({ status: 400 });
+    const cleared = await clearRoomPluginSyncMemory(
+      room,
+      "telegram-release",
+      { confirm: true },
+    );
+    expect(cleared.syncMemory.removed).toBe(3);
+
+    const removed = removeRoomPlugin(room, "telegram-release");
+    expect(removed.plugins).toEqual([]);
   });
 });

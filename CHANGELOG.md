@@ -1,6 +1,23 @@
 # Changelog
 
-## [Unreleased]
+## [1.4.4] - 2026-07-29 [Federated Communities]
+
+Dicefiles can now link approved rooms across trusted independent hosts and
+gives room owners safer, observable ways to run community automation.
+
+### Upgrade notes
+
+- Node.js **22 or newer** is required. Continue using Yarn 1.x and the committed
+  `yarn.lock`; run `yarn install`, then `yarn setup:ubuntu` on Ubuntu/WSL hosts
+  that need preview tooling.
+- Federation and authenticated bot commands remain opt-in. Existing rooms,
+  local room links, files, and plugin configurations continue to work without
+  enabling either feature.
+- Existing account password hashes remain valid and are transparently upgraded
+  to the current Argon2id format after a successful sign-in.
+- Rollback to v1.4.3 is code-only: stop Dicefiles, check out `v1.4.3`, run
+  `yarn install` and `yarn prestart`, then restart the service. The new room and
+  operator configuration fields are additive and are ignored by v1.4.3.
 
 ### Added
 
@@ -22,6 +39,26 @@
   source room into federation. Scoped REST and MCP operations manage links,
   source policy, and peer health without exposing private keys to browsers or
   automation clients.
+- **Federation operations:** durable ActivityStreams invalidations, aggregate
+  peer health on the protected status page, a bounded audit API, guided
+  two-phase key rotation, additive old/new key acceptance, and an isolated
+  two-host smoke test cover the complete operator lifecycle.
+- **Room-bot automation:** scoped REST endpoints and four new MCP tools list,
+  configure, remove, and run invited room bots. Stored credentials are redacted
+  from reads, omitted secrets survive partial updates, and recent run outcome
+  and counts are retained for operators.
+- **Authenticated community commands:** Discord signed interactions and
+  Telegram secret-token webhooks can execute an explicit per-room command and
+  caller allowlist for status, open-request viewing, request creation, and
+  bot-attributed chat. Arbitrary command or code execution is not exposed.
+- **Remote host import foundation:** a shared, allowlisted downloader registry
+  now powers Mega.nz and the new Remote Host Import bot. Pixeldrain file and
+  list links are the first additional provider, using its official API with
+  bounded, streamed downloads.
+- **Plugin import controls:** Room Options now shows each bot's latest run and
+  remembered import count, with refresh and explicitly confirmed “Forget
+  imports” controls. Matching REST and MCP operations expose the same bounded
+  state without returning credentials.
 
 ### Changed
 
@@ -40,12 +77,50 @@
   moderator/owner privileges and limits ordinary users to their own uploads.
 - **Supported runtime:** Node.js 22 or newer is now required by the federation
   stack. Yarn 1.x and `yarn.lock` remain the supported install path.
+- **Maintained dependency baseline:** PDF.js, Sharp, the MCP SDK, federation
+  libraries, Webpack, EJS, and their exposed runtime dependencies have been
+  moved to maintained security-patched versions.
+- **Production-hard plugins:** scheduled room bots use cross-worker leases.
+  Mega.nz Autoshare defaults to 50 files, 256 MiB per file, and 1 GiB per run,
+  with configurable positive limits and reasoned skip counts.
+- **Safer importer memory:** Mega.nz uses stable provider node identities when
+  available, keeps compatibility with old name-and-size records, and checks
+  existing room content hashes before creating another file. Remote downloads
+  flow through a size-limited temporary file instead of being buffered in RAM.
+- **Responsive Room Options:** compact tab sizing, denser cards, centered
+  actions, inline plugin validation, and a reduced plugin table keep the modal
+  usable on narrow screens.
+- **Automation file views:** `GET /api/v1/files` now includes local, linked, and
+  federated rows subject to the same destination visibility rules as the room.
+
+### Security
+
+- The unmaintained password wrapper has been replaced with a local,
+  compatibility-preserving Argon2id implementation. Legacy plaintext-wrapper,
+  PBKDF2, and earlier Argon2 records can still authenticate once and are then
+  rehashed with the stronger current policy.
+- PDF.js now runs with runtime code generation disabled, allowing the browser
+  policy to remove `unsafe-eval` from `script-src`.
+- Remote filename/tag/uploader rules are evaluated by the source host before
+  privacy-safe rows cross the network; source uploader and tag metadata remain
+  private.
+- Federated proxy downloads now re-check destination-room membership and
+  per-link visibility instead of treating possession of a proxy URL as access.
+- Federation network timeouts start after local signature creation, and remote
+  key/signature/protocol errors preserve stable diagnostic codes.
 
 ### Fixed
 
 - **Document readers:** PDF, ePub, MOBI, AZW, and AZW3 readers now import their
   client helpers explicitly, preventing the `dom is not defined` failure when a
   document is opened.
+- **Federated lists:** the source list endpoint now reads the upload emitter
+  correctly; the previous raw-map call could terminate a worker on the first
+  remote file-list request.
+- **Room restoration:** concurrent first requests for a restored room now share
+  one in-flight load, preventing duplicate room objects, event listeners, and
+  startup listener warnings. The room-scaled file, request, and link emitters
+  also declare their intentional unbounded listener model.
 
 ### Documentation
 

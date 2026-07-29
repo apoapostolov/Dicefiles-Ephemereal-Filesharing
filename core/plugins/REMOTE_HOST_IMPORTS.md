@@ -2,7 +2,10 @@
 
 How Dicefiles should grow beyond **Mega.nz** toward the hosts hobby communities actually use: MediaFire, 4shared, Pixeldrain, Gofile, Catbox, Workupload, Dropbox public links, etc.
 
-This is a **design note**, not a shipped feature. The first-party path today is `mega-folder` + injectable downloaders ([MEGA_FOLDER.md](./MEGA_FOLDER.md)).
+The first implementation slice is now shipped: a shared downloader registry,
+the existing Mega.nz adapter, the `remote-import` bot, and an official-API
+Pixeldrain provider. Gofile, MediaFire, 4shared, and the shell bridge remain
+planned.
 
 This is intentionally separate from shipped
 [Dicefiles trusted-host federation](../../docs/FEDERATION.md). Federation
@@ -16,7 +19,9 @@ an untrusted download source and materializes its bytes into local storage.
 
 ## 1. Goal
 
-Operators (or trusted bots) paste a **folder or file URL** from a common hoster → Dicefiles pulls bytes into a room via the same `uploadFile` / `ingestFromBuffer` path used by Mega.nz.
+Operators paste a supported **folder or file URL** into the Remote Host Import
+room bot. Dicefiles resolves it through an allowlisted provider and streams the
+bytes through the same bounded upload path used by Mega.nz.
 
 Constraints that match Dicefiles:
 
@@ -36,7 +41,9 @@ type RemoteEntry = {
   name: string;
   size?: number;
   isDir?: boolean;
-  download?: () => Promise<Buffer | NodeJS.ReadableStream>;
+  sourceId?: string;
+  openStream?: () => Promise<NodeJS.ReadableStream>;
+  download?: () => Promise<Buffer>;
 };
 
 type RemoteDownloader = {
@@ -56,11 +63,13 @@ Orchestration (shared, not per-plugin):
 
 1. Match URL → downloader (`canHandle` / registry).
 2. `listFolder` → entries (skip dirs or recurse with depth cap).
-3. For each file: `download()` → stream/buffer (prefer streams for large files).
+3. For each file: `openStream()` when available, with bounded buffer fallback.
 4. `uploadFile({ roomId, name, body, size, meta: { plugin, sourceUrl, host } })`.
 5. Emit normal `file_uploaded` webhooks; optional plugin events later.
 
-Refactor target: rename mental model from `ctx.megaDownloader` → `ctx.remoteDownloader` (or a **map** of downloaders), keep Mega.nz as one implementation.
+Shipped code uses `ctx.remoteDownloaders`, a registry of provider adapters.
+`ctx.megaDownloader` remains as a compatibility surface for the dedicated
+Mega.nz bot.
 
 ---
 
@@ -121,17 +130,22 @@ Refactor target: rename mental model from `ctx.megaDownloader` → `ctx.remoteDo
 
 ## 5. Suggested build order
 
-1. **Normalize** Mega.nz adapter onto a shared `RemoteDownloader` interface (rename/docs only if behavior stable).
-2. **Pixeldrain + Gofile** single-file / folder adapters (official APIs, low drama).
-3. **`remote-import` plugin** — multi-URL list, caps, shared `uploadFile`.
-4. **`shell-import` plugin** — plowshare/MEGAcmd allowlist for MediaFire/4shared/long tail.
-5. MediaFire/4shared native adapters only if shell path proves too awkward **and** a maintained library appears.
+1. ~~Normalize Mega.nz behind a shared registry.~~ **Shipped.**
+2. ~~Pixeldrain file/list adapter using the official API.~~ **Shipped.**
+3. ~~`remote-import` plugin — multi-URL list, caps, shared streamed upload.~~
+   **Shipped.**
+4. **Gofile** authenticated folder adapter after its beta API stabilizes.
+5. **`shell-import` plugin** — plowshare/MEGAcmd allowlist for
+   MediaFire/4shared/long tail.
+6. MediaFire/4shared native adapters only if the shell path proves too awkward
+   and a maintained library appears.
 
 ---
 
 ## 6. Safety rails (non-negotiable)
 
-- Size / file-count caps per run; prefer streaming into temp then `ingestFromBuffer` (or stream-aware ingest later).
+- Size / file-count caps per run; provider streams flow through a bounded
+  temporary file and are hashed before upload creation.
 - No automatic crawl of arbitrary user-pasted hosts without owner enable + allowlist.
 - Secrets (premium cookies, Mega.nz password) only via env / server config, never room chat.
 - Log source URL + host id on uploaded `meta` for audit.
@@ -146,10 +160,14 @@ Refactor target: rename mental model from `ctx.megaDownloader` → `ctx.remoteDo
 |-------|--------|
 | Registry / lifecycle | `lib/plugins/registry.js` |
 | Mega.nz plugin | `lib/plugins/mega-folder/` |
-| Production wiring | `lib/plugins/runtime-adapters.js` (`uploadFile` + `megaDownloader`) |
+| Shared provider registry | `lib/plugins/remote-downloaders.js` |
+| Remote import bot | `lib/plugins/remote-import/index.js` |
+| Pixeldrain provider | `lib/plugins/remote-import/pixeldrain.js` |
+| Production wiring | `lib/plugins/runtime-adapters.js` |
 | Docs | `DEVELOPING_PLUGINS.md`, `MEGA_FOLDER.md` |
 
-Next code step when scheduled: extract `RemoteDownloader` + register Mega.nz as first provider; add Pixeldrain without new npm deps.
+Next code step: add Gofile behind its authenticated beta API, then evaluate the
+strictly allowlisted shell bridge separately.
 
 ---
 

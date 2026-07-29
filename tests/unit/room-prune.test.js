@@ -250,6 +250,37 @@ describe("Room.prune()", () => {
   });
 });
 
+describe("Room.get()", () => {
+  test("coalesces concurrent first loads into one tracked room", async () => {
+    configValues = {};
+    mockPconfigGet.mockReturnValue(undefined);
+    mockFor.mockResolvedValue([]);
+    let releaseExists;
+    mockExists.mockImplementation(
+      () => new Promise((resolve) => {
+        releaseExists = resolve;
+      }),
+    );
+    const log = jest.spyOn(console, "log").mockImplementation(() => {});
+
+    const loads = Array.from(
+      { length: 12 },
+      () => Room.get("concurrent-room"),
+    );
+    await Promise.resolve();
+    releaseExists(1);
+    const rooms = await Promise.all(loads);
+
+    expect(mockExists).toHaveBeenCalledTimes(1);
+    expect(new Set(rooms).size).toBe(1);
+    expect(
+      log.mock.calls.filter(([message]) =>
+        String(message).includes("Tracking room")),
+    ).toHaveLength(1);
+    log.mockRestore();
+  });
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Room.touchActivity()
 // ─────────────────────────────────────────────────────────────────────────────

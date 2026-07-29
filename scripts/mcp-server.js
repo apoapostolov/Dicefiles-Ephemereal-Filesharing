@@ -2,7 +2,7 @@
 /**
  * scripts/mcp-server.js — Dicefiles MCP server wrapper
  *
- * Wraps the Dicefiles REST API as 20 MCP tools, allowing any MCP-compatible
+ * Wraps the Dicefiles REST API as 30 MCP tools, allowing any MCP-compatible
  * AI client (Claude Desktop, Cursor, Continue, OpenClaw, AutoGen) to interact with
  * a Dicefiles instance directly.
  *
@@ -13,7 +13,7 @@
  *   MCP_TRANSPORT=http MCP_PORT=3001 node scripts/mcp-server.js
  *
  * Required env vars:
- *   DICEFILES_BASE_URL   Base URL of your Dicefiles instance (default: http://localhost:9090)
+ *   DICEFILES_BASE_URL   Base URL of your Dicefiles instance (default: http://localhost:10005)
  *   DICEFILES_API_KEY    Automation API key (minimum scope: files:read)
  *
  * Optional env vars:
@@ -36,7 +36,7 @@ const { z } = require("zod");
 // ── Configuration ──────────────────────────────────────────────────────────
 
 const BASE = (
-  process.env.DICEFILES_BASE_URL || "http://localhost:9090"
+  process.env.DICEFILES_BASE_URL || "http://localhost:10005"
 ).replace(/\/+$/, "");
 const KEY = process.env.DICEFILES_API_KEY || "";
 
@@ -79,7 +79,7 @@ function wrap(data) {
 
 // ── Tool registration ──────────────────────────────────────────────────────
 
-const server = new McpServer({ name: "dicefiles", version: "1.4.3" });
+const server = new McpServer({ name: "dicefiles", version: "1.4.4" });
 
 /**
  * Register all Dicefiles tools on an McpServer (or mock server for tests).
@@ -591,13 +591,39 @@ function registerTools(srv) {
       visibility: z
         .enum(["all", "authenticated", "members", "owners", "mods"])
         .optional(),
+      rules: z
+        .object({
+          nameContains: z
+            .string()
+            .optional()
+            .describe("Filename rule using comma/OR, AND, or /regex/flags"),
+          tagContains: z
+            .string()
+            .optional()
+            .describe("Source tag rule using comma/OR, AND, or /regex/flags"),
+          userContains: z
+            .string()
+            .optional()
+            .describe("Source uploader rule using comma/OR, AND, or /regex/flags"),
+          types: z.array(z.string()).optional(),
+          maxAgeHours: z.number().optional(),
+          minAgeHours: z.number().optional(),
+        })
+        .optional(),
     },
-    async ({ roomid, peerId, remoteRoomId, name, visibility }) =>
+    async ({
+      roomid,
+      peerId,
+      remoteRoomId,
+      name,
+      visibility,
+      rules,
+    }) =>
       wrap(
         await api(
           "POST",
           `/rooms/${encodeURIComponent(roomid)}/federation-links`,
-          { peerId, roomId: remoteRoomId, name, visibility },
+          { peerId, roomId: remoteRoomId, name, visibility, rules },
         ),
       ),
   );
@@ -638,6 +664,131 @@ function registerTools(srv) {
           "PATCH",
           `/rooms/${encodeURIComponent(roomid)}/federation`,
           { allowFederation, allowPrivateFederation },
+        ),
+      ),
+  );
+
+  // ── 25. list_room_plugins ─────────────────────────────────────────────
+  srv.tool(
+    "list_room_plugins",
+    "List the bots invited to a room and the installed bot catalog. " +
+      "Stored credentials are redacted. Requires room-plugins:read.",
+    {
+      roomid: z.string().describe("Room ID"),
+    },
+    async ({ roomid }) =>
+      wrap(
+        await api(
+          "GET",
+          `/rooms/${encodeURIComponent(roomid)}/plugins`,
+        ),
+      ),
+  );
+
+  // ── 26. configure_room_plugin ─────────────────────────────────────────
+  srv.tool(
+    "configure_room_plugin",
+    "Invite or update one installed room bot. Existing secret settings are " +
+      "preserved when omitted. Requires room-plugins:write.",
+    {
+      roomid: z.string().describe("Room ID"),
+      pluginId: z.string().describe("Installed plugin ID"),
+      enabled: z.boolean().optional(),
+      label: z.string().max(80).optional(),
+      config: z
+        .record(z.unknown())
+        .optional()
+        .describe("Plugin settings; may contain credentials"),
+    },
+    async ({ roomid, pluginId, enabled, label, config }) =>
+      wrap(
+        await api(
+          "PUT",
+          `/rooms/${encodeURIComponent(roomid)}/plugins/` +
+            encodeURIComponent(pluginId),
+          { enabled, label, config },
+        ),
+      ),
+  );
+
+  // ── 27. remove_room_plugin ────────────────────────────────────────────
+  srv.tool(
+    "remove_room_plugin",
+    "Remove one invited bot from a room. Requires room-plugins:write.",
+    {
+      roomid: z.string().describe("Room ID"),
+      pluginId: z.string().describe("Invited plugin ID"),
+    },
+    async ({ roomid, pluginId }) =>
+      wrap(
+        await api(
+          "DELETE",
+          `/rooms/${encodeURIComponent(roomid)}/plugins/` +
+            encodeURIComponent(pluginId),
+        ),
+      ),
+  );
+
+  // ── 28. run_room_plugin ───────────────────────────────────────────────
+  srv.tool(
+    "run_room_plugin",
+    "Run one invited room bot immediately and return its bounded result. " +
+      "Requires room-plugins:run.",
+    {
+      roomid: z.string().describe("Room ID"),
+      pluginId: z.string().describe("Invited plugin ID"),
+    },
+    async ({ roomid, pluginId }) =>
+      wrap(
+        await api(
+          "POST",
+          `/rooms/${encodeURIComponent(roomid)}/plugins/` +
+            `${encodeURIComponent(pluginId)}/run`,
+        ),
+      ),
+  );
+
+  // ── 29. inspect_room_plugin_sync_memory ───────────────────────────────
+  srv.tool(
+    "inspect_room_plugin_sync_memory",
+    "Inspect the bounded import-memory log for one invited room plugin, " +
+      "including its most recent run. Requires room-plugins:read.",
+    {
+      roomid: z.string().describe("Room ID"),
+      pluginId: z.string().describe("Invited plugin ID"),
+      limit: z.number().min(1).max(200).optional(),
+    },
+    async ({ roomid, pluginId, limit }) =>
+      wrap(
+        await api(
+          "GET",
+          `/rooms/${encodeURIComponent(roomid)}/plugins/` +
+            `${encodeURIComponent(pluginId)}/sync-log` +
+            (limit ? `?limit=${encodeURIComponent(limit)}` : ""),
+        ),
+      ),
+  );
+
+  // ── 30. clear_room_plugin_sync_memory ─────────────────────────────────
+  srv.tool(
+    "clear_room_plugin_sync_memory",
+    "Forget which remote files one room plugin has imported. This can cause " +
+      "old remote files to be considered again. Requires room-plugins:write " +
+      "and an explicit confirm=true.",
+    {
+      roomid: z.string().describe("Room ID"),
+      pluginId: z.string().describe("Invited plugin ID"),
+      confirm: z
+        .boolean()
+        .describe("Must be true to confirm this destructive action"),
+    },
+    async ({ roomid, pluginId, confirm }) =>
+      wrap(
+        await api(
+          "DELETE",
+          `/rooms/${encodeURIComponent(roomid)}/plugins/` +
+            `${encodeURIComponent(pluginId)}/sync-log`,
+          { confirm },
         ),
       ),
   );

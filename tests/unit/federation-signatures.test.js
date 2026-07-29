@@ -1,5 +1,7 @@
 "use strict";
 
+jest.setTimeout(60000);
+
 const setNonce = jest.fn().mockResolvedValue("OK");
 jest.mock("../../lib/broker", () => ({
   getMethods: () => ({ set: setNonce }),
@@ -108,6 +110,47 @@ describe("RFC 9421 federation signatures", () => {
     expect(result).toEqual({
       ok: false,
       code: "FEDERATION_PEER_UNKNOWN",
+    });
+  });
+
+  test("accepts a staged rotation key without replacing the current peer key", async () => {
+    const nextKeyId =
+      "http://alpha.localhost/federation/actor#key-staged";
+    const signed = await signFederationRequest(
+      new Request(
+        "http://beta.localhost/api/federation/v1/hello",
+        { headers: { host: "beta.localhost" } },
+      ),
+      Object.assign({}, alpha, { keyId: nextKeyId }),
+    );
+    const current = generateIdentity();
+    const result = await verifyFederationRequest(
+      expressLike(signed),
+      {
+        publicBaseUrl: "http://beta.localhost",
+        limits: { replayWindowSeconds: 300 },
+        peers: [{
+          enabled: true,
+          peerId: "alpha",
+          baseUrl: "http://alpha.localhost",
+          keyId: "http://alpha.localhost/federation/actor#main-key",
+          publicKeyJwk: current.publicKeyJwk,
+          publicKeyPem: current.publicKeyPem,
+          acceptedKeys: [{
+            keyId: "http://alpha.localhost/federation/actor#main-key",
+            publicKeyJwk: current.publicKeyJwk,
+            publicKeyPem: current.publicKeyPem,
+          }, {
+            keyId: nextKeyId,
+            publicKeyJwk: alpha.publicKeyJwk,
+            publicKeyPem: alpha.publicKeyPem,
+          }],
+        }],
+      },
+    );
+    expect(result).toMatchObject({
+      ok: true,
+      peer: { peerId: "alpha" },
     });
   });
 });

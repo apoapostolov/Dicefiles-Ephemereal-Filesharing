@@ -9,6 +9,10 @@ Both publish a message when a file is uploaded directly to the room or appears
 through a linked room. They do not require an extra Node package or a separate
 bot process; Node's built-in `fetch` talks directly to the official HTTP APIs.
 
+Both may also accept narrowly scoped community commands. Inbound operation is
+off by default, provider-authenticated, restricted to explicit Discord or
+Telegram caller IDs, and limited to commands selected by the room owner.
+
 ## Before you start
 
 Set the public Dicefiles origin in `.config.json`:
@@ -40,6 +44,30 @@ The webhook URL contains a secret token. Treat it like a password. For a
 single global destination, set `DICEFILES_DISCORD_WEBHOOK_URL` in the service
 environment and leave the room field blank.
 
+### Optional Discord slash commands
+
+1. In the Discord Developer Portal, create/select the application that owns
+   the slash command and copy its 64-character **Public Key**.
+2. Configure the `/dicefiles` command with subcommands `help`, `status`,
+   `requests`, `request`, and/or `say`. `request` and `say` use a string option
+   named `text`.
+3. In the room plugin settings set:
+   - `inboundEnabled`: true
+   - `applicationPublicKey`: the Developer Portal public key
+   - `inboundCommands`: a comma-separated subset of the commands above
+   - `allowedInboundUserIds` and/or `allowedInboundRoleIds`: explicit numeric
+     Discord snowflakes
+4. Save the plugin, list it through Room Options or
+   `GET /api/v1/rooms/:id/plugins`, and copy `inboundPath`.
+5. Set the application's **Interactions Endpoint URL** to
+   `https://files.example.org<inboundPath>`. Discord's validation PING is
+   answered automatically.
+
+Dicefiles verifies Discord's Ed25519 signature over the exact raw body and
+timestamp, rejects stale requests, checks the caller allowlist, and deduplicates
+interaction IDs. Responses are visible only to the caller unless
+`discordEphemeralResponses` is explicitly false.
+
 ## Telegram
 
 1. Message `@BotFather` in Telegram, create a bot, and copy its token.
@@ -56,6 +84,27 @@ environment and leave the room field blank.
 
 For a single global bot identity, set `DICEFILES_TELEGRAM_BOT_TOKEN` in the
 service environment and leave the room token field blank.
+
+### Optional Telegram commands
+
+1. Generate a random webhook secret using only letters, numbers, `_`, and `-`
+   (16–256 characters).
+2. Set `inboundEnabled`, `inboundWebhookSecret`, a comma-separated
+   `inboundCommands` subset, and `allowedInboundUserIds` containing the numeric
+   Telegram IDs allowed to act.
+3. Save the plugin and copy its `inboundPath`.
+4. Register the HTTPS URL with Telegram:
+
+```bash
+curl -X POST "https://api.telegram.org/bot<BOT_TOKEN>/setWebhook" \
+  -d "url=https://files.example.org<INBOUND_PATH>" \
+  -d "secret_token=<INBOUND_WEBHOOK_SECRET>"
+```
+
+Dicefiles requires Telegram's `X-Telegram-Bot-Api-Secret-Token`, the configured
+chat ID, the configured forum topic when present, and an allowed user ID.
+Updates are deduplicated by `update_id`. Supported forms include `/status`,
+`/requests`, `/request text`, `/say text`, and `/dicefiles command text`.
 
 ## What gets published
 
@@ -78,6 +127,25 @@ one worker publishes each `<plugin, room, event, file>` combination. Remote
 delivery is attempted up to three times; a final failure releases the lease so
 a later event replay can try again. Successful deliveries are remembered for
 the configured `pluginSyncLogRetentionDays`.
+
+Scheduled and manual bot runs also expose a bounded last-run record (success,
+time, duration, delivered/uploaded/skipped counts, or a sanitized error)
+through the room-plugin automation API. Provider tokens and webhook URLs are
+redacted.
+
+## Inbound command boundary
+
+| Command | Allowed effect |
+| --- | --- |
+| `help` | Show this room's enabled commands |
+| `status` | Aggregate file and open-request counts |
+| `requests` | Up to eight open request titles |
+| `request <text>` | Create a request as the publisher bot |
+| `say <text>` | Post a bot-attributed room message naming the remote caller |
+
+There is deliberately no arbitrary REST call, shell command, plugin install,
+file deletion, moderation action, or code execution command. Keep `say`
+disabled unless the remote community genuinely needs a chat bridge.
 
 ## Global configuration
 
@@ -110,7 +178,8 @@ The same plugins can be enabled globally in `.config.json`:
 ```
 
 Do not configure the same publisher for the same destination both globally and
-as a room invitation.
+as a room invitation. Inbound commands require a room invitation because the
+room owns their command and caller allowlists.
 
 ## Troubleshooting
 
@@ -123,3 +192,7 @@ as a room invitation.
 - **Telegram cannot post:** grant the bot permission to send messages.
 - **No release appears:** confirm the plugin is enabled in Room Options and
   check the stable server log for a sanitized remote HTTP status.
+- **Provider rejects the inbound endpoint:** it must be public HTTPS; confirm
+  the plugin is saved and `inboundEnabled` validation passes.
+- **Command says unauthorized:** use provider numeric IDs, not display names,
+  and ensure both the caller and command are explicitly allowlisted.

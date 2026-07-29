@@ -19,13 +19,15 @@ endpoints with required scopes. The manifest returns:
 {
   "ok": true,
   "service": "Dicefiles",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "baseUrl": "/api/v1",
   "endpoints": [
     { "path": "/api/v1/files", "scope": "files:read" },
     { "path": "/api/v1/rooms", "scope": "rooms:write" },
     { "path": "/api/v1/rooms/:id/links", "scope": "room-links:read" },
+    { "path": "/api/v1/rooms/:id/federation-links", "scope": "federation-links:read" },
     { "path": "/api/v1/rooms/:id/guest-invites", "scope": "guest-invites:read" },
+    { "path": "/api/v1/rooms/:id/plugins", "scope": "room-plugins:read" },
     { "path": "/healthz", "scope": null }
   ]
 }
@@ -132,9 +134,19 @@ Audit logs are appended as JSON lines to `automationAuditLog`.
 | `GET`    | `/api/v1/rooms/:id/links`     | `room-links:read` | No              |
 | `POST`   | `/api/v1/rooms/:id/links`     | `room-links:write` | No             |
 | `DELETE` | `/api/v1/rooms/:id/links/:sourceRoomId` | `room-links:write` | No   |
+| `GET`    | `/api/v1/rooms/:id/federation-links` | `federation-links:read` | No |
+| `POST`   | `/api/v1/rooms/:id/federation-links` | `federation-links:write` | No |
+| `DELETE` | `/api/v1/rooms/:id/federation-links/:peerId/:remoteRoomId` | `federation-links:write` | No |
+| `PATCH`  | `/api/v1/rooms/:id/federation` | `federation-links:write` | No |
 | `GET`    | `/api/v1/rooms/:id/guest-invites` | `guest-invites:read` | No       |
 | `POST`   | `/api/v1/rooms/:id/guest-invites` | `guest-invites:write` | No      |
 | `DELETE` | `/api/v1/rooms/:id/guest-invites/:token` | `guest-invites:write` | No |
+| `GET`    | `/api/v1/rooms/:id/plugins`   | `room-plugins:read` | No              |
+| `PUT`    | `/api/v1/rooms/:id/plugins/:pluginId` | `room-plugins:write` | No |
+| `DELETE` | `/api/v1/rooms/:id/plugins/:pluginId` | `room-plugins:write` | No |
+| `POST`   | `/api/v1/rooms/:id/plugins/:pluginId/run` | `room-plugins:run` | No |
+| `GET`    | `/api/v1/rooms/:id/plugins/:pluginId/sync-log` | `room-plugins:read` | No |
+| `DELETE` | `/api/v1/rooms/:id/plugins/:pluginId/sync-log` | `room-plugins:write` | No |
 | `POST`   | `/api/v1/requests`            | `requests:write` | Yes              |
 | `POST`   | `/api/v1/uploads/key`         | `uploads:write`  | Yes              |
 | `GET`    | `/api/v1/uploads/:key/offset` | `uploads:write`  | Yes              |
@@ -147,6 +159,8 @@ Audit logs are appended as JSON lines to `automationAuditLog`.
 | `POST`   | `/api/v1/admin/rooms/prune`   | `admin:rooms`    | No               |
 | `DELETE` | `/api/v1/admin/rooms/:id`     | `admin:rooms`    | No               |
 | `DELETE` | `/api/v1/admin/rooms`         | `admin:rooms`    | No               |
+| `GET`    | `/api/v1/federation/peers`    | `admin:read`     | No               |
+| `GET`    | `/api/v1/federation/audit`    | `admin:read`     | No               |
 
 ## 6. Endpoint Details
 
@@ -266,6 +280,53 @@ did not mint; treat `guest-invites:read` as a sensitive scope. Audit records use
 only privacy-safe token hints and are bounded by `guestInviteAuditLimit`. The
 per-room active invite cap is configured with
 `maxActiveGuestInvitesPerRoom`.
+
+### 6.3.3 Room plugin administration
+
+Room bots have dedicated scopes so a bot operator need not receive moderation
+or room-owner credentials:
+
+- `GET /api/v1/rooms/:id/plugins` — `room-plugins:read`
+- `PUT /api/v1/rooms/:id/plugins/:pluginId` — `room-plugins:write`
+- `DELETE /api/v1/rooms/:id/plugins/:pluginId` — `room-plugins:write`
+- `POST /api/v1/rooms/:id/plugins/:pluginId/run` — `room-plugins:run`
+- `GET /api/v1/rooms/:id/plugins/:pluginId/sync-log?limit=50` —
+  `room-plugins:read`
+- `DELETE /api/v1/rooms/:id/plugins/:pluginId/sync-log` —
+  `room-plugins:write`, body `{ "confirm": true }`
+
+The list response includes invited bots, the installed catalog, the public
+inbound webhook path when supported, and each bot's most recent bounded run
+status. Passwords, bot tokens, webhook URLs, secrets, and API keys are removed
+from returned `config`; `secretFields` identifies which stored fields exist.
+
+Configure or invite with:
+
+```json
+{
+  "enabled": true,
+  "label": "Community announcements",
+  "config": {
+    "chatId": "-100123456789",
+    "botToken": "123456:secret",
+    "baseUrl": "https://files.example.org"
+  }
+}
+```
+
+Configuration is a partial merge: omitting an existing secret preserves it.
+Sending a new value replaces it. The path `pluginId` is authoritative and a
+client cannot redirect configuration to another installed module.
+
+`run` returns the plugin's bounded result. Scheduled runs additionally use a
+Redis lease so multiple HTTP workers do not execute the same room/bot interval.
+Mega.nz Autoshare returns upload/skip counts and enforces configurable
+`maxFilesPerRun`, `maxBytesPerFile`, and `maxBytesPerRun` limits.
+
+Sync-log inspection is bounded to 200 newest records and returns the remembered
+entry key and timestamp, retention, total count, and most recent run status.
+Clearing is rejected unless `confirm` is exactly `true`; it never removes files
+already in the room, but remote entries may become eligible for a later rescan.
 
 ### 6.4 Create Request
 
@@ -1236,7 +1297,7 @@ including `meta.hints`, and can match against it programmatically.
 
 ## 19. MCP Server Integration
 
-> **Quick answer on MCP:** Dicefiles ships a 24-tool MCP server at
+> **Quick answer on MCP:** Dicefiles ships a 30-tool MCP server at
 > `scripts/mcp-server.js`. It translates typed MCP calls from Claude Desktop,
 > Cursor, OpenClaw, and other clients into the scoped REST API documented here.
 > See `MCP.md` for client setup, tool schemas, and security guidance.
@@ -1290,6 +1351,12 @@ node scripts/mcp-server.js  # stdio mode for Claude Desktop / local agents
 | `create_federated_room_link` | `POST /api/v1/rooms/:id/federation-links` | `federation-links:write` |
 | `remove_federated_room_link` | `DELETE /api/v1/rooms/:id/federation-links/:peerId/:remoteRoomId` | `federation-links:write` |
 | `set_room_federation_policy` | `PATCH /api/v1/rooms/:id/federation` | `federation-links:write` |
+| `list_room_plugins`    | `GET /api/v1/rooms/:id/plugins`         | `room-plugins:read` |
+| `configure_room_plugin` | `PUT /api/v1/rooms/:id/plugins/:pluginId` | `room-plugins:write` |
+| `remove_room_plugin`   | `DELETE /api/v1/rooms/:id/plugins/:pluginId` | `room-plugins:write` |
+| `run_room_plugin`      | `POST /api/v1/rooms/:id/plugins/:pluginId/run` | `room-plugins:run` |
+| `inspect_room_plugin_sync_memory` | `GET /api/v1/rooms/:id/plugins/:pluginId/sync-log` | `room-plugins:read` |
+| `clear_room_plugin_sync_memory` | `DELETE /api/v1/rooms/:id/plugins/:pluginId/sync-log` | `room-plugins:write` |
 
 ### 19.4 Claude Desktop integration example
 
@@ -1328,7 +1395,7 @@ See `MCP.md` for the full specification, security model, and deployment guide.
 
 ---
 
-## 20. Complete Endpoint Matrix (v1.0 through v1.4.3)
+## 20. Complete Endpoint Matrix (v1.0 through v1.4.4)
 
 | Method   | Path                                | Scope            | Session Required | Version |
 | -------- | ----------------------------------- | ---------------- | ---------------- | ------- |
@@ -1338,9 +1405,19 @@ See `MCP.md` for the full specification, security model, and deployment guide.
 | `GET`    | `/api/v1/rooms/:id/links`           | `room-links:read` | No              | v1.4.3  |
 | `POST`   | `/api/v1/rooms/:id/links`           | `room-links:write` | No             | v1.4.3  |
 | `DELETE` | `/api/v1/rooms/:id/links/:sourceRoomId` | `room-links:write` | No         | v1.4.3  |
+| `GET`    | `/api/v1/rooms/:id/federation-links` | `federation-links:read` | No | v1.4.4 |
+| `POST`   | `/api/v1/rooms/:id/federation-links` | `federation-links:write` | No | v1.4.4 |
+| `DELETE` | `/api/v1/rooms/:id/federation-links/:peerId/:remoteRoomId` | `federation-links:write` | No | v1.4.4 |
+| `PATCH`  | `/api/v1/rooms/:id/federation` | `federation-links:write` | No | v1.4.4 |
 | `GET`    | `/api/v1/rooms/:id/guest-invites`   | `guest-invites:read` | No          | v1.4.3  |
 | `POST`   | `/api/v1/rooms/:id/guest-invites`   | `guest-invites:write` | No         | v1.4.3  |
 | `DELETE` | `/api/v1/rooms/:id/guest-invites/:token` | `guest-invites:write` | No    | v1.4.3  |
+| `GET`    | `/api/v1/rooms/:id/plugins`         | `room-plugins:read` | No          | v1.4.4  |
+| `PUT`    | `/api/v1/rooms/:id/plugins/:pluginId` | `room-plugins:write` | No       | v1.4.4  |
+| `DELETE` | `/api/v1/rooms/:id/plugins/:pluginId` | `room-plugins:write` | No    | v1.4.4  |
+| `POST`   | `/api/v1/rooms/:id/plugins/:pluginId/run` | `room-plugins:run` | No   | v1.4.4  |
+| `GET`    | `/api/v1/rooms/:id/plugins/:pluginId/sync-log` | `room-plugins:read` | No | v1.4.4 |
+| `DELETE` | `/api/v1/rooms/:id/plugins/:pluginId/sync-log` | `room-plugins:write` | No | v1.4.4 |
 | `POST`   | `/api/v1/requests`                  | `requests:write` | Yes              | v1.0    |
 | `POST`   | `/api/v1/uploads/key`               | `uploads:write`  | Yes              | v1.0    |
 | `GET`    | `/api/v1/uploads/:key/offset`       | `uploads:write`  | Yes              | v1.0    |
@@ -1366,6 +1443,8 @@ See `MCP.md` for the full specification, security model, and deployment guide.
 | `POST`   | `/api/v1/admin/rooms/prune`         | `admin:rooms`    | No               | v1.2    |
 | `DELETE` | `/api/v1/admin/rooms/:id`           | `admin:rooms`    | No               | v1.2    |
 | `DELETE` | `/api/v1/admin/rooms`               | `admin:rooms`    | No               | v1.2    |
+| `GET`    | `/api/v1/federation/peers`          | `admin:read`     | No               | v1.4.4  |
+| `GET`    | `/api/v1/federation/audit`          | `admin:read`     | No               | v1.4.4  |
 
 ---
 
@@ -1609,7 +1688,7 @@ one-time nonce.
 | --- | --- |
 | `GET /api/federation/v1/hello` | Bilateral authentication and capability negotiation |
 | `GET /api/federation/v1/rooms/:roomId` | Authorized privacy-safe room metadata |
-| `GET /api/federation/v1/rooms/:roomId/files?cursor=&limit=` | Finished, visible files; cursor page |
+| `GET /api/federation/v1/rooms/:roomId/files?cursor=&limit=&rules=` | Finished, source-filtered files; cursor page |
 | `HEAD /api/federation/v1/files/:key?roomId=` | Stream metadata and range support |
 | `GET /api/federation/v1/files/:key?roomId=` | Original bytes; supports one HTTP byte range |
 | `POST /api/federation/v1/inbox` | ActivityStreams `Add`, `Remove`, or `Update` cache invalidation |
@@ -1648,6 +1727,13 @@ File-list responses contain only:
 Uploader account, nickname, IP, tags, room membership, moderation state,
 storage path, and plugin metadata are excluded.
 
+`rules` is an encoded JSON object using the local link rule fields
+`nameContains`, `tagContains`, `userContains`, `types`, `maxAgeHours`, and
+`minAgeHours`. The source validates the same comma/OR, AND, and regex syntax as
+the automation API, evaluates it before serialization, and returns
+`FEDERATION_RULES_INVALID` for malformed input. This lets a remote link select
+by private tags or uploader identity without transmitting those values.
+
 Errors have one stable shape:
 
 ```json
@@ -1677,9 +1763,71 @@ These routes use the ordinary scoped automation bearer key:
 | `DELETE /api/v1/rooms/:id/federation-links/:peerId/:remoteRoomId` | `federation-links:write` | Remove one destination link |
 | `PATCH /api/v1/rooms/:id/federation` | `federation-links:write` | Set source `allowFederation` and `allowPrivateFederation` |
 | `GET /api/v1/federation/peers` | `admin:read` | Probe configured peers and return status/latency/capabilities |
+| `GET /api/v1/federation/audit?limit=100` | `admin:read` | Read bounded newest-first request diagnostics |
 
 Destination status is `active`, `unreachable`, `denied`, `missing`,
 `key-invalid`, `protocol-mismatch`, or `circuit-open`. A destination streams
 remote bytes through
 `/federation/files/:destinationRoomId/:peerId/:roomId/:key/:name`; peer
 credentials and source cookies never enter the browser.
+
+The peer response also includes the local active public key fingerprint and any
+prepared public rotation record. Private JWK data is never returned. The audit
+response is limited to 1–1000 rows and only exposes timestamp, request ID, peer
+ID, method, path, status, and stable code.
+
+---
+
+## 24. Authenticated Plugin Inbound Commands (v1.4.4)
+
+Discord and Telegram publisher plugins may optionally receive remote community
+commands at:
+
+```text
+POST /api/plugins/:pluginId/:roomId/inbound
+```
+
+This is a provider-authenticated webhook, not an automation-key endpoint.
+Requests are capped at 256 KiB and 120 calls per room/plugin per minute.
+
+Inbound operation is disabled unless the invited room plugin sets
+`inboundEnabled: true`, a non-empty `inboundCommands` allowlist, and an explicit
+caller allowlist. Supported commands are:
+
+| Command | Effect |
+| --- | --- |
+| `help` | List commands enabled for this room |
+| `status` | Return aggregate file and open-request counts |
+| `requests` | List up to eight open request titles |
+| `request <text>` | Create a bot-attributed room request |
+| `say <text>` | Post a bot-attributed room chat message naming the remote caller |
+
+No shell, plugin installation, arbitrary API path, file deletion, moderation,
+or unrestricted code execution is reachable through this endpoint.
+
+### 24.1 Discord interactions
+
+Set `applicationPublicKey`, `allowedInboundUserIds` and/or
+`allowedInboundRoleIds`, and point the Discord application's Interactions
+Endpoint URL at the plugin's returned `inboundPath`. Dicefiles verifies
+`X-Signature-Ed25519` over the timestamp plus exact raw body, rejects
+timestamps outside five minutes, handles Discord PING, and deduplicates
+interaction IDs. Configure a `/dicefiles` command with subcommands named after
+the allowlisted actions; `request` and `say` use a string option named `text`.
+
+Responses are ephemeral by default. Set
+`discordEphemeralResponses: false` only when the community should see command
+results in the Discord channel.
+
+### 24.2 Telegram updates
+
+Set `inboundWebhookSecret`, `allowedInboundUserIds`, and the existing `chatId`.
+Register the returned `inboundPath` with Telegram `setWebhook` and pass the same
+value as `secret_token`. Dicefiles compares
+`X-Telegram-Bot-Api-Secret-Token` in constant time, enforces the configured
+chat and optional forum topic, and deduplicates `update_id`.
+
+Telegram accepts `/status`, `/requests`, `/request text`, `/say text`, and the
+equivalent `/dicefiles command text` form. Bot tokens, webhook secrets, and
+provider webhook URLs are redacted from room-plugin API reads. Discord's
+application public key is intentionally readable because it is not a credential.

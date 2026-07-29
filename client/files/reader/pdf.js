@@ -36,9 +36,8 @@ class PDFReader {
     dbg("PDFReader.open() url =", url);
     dbgShow(this.container, `Opening PDF: ${url}`);
 
-    // pdfjs-dist is a UMD/CJS bundle; webpack 5 wraps CJS modules so that the
-    // full API object lands on .default. Fall back to the namespace itself for
-    // any future ESM builds of pdfjs that expose named exports directly.
+    // PDF.js 4 is ESM. Keep the default fallback for compatibility with
+    // distributions that expose the API object as a default export.
     let pdfjsLib;
     try {
       const pdfModule = await import("pdfjs-dist");
@@ -72,6 +71,7 @@ class PDFReader {
         url,
         disableAutoFetch: false,
         disableStream: false,
+        isEvalSupported: false,
         rangeChunkSize: 65536,
       }).promise;
     } catch (ex) {

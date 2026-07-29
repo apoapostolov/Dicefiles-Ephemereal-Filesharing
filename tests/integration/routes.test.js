@@ -349,11 +349,12 @@ describe("Security headers", () => {
     expect(headers.get("x-powered-by")).toBeNull();
   });
 
-  ifServer("Content-Security-Policy header is present", async () => {
+  ifServer("Content-Security-Policy blocks runtime code generation", async () => {
     const { headers } = await get("/");
     const csp = headers.get("content-security-policy");
     expect(csp).not.toBeNull();
     expect(csp).toContain("default-src");
+    expect(csp).not.toContain("'unsafe-eval'");
   });
 
   ifServer("X-Frame-Options or CSP frame-ancestors is set", async () => {

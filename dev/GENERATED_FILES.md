@@ -9,7 +9,7 @@ maps.
 | --- | --- |
 | `client/**/*.js` and `entries/**/*.js` | `static/*.js`, lazy chunks, license files, and maps |
 | `entries/css/**/*.css` and bundled fonts | `static/*.css`, hashed `static/s~*` assets, and maps |
-| `node_modules/pdfjs-dist/build/pdf.worker.entry.js` | `static/pdf.worker.js*` |
+| `node_modules/pdfjs-dist/build/pdf.worker.mjs` | `static/pdf.worker.js*` |
 | `webpack.config.js` and the full browser asset graph | `lib/clientversion.js` |
 
 Run the only supported production generator:

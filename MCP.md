@@ -83,7 +83,7 @@ Add a `dicefiles` entry under `mcpServers`:
 }
 ```
 
-Restart Claude Desktop. All 24 tools appear in the tool picker. Try: _"Use the
+Restart Claude Desktop. All 30 tools appear in the tool picker. Try: _"Use the
 `server_health` tool to check my Dicefiles instance."_
 
 ---
@@ -161,7 +161,7 @@ tools will be listed.
 }
 ```
 
-Save and reload. The 24 tools are now available to Antigravity's agent.
+Save and reload. The 30 tools are now available to Antigravity's agent.
 
 ---
 
@@ -287,7 +287,7 @@ cp /path/to/Dicefiles/scripts/openclaw-dicefiles-skill/SKILL.md \
    ~/.claude/skills/dicefiles/
 ```
 
-The skill teaches the agent the full 24-tool inventory, recommended call sequences,
+The skill teaches the agent the full 30-tool inventory, recommended call sequences,
 error handling, and fulfillment loop patterns. See
 `scripts/openclaw-dicefiles-skill/SKILL.md` for the full skill definition.
 
@@ -340,6 +340,12 @@ beyond localhost.
 | 22  | `create_federated_room_link` | `federation-links:write` | No |
 | 23  | `remove_federated_room_link` | `federation-links:write` | No |
 | 24  | `set_room_federation_policy` | `federation-links:write` | No |
+| 25  | `list_room_plugins`      | `room-plugins:read` | No |
+| 26  | `configure_room_plugin`  | `room-plugins:write` | No |
+| 27  | `remove_room_plugin`     | `room-plugins:write` | No |
+| 28  | `run_room_plugin`        | `room-plugins:run` | No |
+| 29  | `inspect_room_plugin_sync_memory` | `room-plugins:read` | No |
+| 30  | `clear_room_plugin_sync_memory` | `room-plugins:write` | No |
 
 ---
 
@@ -770,7 +776,8 @@ Revoke one active guest invite using its full token.
 - `list_federated_room_links` maps to
   `GET /api/v1/rooms/:id/federation-links`.
 - `create_federated_room_link` accepts `roomid`, `peerId`, `remoteRoomId`,
-  optional `name`, and optional `visibility`.
+  optional `name`, `visibility`, and source-side `rules` using the same typed
+  shape and expression syntax as local links.
 - `remove_federated_room_link` removes the exact peer/remote-room pair.
 - `set_room_federation_policy` opts the source room into federation; private
   rooms additionally need `allowPrivateFederation: true`.
@@ -779,6 +786,33 @@ These tools configure room consent and destination links only. Operators must
 pin peers and public keys in `.config.json`; MCP tools deliberately cannot add a
 new trusted host or read a private federation key. See
 [`docs/FEDERATION.md`](docs/FEDERATION.md).
+
+---
+
+### 4.25–4.30 Room plugins
+
+- `list_room_plugins` returns invited bots, the installed catalog, redacted
+  settings, public inbound path when supported, and bounded last-run status.
+- `configure_room_plugin` invites or partially updates one installed bot using
+  `roomid`, `pluginId`, optional `enabled`, `label`, and `config`. Omitted
+  secrets remain stored; returned settings never contain them.
+- `remove_room_plugin` removes one invited bot from the room.
+- `run_room_plugin` runs an invited bot immediately and returns its bounded
+  result.
+- `inspect_room_plugin_sync_memory` returns a bounded list and count of remote
+  entries already remembered by an importer, plus its latest run state.
+- `clear_room_plugin_sync_memory` requires `confirm: true` and forgets those
+  records without deleting room files.
+
+Use separate `room-plugins:read`, `room-plugins:write`, and
+`room-plugins:run` scopes so an agent that monitors bot health does not also
+receive configuration or execution authority. The MCP layer cannot install
+code, invoke an uninvited plugin, or bypass plugin validation/import limits.
+
+Discord and Telegram inbound commands are configured through the ordinary bot
+settings, but provider webhooks call Dicefiles directly; they are not separate
+MCP tools. See `API.md` §24 and
+[`core/plugins/RELEASE_PUBLISHERS.md`](core/plugins/RELEASE_PUBLISHERS.md).
 
 ---
 
@@ -807,7 +841,12 @@ Recommended key setup for full agent access:
         "room-links:read",
         "room-links:write",
         "guest-invites:read",
-        "guest-invites:write"
+        "guest-invites:write",
+        "federation-links:read",
+        "federation-links:write",
+        "room-plugins:read",
+        "room-plugins:write",
+        "room-plugins:run"
       ]
     }
   ]

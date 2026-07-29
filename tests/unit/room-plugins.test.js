@@ -8,6 +8,9 @@ const {
   findRoomPlugin,
 } = require("../../lib/plugins/room-plugins");
 const { createRoomPluginRuntime } = require("../../lib/plugins/room-runtime");
+const {
+  createMemoryEventLease,
+} = require("../../lib/plugins/event-lease");
 const path = require("path");
 
 describe("room-plugins (shipped)", () => {
@@ -142,5 +145,51 @@ describe("room-runtime catalog (shipped)", () => {
     expect(rv.uploaded).toBe(1);
     expect(uploads[0].roomId).toBe("RoomHost99");
     expect(uploads[0].role).toBe("bot");
+  });
+
+  test("scheduled runs are leased once across workers", async () => {
+    const events = createMemoryEventLease({ retentionDays: 1 });
+    let runs = 0;
+    const plugin = {
+      id: "test-plugin",
+      name: "Test plugin",
+      validateConfig() {
+        return { ok: true };
+      },
+      async run() {
+        runs++;
+        return { runs };
+      },
+    };
+    const makeRuntime = () =>
+      createRoomPluginRuntime({
+        now: () => 1_000_000,
+        loadModule: () => ({ ok: true, plugin }),
+        buildCtx: () => ({ events }),
+        log: { info() {}, warn() {}, error() {} },
+      });
+    const list = [{
+      id: "test-plugin",
+      enabled: true,
+      config: { pollIntervalMinutes: 5 },
+    }];
+    const first = await makeRuntime().runRoomPlugin(
+      "RoomHost99",
+      "test-plugin",
+      { reason: "poll" },
+      list,
+    );
+    const second = await makeRuntime().runRoomPlugin(
+      "RoomHost99",
+      "test-plugin",
+      { reason: "poll" },
+      list,
+    );
+    expect(first).toEqual({ runs: 1 });
+    expect(second).toEqual({
+      skipped: true,
+      reason: "already_running_or_completed",
+    });
+    expect(runs).toBe(1);
   });
 });

@@ -1,5 +1,6 @@
 "use strict";
 
+const crypto = require("crypto");
 const path = require("path");
 const discord = require("../../lib/plugins/discord-release");
 const telegram = require("../../lib/plugins/telegram-release");
@@ -162,6 +163,76 @@ describe("Discord release publisher", () => {
         "https://files.example.test/g/release-key/Adventure%20Pack.pdf",
     });
   });
+
+  test("verifies and executes an allowlisted Discord interaction", async () => {
+    const { publicKey, privateKey } = crypto.generateKeyPairSync("ed25519");
+    const publicJwk = publicKey.export({ format: "jwk" });
+    const publicKeyHex = Buffer.from(publicJwk.x, "base64url").toString("hex");
+    const interaction = {
+      id: "interaction-1",
+      type: 2,
+      data: {
+        name: "dicefiles",
+        options: [{ name: "status", type: 1 }],
+      },
+      member: {
+        user: { id: "user-1", username: "Alice" },
+        roles: [],
+      },
+    };
+    const rawBody = Buffer.from(JSON.stringify(interaction));
+    const timestamp = String(Math.floor(Date.now() / 1000));
+    const signature = crypto.sign(
+      null,
+      Buffer.concat([Buffer.from(timestamp), rawBody]),
+      privateKey,
+    ).toString("hex");
+    const ctx = baseCtx(
+      discord.id,
+      {
+        webhookUrl: DISCORD_WEBHOOK_URL,
+        inboundEnabled: true,
+        applicationPublicKey: publicKeyHex,
+        inboundCommands: ["status"],
+        allowedInboundUserIds: ["user-1"],
+      },
+      [],
+    );
+    ctx.dicefiles.getRoomSummary = async () => ({
+      name: "Release Room",
+      files: 12,
+      openRequests: 3,
+    });
+    const response = await discord.inbound.handle(
+      {
+        headers: {
+          "x-signature-ed25519": signature,
+          "x-signature-timestamp": timestamp,
+        },
+        rawBody,
+        body: interaction,
+      },
+      ctx,
+    );
+    expect(response.body.type).toBe(4);
+    expect(response.body.data.content).toContain(
+      "12 files, 3 open requests",
+    );
+
+    await expect(
+      discord.inbound.handle(
+        {
+          headers: {
+            "x-signature-ed25519": "0".repeat(128),
+            "x-signature-timestamp": timestamp,
+          },
+          rawBody,
+          body: interaction,
+        },
+        ctx,
+      ),
+    ).rejects.toMatchObject({ status: 401 });
+  });
 });
 
 describe("Telegram release publisher", () => {
@@ -212,6 +283,54 @@ describe("Telegram release publisher", () => {
     expect(calls[0].options.body.text).toContain(
       "Linked from Source Library",
     );
+  });
+
+  test("authenticates Telegram updates and creates allowlisted requests", async () => {
+    const created = [];
+    const ctx = baseCtx(
+      telegram.id,
+      {
+        botToken: TELEGRAM_BOT_TOKEN,
+        chatId: "-100123456789",
+        inboundEnabled: true,
+        inboundWebhookSecret: "secure_webhook_secret_123",
+        inboundCommands: ["request"],
+        allowedInboundUserIds: ["42"],
+      },
+      [],
+    );
+    ctx.dicefiles.createRequest = async (spec) => {
+      created.push(spec);
+      return { name: spec.text };
+    };
+    const response = await telegram.inbound.handle(
+      {
+        headers: {
+          "x-telegram-bot-api-secret-token":
+            "secure_webhook_secret_123",
+        },
+        body: {
+          update_id: 99,
+          message: {
+            message_id: 8,
+            text: "/request Pathfinder maps",
+            chat: { id: -100123456789 },
+            from: { id: 42, username: "alice" },
+          },
+        },
+      },
+      ctx,
+    );
+    expect(created[0]).toMatchObject({
+      roomId: "room1234",
+      text: "Pathfinder maps",
+      remoteUser: "alice",
+    });
+    expect(response.body).toMatchObject({
+      method: "sendMessage",
+      chat_id: -100123456789,
+    });
+    expect(response.body.text).toContain("Request added");
   });
 });
 
@@ -275,6 +394,9 @@ describe("bot runtime extensions", () => {
 
   test("Dicefiles plugin API returns stable room and file objects", async () => {
     const api = createDicefilesPluginApi({
+      async listRoomRequests() {
+        return [];
+      },
       async getRoom() {
         return {
           fileTTL: 48,

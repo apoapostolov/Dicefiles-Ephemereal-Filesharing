@@ -960,6 +960,7 @@
                 <tr>
                   <th>Peer / room</th>
                   <th>Status</th>
+                  <th>Filters / rules</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -1106,11 +1107,14 @@
                 <option value="mods">Moderators only</option>
               </select>
             </div>
-            <label class="roomopts-invite-check roomopts-link-private">
+            <label
+              class="roomopts-invite-check roomopts-link-private"
+              name="linkprivatecontainer"
+            >
               <input type="checkbox" name="linkprivate" />
               Request private-source access for this link
             </label>
-            <p class="roomopts-hint">
+            <p class="roomopts-hint" name="linkprivatehint">
               The invite-only source room must separately allow private
               cross-linking. Both rooms must consent.
             </p>
@@ -1118,6 +1122,20 @@
               Hidden and hellbanned source uploads never cross room boundaries,
               including for moderators.
             </p>
+          </div>
+          <div class="roomopts-plugin-operations" name="pluginoperations">
+            <div class="roomopts-plugin-operation">
+              <span class="roomopts-plugin-operation-label">Last run</span>
+              <span name="pluginrunstate">Never run</span>
+            </div>
+            <div class="roomopts-plugin-operation" name="pluginsyncrow">
+              <span class="roomopts-plugin-operation-label">Import memory</span>
+              <span name="pluginsyncstate">Loading…</span>
+              <div class="roomopts-plugin-operation-actions">
+                <button type="button" name="pluginsyncrefresh">Refresh</button>
+                <button type="button" name="pluginsyncclear">Forget imports</button>
+              </div>
+            </div>
           </div>
           <div class="roomopts-link-editor-actions">
             <button type="button" name="linkeditorapply">Apply rules</button>
@@ -1319,6 +1337,11 @@
             <span name="plugineditorlabel"></span>
           </div>
           <div class="roomopts-plugin-editor-fields" name="plugineditorfields"></div>
+          <p
+            class="roomopts-rule-error hidden"
+            name="pluginvalidation"
+            role="alert"
+          ></p>
           <div class="roomopts-checks">
             <label
               ><input type="checkbox" name="pluginenabled" checked />

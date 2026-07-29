@@ -7,13 +7,20 @@ const {
   isLoopbackHost,
 } = require("../../lib/federation/config");
 const {
+  activateFederationRotation,
   generateIdentity,
+  prepareFederationRotation,
   publicFingerprint,
 } = require("../../lib/federation/identity");
 const {
+  federationRuleFile,
   normalizeFederatedRoomLinks,
+  requestedFederationRules,
   remoteFileToClient,
 } = require("../../lib/federation/links");
+const {
+  fileMatchesLinkRules,
+} = require("../../lib/room/room-links");
 
 function peerKey() {
   const { publicKey } = crypto.generateKeyPairSync("rsa", {
@@ -48,6 +55,7 @@ describe("federation configuration", () => {
   });
 
   test("pins peer origin, key, and inbound room allowlist", () => {
+    const stagedKey = peerKey();
     const value = normalizeFederationConfig(
       {
         enabled: true,
@@ -58,6 +66,10 @@ describe("federation configuration", () => {
             peerId: "beta",
             baseUrl: "https://beta.example",
             publicKeyJwk: peerKey(),
+            acceptedPublicKeys: [{
+              keyId: "https://beta.example/federation/actor#key-next",
+              publicKeyJwk: stagedKey,
+            }],
             allowedRooms: ["releases", "releases"],
           },
         ],
@@ -71,6 +83,11 @@ describe("federation configuration", () => {
     expect(value.peers[0].allowedRooms).toEqual(["releases"]);
     expect(peerAllowsRoom(value.peers[0], "releases")).toBe(true);
     expect(peerAllowsRoom(value.peers[0], "private-room")).toBe(false);
+    expect(value.peers[0].acceptedKeys).toHaveLength(2);
+    expect(value.peers[0].acceptedKeys[1]).toMatchObject({
+      keyId: "https://beta.example/federation/actor#key-next",
+      publicKeyJwk: stagedKey,
+    });
   });
 
   test("blocks insecure non-local peers unless explicitly allowed", () => {
@@ -110,6 +127,48 @@ describe("federation identity", () => {
     expect(identity.fingerprint).toBe(
       publicFingerprint(identity.publicKeyJwk),
     );
+  });
+
+  test("prepares and activates a confirmed two-phase key rotation", () => {
+    const configPath = "/private/.config.json";
+    const current = generateIdentity();
+    const files = new Map([
+      [configPath, JSON.stringify({
+        federation: Object.assign({
+          enabled: true,
+          publicBaseUrl: "https://alpha.example",
+        }, current),
+      })],
+    ]);
+    const fileSystem = {
+      existsSync: path => files.has(path),
+      readFileSync: path => files.get(path),
+      writeFileSync: (path, value) => files.set(path, String(value)),
+      renameSync: (from, to) => {
+        files.set(to, files.get(from));
+        files.delete(from);
+      },
+      chmodSync: () => {},
+    };
+    const pending = prepareFederationRotation(configPath, fileSystem);
+    expect(pending.keyId).toMatch(
+      /^https:\/\/alpha\.example\/federation\/actor#key-/,
+    );
+    expect(pending.fingerprint).not.toBe(current.fingerprint);
+    expect(() =>
+      activateFederationRotation(configPath, "wrong", fileSystem),
+    ).toThrow(/complete pending federation fingerprint/);
+
+    const activated = activateFederationRotation(
+      configPath,
+      pending.fingerprint,
+      fileSystem,
+    );
+    expect(activated.fingerprint).toBe(pending.fingerprint);
+    expect(activated.previousPublicKeys[0].fingerprint).toBe(
+      current.fingerprint,
+    );
+    expect(activated.pendingIdentity).toBeUndefined();
   });
 });
 
@@ -160,5 +219,47 @@ describe("federated room links", () => {
       federationRoomId: "releases",
       remoteKey: "remote-key",
     });
+  });
+
+  test("validates source-side rules without exposing tags or uploader data", () => {
+    const validation = requestedFederationRules(
+      JSON.stringify({
+        tagContains: "pf2e AND remaster",
+        userContains: "alice OR release-bot",
+      }),
+    );
+    expect(validation.valid).toBe(true);
+    const internal = federationRuleFile({
+      name: "Player Core.pdf",
+      type: "document",
+      tags: { system: "pf2e", edition: "remaster", usernick: "Alice" },
+      meta: { account: "alice" },
+      uploaded: Date.now(),
+    });
+    expect(fileMatchesLinkRules(internal, validation.rules)).toBe(true);
+
+    const safe = remoteFileToClient(
+      {
+        key: "remote-key",
+        name: "Player Core.pdf",
+        size: 42,
+        type: "document",
+        uploadedAt: "2026-07-28T12:00:00.000Z",
+        expiresAt: "2026-08-02T12:00:00.000Z",
+        roomName: "Releases",
+      },
+      { peerId: "beta", roomId: "releases" },
+      "destination",
+    );
+    expect(JSON.stringify(safe)).not.toMatch(/alice|pf2e|remaster/i);
+  });
+
+  test("rejects malformed or unsafe remote rule expressions", () => {
+    expect(requestedFederationRules("{").valid).toBe(false);
+    const invalid = requestedFederationRules(
+      JSON.stringify({ tagContains: "/[/" }),
+    );
+    expect(invalid.valid).toBe(false);
+    expect(invalid.errors).toHaveProperty("tagContains");
   });
 });

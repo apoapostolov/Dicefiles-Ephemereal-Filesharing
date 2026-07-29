@@ -345,7 +345,11 @@ function renderComponents(data) {
     }
     node.dataset.status = item.status;
     node.querySelector(".component-latency").textContent =
-      item.latencyMs == null ? "—" : `${item.latencyMs} ms`;
+      item.id === "federation" && data.federation ?
+        `${data.federation.active}/${data.federation.peers} available${
+          item.latencyMs == null ? "" : ` · ${item.latencyMs} ms`
+        }` :
+        item.latencyMs == null ? "—" : `${item.latencyMs} ms`;
     node.querySelector(".component-state").textContent = item.status;
   }
   const previews = document.querySelector("[data-component=\"previews\"]");

@@ -1,9 +1,9 @@
 // Node version guard — must run before any require() to surface version mismatches early.
 {
   const [major] = process.versions.node.split(".").map(Number);
-  if (major < 20) {
+  if (major < 22) {
     process.stderr.write(
-      `ERROR: Node.js 20+ required, found ${process.versions.node}\n`,
+      `ERROR: Node.js 22+ required, found ${process.versions.node}\n`,
     );
     process.exit(1);
   }

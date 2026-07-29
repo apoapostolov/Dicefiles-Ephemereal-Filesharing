@@ -1872,6 +1872,59 @@
   min-height: 1.1em;
 }
 
+.modal-optsdlg .roomopts-plugin-operations {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.modal-optsdlg .roomopts-plugin-operation {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: 0.35rem 0.7rem;
+  min-width: 0;
+  font-size: 0.82rem;
+  color: rgba(220, 220, 220, 0.9);
+}
+
+.modal-optsdlg .roomopts-plugin-operation-label {
+  font-weight: 700;
+  color: rgba(238, 238, 238, 0.96);
+}
+
+.modal-optsdlg .roomopts-plugin-operation-actions {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.modal-optsdlg .roomopts-plugin-operation-actions > button {
+  appearance: none;
+  margin: 0;
+  padding: 0.28rem 0.62rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-fg);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.modal-optsdlg .roomopts-plugin-operation-actions > button:hover,
+.modal-optsdlg .roomopts-plugin-operation-actions > button:focus-visible {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.modal-optsdlg .roomopts-status-error {
+  color: #f1a0a0;
+}
+
 .modal-optsdlg .roomopts-plugin-status:empty {
   display: none;
 }
@@ -2221,6 +2274,49 @@
   .modal-optsdlg .roomopts-checks-mod,
   .modal-optsdlg .roomopts-link-age {
     grid-template-columns: 1fr;
+  }
+
+  .modal-optsdlg .modal-body:has(.roomopts-shell) {
+    padding: 0.45rem 0.6rem 0.7rem;
+  }
+
+  .modal-optsdlg .roomopts-shell {
+    gap: 0.65rem;
+  }
+
+  .modal-optsdlg .roomopts-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .modal-optsdlg .roomopts-tab {
+    padding: 0.55em 0.2em;
+    text-align: center;
+    font-size: 0.8rem;
+  }
+
+  .modal-optsdlg .roomopts-section,
+  .modal-optsdlg .roomopts-plugin-editor,
+  .modal-optsdlg .roomopts-link-editor {
+    padding: 0.65rem;
+    border-radius: 8px;
+  }
+
+  .modal-optsdlg .roomopts-plugin-table th:nth-child(3),
+  .modal-optsdlg .roomopts-plugin-table td:nth-child(3) {
+    display: none;
+  }
+
+  .modal-optsdlg .roomopts-plugin-operation {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-optsdlg .roomopts-plugin-operation-actions {
+    grid-column: 1;
+  }
+
+  .modal-optsdlg .roomopts-link-editor-actions {
+    justify-content: center;
   }
 }
 

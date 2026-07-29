@@ -28,9 +28,8 @@ import {
  */
 
 // Append the client build version so the browser fetches a fresh copy
-// whenever the build changes (pdf.worker.js is served immutable/30-day cached
-// and Chrome applies the worker script's own cached response headers as its
-// CSP context — stale cache = stale CSP without 'unsafe-eval').
+// whenever the build changes (pdf.worker.js is served immutable/30-day
+// cached).
 const PDF_WORKER_SRC = `/pdf.worker.js?v=${window.__CV__ || "1"}`;
 
 // ── debug helpers ─────────────────────────────────────────────────────────────
