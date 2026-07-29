@@ -2,9 +2,9 @@
 
 **Trigger**: Use this skill whenever the user asks you to interact with a Dicefiles
 room — listing files, uploading URLs, fulfilling requests, enriching metadata,
-checking server status, managing local/federated links, guest invites, room
-bots, or running any multi-step file-management workflow against a Dicefiles
-instance.
+checking server status, managing storage volumes, protected-room access,
+local/federated links, guest invites, room bots, or running any multi-step
+file-management workflow against a Dicefiles instance.
 
 **Requires**: The `dicefiles` MCP server must be registered in mcporter. Verify with:
 `mcporter list` — `dicefiles` must appear and show status `connected`.
@@ -18,7 +18,7 @@ organised into rooms. Each room has uploads (files), requests (unfulfilled asks 
 participants), and a chat channel. Rooms are identified by a short alphanumeric
 `roomid`.
 
-The MCP server exposes 30 tools. All network calls go through the tools — never
+The MCP server exposes 36 tools. All network calls go through the tools — never
 construct raw HTTP requests.
 
 ---
@@ -55,6 +55,14 @@ construct raw HTTP requests.
 | `configure_room_plugin` | Invite or partially update an installed room bot                 |
 | `remove_room_plugin`    | Remove an invited bot from a room                                 |
 | `run_room_plugin`       | Run one already invited room bot immediately                      |
+| `inspect_room_plugin_sync_memory` | Inspect remembered imports and latest run state       |
+| `clear_room_plugin_sync_memory` | Confirm and clear remembered import state                |
+| `get_storage_volumes`   | Inspect storage tiers, capacity, reservations, and health             |
+| `preview_storage_placement` | Preview a blob destination without writing it                   |
+| `get_room_password_access` | Read protection policy without revealing passwords                |
+| `configure_room_password_access` | Enable, update, or disable rotating room access           |
+| `rotate_room_password`  | Replace the password and revoke existing visitor grants                |
+| `reveal_room_passwords` | Reveal current/prepared secrets under a sensitive scope                 |
 
 ---
 
@@ -180,6 +188,28 @@ Omit stored secret fields unless replacing them; the API preserves omitted
 credentials and never returns their values. A tool cannot install code or run
 an uninvited catalog plugin.
 
+### J. Inspect storage placement
+
+```
+get_storage_volumes()
+→ preview_storage_placement(bytes)
+→ report the selected tier and any hard-full or unavailable volume
+```
+
+These tools never move existing blobs. Do not rename durable volume ids or edit
+storage configuration through an agent.
+
+### K. Operate protected community access
+
+```
+get_room_password_access(roomid)
+→ configure_room_password_access(...) or rotate_room_password(...)
+→ reveal_room_passwords(roomid) only for explicit owner delivery
+```
+
+Never put revealed passwords in chat, logs, memory, or ordinary summaries.
+Content tools also require explicit `room-access:bypass` for protected rooms.
+
 ---
 
 ## Error Handling
@@ -213,7 +243,7 @@ The MCP server is started by mcporter using:
       "command": "node",
       "args": ["/path/to/Dicefiles/scripts/mcp-server.js"],
       "env": {
-        "DICEFILES_BASE_URL": "http://localhost:9090",
+        "DICEFILES_BASE_URL": "http://localhost:10005",
         "DICEFILES_API_KEY": "your-api-key-here"
       }
     }
@@ -226,6 +256,6 @@ Scopes needed for full automation:
 `room-links:read`, `room-links:write`, `guest-invites:read`,
 `guest-invites:write`, `federation-links:read`,
 `federation-links:write`, `room-plugins:read`, `room-plugins:write`,
-`room-plugins:run`
+`room-plugins:run`, `room-access:read`, `room-access:write`, `admin:read`
 
 For read-only monitoring, `files:read` alone is sufficient.

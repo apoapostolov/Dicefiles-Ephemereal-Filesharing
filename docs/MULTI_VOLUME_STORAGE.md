@@ -1,6 +1,7 @@
-# Multi-volume storage backend proposal
+# Multi-volume storage backend
 
-**Status:** Proposal — not shipped
+**Status:** Core placement, reservations, health, and operator inspection are
+implemented for v1.4.5; manual drain/rebalance remains future work.
 **Scope:** Local filesystem directories and mounted drives on one Dicefiles host
 
 ## Summary
@@ -26,7 +27,7 @@ Every policy also enforces an absolute free-space reserve. Placement is made for
 new physical blobs, not for every room reference: deduplicated uploads continue
 to point to the existing blob on its existing volume.
 
-The recommended first release adds safe placement and visibility, but not
+The v1.4.5 implementation adds safe placement and visibility, but not
 automatic background migration. A later release can add an explicit,
 journalled drain/rebalance operation after the basic multi-volume path has
 proven reliable.

@@ -7,13 +7,19 @@ the existing Mega.nz adapter, the `remote-import` bot, and an official-API
 Pixeldrain provider. Gofile, MediaFire, 4shared, and the shell bridge remain
 planned.
 
+The implementation-ready 1.4.6 scope, provider contract, Gofile design,
+Plowshare security boundary, migration rules, and acceptance tests are defined
+in [the multi-host remote imports proposal](../../docs/MULTI_HOST_REMOTE_IMPORTS.md).
+
 This is intentionally separate from shipped
 [Dicefiles trusted-host federation](../../docs/FEDERATION.md). Federation
 authenticates another operator-pinned Dicefiles server and streams an approved
 room without copying it. Remote host import treats a third-party file locker as
 an untrusted download source and materializes its bytes into local storage.
 
-**Library research** (GitHub/npm candidates, embed vs product boundary, shell/debrid options): [REMOTE_HOST_LIBRARY_RESEARCH.md](../../docs/plugins/REMOTE_HOST_LIBRARY_RESEARCH.md).
+**Library research** (GitHub/npm candidates, embed vs product boundary,
+shell/debrid options):
+[REMOTE_HOST_LIBRARY_RESEARCH.md](../../docs/REMOTE_HOST_LIBRARY_RESEARCH.md).
 
 ---
 
@@ -173,7 +179,8 @@ strictly allowlisted shell bridge separately.
 
 ## 8. References
 
-Full candidate matrix and rejects: [REMOTE_HOST_LIBRARY_RESEARCH.md](../../docs/plugins/REMOTE_HOST_LIBRARY_RESEARCH.md).
+Full candidate matrix and rejects:
+[REMOTE_HOST_LIBRARY_RESEARCH.md](../../docs/REMOTE_HOST_LIBRARY_RESEARCH.md).
 
 - megajs: https://www.npmjs.com/package/megajs — https://mega.js.org/
 - megajs-cli: https://github.com/qgustavor/megajs-cli

@@ -116,9 +116,9 @@ function parseResult(result) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("registerTools", () => {
-  it("registers exactly 30 tools", () => {
+  it("registers exactly 36 tools", () => {
     const tools = buildToolMap();
-    expect(Object.keys(tools)).toHaveLength(30);
+    expect(Object.keys(tools)).toHaveLength(36);
   });
 
   it("registers every expected tool name", () => {
@@ -154,6 +154,12 @@ describe("registerTools", () => {
       "run_room_plugin",
       "inspect_room_plugin_sync_memory",
       "clear_room_plugin_sync_memory",
+      "get_storage_volumes",
+      "preview_storage_placement",
+      "get_room_password_access",
+      "configure_room_password_access",
+      "rotate_room_password",
+      "reveal_room_passwords",
     ];
     for (const name of expected) {
       expect(tools).toHaveProperty(name);
@@ -734,6 +740,56 @@ describe("room plugin tools", () => {
     expect(JSON.parse(global.fetch.mock.calls[5][1].body)).toEqual({
       confirm: true,
     });
+  });
+});
+
+describe("storage and room password tools", () => {
+  it("maps storage inspection and placement preview", async () => {
+    const tools = buildToolMap();
+    global.fetch = mockFetchJson({ ok: true });
+
+    await tools.get_storage_volumes({});
+    expect(global.fetch.mock.calls[0][0]).toContain("/api/v1/admin/storage");
+    expect(global.fetch.mock.calls[0][1].method).toBe("GET");
+
+    await tools.preview_storage_placement({ bytes: 1048576 });
+    expect(global.fetch.mock.calls[1][0]).toContain(
+      "/admin/storage/placement-preview",
+    );
+    expect(JSON.parse(global.fetch.mock.calls[1][1].body)).toEqual({
+      bytes: 1048576,
+    });
+  });
+
+  it("maps protected-room policy, rotation, and secret reveal", async () => {
+    const tools = buildToolMap();
+    global.fetch = mockFetchJson({ ok: true });
+
+    await tools.get_room_password_access({ roomid: "Room One" });
+    expect(global.fetch.mock.calls[0][0]).toContain(
+      "/rooms/Room%20One/password-access",
+    );
+
+    await tools.configure_room_password_access({
+      roomid: "Room One",
+      enabled: true,
+      rotation: "monthly",
+      prepareDays: 7,
+    });
+    expect(global.fetch.mock.calls[1][1].method).toBe("PATCH");
+
+    await tools.rotate_room_password({
+      roomid: "Room One",
+      password: "replacement",
+    });
+    expect(global.fetch.mock.calls[2][0]).toContain(
+      "/password-access/rotate",
+    );
+
+    await tools.reveal_room_passwords({ roomid: "Room One" });
+    expect(global.fetch.mock.calls[3][0]).toContain(
+      "/password-access/secrets",
+    );
   });
 });
 

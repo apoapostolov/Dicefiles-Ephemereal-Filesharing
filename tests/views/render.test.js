@@ -261,6 +261,25 @@ test("room.ejs renders without error", async () => {
   expect(html).toMatch(
     /name="invitecopy"[\s\S]*?hidden[\s\S]*?disabled[\s\S]*?<\/button>/,
   );
+  // Password access uses aligned compact settings and a period table.
+  expect(html).toContain('class="roomopts-access-grid"');
+  expect(html).toContain("Period (days)");
+  expect(html).toContain("Prepare (days)");
+  expect(html).toContain('class="roomopts-password-entry"');
+  expect(html).toContain('class="roomopts-password-table"');
+  expect(html).toMatch(
+    /name="passwordemptyrow"[\s\S]*?No passwords generated yet\./,
+  );
+  expect(html).toMatch(/name="passwordcurrentrow" class="hidden"/);
+  expect(html).toMatch(/name="passwordnextrow" class="hidden"/);
+  expect(html).toMatch(
+    /<code[\s\S]*?name="passwordcurrent"[\s\S]*?<\/code>/,
+  );
+  expect(html).toMatch(
+    /<code[\s\S]*?name="passwordnext"[\s\S]*?<\/code>/,
+  );
+  expect(html).not.toMatch(/<input[^>]+name="passwordcurrent"/);
+  expect(html).not.toMatch(/<input[^>]+name="passwordnext"/);
   // Report dialog fields are explicitly labelled and validation-ready.
   expect(html).toContain('for="report-room"');
   expect(html).toMatch(/id="report-room"[\s\S]*?readonly/);
@@ -273,6 +292,18 @@ test("room.ejs renders without error", async () => {
   );
   expect(html).not.toContain("jurisdication");
   expect(html).not.toContain("but dn");
+});
+
+test("room-access.ejs renders the protected-room gate", async () => {
+  const html = await render("room-access.ejs", {
+    pagename: "Protected room",
+    roomid: "Room123",
+    error: "",
+    STATUS_HREF: "/status",
+  });
+  expect(html).toContain("This room is password protected");
+  expect(html).toContain('action="/r/Room123/access"');
+  expect(html).not.toContain("room name");
 });
 
 test("register.ejs renders without error", async () => {

@@ -83,7 +83,7 @@ Add a `dicefiles` entry under `mcpServers`:
 }
 ```
 
-Restart Claude Desktop. All 30 tools appear in the tool picker. Try: _"Use the
+Restart Claude Desktop. All 36 tools appear in the tool picker. Try: _"Use the
 `server_health` tool to check my Dicefiles instance."_
 
 ---
@@ -161,7 +161,7 @@ tools will be listed.
 }
 ```
 
-Save and reload. The 30 tools are now available to Antigravity's agent.
+Save and reload. The 36 tools are now available to Antigravity's agent.
 
 ---
 
@@ -287,7 +287,7 @@ cp /path/to/Dicefiles/scripts/openclaw-dicefiles-skill/SKILL.md \
    ~/.claude/skills/dicefiles/
 ```
 
-The skill teaches the agent the full 30-tool inventory, recommended call sequences,
+The skill teaches the agent the full 36-tool inventory, recommended call sequences,
 error handling, and fulfillment loop patterns. See
 `scripts/openclaw-dicefiles-skill/SKILL.md` for the full skill definition.
 
@@ -813,6 +813,26 @@ Discord and Telegram inbound commands are configured through the ordinary bot
 settings, but provider webhooks call Dicefiles directly; they are not separate
 MCP tools. See `API.md` §24 and
 [`core/plugins/RELEASE_PUBLISHERS.md`](core/plugins/RELEASE_PUBLISHERS.md).
+
+---
+
+### 4.31–4.36 Storage and protected-room access
+
+- `get_storage_volumes` returns configured volume roles, thresholds,
+  reservations, capacity, and health with `admin:read`.
+- `preview_storage_placement` accepts an optional expected byte size and shows
+  the policy decision without writing data.
+- `get_room_password_access` returns enabled state, schedule, and period
+  boundaries without raw passwords using `room-access:read`.
+- `configure_room_password_access` enables, updates, or disables the shared
+  room credential with `room-access:write`.
+- `rotate_room_password` immediately replaces the current password and revokes
+  visitor grants from the old revision.
+- `reveal_room_passwords` is the only MCP operation that returns current or
+  prepared-next secrets and requires the separate `room-access:secrets` scope.
+
+Never grant the secret-read scope to a monitoring or ordinary room-management
+agent. Protected rooms cannot be linking or federation sources in v1.4.5.
 
 ---
 

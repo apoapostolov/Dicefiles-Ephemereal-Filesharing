@@ -1,7 +1,7 @@
 # Dicefiles - Ephemereal Filesharing for Hobby Communities
 
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Version](https://img.shields.io/badge/version-1.4.4-blue)
+![Version](https://img.shields.io/badge/version-1.4.5-blue)
 ![Node](https://img.shields.io/badge/node-%3E%3D22-339933)
 ![Redis](https://img.shields.io/badge/redis-v4%20client-DC382D)
 ![Package manager](https://img.shields.io/badge/package%20manager-yarn%201.x-2C8EBB)
@@ -17,19 +17,20 @@ the experience into a generic cloud-drive dashboard.
   <img src="images/dicefiles-room-gallery.png" alt="A living Dicefiles room with an expanded community banner, chat, filters, and a gallery of shared files" width="100%" />
 </p>
 
-### What's new in 1.4.4
+### What's new in 1.4.5
 
-**Trusted communities can now span hosts.** Operators may pin another
-Dicefiles server, explicitly allow selected source rooms, and present matching
-remote files in an ordinary destination room without sharing accounts, Redis,
-or storage. Source-side rules, remote expiry, signed requests, durable
-invalidation, and ranged reader/download traffic preserve the linking model
-across the network.
+**Community access and storage can now grow without becoming fragile.** Room
+owners may protect an entire room with a shared password that rotates monthly
+or on a fixed schedule. Access lasts only for the active password period, while
+owners can prepare the next credential or rotate immediately when a password
+spreads too widely.
 
-The release also promotes Discord and Telegram publishers into opt-in remote
-assistants, adds scoped room-bot REST and MCP controls, hardens scheduled
-imports, introduces guided federation key rotation and peer diagnostics, and
-extends the MCP surface to 30 tools. Full notes:
+Operators may also place content across several storage directories using
+balanced placement or primary-then-fallback thresholds. Capacity reservations,
+hard limits, and free-space floors keep concurrent uploads from overcommitting
+a drive. The REST and MCP surfaces now include scoped access administration
+and privacy-safe storage inspection, bringing the MCP inventory to 36 tools.
+Full notes:
 [CHANGELOG.md](CHANGELOG.md).
 
 > **Note:** This is a self-hosted application. You must host it yourself - there is no public service provided.
@@ -42,6 +43,9 @@ extends the MCP surface to 30 tools. Full notes:
   search, moderation, flood controls, and configurable retention.
 - **Invite-only rooms** can mint labeled guest links with one-use, use-count,
   and age limits; owners can copy, audit, and revoke them from Room Options.
+- **Rotating community passwords** add a full-room gate with monthly or
+  fixed-day periods, prepared-next credentials, emergency rotation, and
+  browser access that naturally expires at the period boundary.
 - **Return awareness** separates your own activity from everything that arrived
   since your previous visit and keeps a one-click Download All path close by.
 - **Room controls** cover requests, deep links, public-directory visibility,
@@ -117,9 +121,13 @@ extends the MCP surface to 30 tools. Full notes:
 - **Automation REST API** uses scoped keys, per-scope rate limits, audit logs,
   webhooks, room-link operations, guest-invite operations, and separately
   scoped room-bot configuration and execution.
-- **30-tool MCP server** gives AI clients typed tools for discovery, metadata,
+- **36-tool MCP server** gives AI clients typed tools for discovery, metadata,
   requests, uploads, archives, local links, federated peer links, and guest
   invites, plus room-bot administration.
+- **Multi-volume storage** balances new blobs across several directories or
+  holds fallback drives until a configured threshold. Cross-worker
+  reservations, hard limits, and free-space floors protect concurrent uploads
+  while legacy content remains in place.
 - **Reactive plugins** receive room lifecycle events through stable HTTP,
   event-lease, room/file read, chat-write, and upload capabilities rather than
   importing server internals.
@@ -243,8 +251,8 @@ The PDF.js web worker is built as a separate webpack entry (`pdf.worker.js`) and
 | [core/plugins/MEGA_FOLDER.md](core/plugins/MEGA_FOLDER.md) | Mega.nz Autoshare operator guide |
 | [core/plugins/RELEASE_PUBLISHERS.md](core/plugins/RELEASE_PUBLISHERS.md) | Discord and Telegram release bot setup |
 | [docs/FEDERATION.md](docs/FEDERATION.md) | Trusted-host federation setup, protocol, security, and troubleshooting |
-| [docs/MULTI_VOLUME_STORAGE.md](docs/MULTI_VOLUME_STORAGE.md) | Proposal: balanced and fallback multi-volume storage |
-| [docs/PASSWORD_PROTECTED_ROOMS.md](docs/PASSWORD_PROTECTED_ROOMS.md) | Proposal: rotating shared and personal room credentials |
+| [docs/MULTI_VOLUME_STORAGE.md](docs/MULTI_VOLUME_STORAGE.md) | Multi-volume setup, policies, reservations, and future drain design |
+| [docs/PASSWORD_PROTECTED_ROOMS.md](docs/PASSWORD_PROTECTED_ROOMS.md) | Rotating shared room passwords and future credential phases |
 | [docs/FUTURE_DEVELOPMENT_PLAN.md](docs/FUTURE_DEVELOPMENT_PLAN.md) | Product backlog (shipped vs proposed) |
 | [docs/PERF_NOTES.md](docs/PERF_NOTES.md) | Performance notes (virtualization, code-splitting, workers) |
 | [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Dev setup (Yarn 1.x, Node ≥22, Redis) and PR expectations |
@@ -330,7 +338,7 @@ mkdir -p ~/.claude/skills/dicefiles
 cp /absolute/path/to/Dicefiles/scripts/openclaw-dicefiles-skill/SKILL.md \
    ~/.claude/skills/dicefiles/
 ```
-The skill teaches OpenClaw the full 30-tool inventory, startup sequence, and
+The skill teaches OpenClaw the full 36-tool inventory, startup sequence, and
 fulfillment loop. Full skill definition: `scripts/openclaw-dicefiles-skill/SKILL.md`.
 
 ## 6 — Verify

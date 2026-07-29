@@ -1,5 +1,68 @@
 # Changelog
 
+## [1.4.5] - 2026-07-29 [Community Access and Storage Tiers]
+
+Dicefiles can now protect a community room with a rotating shared password and
+place new content safely across multiple storage directories. Both features are
+opt-in and preserve existing single-volume, unprotected-room behavior.
+
+### Upgrade notes
+
+- Node.js **22 or newer** and Yarn 1.x remain required. Run `yarn install`,
+  then `yarn prestart`, and restart Dicefiles normally.
+- Existing installations need no storage migration. With no `storage.volumes`
+  entries, Dicefiles continues using the existing `uploads` directory. Add
+  volumes only after their directories are mounted and writable.
+- Existing rooms remain unprotected. Owners explicitly enable a community
+  password from Room Options → Access; generated secrets are stored in Redis
+  using the instance's existing secret material.
+- Automation clients need the new `storage:read`, `room-access:read`,
+  `room-access:write`, `room-access:secrets`, or `room-access:bypass` scopes
+  only for the corresponding new operations.
+- Rollback to v1.4.4 is code-only when no new volumes were enabled. If content
+  was written outside the legacy `uploads` root, retain the v1.4.5 storage
+  configuration or move those blobs back before rollback. Password-protected
+  rooms should be disabled before returning to v1.4.4.
+
+### Added
+
+- **Multi-volume storage:** operators can configure several durable storage
+  roots and choose balanced or primary-then-fallback placement. New physical
+  blobs retain their selected `volumeId`; deduplicated files remain on their
+  existing volume and legacy records continue resolving through `uploads`.
+- **Capacity-safe uploads:** resumable browser uploads and programmatic
+  buffer/stream ingestion use Redis-backed, expiring per-volume reservations.
+  Hard fill limits and absolute free-space reserves fail closed before a write
+  is accepted.
+- **Storage operations:** `/healthz` reports privacy-safe per-volume state.
+  Scoped operator endpoints and MCP tools inspect volume health and preview
+  placement without writing or exposing paths to public status telemetry.
+- **Rotating room passwords:** Room Options includes an Access tab for an
+  opt-in shared community password, calendar-month or fixed-day periods,
+  prepared-next credentials, custom passwords, and emergency rotation.
+- **Period-bound access grants:** successful visitors receive an HTTP-only,
+  browser-bound grant that expires at the credential boundary. Owners and
+  moderators bypass the prompt; invite-only rooms require both checks.
+- **Protected content boundaries:** page entry, live sockets, downloads,
+  archive browsing, comic reading, local linking, and federation enforce the
+  room gate. Protected rooms cannot become linked or federated sources.
+- **Scoped automation:** REST and MCP surfaces separate password policy reads,
+  policy changes, and raw credential reveal into `room-access:read`,
+  `room-access:write`, and `room-access:secrets`.
+
+### Changed
+
+- **Clearer Access controls:** rotation settings use compact aligned fields,
+  password actions sit beside the credential entry, and generated current/next
+  credentials appear in a normalized period table. Rooms with no generated
+  credential show a clean empty row instead of an epoch date.
+
+### Security
+
+- Room passwords are verified with Argon2id. Revealable owner copies are
+  encrypted with AES-256-GCM under an instance-derived key and never enter
+  exported room configuration, public telemetry, logs, or ordinary API reads.
+
 ## [1.4.4] - 2026-07-29 [Federated Communities]
 
 Dicefiles can now link approved rooms across trusted independent hosts and

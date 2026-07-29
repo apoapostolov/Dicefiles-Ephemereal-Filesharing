@@ -75,6 +75,20 @@ module.exports = {
   // Path to upload directory
   uploads: "uploads",
 
+  // Optional multi-volume storage. With no volumes configured, Dicefiles uses
+  // the legacy `uploads` path as a single volume named "uploads".
+  storage: {
+    policy: "balanced", // "balanced" or "primary-then-fallback"
+    fallbackThreshold: 75,
+    softLimit: 75,
+    hardLimit: 90,
+    resumeLimit: 70,
+    minFreeBytes: 1024 * 1024 * 1024,
+    unknownUploadReservationBytes: 64 * 1024 * 1024,
+    reservationTtlMinutes: 60,
+    volumes: [],
+  },
+
   // Path to keep the moderation log
   modlog: "mod.log",
 
@@ -329,6 +343,14 @@ module.exports = {
   // have elapsed since that account/browser first joined the room. Set to 0
   // to disable the indicator.
   newRoomMemberDays: 7,
+
+  // Defaults used when a room owner enables rotating community access.
+  roomPasswordAccess: {
+    rotation: "monthly",
+    days: 30,
+    prepareDays: 7,
+    maxAttemptsPerMinute: 10,
+  },
 
   /*****************************/
   /* Server Directory          */

@@ -1687,3 +1687,98 @@ body#page {
 .modlogusers {
   max-width: 30vw;
 }
+
+.room-access-page {
+  min-height: 100vh;
+}
+
+.room-access-shell {
+  min-height: calc(100vh - 7rem);
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+}
+
+.room-access-card {
+  width: min(34rem, 100%);
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  border: 1px solid var(--hairline);
+  border-radius: 1rem;
+  background: var(--surface-1);
+  box-shadow: 0 1.25rem 4rem rgba(0, 0, 0, 0.24);
+}
+
+.room-access-lock {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: grid;
+  place-items: center;
+  margin-bottom: 1rem;
+  border-radius: 50%;
+  color: var(--role-user-fg);
+  background: color-mix(in srgb, var(--role-user-fg) 14%, transparent);
+}
+
+.room-access-eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--dark-fg);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.room-access-card h1 {
+  margin: 0;
+  font-size: clamp(1.55rem, 5vw, 2.2rem);
+}
+
+.room-access-copy,
+.room-access-note {
+  color: var(--dark-fg);
+}
+
+.room-access-card label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-weight: 700;
+}
+
+.room-access-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.room-access-input-row input {
+  min-width: 0;
+  border-radius: 0.45rem 0 0 0.45rem;
+}
+
+.room-access-input-row button {
+  border-radius: 0 0.45rem 0.45rem 0;
+}
+
+.room-access-error {
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgba(255, 109, 109, 0.42);
+  border-radius: 0.45rem;
+  color: #ffd1d1;
+  background: rgba(120, 24, 24, 0.25);
+}
+
+.room-access-note {
+  margin: 1rem 0 0;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 32rem) {
+  .room-access-input-row {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+
+  .room-access-input-row input,
+  .room-access-input-row button {
+    border-radius: 0.45rem;
+  }
+}

@@ -109,6 +109,38 @@
   // Use an absolute path for clarity.  Default: "uploads" (relative).
   "uploads": "uploads",
 
+  // Optional multi-volume placement. Leave volumes empty to retain the
+  // single `uploads` directory above. Volume ids are durable file metadata:
+  // do not rename/remove one until its files have been migrated.
+  //
+  // balanced: place each new physical blob on the lowest-filled writable
+  // volume. primary-then-fallback: use primary volumes until the threshold,
+  // then place on fallback volumes.
+  "storage": {
+    "policy": "balanced",
+    "fallbackThreshold": 75,
+    "softLimit": 75,
+    "hardLimit": 90,
+    "resumeLimit": 70,
+    "minFreeBytes": 1073741824,
+    "unknownUploadReservationBytes": 67108864,
+    "reservationTtlMinutes": 60,
+    "volumes": [
+      // {
+      //   "id": "fast",
+      //   "path": "/srv/dicefiles-fast",
+      //   "role": "primary",
+      //   "weight": 1
+      // },
+      // {
+      //   "id": "bulk",
+      //   "path": "/mnt/bulk/dicefiles",
+      //   "role": "fallback",
+      //   "weight": 2
+      // }
+    ]
+  },
+
   // Maximum file size in bytes.  Default: 10 GB.
   // 0 = unlimited (not recommended on a public server).
   // Examples:
@@ -143,6 +175,11 @@
   //   room-plugins:read  – list invited bots, catalog, and last-run status
   //   room-plugins:write – invite/update/remove room bots
   //   room-plugins:run   – run an invited room bot immediately
+  //   room-access:read    – inspect room password policy (no secrets)
+  //   room-access:write   – enable, update, disable, or rotate room passwords
+  //   room-access:secrets – reveal current/prepared passwords to an owner tool
+  //   room-access:bypass  – access protected content without a human password
+  //   admin:read          – storage volume health and placement preview
   //   mod:*             – full moderation access
   //
   // Full API reference: API.md
@@ -165,7 +202,9 @@
         "guest-invites:write",
         "room-plugins:read",
         "room-plugins:write",
-        "room-plugins:run"
+        "room-plugins:run",
+        "room-access:read",
+        "room-access:write"
       ]
     }
     // Add more keys as needed, for example a read-only monitoring key:
@@ -239,6 +278,15 @@
   // Show a new-member icon beside uploaders who first joined this room within
   // the configured number of days. Set to 0 to disable. Default: 7.
   // "newRoomMemberDays": 7,
+
+  // Defaults used when an owner enables Community password in Room Options.
+  // Verification attempts are Redis-limited per room and privacy-hashed IP.
+  // "roomPasswordAccess": {
+  //   "rotation": "monthly",
+  //   "days": 30,
+  //   "prepareDays": 7,
+  //   "maxAttemptsPerMinute": 10
+  // },
 
   // ----------------------------------------------------------
   // FILE EXPIRY

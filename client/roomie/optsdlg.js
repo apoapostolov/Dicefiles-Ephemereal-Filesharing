@@ -22,6 +22,14 @@ const INVITE_TIME_FORMAT = new Intl.DateTimeFormat(undefined, {
   minute: "2-digit",
   hourCycle: "h23",
 });
+const PASSWORD_MONTH_FORMAT = new Intl.DateTimeFormat(undefined, {
+  month: "long",
+  year: "numeric",
+});
+const PASSWORD_DAY_FORMAT = new Intl.DateTimeFormat(undefined, {
+  month: "short",
+  day: "numeric",
+});
 
 function compactInviteText(value, maxLength = 12) {
   const text = String(value || "").trim();
@@ -53,6 +61,21 @@ function compactInviteDate(value) {
     return "—";
   }
   return `${INVITE_DATE_FORMAT.format(date)} ${INVITE_TIME_FORMAT.format(date)}`;
+}
+
+function passwordPeriodLabel(start, end, rotation, fallback) {
+  const startValue = Number(start);
+  if (!Number.isFinite(startValue) || startValue <= 0) {
+    return fallback;
+  }
+  const startsAt = new Date(startValue);
+  if (rotation === "monthly") {
+    return PASSWORD_MONTH_FORMAT.format(startsAt);
+  }
+  const endsAt = new Date(Number(end));
+  return Number.isNaN(endsAt.getTime()) ?
+    PASSWORD_DAY_FORMAT.format(startsAt) :
+    `${PASSWORD_DAY_FORMAT.format(startsAt)}–${PASSWORD_DAY_FORMAT.format(endsAt)}`;
 }
 
 /**
@@ -139,6 +162,26 @@ export class OptionsModal extends Modal {
       "invitecap",
       "inviteaudittbody",
       "inviteauditempty",
+      "passwordenabled",
+      "passwordrotation",
+      "passworddays",
+      "passwordprepare",
+      "passwordcustom",
+      "passwordapply",
+      "passwordrotate",
+      "passwordcurrent",
+      "passwordnext",
+      "passwordemptyrow",
+      "passwordcurrentrow",
+      "passwordnextrow",
+      "passwordcurrentperiod",
+      "passwordnextperiod",
+      "passwordrevealcurrent",
+      "passwordcopycurrent",
+      "passwordrevealnext",
+      "passwordcopynext",
+      "passwordperiod",
+      "passwordstatus",
       "pluginpick",
       "plugininvite",
       "plugindesc",
@@ -164,6 +207,8 @@ export class OptionsModal extends Modal {
     for (const f of fields) {
       this[f] = this.el.elements[f] || this.el.querySelector(`[name="${f}"]`);
     }
+    this.passwordSecrets = { current: "", next: "" };
+    this.passwordRevealed = { current: false, next: false };
 
     // Type checkboxes
     this.ruleTypeBoxes = {};
@@ -308,6 +353,47 @@ export class OptionsModal extends Modal {
         this.closePluginEditor(),
       );
     }
+    if (this.passwordenabled) {
+      this.passwordenabled.addEventListener("change", () =>
+        this.syncPasswordAccessControls(),
+      );
+    }
+    if (this.passwordrotation) {
+      this.passwordrotation.addEventListener("change", () =>
+        this.syncPasswordAccessControls(),
+      );
+    }
+    if (this.passwordapply) {
+      this.passwordapply.addEventListener("click", () =>
+        this.applyPasswordAccess(),
+      );
+    }
+    if (this.passwordrotate) {
+      this.passwordrotate.addEventListener("click", () =>
+        this.rotatePasswordAccess(),
+      );
+    }
+    for (const [key, button] of [
+      ["current", this.passwordrevealcurrent],
+      ["next", this.passwordrevealnext],
+    ]) {
+      if (button) {
+        button.addEventListener("click", () => {
+          this.passwordRevealed[key] = !this.passwordRevealed[key];
+          this.renderPasswordSecret(key);
+        });
+      }
+    }
+    for (const [key, button] of [
+      ["current", this.passwordcopycurrent],
+      ["next", this.passwordcopynext],
+    ]) {
+      if (button) {
+        button.addEventListener("click", () =>
+          this.copyInviteLink(this.passwordSecrets[key], button),
+        );
+      }
+    }
 
     const { config: c } = registry;
     this.name.value = c.get("roomname");
@@ -367,6 +453,7 @@ export class OptionsModal extends Modal {
     this.guestInviteAudit = [];
     this.refreshGuestInvites();
     this.refreshPlugins();
+    this.refreshPasswordAccess();
 
     this.syncInviteCopyVisibility();
     this.oninviteonly();
@@ -1416,7 +1503,13 @@ export class OptionsModal extends Modal {
     if (this.el.parentElement) {
       this._modalPinnedTop = this.el.getBoundingClientRect().top;
     }
-    const allowed = new Set(["general", "invites", "linking", "plugins"]);
+    const allowed = new Set([
+      "general",
+      "invites",
+      "access",
+      "linking",
+      "plugins",
+    ]);
     this.activeTab = allowed.has(tab) ? tab : "general";
     this.el.querySelectorAll("[data-roomopts-tab]").forEach(btn => {
       const on = btn.dataset.roomoptsTab === this.activeTab;
@@ -1443,6 +1536,9 @@ export class OptionsModal extends Modal {
     else {
       this.setInviteLimitsPanel(false);
     }
+    if (this.activeTab === "access") {
+      this.refreshPasswordAccess();
+    }
     if (this.activeTab === "plugins") {
       this.refreshPlugins();
     }
@@ -1450,6 +1546,177 @@ export class OptionsModal extends Modal {
       this.closePluginEditor();
     }
     this.queueModalVerticalFit();
+  }
+
+  syncPasswordAccessControls() {
+    if (!this.passwordenabled) {
+      return;
+    }
+    const enabled = this.passwordenabled.checked;
+    const fixed =
+      this.passwordrotation && this.passwordrotation.value === "fixed-days";
+    for (const field of [
+      this.passwordrotation,
+      this.passwordprepare,
+      this.passwordcustom,
+      this.passwordapply,
+    ]) {
+      if (field) {
+        field.disabled = !enabled && field !== this.passwordapply;
+      }
+    }
+    if (this.passworddays) {
+      this.passworddays.disabled = !enabled || !fixed;
+    }
+    if (this.passwordrotate) {
+      this.passwordrotate.disabled = !enabled;
+    }
+  }
+
+  renderPasswordSecret(key) {
+    const field =
+      key === "current" ? this.passwordcurrent : this.passwordnext;
+    const button =
+      key === "current" ?
+        this.passwordrevealcurrent :
+        this.passwordrevealnext;
+    if (!field || !button) {
+      return;
+    }
+    const password = this.passwordSecrets[key];
+    const emptyText = key === "current" ?
+      "Enable access to generate one" :
+      "Not prepared yet";
+    field.textContent = password ?
+      (this.passwordRevealed[key] ? password : "••••••••••••") :
+      emptyText;
+    field.classList.toggle("empty", !password);
+    button.textContent = this.passwordRevealed[key] ? "Hide" : "Reveal";
+  }
+
+  renderPasswordAccessState(state) {
+    if (!state || !this.passwordenabled) {
+      return;
+    }
+    this.passwordenabled.checked = state.enabled === true;
+    this.passwordrotation.value = state.rotation || "monthly";
+    this.passworddays.value = state.days || 30;
+    this.passwordprepare.value =
+      state.prepareDays === 0 ? 0 : state.prepareDays || 7;
+    this.passwordSecrets.current = state.currentPassword || "";
+    this.passwordSecrets.next = state.nextPassword || "";
+    const hasPasswords =
+      !!state.currentPassword ||
+      !!state.nextPassword ||
+      (Number.isFinite(Number(state.startsAt)) && Number(state.startsAt) > 0);
+    if (this.passwordemptyrow) {
+      this.passwordemptyrow.classList.toggle("hidden", hasPasswords);
+    }
+    if (this.passwordcurrentrow) {
+      this.passwordcurrentrow.classList.toggle("hidden", !hasPasswords);
+    }
+    if (this.passwordnextrow) {
+      this.passwordnextrow.classList.toggle("hidden", !hasPasswords);
+    }
+    this.passwordRevealed.current = false;
+    this.passwordRevealed.next = false;
+    this.renderPasswordSecret("current");
+    this.renderPasswordSecret("next");
+    this.passwordcopycurrent.disabled = !state.currentPassword;
+    this.passwordcopynext.disabled = !state.nextPassword;
+    this.passwordrevealcurrent.disabled = !state.currentPassword;
+    this.passwordrevealnext.disabled = !state.nextPassword;
+    if (this.passwordcurrentperiod) {
+      this.passwordcurrentperiod.textContent = passwordPeriodLabel(
+        state.startsAt,
+        state.endsAt,
+        state.rotation,
+        "Current",
+      );
+    }
+    if (this.passwordnextperiod) {
+      const nextEndsAt = state.rotation === "fixed-days" ?
+        Number(state.nextStartsAt) + Number(state.days || 30) * 86400000 :
+        0;
+      this.passwordnextperiod.textContent = passwordPeriodLabel(
+        state.nextStartsAt,
+        nextEndsAt,
+        state.rotation,
+        "Next",
+      );
+    }
+    this.passwordperiod.textContent = state.endsAt ?
+      `Current access ends ${new Date(state.endsAt).toLocaleString()}.` :
+      "Password access is currently disabled.";
+    this.passwordstatus.textContent = "";
+    this.syncPasswordAccessControls();
+    this.queueModalVerticalFit();
+  }
+
+  async refreshPasswordAccess() {
+    if (!registry.socket || !this.passwordstatus) {
+      return;
+    }
+    this.passwordstatus.textContent = "Loading access settings…";
+    try {
+      const state = await registry.socket.makeCall(
+        "setconfig",
+        "getPasswordAccessAdminState",
+        null,
+      );
+      this.renderPasswordAccessState(state);
+    }
+    catch (ex) {
+      this.passwordstatus.textContent =
+        ex.message || "Could not load access settings.";
+    }
+  }
+
+  passwordAccessPayload() {
+    return {
+      enabled: !!this.passwordenabled.checked,
+      rotation: this.passwordrotation.value,
+      days: Number(this.passworddays.value) || 30,
+      prepareDays: Number(this.passwordprepare.value) || 0,
+      password: this.passwordcustom.value,
+    };
+  }
+
+  async applyPasswordAccess() {
+    this.passwordstatus.textContent = "Applying access settings…";
+    try {
+      const state = await registry.socket.makeCall(
+        "setconfig",
+        "configurePasswordAccess",
+        this.passwordAccessPayload(),
+      );
+      this.passwordcustom.value = "";
+      this.renderPasswordAccessState(state);
+      this.passwordstatus.textContent = state.enabled ?
+        "Password access is active. Share the current password privately." :
+        "Password access is disabled.";
+    }
+    catch (ex) {
+      this.passwordstatus.textContent = ex.message || String(ex);
+    }
+  }
+
+  async rotatePasswordAccess() {
+    this.passwordstatus.textContent = "Rotating password…";
+    try {
+      const state = await registry.socket.makeCall(
+        "setconfig",
+        "rotatePasswordAccess",
+        { password: this.passwordcustom.value },
+      );
+      this.passwordcustom.value = "";
+      this.renderPasswordAccessState(state);
+      this.passwordstatus.textContent =
+        "Password rotated. Existing visitor grants were revoked.";
+    }
+    catch (ex) {
+      this.passwordstatus.textContent = ex.message || String(ex);
+    }
   }
 
   setLinkHelp(open) {

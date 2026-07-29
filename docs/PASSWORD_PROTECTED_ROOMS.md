@@ -1,6 +1,7 @@
-# Password-protected rooms proposal
+# Password-protected rooms
 
-**Status:** Proposal — not shipped
+**Status:** Shared rotating community passwords are implemented for v1.4.5.
+Cohort and personal credentials remain an additive future phase.
 **Scope:** First-class shared and personal room access credentials
 
 ## Summary
@@ -25,7 +26,8 @@ The central community use case is a **rotating shared password**:
 - an emergency rotation immediately invalidates the compromised password and
   its grants.
 
-The design also supports several independently revocable credentials. A room
+The longer-term design also supports several independently revocable
+credentials. A future room
 may have one shared community password, separate passwords for contributor
 groups, or one personal credential per member. Every credential has its own
 label, schedule, limits, audit identity, and revocation state.
@@ -63,7 +65,7 @@ The first release is not:
 - an identity provider or single sign-on system;
 - a way to embed passwords in room URLs.
 
-Dicefiles should never send a raw room password to a third-party integration by
+Dicefiles never sends a raw room password to a third-party integration by
 default. Distribution remains an explicit owner action.
 
 ## Terminology

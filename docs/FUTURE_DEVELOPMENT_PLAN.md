@@ -9,11 +9,46 @@ Working backlog of product ideas that fit self-hosted room chat + ephemeral file
 
 Plugin docs: `core/plugins/`. Formerly `feature_creep_proposal.md`.
 
-**Last updated:** 2026-07-29 — v1.4.4 completes the trusted-host federation
-operator lifecycle (source-side rules, durable push invalidation, peer
-telemetry, guided key rotation, audit, and two-host smoke test) and makes room
-bots remotely manageable, bounded, observable, and optionally
-provider-authenticated for safe community commands.
+**Last updated:** 2026-07-29 — v1.4.5 development adds multi-volume storage
+placement with cross-worker reservations and first-class rotating community
+passwords. Manual storage movement plus cohort/personal password variants
+remain intentionally separate follow-up phases.
+
+---
+
+## v1.4.6 proposed release gate
+
+Detailed contract, security model, phases, and acceptance tests:
+[Multi-host remote imports](./MULTI_HOST_REMOTE_IMPORTS.md).
+
+- [ ] Versioned provider contract and safe outbound request layer
+- [ ] Mega.nz and Pixeldrain migrated without observable regressions
+- [ ] Native Gofile adapter for public, authenticated, recursive, and
+  password-protected folders
+- [ ] Fair multi-source scheduling, provider backoff, circuit breaking, and
+  structured run summaries
+- [ ] Provider status and source validation across Room Options, REST, and MCP
+- [ ] Disabled-by-default Plowshare bridge with MediaFire/4shared module
+  allowlisting and no shell-command surface
+- [ ] Upgrade, security, real-provider smoke, full-suite, production-build, and
+  stable-service acceptance
+
+---
+
+## v1.4.5 release gate
+
+- [x] Backward-compatible volume registry and durable `volumeId` metadata
+- [x] Balanced and primary/fallback placement with hard and absolute reserves
+- [x] Redis-backed resumable-upload reservations across workers and ingest paths
+- [x] Additive multi-volume health, operator API, and placement preview
+- [x] Room password gate before page, socket, file, archive, and comic access
+- [x] Monthly/fixed-period rotation, prepared-next credentials, owner reveal,
+  emergency rotation, and period-bound browser grants
+- [x] Invite-only composition and protected-source linking/federation denial
+- [x] Scoped REST and MCP administration with a separate secret-read scope
+- [x] Full test, production rebuild, stable service restart, dual health check,
+  and in-app browser acceptance
+- [x] Release documentation, version, tag, and GitHub release metadata
 
 ---
 
@@ -46,10 +81,10 @@ not silently expand the scope of v1.4.4.
 - [x] Multi-room linking (files mirror, one-way, badge, source ownership) — **v1.4.2**; source must **Allow Room Cross-Linking**
 - [x] Deep links with intent (`filter` / `sort` / `request` / file open) — room option — **v1.4.2**
 - [x] Resume strip + “what’s new since last visit” productization — **v1.4.3**
-- [ ] Multi-volume storage with balanced and threshold-based placement —
-  proposal: `docs/MULTI_VOLUME_STORAGE.md`
-- [ ] Password-protected rooms with rotating shared and personal credentials —
-  proposal: `docs/PASSWORD_PROTECTED_ROOMS.md`
+- [x] Multi-volume storage with balanced and threshold-based placement —
+  **v1.4.5 core**; manual drain/rebalance remains future work
+- [x] Password-protected rooms with rotating shared community credentials —
+  **v1.4.5 core**; cohort/personal credentials remain future work
 - [x] Request board polish — **v1.4.2** first-class board + filters + segmented toolbar pill
 - [x] Guest invite links (single-use / max X / max Y hours) — Room Options → **Invites** — **v1.4.2**
 - [x] Privacy-safe operator dashboard beyond `/healthz`, protected by a generated capability link by default — **v1.4.3**
@@ -57,8 +92,9 @@ not silently expand the scope of v1.4.4.
 - [x] Durable plugin sync skip-log (stable provider id with legacy name+size,
   Redis, configurable retention) — **v1.4.3**, strengthened in **v1.4.4**
 - [ ] Multi-host remote import — shared downloader registry plus Mega.nz and
-  Pixeldrain are shipped; Gofile and long-tail providers remain — design:
-  `core/plugins/REMOTE_HOST_IMPORTS.md`
+  Pixeldrain are shipped; Gofile and a hardened, disabled-by-default
+  Plowshare bridge for MediaFire/4shared are proposed for **v1.4.6** —
+  [implementation proposal](./MULTI_HOST_REMOTE_IMPORTS.md)
 - [x] Plugin import safety: per-file/per-run caps and cross-worker run leases
 - [x] Plugin dedupe upgrade: stable provider identity plus existing-room
   content-hash check
@@ -394,6 +430,7 @@ Room-level: destination still needs an explicit link row (no automatic mesh of a
 | **v1.4.2** | Multi-room linking, request board, deep links, guest invites, plugins/bots/Mega.nz, Room Options tabs, webhooks expansions, docs reorg |
 | **v1.4.3** | Since Your Last Visit continuity, protected status dashboard, Discord/Telegram release publishers, linked-room and guest-invite automation, 20-tool MCP |
 | **v1.4.4** | Complete trusted-host federation operations, 30-tool MCP, scoped room-bot automation, streamed multi-host imports, import caps/leases/run status, authenticated Discord/Telegram commands |
+| **v1.4.5** | Rotating shared room passwords, period-bound access grants, multi-volume placement and reservations, storage/access REST and 36-tool MCP administration |
 
 ### Still open (product)
 

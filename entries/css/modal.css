@@ -1312,6 +1312,180 @@
   margin: 0;
 }
 
+.modal-optsdlg .roomopts-access-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(12rem, 1.35fr)
+    minmax(7rem, 0.7fr)
+    minmax(7rem, 0.7fr);
+  gap: 0.65rem;
+  align-items: end;
+}
+
+.modal-optsdlg .roomopts-access-grid .roomopts-field > label {
+  min-height: 1.2em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.modal-optsdlg .roomopts-password-entry {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.modal-optsdlg .roomopts-password-entry > input {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-optsdlg .roomopts-password-entry-actions {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+}
+
+.modal-optsdlg .roomopts-password-entry-actions > button {
+  min-width: 4.4rem;
+}
+
+.modal-optsdlg .roomopts-password-table-wrap {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+}
+
+.modal-optsdlg .roomopts-password-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.modal-optsdlg .roomopts-password-table th,
+.modal-optsdlg .roomopts-password-table td {
+  padding: 0.5rem 0.6rem;
+  vertical-align: middle;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
+}
+
+.modal-optsdlg .roomopts-password-table thead th {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(225, 225, 225, 0.82);
+  font-size: 0.74rem;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.modal-optsdlg .roomopts-password-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.modal-optsdlg .roomopts-password-table th:first-child {
+  width: 9rem;
+}
+
+.modal-optsdlg .roomopts-password-table th:last-child {
+  width: 9.6rem;
+}
+
+.modal-optsdlg .roomopts-password-table tbody th {
+  overflow: hidden;
+  color: rgba(242, 242, 242, 0.92);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-optsdlg .roomopts-password-empty {
+  height: 3rem;
+  color: rgba(195, 195, 195, 0.72);
+  font-style: italic;
+  text-align: center !important;
+}
+
+.modal-optsdlg .roomopts-password-actions-heading {
+  text-align: center !important;
+}
+
+.modal-optsdlg .roomopts-password-value {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(245, 245, 245, 0.94);
+  font-family: monospace;
+  letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-optsdlg .roomopts-password-value.empty {
+  color: rgba(190, 190, 190, 0.7);
+  font-family: inherit;
+  font-style: italic;
+  letter-spacing: 0;
+}
+
+.modal-optsdlg .roomopts-password-row-actions {
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.modal-optsdlg .roomopts-password-row-actions > button {
+  min-width: 3.8rem;
+  padding-right: 0.7em;
+  padding-left: 0.7em;
+}
+
+@media (max-width: 560px) {
+  .modal-optsdlg .roomopts-access-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .modal-optsdlg .roomopts-access-grid .roomopts-field:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .modal-optsdlg .roomopts-password-entry {
+    flex-wrap: wrap;
+  }
+
+  .modal-optsdlg .roomopts-password-entry-actions {
+    margin-left: auto;
+  }
+
+  .modal-optsdlg .roomopts-password-table th:first-child {
+    width: 6.2rem;
+  }
+
+  .modal-optsdlg .roomopts-password-table th:last-child {
+    width: 5.2rem;
+  }
+
+  .modal-optsdlg .roomopts-password-table th,
+  .modal-optsdlg .roomopts-password-table td {
+    padding: 0.45rem;
+  }
+
+  .modal-optsdlg .roomopts-password-row-actions {
+    flex-direction: column;
+  }
+
+  .modal-optsdlg .roomopts-password-row-actions > button {
+    width: 100%;
+    min-width: 0;
+    padding: 0.32em 0.45em;
+  }
+}
+
 .modal-optsdlg .roomopts-section-count {
   margin-left: 0.45rem;
   color: rgba(150, 205, 225, 0.95);

@@ -2,7 +2,7 @@
 /**
  * scripts/mcp-server.js — Dicefiles MCP server wrapper
  *
- * Wraps the Dicefiles REST API as 30 MCP tools, allowing any MCP-compatible
+ * Wraps the Dicefiles REST API as 36 MCP tools, allowing any MCP-compatible
  * AI client (Claude Desktop, Cursor, Continue, OpenClaw, AutoGen) to interact with
  * a Dicefiles instance directly.
  *
@@ -789,6 +789,93 @@ function registerTools(srv) {
           `/rooms/${encodeURIComponent(roomid)}/plugins/` +
             `${encodeURIComponent(pluginId)}/sync-log`,
           { confirm },
+        ),
+      ),
+  );
+
+  srv.tool(
+    "get_storage_volumes",
+    "Inspect configured Dicefiles storage volumes, capacity, health, roles, " +
+      "and placement thresholds. Requires admin:read.",
+    {},
+    async () => wrap(await api("GET", "/admin/storage")),
+  );
+
+  srv.tool(
+    "preview_storage_placement",
+    "Preview which storage volume would receive a new physical blob without " +
+      "writing it. Requires admin:read.",
+    {
+      bytes: z.number().min(0).optional().describe("Expected blob size in bytes"),
+    },
+    async ({ bytes }) =>
+      wrap(await api("POST", "/admin/storage/placement-preview", { bytes })),
+  );
+
+  srv.tool(
+    "get_room_password_access",
+    "Read the privacy-safe password-access policy and current period for a room. " +
+      "Does not reveal passwords. Requires room-access:read.",
+    { roomid: z.string().describe("Room ID") },
+    async ({ roomid }) =>
+      wrap(
+        await api(
+          "GET",
+          `/rooms/${encodeURIComponent(roomid)}/password-access`,
+        ),
+      ),
+  );
+
+  srv.tool(
+    "configure_room_password_access",
+    "Enable, update, or disable rotating community-password access. " +
+      "Requires room-access:write.",
+    {
+      roomid: z.string().describe("Room ID"),
+      enabled: z.boolean(),
+      rotation: z.enum(["monthly", "fixed-days"]).optional(),
+      days: z.number().min(1).max(365).optional(),
+      prepareDays: z.number().min(0).max(31).optional(),
+      password: z.string().optional(),
+    },
+    async ({ roomid, ...body }) =>
+      wrap(
+        await api(
+          "PATCH",
+          `/rooms/${encodeURIComponent(roomid)}/password-access`,
+          body,
+        ),
+      ),
+  );
+
+  srv.tool(
+    "rotate_room_password",
+    "Immediately rotate a protected room password and revoke existing visitor " +
+      "grants. Requires room-access:write.",
+    {
+      roomid: z.string().describe("Room ID"),
+      password: z.string().optional(),
+    },
+    async ({ roomid, password }) =>
+      wrap(
+        await api(
+          "POST",
+          `/rooms/${encodeURIComponent(roomid)}/password-access/rotate`,
+          { password },
+        ),
+      ),
+  );
+
+  srv.tool(
+    "reveal_room_passwords",
+    "Reveal the current and prepared-next community passwords for secure owner " +
+      "distribution. Requires the separate room-access:secrets scope.",
+    { roomid: z.string().describe("Room ID") },
+    async ({ roomid }) =>
+      wrap(
+        await api(
+          "GET",
+          `/rooms/${encodeURIComponent(roomid)}/password-access/secrets`,
         ),
       ),
   );

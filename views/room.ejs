@@ -675,6 +675,15 @@
         <button
           type="button"
           class="roomopts-tab"
+          data-roomopts-tab="access"
+          role="tab"
+          aria-selected="false"
+        >
+          Access
+        </button>
+        <button
+          type="button"
+          class="roomopts-tab"
           data-roomopts-tab="linking"
           role="tab"
           aria-selected="false"
@@ -819,6 +828,143 @@
               max="168"
             />
           </div>
+        </div>
+      </div>
+
+      <div
+        class="roomopts-panel roomopts-panel-access hidden"
+        data-roomopts-panel="access"
+        role="tabpanel"
+      >
+        <div class="roomopts-section">
+          <div class="roomopts-section-title">Community password</div>
+          <p class="roomopts-hint">
+            Visitors enter a shared password once per period. Owners and
+            moderators always retain access.
+          </p>
+          <div class="roomopts-checks">
+            <label>
+              <input type="checkbox" name="passwordenabled" />
+              Require a room password
+            </label>
+          </div>
+          <div class="roomopts-access-grid">
+            <div class="roomopts-field">
+              <label for="roomopts-password-rotation">Rotation</label>
+              <select id="roomopts-password-rotation" name="passwordrotation">
+                <option value="monthly">Every calendar month</option>
+                <option value="fixed-days">Every number of days</option>
+              </select>
+            </div>
+            <div class="roomopts-field">
+              <label for="roomopts-password-days">Period (days)</label>
+              <input
+                id="roomopts-password-days"
+                name="passworddays"
+                type="number"
+                min="1"
+                max="365"
+                value="30"
+              />
+            </div>
+            <div class="roomopts-field">
+              <label for="roomopts-password-prepare">Prepare (days)</label>
+              <input
+                id="roomopts-password-prepare"
+                name="passwordprepare"
+                type="number"
+                min="0"
+                max="31"
+                value="7"
+              />
+            </div>
+          </div>
+          <div class="roomopts-field roomopts-password-custom">
+            <label for="roomopts-password-custom">Custom password</label>
+            <div class="roomopts-password-entry">
+              <input
+                id="roomopts-password-custom"
+                name="passwordcustom"
+                type="password"
+                autocomplete="new-password"
+                placeholder="Leave blank to generate a strong password"
+              />
+              <div class="roomopts-actions roomopts-password-entry-actions">
+                <button type="button" name="passwordapply">Apply</button>
+                <button type="button" name="passwordrotate">Rotate</button>
+              </div>
+            </div>
+          </div>
+          <p class="roomopts-hint" name="passwordstatus" role="status"></p>
+        </div>
+
+        <div class="roomopts-section">
+          <div class="roomopts-section-title">Passwords to share</div>
+          <div class="roomopts-password-table-wrap">
+            <table class="roomopts-password-table">
+              <thead>
+                <tr>
+                  <th scope="col">Period</th>
+                  <th scope="col">Password</th>
+                  <th scope="col" class="roomopts-password-actions-heading">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr name="passwordemptyrow">
+                  <td colspan="3" class="roomopts-password-empty">
+                    No passwords generated yet.
+                  </td>
+                </tr>
+                <tr name="passwordcurrentrow" class="hidden">
+                  <th scope="row" name="passwordcurrentperiod">Current</th>
+                  <td>
+                    <code
+                      id="roomopts-password-current"
+                      name="passwordcurrent"
+                      class="roomopts-password-value"
+                    >Enable password access to generate one</code>
+                  </td>
+                  <td>
+                    <div class="roomopts-actions roomopts-password-row-actions">
+                      <button type="button" name="passwordrevealcurrent">
+                        Reveal
+                      </button>
+                      <button type="button" name="passwordcopycurrent">
+                        Copy
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr name="passwordnextrow" class="hidden">
+                  <th scope="row" name="passwordnextperiod">Next</th>
+                  <td>
+                    <code
+                      id="roomopts-password-next"
+                      name="passwordnext"
+                      class="roomopts-password-value"
+                    >Generated near the end of the current period</code>
+                  </td>
+                  <td>
+                    <div class="roomopts-actions roomopts-password-row-actions">
+                      <button type="button" name="passwordrevealnext">
+                        Reveal
+                      </button>
+                      <button type="button" name="passwordcopynext">
+                        Copy
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="roomopts-hint" name="passwordperiod"></p>
+          <p class="roomopts-hint">
+            Passwords are only shown to room owners. Copy them into your
+            community’s private announcement channel.
+          </p>
         </div>
       </div>
 

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <%- include("head") %>
+  </head>
+  <body class="room-access-page">
+    <main class="room-access-shell">
+      <section class="room-access-card" aria-labelledby="room-access-title">
+        <div class="room-access-lock" aria-hidden="true">●</div>
+        <div>
+          <p class="room-access-eyebrow">Community access</p>
+          <h1 id="room-access-title">This room is password protected</h1>
+          <p class="room-access-copy">
+            Enter the current community password. Access lasts until the room’s
+            next password period.
+          </p>
+        </div>
+        <% if (error) { %>
+          <p class="room-access-error" role="alert"><%= error %></p>
+        <% } %>
+        <form method="post" action="/r/<%= roomid %>/access">
+          <input type="hidden" name="token" value="<%= token %>" />
+          <label for="room-password">Room password</label>
+          <div class="room-access-input-row">
+            <input
+              id="room-password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              autofocus
+              required
+            />
+            <button type="submit">Enter room</button>
+          </div>
+        </form>
+        <p class="room-access-note">
+          Room owners and service moderators do not need to enter this password.
+        </p>
+      </section>
+    </main>
+    <%- include("footer") %>
+  </body>
+</html>

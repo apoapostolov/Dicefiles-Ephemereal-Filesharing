@@ -515,7 +515,22 @@ Response:
   "now": "2026-02-18T17:00:00.000Z",
   "checks": {
     "redis": { "ok": true, "latencyMs": 2, "detail": "PONG" },
-    "storage": { "ok": true, "latencyMs": 1, "path": "uploads" }
+    "storage": {
+      "ok": true,
+      "latencyMs": 1,
+      "volumes": [{ "id": "uploads", "ok": true }]
+    },
+    "disk": {
+      "ok": true,
+      "freeBytes": 125000000000,
+      "totalBytes": 500000000000,
+      "volumes": [{
+        "id": "uploads",
+        "role": "primary",
+        "reservedBytes": 67108864,
+        "usedPercent": 75
+      }]
+    }
   },
   "metrics": {
     "uploadsCreated": 10,
@@ -1297,7 +1312,7 @@ including `meta.hints`, and can match against it programmatically.
 
 ## 19. MCP Server Integration
 
-> **Quick answer on MCP:** Dicefiles ships a 30-tool MCP server at
+> **Quick answer on MCP:** Dicefiles ships a 36-tool MCP server at
 > `scripts/mcp-server.js`. It translates typed MCP calls from Claude Desktop,
 > Cursor, OpenClaw, and other clients into the scoped REST API documented here.
 > See `MCP.md` for client setup, tool schemas, and security guidance.
@@ -1831,3 +1846,47 @@ Telegram accepts `/status`, `/requests`, `/request text`, `/say text`, and the
 equivalent `/dicefiles command text` form. Bot tokens, webhook secrets, and
 provider webhook URLs are redacted from room-plugin API reads. Discord's
 application public key is intentionally readable because it is not a credential.
+
+---
+
+## 25. Multi-volume Storage and Room Password Access (v1.4.5)
+
+### 25.1 Storage operator routes
+
+| Route | Scope | Purpose |
+| --- | --- | --- |
+| `GET /api/v1/admin/storage` | `admin:read` | Volume roles, paths, thresholds, capacity, reservations, and health |
+| `POST /api/v1/admin/storage/placement-preview` | `admin:read` | Preview placement for `{ "bytes": 1048576 }` without writing |
+
+These are operator routes. Public status telemetry receives only aggregate,
+privacy-safe volume state and never configured filesystem paths.
+
+Configure `storage.policy` as `balanced` or `primary-then-fallback` and provide
+stable volume objects under `storage.volumes`. Existing records without a
+`volumeId` continue to resolve through the legacy `uploads` directory. Volume
+ids are durable metadata; do not rename or remove one before a future explicit
+drain/migration operation has moved its files.
+
+### 25.2 Protected-room routes
+
+| Route | Scope | Purpose |
+| --- | --- | --- |
+| `GET /api/v1/rooms/:id/password-access` | `room-access:read` | Read policy and period boundaries without passwords |
+| `PATCH /api/v1/rooms/:id/password-access` | `room-access:write` | Enable/update/disable `{enabled, rotation, days?, prepareDays?, password?}` |
+| `POST /api/v1/rooms/:id/password-access/rotate` | `room-access:write` | Emergency rotation with optional `{password}` |
+| `GET /api/v1/rooms/:id/password-access/secrets` | `room-access:secrets` | Reveal current and prepared-next owner credentials |
+
+`rotation` is `monthly` (UTC calendar boundary) or `fixed-days`. Omitting
+`password` generates a strong credential. Raw credentials are returned only by
+the dedicated secrets endpoint and by the privileged Room Options socket RPC;
+ordinary policy reads and update responses redact them.
+
+Browser entry uses `POST /r/:roomid/access`, a CSRF-protected form that issues
+an HTTP-only, SameSite Strict, browser-bound grant. Invite-only and password
+checks compose with AND. Protected rooms are not eligible as local-link or
+federation sources.
+
+Ordinary automation content scopes do not bypass this boundary. A trusted room
+service must also receive the explicit `room-access:bypass` scope before it may
+list, post, upload, or mutate protected-room content. Keep bypass off
+general-purpose and monitoring keys.
