@@ -1,3 +1,9 @@
+<div align="center">
+  <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing">
+    <img src="images/hero.png" width="100%"
+      alt="Dicefiles: ephemeral file sharing for hobby communities with books, comics, board games, and live chat"></a>
+</div>
+
 # Dicefiles - Ephemereal Filesharing for Hobby Communities
 
 ![License](https://img.shields.io/badge/license-MIT-green)
