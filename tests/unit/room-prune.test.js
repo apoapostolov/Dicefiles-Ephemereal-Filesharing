@@ -9,7 +9,7 @@
 
 // ── mock lib/broker ──────────────────────────────────────────────────────────
 // Must be declared before requiring lib/room/index.js
-const mockKeys = jest.fn();
+const mockScan = jest.fn();
 const mockGet = jest.fn();
 const mockDel = jest.fn();
 const mockExists = jest.fn();
@@ -19,7 +19,7 @@ jest.mock("../../lib/broker", () => {
   const emitter = { on: jest.fn(), off: jest.fn(), emit: jest.fn() };
   return Object.assign(emitter, {
     getMethods: () => ({
-      keys: mockKeys,
+      scan: mockScan,
       get: mockGet,
       del: mockDel,
       exists: mockExists,
@@ -146,7 +146,7 @@ describe("Room.prune()", () => {
 
   test("returns 0 and does nothing when roomPruning is disabled", async () => {
     configValues.roomPruning = false;
-    mockKeys.mockResolvedValue(["rooms:abc123"]);
+    mockScan.mockResolvedValue(["0", ["rooms:abc123"]]);
 
     const pruned = await Room.prune();
 
@@ -155,7 +155,7 @@ describe("Room.prune()", () => {
   });
 
   test("returns 0 when all rooms are recently active (lastActivity in pconfig)", async () => {
-    mockKeys.mockResolvedValue(["rooms:activeroom"]);
+    mockScan.mockResolvedValue(["0", ["rooms:activeroom"]]);
     // lastActivity is NOW — well within the cutoff window
     mockPconfigGet.mockImplementation((k) =>
       k === "lastActivity" ? Date.now() : undefined,
@@ -168,7 +168,7 @@ describe("Room.prune()", () => {
   });
 
   test("prunes a room whose lastActivity is older than roomPruningDays", async () => {
-    mockKeys.mockResolvedValue(["rooms:oldroom"]);
+    mockScan.mockResolvedValue(["0", ["rooms:oldroom"]]);
     // lastActivity was 30 days ago — exceeds default 21-day cutoff
     const staleTime = Date.now() - 30 * DAY;
     mockPconfigGet.mockImplementation((k) =>
@@ -187,7 +187,7 @@ describe("Room.prune()", () => {
   });
 
   test("falls back to room creation timestamp when pconfig has no lastActivity", async () => {
-    mockKeys.mockResolvedValue(["rooms:newishroom"]);
+    mockScan.mockResolvedValue(["0", ["rooms:newishroom"]]);
     // pconfig has no lastActivity entry
     mockPconfigGet.mockReturnValue(undefined);
     // creation timestamp stored as Redis key value — 30 days ago
@@ -207,7 +207,7 @@ describe("Room.prune()", () => {
   });
 
   test("leaves a room alone when neither lastActivity nor creation timestamp can be read", async () => {
-    mockKeys.mockResolvedValue(["rooms:unknownroom"]);
+    mockScan.mockResolvedValue(["0", ["rooms:unknownroom"]]);
     mockPconfigGet.mockReturnValue(undefined);
     // Redis get returns null — no creation time stored
     mockGet.mockResolvedValue(null);
@@ -219,7 +219,7 @@ describe("Room.prune()", () => {
   });
 
   test("skips a room if pconfig load throws, continues with others", async () => {
-    mockKeys.mockResolvedValue(["rooms:broken", "rooms:stale"]);
+    mockScan.mockResolvedValue(["0", ["rooms:broken", "rooms:stale"]]);
     const staleTime = Date.now() - 30 * DAY;
 
     // First call (broken): throw during pconfig construction → the mock's
@@ -239,7 +239,7 @@ describe("Room.prune()", () => {
 
   test("respects custom roomPruningDays (7 days)", async () => {
     configValues.roomPruningDays = 7;
-    mockKeys.mockResolvedValue(["rooms:room10days"]);
+    mockScan.mockResolvedValue(["0", ["rooms:room10days"]]);
     // 10 days ago — older than 7-day cutoff
     mockPconfigGet.mockImplementation((k) =>
       k === "lastActivity" ? Date.now() - 10 * DAY : undefined,
@@ -288,7 +288,7 @@ describe("Room.get()", () => {
 describe("Room.touchActivity()", () => {
   test("writes lastActivity to pconfig when no prior value exists", async () => {
     mockExists.mockResolvedValue(1);
-    mockKeys.mockResolvedValue([]);
+    mockScan.mockResolvedValue(["0", []]);
     // Construct a room by using the internal constructor path is complex
     // due to LOADING; test the method logic directly via a minimal stub.
     const pconfig = {
