@@ -22,6 +22,7 @@ Plugin system docs live under **`../core/plugins/`** (design + operator guides).
 | [AI_AUTOMATION.md](./AI_AUTOMATION.md) | AI agent automation use cases vs REST/MCP |
 | [REMOTE_HOST_LIBRARY_RESEARCH.md](./REMOTE_HOST_LIBRARY_RESEARCH.md) | Research: embeddable multi-host download libs (not a standalone product) |
 | [../dev/README.md](../dev/README.md) | AI/human development workflow, generated files, review, and release checks |
+| [../skills/dicefiles-ops/SKILL.md](../skills/dicefiles-ops/SKILL.md) | Operator skill for AI agents: install, config, service, upgrade, backup, MCP wiring, room bots, diagnostics |
 | [../SECURITY.md](../SECURITY.md) | Private vulnerability reporting and repository security policy |
 
 ## Archived (historical only)

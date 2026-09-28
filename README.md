@@ -130,6 +130,7 @@ access. Permissions are split into scopes, rate limited, and audited.
 - [MCP setup and 36-tool reference](./MCP.md)
 - [Trusted-host federation](./docs/FEDERATION.md)
 - [Plugin development](./core/plugins/DEVELOPING_PLUGINS.md)
+- [Operations skill for AI agents](./skills/dicefiles-ops/SKILL.md)
 - [Security policy](./SECURITY.md)
 
 The protected operator dashboard reports capacity, uptime, traffic, requests,
