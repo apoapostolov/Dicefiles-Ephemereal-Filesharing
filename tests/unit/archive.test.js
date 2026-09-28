@@ -253,6 +253,8 @@ describe("extractEntry path-traversal security", () => {
     ["path with control char", "foo\x00bar"],
     ["path with null byte", "\x00"],
     ["path with double-dot inside", "sub/../../escape"],
+    ["path that looks like a long option", "--to-command=touch /tmp/pwned"],
+    ["path that looks like a short option", "-Ttmp"],
   ];
 
   test.each(rejected)("rejects %s", async (_, badPath) => {
