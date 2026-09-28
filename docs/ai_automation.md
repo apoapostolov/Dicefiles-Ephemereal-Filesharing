@@ -363,9 +363,10 @@ automation API events, newest first. See API.md §14.2.
 See [`MCP.md`](../MCP.md) for the complete design and implementation guide.
 
 In brief: Dicefiles keeps HTTP REST as the core contract and ships
-`scripts/mcp-server.js` using `@modelcontextprotocol/sdk` to translate 20 typed MCP
-tools into API calls. Clients such as Claude Desktop, Cursor, and OpenClaw connect
-via stdio locally or Streamable HTTP remotely.
+`scripts/mcp-server.js` using `@modelcontextprotocol/server` 2.x to translate 36
+typed MCP tools into API calls. Clients such as Claude Desktop, Cursor, and
+OpenClaw connect via stdio locally or via stateless Streamable HTTP remotely,
+where MCP 2026-07-28 has no session handshake at all.
 
 The curated tool set includes:
 `list_files`, `get_file`, `get_room_snapshot`, `upload_file_from_urls`,

@@ -12,6 +12,10 @@
  * Usage (HTTP — remote orchestrators):
  *   MCP_TRANSPORT=http MCP_PORT=3001 node scripts/mcp-server.js
  *
+ * The HTTP transport speaks the stateless 2026-07-28 protocol core: no
+ * `initialize` handshake, no `Mcp-Session-Id`, and a fresh server instance per
+ * request, so it scales horizontally behind a plain load balancer.
+ *
  * Required env vars:
  *   DICEFILES_BASE_URL   Base URL of your Dicefiles instance (default: http://localhost:10005)
  *   DICEFILES_API_KEY    Automation API key (minimum scope: files:read)
@@ -19,19 +23,29 @@
  * Optional env vars:
  *   MCP_TRANSPORT        "stdio" (default) | "http"
  *   MCP_PORT             HTTP port when MCP_TRANSPORT=http (default: 3001)
+ *   MCP_HOST             HTTP bind address when MCP_TRANSPORT=http (default: 127.0.0.1)
+ *   MCP_API_TIMEOUT_MS   Per-request Dicefiles API timeout (default: 30000)
  *
  * Dependencies:
- *   @modelcontextprotocol/sdk  ≥1.6.0
- *   zod                        ^3
+ *   @modelcontextprotocol/server  ≥2.1.0  (2026-07-28 stateless protocol core)
+ *   @modelcontextprotocol/node    ≥2.1.0  (node:http adapter, Host/Origin guards)
+ *   zod                           ^4
  *
- * Install: npm install @modelcontextprotocol/sdk zod
+ * Install: yarn add @modelcontextprotocol/server @modelcontextprotocol/node zod
  */
 
-const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
 const {
-  StdioServerTransport,
-} = require("@modelcontextprotocol/sdk/server/stdio.js");
-const { z } = require("zod");
+  McpServer,
+  createMcpHandler,
+} = require("@modelcontextprotocol/server");
+const { StdioServerTransport } = require("@modelcontextprotocol/server/stdio");
+const {
+  toNodeHandler,
+  localhostHostValidation,
+  localhostOriginValidation,
+} = require("@modelcontextprotocol/node");
+const { z } = require("zod/v4");
+const { version: DICEFILES_VERSION } = require("../package.json");
 
 // ── Configuration ──────────────────────────────────────────────────────────
 
@@ -39,6 +53,9 @@ const BASE = (
   process.env.DICEFILES_BASE_URL || "http://localhost:10005"
 ).replace(/\/+$/, "");
 const KEY = process.env.DICEFILES_API_KEY || "";
+
+/** Network timeout for every outbound Dicefiles API call, in ms. */
+const API_TIMEOUT_MS = Number(process.env.MCP_API_TIMEOUT_MS) || 30000;
 
 if (!KEY) {
   console.error(
@@ -66,35 +83,166 @@ async function api(method, path, body) {
   const init = {
     method,
     headers: AUTH_HEADERS,
+    signal: AbortSignal.timeout(API_TIMEOUT_MS),
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   };
-  const res = await fetch(url, init);
-  return res.json().catch(() => ({ ok: false, err: `HTTP ${res.status}` }));
+  let res;
+  try {
+    res = await fetch(url, init);
+  }
+  catch (err) {
+    return { ok: false, err: `${BASE} unreachable: ${err.message}` };
+  }
+  const data = await res.json().catch(() => null);
+  if (data === null) {
+    return { ok: false, err: `HTTP ${res.status} with a non-JSON body` };
+  }
+  if (res.status >= 400 && data.ok !== false) {
+    return { ok: false, err: data.err || `HTTP ${res.status}`, status: res.status };
+  }
+  return data;
 }
 
 /** Wrap any JSON response as an MCP text content block. */
 function wrap(data) {
-  return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+  const failed = !data || data.ok === false;
+  return {
+    content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+    ...(failed ? { isError: true } : {}),
+  };
+}
+
+// ── Tool metadata ───────────────────────────────────────────────────────────
+
+/**
+ * Per-tool behaviour hints. `readOnlyHint` lets a host auto-approve lookups;
+ * `destructiveHint` forces a confirmation before anything that removes or
+ * rotates state. Keep this table exhaustive: a tool missing from it gets the
+ * conservative default, which asks the user to confirm.
+ */
+const TOOL_META = {
+  // Reads.
+  server_health: { title: "Server health", readOnly: true },
+  list_files: { title: "List files and requests", readOnly: true },
+  get_file: { title: "Get file metadata", readOnly: true },
+  get_room_snapshot: { title: "Get room snapshot", readOnly: true },
+  list_subscriptions: { title: "List subscriptions", readOnly: true },
+  archive_list_contents: { title: "List archive contents", readOnly: true },
+  list_room_links: { title: "List room links", readOnly: true },
+  list_guest_invites: { title: "List guest invites", readOnly: true },
+  list_federated_room_links: {
+    title: "List federated room links",
+    readOnly: true,
+  },
+  list_room_plugins: { title: "List room plugins", readOnly: true },
+  inspect_room_plugin_sync_memory: {
+    title: "Inspect plugin sync memory",
+    readOnly: true,
+  },
+  get_storage_volumes: { title: "Get storage volumes", readOnly: true },
+  preview_storage_placement: {
+    title: "Preview storage placement",
+    readOnly: true,
+  },
+  get_room_password_access: { title: "Get room password access", readOnly: true },
+  reveal_room_passwords: { title: "Reveal room passwords", readOnly: true },
+
+  // Writes that add or change state.
+  update_file_metadata: { title: "Update file metadata" },
+  upload_file_from_urls: { title: "Upload files from URLs" },
+  create_request: { title: "Create a request", idempotent: false },
+  claim_request: { title: "Claim a request", idempotent: false },
+  release_request: { title: "Release a request", idempotent: false },
+  post_room_chat: { title: "Post a room chat message" },
+  save_subscription: { title: "Save a subscription" },
+  download_file: { title: "Download a file" },
+  create_room_link: { title: "Create a room link" },
+  create_guest_invite: { title: "Create a guest invite" },
+  create_federated_room_link: { title: "Create a federated room link" },
+  set_room_federation_policy: { title: "Set room federation policy" },
+  configure_room_plugin: { title: "Configure a room plugin" },
+  run_room_plugin: { title: "Run a room plugin" },
+  configure_room_password_access: { title: "Configure room password access" },
+  rotate_room_password: {
+    title: "Rotate room password",
+    destructive: true,
+  },
+
+  // Removals.
+  remove_room_link: { title: "Remove a room link", destructive: true },
+  revoke_guest_invite: { title: "Revoke a guest invite", destructive: true },
+  remove_federated_room_link: {
+    title: "Remove a federated room link",
+    destructive: true,
+  },
+  remove_room_plugin: { title: "Remove a room plugin", destructive: true },
+  clear_room_plugin_sync_memory: {
+    title: "Clear plugin sync memory",
+    destructive: true,
+  },
+};
+
+/**
+ * Register one tool on the server. Thin wrapper so the 36 registrations below
+ * keep the v1 call shape while the annotations live in one reviewable table.
+ * @param {McpServer|{registerTool:Function}} srv
+ * @param {string} name
+ * @param {string} description
+ * @param {object} [inputSchema] Zod object schema, omitted for no-arg tools
+ * @param {Function} handler
+ */
+function defineTool(srv, name, description, inputSchema, handler) {
+  const meta = TOOL_META[name] || {};
+  const config = {
+    title: meta.title || name,
+    description,
+    annotations: {
+      readOnlyHint: meta.readOnly === true,
+      destructiveHint: meta.destructive === true,
+      idempotentHint: meta.idempotent !== false,
+      openWorldHint: true,
+    },
+    ...(inputSchema && Object.keys(inputSchema).length
+      ? { inputSchema }
+      : {}),
+  };
+  return srv.registerTool(name, config, handler);
 }
 
 // ── Tool registration ──────────────────────────────────────────────────────
 
-const server = new McpServer({ name: "dicefiles", version: "1.4.4" });
+/**
+ * Build a fresh server instance with every Dicefiles tool registered.
+ *
+ * The 2026-07-28 protocol core is stateless: the HTTP handler calls this
+ * factory once per request, so no instance state is shared between callers.
+ *
+ * @returns {McpServer}
+ */
+function createServer() {
+  const srv = new McpServer({ name: "dicefiles", version: DICEFILES_VERSION });
+  registerTools(srv);
+  return srv;
+}
 
 /**
  * Register all Dicefiles tools on an McpServer (or mock server for tests).
- * @param {McpServer|{tool:Function}} srv
+ * @param {McpServer|{registerTool:Function}} srv
  */
 function registerTools(srv) {
   // ── 1. server_health ───────────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "server_health",
     "Check Dicefiles server health and retrieve metrics counters " +
       "(uploads, downloads, preview failures, uptime). " +
       "Use this as a pre-flight check before long automation runs.",
     {},
     async () => {
-      const res = await fetch(`${BASE}/healthz`);
+      const res = await fetch(`${BASE}/healthz`, {
+        signal: AbortSignal.timeout(API_TIMEOUT_MS),
+      }).catch(err => {
+        throw new Error(`healthz unreachable: ${err.message}`);
+      });
       const data = await res
         .json()
         .catch(() => ({ ok: false, err: "healthz unreachable" }));
@@ -103,7 +251,7 @@ function registerTools(srv) {
   );
 
   // ── 2. list_files ──────────────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "list_files",
     "List files and/or requests in a Dicefiles room. " +
       "Use type=requests to see open requests, type=new with since=<ms> for incremental polling, " +
@@ -140,7 +288,7 @@ function registerTools(srv) {
   );
 
   // ── 3. get_file ────────────────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "get_file",
     "Fetch full metadata (tags, meta fields, asset URLs) for a single file by key. " +
       "Use this to check whether ai_caption or author tags are already populated before " +
@@ -153,7 +301,7 @@ function registerTools(srv) {
   );
 
   // ── 4. get_room_snapshot ───────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "get_room_snapshot",
     "Get a one-call aggregate summary of a room: file count, total bytes, " +
       "open request count, unique uploaders, and oldest expiry timestamp. " +
@@ -166,7 +314,7 @@ function registerTools(srv) {
   );
 
   // ── 5. update_file_metadata ────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "update_file_metadata",
     "Write AI-enriched metadata back to a file: captions, OCR text previews, " +
       "and structured tags (author, genre, series, language). " +
@@ -197,7 +345,7 @@ function registerTools(srv) {
   );
 
   // ── 6. upload_file_from_urls ───────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "upload_file_from_urls",
     "Fetch one or more URLs server-side and store them as uploads in a room. " +
       "The server does the downloading — the agent doesn't stream bytes. " +
@@ -221,7 +369,7 @@ function registerTools(srv) {
   );
 
   // ── 7. create_request ─────────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "create_request",
     "Create a file request in a room. Include structured hints to help " +
       "automation agents match and fulfil the request programmatically. " +
@@ -252,7 +400,7 @@ function registerTools(srv) {
   );
 
   // ── 8. claim_request ──────────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "claim_request",
     "Claim an open request to signal this agent is working on it. " +
       "Returns 409 if already claimed by another agent. " +
@@ -278,7 +426,7 @@ function registerTools(srv) {
   );
 
   // ── 9. release_request ────────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "release_request",
     "Release a previously claimed request back to open state immediately. " +
       "Use this when the agent determines it cannot fulfil the request, " +
@@ -291,7 +439,7 @@ function registerTools(srv) {
   );
 
   // ── 10. post_room_chat ────────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "post_room_chat",
     "Post a message into a room's chat channel from the agent. " +
       "Use this to provide real-time progress updates so users can see what the agent is doing. " +
@@ -316,7 +464,7 @@ function registerTools(srv) {
   );
 
   // ── 11. download_file ─────────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "download_file",
     "Download a file and return its content as a base64 string. " +
       "Suitable for documents up to a few MB. For larger files, use get_file to " +
@@ -364,7 +512,7 @@ function registerTools(srv) {
   );
 
   // ── 12. save_subscription ────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "save_subscription",
     "Save a named server-side filter preset so the agent remembers what to watch for across restarts. " +
       "Retrieve with list_subscriptions after startup to reconstruct your polling filters. " +
@@ -384,7 +532,7 @@ function registerTools(srv) {
   );
 
   // ── 13. list_subscriptions ────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "list_subscriptions",
     "Retrieve all saved filter subscriptions for this API key. " +
       "Call this at agent startup to restore your previous polling configuration. " +
@@ -394,7 +542,7 @@ function registerTools(srv) {
   );
 
   // ── 14. archive_list_contents ─────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "archive_list_contents",
     "List every entry inside a ZIP, RAR, 7z, or TAR archive stored in Dicefiles. " +
       "Returns name, size, compressed size, and path for every file in the archive. " +
@@ -410,7 +558,7 @@ function registerTools(srv) {
   );
 
   // ── 15. list_room_links ─────────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "list_room_links",
     "List a destination room's linked source rooms, rules, visibility, " +
       "private-source consent, and live status. Requires room-links:read.",
@@ -427,7 +575,7 @@ function registerTools(srv) {
   );
 
   // ── 16. create_room_link ────────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "create_room_link",
     "Add a source room to a destination room's linked-file view. " +
       "The source must allow cross-linking; private sources require bilateral consent. " +
@@ -482,7 +630,7 @@ function registerTools(srv) {
   );
 
   // ── 17. remove_room_link ────────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "remove_room_link",
     "Remove one linked source room from a destination room. " +
       "Requires room-links:write.",
@@ -502,7 +650,7 @@ function registerTools(srv) {
   );
 
   // ── 18. list_guest_invites ──────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "list_guest_invites",
     "List active guest invite links and recent privacy-safe invite activity " +
       "for a room. Responses include full active tokens; treat them as secrets. " +
@@ -520,7 +668,7 @@ function registerTools(srv) {
   );
 
   // ── 19. create_guest_invite ─────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "create_guest_invite",
     "Mint a guest invite with optional use and age limits. " +
       "The returned token is secret. Requires guest-invites:write.",
@@ -542,7 +690,7 @@ function registerTools(srv) {
   );
 
   // ── 20. revoke_guest_invite ─────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "revoke_guest_invite",
     "Revoke one active guest invite by its full token. " +
       "Requires guest-invites:write.",
@@ -562,7 +710,7 @@ function registerTools(srv) {
   );
 
   // ── 21. list_federated_room_links ──────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "list_federated_room_links",
     "List a room's trusted cross-host Dicefiles links and live peer status. " +
       "Requires federation-links:read.",
@@ -579,7 +727,7 @@ function registerTools(srv) {
   );
 
   // ── 22. create_federated_room_link ─────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "create_federated_room_link",
     "Link a room from an operator-pinned Dicefiles peer. The source peer and " +
       "source room must independently allow access. Requires federation-links:write.",
@@ -629,7 +777,7 @@ function registerTools(srv) {
   );
 
   // ── 23. remove_federated_room_link ─────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "remove_federated_room_link",
     "Remove one peer-room link from a destination room. " +
       "Requires federation-links:write.",
@@ -649,7 +797,7 @@ function registerTools(srv) {
   );
 
   // ── 24. set_room_federation_policy ─────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "set_room_federation_policy",
     "Opt a source room into or out of trusted-peer federation. Private rooms " +
       "need both switches. Requires federation-links:write.",
@@ -669,7 +817,7 @@ function registerTools(srv) {
   );
 
   // ── 25. list_room_plugins ─────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "list_room_plugins",
     "List the bots invited to a room and the installed bot catalog. " +
       "Stored credentials are redacted. Requires room-plugins:read.",
@@ -686,7 +834,7 @@ function registerTools(srv) {
   );
 
   // ── 26. configure_room_plugin ─────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "configure_room_plugin",
     "Invite or update one installed room bot. Existing secret settings are " +
       "preserved when omitted. Requires room-plugins:write.",
@@ -712,7 +860,7 @@ function registerTools(srv) {
   );
 
   // ── 27. remove_room_plugin ────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "remove_room_plugin",
     "Remove one invited bot from a room. Requires room-plugins:write.",
     {
@@ -730,7 +878,7 @@ function registerTools(srv) {
   );
 
   // ── 28. run_room_plugin ───────────────────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "run_room_plugin",
     "Run one invited room bot immediately and return its bounded result. " +
       "Requires room-plugins:run.",
@@ -749,7 +897,7 @@ function registerTools(srv) {
   );
 
   // ── 29. inspect_room_plugin_sync_memory ───────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "inspect_room_plugin_sync_memory",
     "Inspect the bounded import-memory log for one invited room plugin, " +
       "including its most recent run. Requires room-plugins:read.",
@@ -770,7 +918,7 @@ function registerTools(srv) {
   );
 
   // ── 30. clear_room_plugin_sync_memory ─────────────────────────────────
-  srv.tool(
+  defineTool(srv,
     "clear_room_plugin_sync_memory",
     "Forget which remote files one room plugin has imported. This can cause " +
       "old remote files to be considered again. Requires room-plugins:write " +
@@ -793,7 +941,7 @@ function registerTools(srv) {
       ),
   );
 
-  srv.tool(
+  defineTool(srv,
     "get_storage_volumes",
     "Inspect configured Dicefiles storage volumes, capacity, health, roles, " +
       "and placement thresholds. Requires admin:read.",
@@ -801,7 +949,7 @@ function registerTools(srv) {
     async () => wrap(await api("GET", "/admin/storage")),
   );
 
-  srv.tool(
+  defineTool(srv,
     "preview_storage_placement",
     "Preview which storage volume would receive a new physical blob without " +
       "writing it. Requires admin:read.",
@@ -812,7 +960,7 @@ function registerTools(srv) {
       wrap(await api("POST", "/admin/storage/placement-preview", { bytes })),
   );
 
-  srv.tool(
+  defineTool(srv,
     "get_room_password_access",
     "Read the privacy-safe password-access policy and current period for a room. " +
       "Does not reveal passwords. Requires room-access:read.",
@@ -826,7 +974,7 @@ function registerTools(srv) {
       ),
   );
 
-  srv.tool(
+  defineTool(srv,
     "configure_room_password_access",
     "Enable, update, or disable rotating community-password access. " +
       "Requires room-access:write.",
@@ -848,7 +996,7 @@ function registerTools(srv) {
       ),
   );
 
-  srv.tool(
+  defineTool(srv,
     "rotate_room_password",
     "Immediately rotate a protected room password and revoke existing visitor " +
       "grants. Requires room-access:write.",
@@ -866,7 +1014,7 @@ function registerTools(srv) {
       ),
   );
 
-  srv.tool(
+  defineTool(srv,
     "reveal_room_passwords",
     "Reveal the current and prepared-next community passwords for secure owner " +
       "distribution. Requires the separate room-access:secrets scope.",
@@ -881,37 +1029,35 @@ function registerTools(srv) {
   );
 }
 
-// Register all tools on the server
-registerTools(server);
-
 // ── Transport ──────────────────────────────────────────────────────────────
 
+/**
+ * Stateless Streamable HTTP transport (MCP 2026-07-28).
+ *
+ * `createMcpHandler` takes a factory and runs it once per request, so nothing
+ * lives on the wire between calls: no `Mcp-Session-Id`, no `initialize`
+ * handshake, and any request can land on any instance behind a load balancer.
+ *
+ * The handler validates no `Host`, no `Origin`, and no token itself, so the
+ * guards below run in front of it. On a loopback bind the `Host` check is what
+ * stops DNS rebinding, where a hostile page points its own domain at
+ * 127.0.0.1 and the browser treats the local server as same-origin.
+ */
 async function startHttpTransport() {
-  let StreamableHTTPServerTransport;
-  try {
-    ({
-      StreamableHTTPServerTransport,
-    } = require("@modelcontextprotocol/sdk/server/streamableHttp.js"));
-  } catch {
-    throw new Error(
-      "HTTP transport requires @modelcontextprotocol/sdk ≥1.5.0. " +
-        "Run: npm install @modelcontextprotocol/sdk",
-    );
-  }
   const http = require("http");
   const port = Number(process.env.MCP_PORT) || 3001;
-  const transport = new StreamableHTTPServerTransport({
-    sessionIdGenerator: undefined,
-  });
+  const host = process.env.MCP_HOST || "127.0.0.1";
+  const handler = createMcpHandler(() => createServer());
+  const nodeHandler = toNodeHandler(handler);
+  const validateHost = localhostHostValidation();
+  const validateOrigin = localhostOriginValidation();
+
   const httpServer = http.createServer(async (req, res) => {
-    if (
-      (req.method === "POST" ||
-        req.method === "GET" ||
-        req.method === "DELETE") &&
-      req.url === "/mcp"
-    ) {
-      await transport.handleRequest(req, res);
-    } else {
+    if (!validateHost(req, res) || !validateOrigin(req, res)) {
+      return;
+    }
+    const pathname = new URL(req.url, "http://localhost").pathname;
+    if (pathname !== "/mcp") {
       res.writeHead(req.method === "GET" ? 200 : 404, {
         "Content-Type": "text/plain",
       });
@@ -920,28 +1066,49 @@ async function startHttpTransport() {
           ? "Dicefiles MCP server running. POST /mcp for JSON-RPC.\n"
           : "Not Found",
       );
+      return;
     }
+    await nodeHandler(req, res);
   });
-  await new Promise((resolve, reject) =>
-    httpServer.listen(port, (err) => (err ? reject(err) : resolve())),
-  );
+
+  await new Promise((resolve, reject) => {
+    httpServer.once("error", reject);
+    httpServer.listen(port, host, resolve);
+  });
+
+  const shutdown = async () => {
+    await handler.close();
+    httpServer.close();
+    process.exit(0);
+  };
+  process.once("SIGINT", shutdown);
+  process.once("SIGTERM", shutdown);
+
   console.error(
-    `[dicefiles-mcp] HTTP transport listening at http://0.0.0.0:${port}/mcp`,
+    `[dicefiles-mcp] Stateless HTTP transport at http://${host}:${port}/mcp ` +
+      "(protocol 2026-07-28, no sessions)",
   );
-  return transport;
+  if (!["127.0.0.1", "localhost", "::1"].includes(host)) {
+    console.error(
+      "[dicefiles-mcp] WARNING: binding beyond loopback. Host validation then " +
+        "only allows the configured host, and every caller that reaches this " +
+        "port can spend the configured Dicefiles API key.",
+    );
+  }
+  return handler;
 }
 
 async function main() {
-  const transport =
-    process.env.MCP_TRANSPORT === "http"
-      ? await startHttpTransport()
-      : new StdioServerTransport();
-  await server.connect(transport);
-  if (process.env.MCP_TRANSPORT !== "http") {
-    console.error(
-      "[dicefiles-mcp] Stdio transport ready. Waiting for MCP client...",
-    );
+  if (process.env.MCP_TRANSPORT === "http") {
+    // createMcpHandler owns the per-request server instances.
+    await startHttpTransport();
+    return;
   }
+  const server = createServer();
+  await server.connect(new StdioServerTransport());
+  console.error(
+    "[dicefiles-mcp] Stdio transport ready. Waiting for MCP client...",
+  );
 }
 
 // Allow require()-ing this module without auto-starting (for tests)
@@ -952,4 +1119,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { registerTools, api };
+module.exports = { registerTools, createServer, api };

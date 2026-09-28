@@ -30,7 +30,8 @@
   "dependencies": {
     "@fedify/fedify": "^2.3.4",
     "@lingo-reader/mobi-parser": "^0.4.6",
-    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@modelcontextprotocol/node": "^2.1.0",
+    "@modelcontextprotocol/server": "^2.1.0",
     "argon2": "^0.45.1",
     "body-parser": "^1.20.3",
     "compression": "^1.7.5",
@@ -69,7 +70,7 @@
     "webpack-cli": "^5.1.4",
     "xregexp": "^5.1.1",
     "yauzl": "^2.10.0",
-    "zod": "^3.24.0"
+    "zod": "^4.2.0"
   },
   "optionalDependencies": {
     "gm": "^1.25.1",

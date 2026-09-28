@@ -2,7 +2,7 @@
 
 This reference is written for developers who want to connect AI clients (Claude Desktop,
 Cursor, Continue, OpenClaw, AutoGen) to a Dicefiles instance via the
-[Model Context Protocol](https://modelcontextprotocol.io). It covers setup, all 20
+[Model Context Protocol](https://modelcontextprotocol.io). It covers setup, all 36
 exposed tools, security configuration, and worked multi-step workflows.
 
 ---
@@ -53,6 +53,8 @@ Environment variables accepted by the server:
 | `DICEFILES_API_KEY`  | _(empty)_               | Automation API key — warning printed if unset |
 | `MCP_TRANSPORT`      | `stdio`                 | `stdio` (default) or `http`                   |
 | `MCP_PORT`           | `3001`                  | Listening port when `MCP_TRANSPORT=http`      |
+| `MCP_HOST`           | `127.0.0.1`             | Bind address when `MCP_TRANSPORT=http`        |
+| `MCP_API_TIMEOUT_MS` | `30000`                 | Per-request timeout for Dicefiles API calls   |
 
 ---
 
@@ -161,7 +163,7 @@ tools will be listed.
 }
 ```
 
-Save and reload. The 36 tools are now available to Antigravity's agent.
+Save and reload. Antigravity's agent can call all 36 tools.
 
 ---
 
@@ -274,7 +276,7 @@ mcporter add dicefiles -- node /absolute/path/to/Dicefiles/scripts/mcp-server.js
 # then set env via mcporter env set dicefiles DICEFILES_API_KEY your-key
 ```
 
-The tools are now callable from any OpenClaw workflow step.
+Every OpenClaw workflow step can call the tools.
 
 #### Agent skill (autonomous operation)
 
@@ -300,12 +302,13 @@ instead of spawning a local process:
 
 ```bash
 MCP_TRANSPORT=http MCP_PORT=3001 node scripts/mcp-server.js
-# → [dicefiles-mcp] HTTP transport listening at http://0.0.0.0:3001/mcp
+# → [dicefiles-mcp] Stateless HTTP transport at http://127.0.0.1:3001/mcp
+#   (protocol 2026-07-28, no sessions)
 ```
 
-Point your orchestrator at `http://<host>:3001/mcp`. The server implements the
-Streamable HTTP MCP transport (`POST /mcp` for JSON-RPC, `GET /mcp` for SSE event
-stream).
+Point your orchestrator at `http://127.0.0.1:3001/mcp`. The server implements the
+Streamable HTTP MCP transport over stateless request/response (`POST /mcp` for
+JSON-RPC). Set `MCP_HOST=0.0.0.0` to accept remote connections.
 
 Protect the port with a reverse proxy (nginx, Caddy) and TLS before exposing it
 beyond localhost.
@@ -895,12 +898,56 @@ The MCP server exposes a curated subset of the API. It cannot:
 Scopes are enforced server-side on every request; the MCP layer adds no extra gates
 and removes no existing ones.
 
-### 5.3 Network Exposure
+### 5.3 Tool Behaviour Hints
+
+Every tool declares a display `title` and the behaviour annotations a client uses
+to decide what to put in front of a user:
+
+| Annotation        | Meaning on a Dicefiles tool                                     |
+| ----------------- | --------------------------------------------------------------- |
+| `readOnlyHint`    | `true` for the 15 inspection tools, `false` for anything writing |
+| `destructiveHint` | `true` for removals and password rotation                       |
+| `idempotentHint`  | `true` unless the tool changes state on every call               |
+| `openWorldHint`   | `true`, because every tool reaches the configured Dicefiles host |
+
+A host may therefore auto-approve `list_files` or `get_room_snapshot` and ask for
+confirmation before `remove_room_plugin` or `rotate_room_password`.
+
+A Dicefiles API response that reports failure, a non-2xx status, an unreachable
+host, or a timeout comes back as a tool result with `isError: true`, so a failed
+call never reads as a success.
+
+### 5.4 Network Exposure
 
 - **Stdio mode** (default): the MCP process is only accessible to a parent process
   that started it (Claude Desktop, Cursor). No network port is opened.
-- **HTTP mode** (`MCP_TRANSPORT=http`): the server binds on `0.0.0.0:MCP_PORT`.
-  Put it behind a reverse proxy with TLS if it needs to be reachable over the internet.
+- **HTTP mode** (`MCP_TRANSPORT=http`): the server binds on `127.0.0.1:MCP_PORT` and
+  validates the `Host` and `Origin` headers before every request, so a hostile page
+  cannot point its own domain at the local port and call your tools. Binding beyond
+  loopback is opt-in through `MCP_HOST`; once you do it, every caller that reaches
+  the port can spend the configured `DICEFILES_API_KEY`, so put it behind a reverse
+  proxy with TLS and its own authentication.
+
+### 5.5 Protocol Version
+
+The server speaks **MCP 2026-07-28**, whose protocol core is stateless:
+
+- No `initialize`/`initialized` handshake and no `Mcp-Session-Id` header. Each
+  request carries its protocol version and client identity in `params._meta`, so
+  any request can land on any instance behind a plain round-robin load balancer.
+- Every `POST /mcp` must carry `MCP-Protocol-Version`, `Mcp-Method`, and, for
+  methods that mirror a name in `params`, `Mcp-Name`. A request missing one of
+  those is refused with HTTP 400 and JSON-RPC `-32020`.
+- Capabilities are available on demand through `server/discover`; `tools/list`
+  does not have to come first.
+- `tools/list` responses carry `ttlMs` and `cacheScope`, so clients can cache the
+  tool catalog instead of re-fetching it on every reconnect.
+- Roots, sampling, and logging are deprecated in the specification. The Dicefiles
+  server uses none of them.
+
+The handler in `scripts/mcp-server.js` also answers clients that speak the 2025
+revisions. `createMcpHandler` takes a `legacy` option for operators who need to
+restrict the endpoint to 2026-07-28 clients only.
 
 ---
 

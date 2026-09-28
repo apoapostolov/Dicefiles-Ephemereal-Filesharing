@@ -13,27 +13,41 @@
  *  - Each handler is invoked directly and its return value is asserted.
  */
 
-// ── Mock @modelcontextprotocol/sdk before any require() ──────────────────────
+// ── Mock @modelcontextprotocol/server before any require() ──────────────────
 jest.mock(
-  "@modelcontextprotocol/sdk/server/mcp.js",
+  "@modelcontextprotocol/server",
   () => ({
     McpServer: class MockMcpServer {
       constructor(meta) {
         this.meta = meta;
       }
-      tool(name, desc, schema, handler) {
+      registerTool(name, config, handler) {
         // captured by mock server in registerTools tests
       }
       connect() {
         return Promise.resolve();
       }
     },
+    createMcpHandler: () => ({
+      fetch: () => Promise.resolve(),
+      close: () => Promise.resolve(),
+    }),
   }),
   { virtual: true },
 );
 
 jest.mock(
-  "@modelcontextprotocol/sdk/server/stdio.js",
+  "@modelcontextprotocol/node",
+  () => ({
+    toNodeHandler: () => () => Promise.resolve(),
+    localhostHostValidation: () => () => true,
+    localhostOriginValidation: () => () => true,
+  }),
+  { virtual: true },
+);
+
+jest.mock(
+  "@modelcontextprotocol/server/stdio",
   () => ({
     StdioServerTransport: class MockStdio {},
   }),
@@ -42,7 +56,7 @@ jest.mock(
 
 // ── Mock zod — schemas are only used at registration time, not in handlers ──
 jest.mock(
-  "zod",
+  "zod/v4",
   () => {
     const chain = () => {
       const o = {
@@ -82,7 +96,7 @@ const { registerTools } = require("../../scripts/mcp-server");
 function buildToolMap() {
   const tools = {};
   const mockServer = {
-    tool: (name, _desc, _schema, handler) => {
+    registerTool: (name, _config, handler) => {
       tools[name] = handler;
     },
   };
