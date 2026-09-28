@@ -1,5 +1,94 @@
 # Changelog
 
+## [1.4.6] - 2026-09-28 [Sandboxed Archives and Stateless MCP]
+
+Hardening release. Archive parsing runs inside the sandbox that was already
+shipped for the metadata tools, every server-side fetch of a user-supplied URL is
+validated and pinned, the MCP server speaks the stateless 2026-07-28 protocol
+core, and the repository pins its own line endings.
+
+### Security
+
+- **Archive tools run inside the sandbox.** `tar`, `7z`, and `unrar` now go
+  through the same firejail wrapper as the metadata tools, with the archive's own
+  directory as the jail's private home. Parsing uploaded archives was the one
+  surface without a sandbox, and it is the surface attackers aim at.
+- **Archive member names can no longer read as command-line switches.** A name
+  beginning with `-` is rejected, and the end-of-options marker is passed to
+  `tar` and `7z`. A crafted member named `--to-command=…` used to be parsed as an
+  option instead of a file name.
+- **Outbound fetches are validated and pinned.** The new `lib/net-guard.js`
+  refuses destinations that resolve to loopback, private, link-local, or shared
+  address space, follows redirects one validated hop at a time, and pins the
+  validated address into the socket, so a hostname that changes its answer between
+  the check and the connection cannot redirect it. `POST /api/v1/batch-upload`
+  uses it, so an `uploads:write` key can no longer read cloud metadata or
+  internal services through the server. Federation peers use the same guard, and
+  a peer address is pinned for the request rather than only checked beforehand.
+- **External tools are bounded.** Every `tar`, `7z`, `unrar`, `exiftool`, `file`,
+  `pdftoppm`, and `ffmpeg` invocation collects stdout under a byte cap and a
+  wall-clock timeout, and the child is killed the moment either limit is hit, so
+  a decompression bomb cannot exhaust a worker's memory and a wedged parser
+  cannot pin one.
+
+### Added
+
+- **Operations skill for AI agents:** `skills/dicefiles-ops/SKILL.md` covers
+  installing, configuring, running as a service, upgrading, backing up, and
+  diagnosing a Dicefiles instance, plus MCP wiring, scope selection, and room bot
+  management. It is installable from the repository with
+  `npx skills add apoapostolov/Dicefiles-Ephemereal-Filesharing`.
+
+### Changed
+
+- **MCP server moved to the stateless 2026-07-28 protocol:** `scripts/mcp-server.js`
+  now runs on `@modelcontextprotocol/server` 2.x. HTTP mode no longer assigns a
+  session: there is no `initialize` handshake and no `Mcp-Session-Id`, a fresh
+  server instance is built per request, and `tools/list` carries `ttlMs` and
+  `cacheScope` so clients can cache the catalog. Any request can be served by any
+  instance behind a round-robin load balancer.
+- **MCP tools carry behaviour annotations:** every tool declares `readOnlyHint`,
+  `destructiveHint`, `idempotentHint`, and `openWorldHint` plus a display title,
+  so a host can auto-approve lookups and ask for confirmation before anything that
+  removes or rotates state.
+- **MCP failures are reported as errors:** a Dicefiles API response with
+  `ok: false`, a non-2xx status, an unreachable host, or a timeout now returns an
+  `isError` tool result instead of looking like a successful call.
+- **MCP HTTP mode binds loopback by default** and validates `Host` and `Origin`
+  before every request, which blocks DNS rebinding against the local port. Set
+  `MCP_HOST` to bind elsewhere. The new `MCP_API_TIMEOUT_MS` variable bounds each
+  Dicefiles API call (default 30s).
+
+### Fixed
+
+- **Room, moderation-log, and status listings no longer block Redis.** Those three
+  lookups used `KEYS`, which walks the whole keyspace inside one command and
+  stalls every other caller while it runs. They use an incremental `SCAN` now.
+- **The repository pins its line endings.** A `.gitattributes` normalizes text
+  files to LF, so a Windows checkout no longer reports tens of thousands of
+  `linebreak-style` lint errors and no longer marks freshly built bundles as
+  modified.
+- The MCP server reported version 1.4.4 while the package was at 1.4.5. It now
+  reads its own version from `package.json`.
+
+### Upgrade notes
+
+- `yarn install` picks up `@modelcontextprotocol/server` and
+  `@modelcontextprotocol/node` 2.x and zod 4. Node.js 22+ and Yarn 1.x are still
+  required. No configuration change, no migration step, and no data conversion.
+- stdio MCP clients need no change. HTTP clients must send `MCP-Protocol-Version`,
+  `Mcp-Method`, and `Mcp-Name` on every `POST /mcp`; clients that pin an older
+  protocol revision are still served by the same handler.
+- If you ran MCP HTTP mode on `0.0.0.0` before, set `MCP_HOST=0.0.0.0` explicitly.
+  Otherwise it now listens on `127.0.0.1` only and validates `Host` and `Origin`.
+- Install firejail and leave `jail` at its default. The archive parsers are only
+  sandboxed when it is on.
+- A checkout made before `.gitattributes` existed keeps its CRLF working tree
+  until it is refreshed. Run `git add --renormalize .` once and then re-check the
+  tree out, or the lint gate keeps reporting line endings instead of real issues.
+- No room, upload, config, or Redis data changes. Rolling back to v1.4.5 is
+  code-only.
+
 ## [1.4.5] - 2026-07-29 [Community Access and Storage Tiers]
 
 Dicefiles can now protect a community room with a rotating shared password and
