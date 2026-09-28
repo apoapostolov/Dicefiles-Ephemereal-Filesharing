@@ -101,4 +101,39 @@ describe("federation transport contracts", () => {
     expect(result).toMatchObject({ peer: { peerId: "beta" } });
     expect(slowSign).toHaveBeenCalledTimes(1);
   });
+
+  test("sends the signed request over the guarded, address-pinned path", async () => {
+    const http = require("http");
+    const seen = {};
+    const server = http.createServer((req, res) => {
+      seen.method = req.method;
+      seen.url = req.url;
+      seen.accept = req.headers.accept;
+      seen.agent = req.headers["user-agent"];
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ok: true, peerId: "beta" }));
+    });
+    await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+    const port = server.address().port;
+    const config = require("../../lib/config");
+    const federation = config.get("federation");
+    const previous = federation.peers[0].baseUrl;
+    federation.peers[0].baseUrl = `http://127.0.0.1:${port}`;
+    try {
+      const result = await signedFetch(
+        "beta",
+        "/api/federation/v1/hello",
+        { method: "GET" },
+      );
+      expect(result).toMatchObject({ peer: { peerId: "beta" } });
+      expect(seen.method).toBe("GET");
+      expect(seen.url).toBe("/api/federation/v1/hello");
+      expect(seen.accept).toBe("application/json");
+      expect(seen.agent).toBe("Dicefiles-Federation/1.0");
+    }
+    finally {
+      federation.peers[0].baseUrl = previous;
+      await new Promise(resolve => server.close(resolve));
+    }
+  });
 });
