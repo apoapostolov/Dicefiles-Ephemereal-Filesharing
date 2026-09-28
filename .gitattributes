@@ -1,0 +1,38 @@
+# Normalize text files in the repository and check them out as LF everywhere.
+#
+# Without this, a Windows clone with core.autocrlf=true rewrites every tracked
+# file, `yarn lint` then fails on tens of thousands of linebreak-style errors,
+# and `yarn prestart` marks generated bundles as modified. Pinning the line
+# endings keeps the review gate usable on every platform.
+* text=auto eol=lf
+
+# Generated browser output: LF in the index, LF in the working tree.
+*.js text eol=lf
+*.css text eol=lf
+*.map text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+
+# Binaries stay untouched.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.svg text eol=lf
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
+*.mp3 binary
+*.wav binary
+*.zip binary
+*.7z binary
+*.rar binary
+*.tar binary
+*.gz binary
+*.pdf binary
+*.epub binary
