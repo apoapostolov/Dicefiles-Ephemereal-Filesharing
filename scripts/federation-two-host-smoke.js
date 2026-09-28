@@ -6,10 +6,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { createRequire } = require("module");
-const {
-  spawn,
-  spawnSync,
-} = require("child_process");
+const { spawn } = require("child_process");
 const { createClient } = require("redis");
 const {
   generateIdentity,
@@ -341,21 +338,30 @@ async function main() {
       { allowFederation: true, allowPrivateFederation: false },
     );
 
-    const seeded = spawnSync(
-      process.execPath,
-      [__filename, "--seed", sourceRoom],
-      {
+    // Keep the event loop free to process idle socket closes while seeding.
+    await new Promise((resolve, reject) => {
+      const seeded = spawn(process.execPath, [__filename, "--seed", sourceRoom], {
         cwd: source.directory,
         env: process.env,
-        encoding: "utf8",
+        stdio: ["ignore", "ignore", "pipe"],
         timeout: 60000,
-      },
-    );
-    if (seeded.status !== 0) {
-      throw new Error(
-        `Fixture seeding failed: ${seeded.stderr || seeded.stdout}`,
-      );
-    }
+      });
+      let stderr = "";
+      seeded.stderr.on("data", chunk => {
+        stderr = (stderr + chunk.toString()).slice(-4000);
+      });
+      seeded.once("error", reject);
+      seeded.once("close", (code, signal) => {
+        if (code === 0) {
+          resolve();
+        }
+        else {
+          reject(new Error(
+            `Fixture seeding failed (${signal || code}): ${stderr}`,
+          ));
+        }
+      });
+    });
     const sourceFiles = await api(
       source.baseUrl,
       "GET",
