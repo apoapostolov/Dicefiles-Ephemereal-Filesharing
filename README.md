@@ -1,19 +1,25 @@
+<!-- markdownlint-disable MD033 -->
+
+<div align="center">
+
+  <h1>Dicefiles</h1>
+
+  <p>Host a community room where people can share, find, request, and read files together.</p>
+
+  <p>
+    <a href="#readme"><img src="https://img.shields.io/badge/Type-Self-hosted%20app-555" alt="Type: Self-hosted app"></a>
+    <a href="./package.json"><img src="https://img.shields.io/badge/Language-JavaScript-555" alt="Language: JavaScript"></a>
+    <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/releases/latest"><img src="https://img.shields.io/github/v/release/apoapostolov/Dicefiles-Ephemereal-Filesharing" alt="Latest stable release version"></a>
+    <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/releases/latest"><img src="https://img.shields.io/github/release-date/apoapostolov/Dicefiles-Ephemereal-Filesharing?display_date=published_at&amp;label=last%20release" alt="Published date of latest stable release"></a>
+  </p>
+
+</div>
+
 <div align="center">
   <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing">
     <img src="images/hero.png" width="100%"
       alt="Dicefiles: ephemeral file sharing for hobby communities"></a>
 </div>
-
-# Dicefiles — Ephemeral Filesharing for Hobby Communities
-
-*A self-hosted community room for sharing, discovering, requesting, and reading files together.*
-
-[![License](https://img.shields.io/badge/license-MIT-green)](./package.json)
-[![Version](https://img.shields.io/badge/version-1.4.6-blue)](./CHANGELOG.md)
-[![Node](https://img.shields.io/badge/node-%3E%3D22-339933)](./package.json)
-[![Redis](https://img.shields.io/badge/redis-v4%20client-DC382D)](./package.json)
-[![Package manager](https://img.shields.io/badge/package%20manager-yarn%201.x-2C8EBB)](./yarn.lock)
-[![Status](https://img.shields.io/badge/status-active-brightgreen)](./CHANGELOG.md)
 
 Dicefiles is built for collections people actively browse and discuss: RPG
 books and maps, board games, STL models, comics, fiction, and other hobby media.
