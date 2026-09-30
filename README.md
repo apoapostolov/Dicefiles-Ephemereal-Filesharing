@@ -9,7 +9,7 @@
 *A self-hosted community room for sharing, discovering, requesting, and reading files together.*
 
 [![License](https://img.shields.io/badge/license-MIT-green)](./package.json)
-[![Version](https://img.shields.io/badge/version-1.4.5-blue)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.4.6-blue)](./CHANGELOG.md)
 [![Node](https://img.shields.io/badge/node-%3E%3D22-339933)](./package.json)
 [![Redis](https://img.shields.io/badge/redis-v4%20client-DC382D)](./package.json)
 [![Package manager](https://img.shields.io/badge/package%20manager-yarn%201.x-2C8EBB)](./yarn.lock)
@@ -25,16 +25,17 @@ dashboard. You host it; there is no public Dicefiles service.
   <img src="images/dicefiles-room-gallery.png" alt="A Dicefiles room with live chat, filters, and a gallery of shared files" width="100%">
 </p>
 
-## What's New in 1.4.5
+## What's New in 1.4.6
 
-- Protect a room with a shared password that rotates monthly or on a fixed schedule.
-- Prepare the next credential or rotate immediately when access needs to change.
-- Spread new uploads across several storage volumes using balanced or fallback placement.
-- Reserve capacity before writes so concurrent uploads cannot overcommit a drive.
-- Inspect privacy-safe storage health and manage access through scoped REST and MCP tools.
+This release closes the remaining gap in upload parsing: archives now go
+through the same sandbox as other file metadata tools. It also keeps server
+fetches from reaching private addresses and puts time and output limits on
+external parsers. For people running Dicefiles with automation, MCP HTTP is now
+stateless and binds to loopback unless explicitly configured otherwise.
 
-Existing rooms stay unprotected and single-volume unless an operator enables
-the new options. See the [upgrade notes and full changelog](./CHANGELOG.md).
+Room data needs no migration. Operators using MCP HTTP should read the
+[upgrade notes](CHANGELOG.md#upgrade-notes); the full [changelog](CHANGELOG.md)
+has the security and client details.
 
 ## What You Can Do
 
