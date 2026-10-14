@@ -50,6 +50,8 @@
   ZIP reader; native preview setup includes the sandbox and RAR tools.
 - Small PDFs retain a gallery cover when the rendered thumbnail is larger than
   the source document, with a fixed byte limit for each preview.
+- Sandboxed previews and archive tools resolve files correctly when uploads
+  are stored inside the operator's home directory.
 - Build installation uses fewer runtime packages. Install development
   dependencies when building assets before a production-only deployment.
 

@@ -55,6 +55,19 @@ describe("maybeJail", () => {
     expect(wrapArgs(alreadyJailed)).toEqual(alreadyJailed);
     expect(wrapArgs(["7z", "l", "a.7z"])[0]).toBe("firejail");
   });
+
+  test("addresses private files through the mounted home without changing sibling paths", () => {
+    const { maybeJail, wrapArgs } = loadJail(true);
+    const path = require("path");
+
+    const source = path.join(require("os").homedir(), "uploads", "fixture");
+    const input = path.join(source, "book.pdf");
+    const sibling = path.join(`${source}-other`, "outside.pdf");
+    const argv = maybeJail(["pdftoppm", input, sibling], { privateDir: source });
+    expect(argv).toContain(`--private=${source}`);
+    expect(argv.slice(-2)).toEqual([`.${path.sep}book.pdf`, sibling]);
+    expect(wrapArgs(["firejail", `--private=${source}`, "--", "pdftoppm", input]).slice(-1)).toEqual([`.${path.sep}book.pdf`]);
+  });
 });
 
 describe("spawnBounded", () => {

@@ -57,6 +57,16 @@ on pull requests. After this workflow is in the repository, run it manually with
 `packages:write`, publishes `linux/amd64` and `linux/arm64`, and attaches SBOM and
 provenance. It does not publish automatically from pull requests.
 
+From an authenticated GitHub CLI checkout:
+
+```bash
+gh workflow run container.yml --ref main -f publish=true -f tag=preview
+gh run list --workflow container.yml
+```
+
+Wait for the publishing run to succeed before using the tag. Docker registry
+login on your workstation is not required for Actions publication.
+
 Local publication requires a classic GitHub token with `write:packages`:
 
 ```bash
@@ -102,6 +112,9 @@ capabilities and `no-new-privileges`. The image sets
 `DICEFILES_NATIVE_TOOLS=false`: external metadata/preview/extraction commands
 are disabled. Firejail can treat a container as an existing sandbox and skip
 nested isolation, so a successful exit alone is not sufficient proof of safety.
+The same automatic detection can occur on WSL. A fixture rendering successfully
+there proves preview functionality, not additional per-file isolation. Validate
+isolation on the actual deployment host before accepting untrusted uploads.
 
 File sharing, torrent metadata, Sharp image previews and browser readers remain
 available. New server-generated PDF/book/video covers and native RAR/7Z extraction
