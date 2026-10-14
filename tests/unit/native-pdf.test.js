@@ -44,6 +44,9 @@ test("PDF.js parses the same fixture with its actual worker", async () => {
     const { spawnBounded, PROFILE } = require("../../lib/media/jail");
 
     const result = await spawnBounded(["firejail", "--quiet", `--profile=${PROFILE}`, `--private=${directory}`, "--", "pdftoppm", "-f", "1", "-l", "1", "-singlefile", "-jpeg", "-scale-to", "2048", full], { maxBytes: 4 * 1024 * 1024, timeoutMs: 30000 });
+    if (result.code !== 0) {
+      throw new Error(`Firejail PDF fixture failed: ${result.stderr}`);
+    }
     expect(result.code).toBe(0);
     expect(result.stdout.subarray(0, 2)).toEqual(Buffer.from([255, 216]));
     expect(result.stdout.length).toBeGreaterThan(100);

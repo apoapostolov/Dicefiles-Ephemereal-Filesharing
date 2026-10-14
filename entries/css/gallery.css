@@ -175,7 +175,7 @@
   z-index: 2001;
 }
 #gallery_close { inset-inline-end: 0.75rem; }
-#gallery_download { inset-inline-end: calc(0.75rem + 50px); }
+#gallery_download { inset-inline-end: calc(0.75rem + 50px); opacity: 1; }
 #gallery_download.dl-light,
 #gallery_download.dl-dark { color: var(--text-fg); text-shadow: none; }
 #gallery_close:hover,

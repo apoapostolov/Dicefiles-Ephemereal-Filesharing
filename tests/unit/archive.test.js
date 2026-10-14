@@ -1,5 +1,9 @@
 "use strict";
 
+// Format tests isolate filesystem calls; they must not initialize operator
+// configuration or generate a private status token on a fresh CI checkout.
+jest.mock("../../lib/config", () => ({ get: key => key === "maxAssetsProcesses" ? 2 : false }));
+
 /**
  * Unit tests for lib/archive.js
  *
