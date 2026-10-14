@@ -65,6 +65,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish image
+        id: publish
         if: github.event_name == 'workflow_dispatch' && inputs.publish
         uses: docker/build-push-action@v7
         with:
@@ -75,6 +76,17 @@ jobs:
           sbom: true
           provenance: mode=max
           cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Verify published architectures
+        if: github.event_name == 'workflow_dispatch' && inputs.publish
+        env:
+          IMAGE: ${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}
+          DIGEST: ${{ steps.publish.outputs.digest }}
+        run: |
+          docker buildx imagetools inspect "$IMAGE" --raw | jq -e '
+            (.manifests | any(.platform.os == "linux" and .platform.architecture == "amd64")) and
+            (.manifests | any(.platform.os == "linux" and .platform.architecture == "arm64"))'
+          echo "Published: \`$IMAGE@$DIGEST\`" >> "$GITHUB_STEP_SUMMARY"
       - name: Clean up smoke containers
         if: always()
         run: |
