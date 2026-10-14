@@ -1,7 +1,8 @@
 # Multi-volume storage backend
 
 **Status:** Core placement, reservations, health, and operator inspection are
-implemented for v1.4.5; manual drain/rebalance remains future work.
+implemented for v1.4.5. Journaled manual drain/rebalance is now implemented in
+the unreleased maintenance round.
 **Scope:** Local filesystem directories and mounted drives on one Dicefiles host
 
 ## Summary
@@ -832,3 +833,32 @@ Use isolated temporary directories and injected capacity snapshots:
 The architecture does not depend on these policy choices. They can be resolved
 before their respective implementation phase without changing stored blob
 identity or the `StorageLocation` contract.
+
+## Unreleased mover operations
+
+Use the admin:storage scope to POST /api/v1/admin/storage/migrations. An explicit
+move takes hashes and targetVolumeId. Drain/rebalance takes mode, optional target,
+sourceVolumeId (required for drain), maxBlobs (1–500, default 100), and dryRun.
+Dry runs are the default and queue no moves. Repeat bounded batches after reviewing
+remaining counts. A real drain marks its source as draining before scheduling.
+Clear draining explicitly with PATCH /api/v1/admin/storage/volumes/:id/drain.
+
+The Redis journal and outbox survive restart. A blob lease coordinates moves with
+preview installation and reference deletion. Copies include every known sidecar,
+stream at 16 MiB/s, renew destination reservations, verify length/SHA-256, fsync,
+and commit the volumeId through compare-and-set. A conflicting destination is
+preserved. Completed source copies remain for 24 hours, then checksum-verified
+cleanup runs. Expired blobs also release their retained source copies.
+
+POST /api/v1/admin/storage/migrations/:id/pause, /resume or /rollback controls a
+job. Pause is checked between files and before cutover; a same-worker pause also
+aborts its current stream. A different worker may finish its current file before
+observing pause. Rollback requires unchanged, complete source copies for all
+current assets. After cleanup, rollback cannot reconstruct deleted sources.
+Finished journals are pruned after seven days when new work is planned; the journal
+is bounded to 10,000 jobs. Active duplicate plans for one blob are rejected.
+
+Synthetic filesystem/Redis checks cover copy, rollback, collisions, source grace,
+expiry, draining and reservation accounting. No existing user blobs were moved
+as part of implementation acceptance. Test a small operator-selected dry run
+before scheduling production movement.

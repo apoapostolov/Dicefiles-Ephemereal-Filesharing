@@ -46,7 +46,7 @@ async function main() {
   });
 
   const client = redis.createClient(CONN);
-  client.on("error", (err) => console.error("Redis error:", err));
+  client.on("error", err => console.error("Redis error:", err));
 
   const hgetall = promisify(client.hgetall).bind(client);
   const hset = promisify(client.hset).bind(client);
@@ -67,7 +67,8 @@ async function main() {
     let entry;
     try {
       entry = JSON.parse(raw[key]);
-    } catch {
+    }
+    catch {
       console.warn(`  Skipping: could not parse entry for key ${key}`);
       skipped++;
       continue;
@@ -113,15 +114,19 @@ async function main() {
 
     try {
       const listing = await listArchive(filePath, name);
-      const files = (listing.files || []).filter((f) => !f.isDir);
+      const files = (listing.files || []).filter(f => !f.isDir);
       const count = String(files.length);
 
       // Collect up to 3 unique extensions
       const extSet = new Set();
       for (const f of files) {
         const ext = path.extname(f.path).toLowerCase().replace(/^\./, "");
-        if (ext && ext.length <= 8) extSet.add(ext);
-        if (extSet.size >= 3) break;
+        if (ext && ext.length <= 8) {
+          extSet.add(ext);
+        }
+        if (extSet.size >= 3) {
+          break;
+        }
       }
       const extSample = Array.from(extSet).join(",");
 
@@ -132,12 +137,13 @@ async function main() {
       // If it was misclassified as "file", correct the type too
       if (isPlainArchiveFile) {
         entry.type = "archive";
-        console.log(`    corrected type: file → archive`);
+        console.log("    corrected type: file → archive");
       }
       await hset(STORAGE_MAP_KEY, key, JSON.stringify(entry));
       console.log(`    → ${count} files, exts: ${extSample || "(none)"}`);
       processed++;
-    } catch (ex) {
+    }
+    catch (ex) {
       console.warn(`    FAILED: ${ex.message || ex}`);
       failed++;
     }
@@ -149,7 +155,7 @@ async function main() {
   );
 }
 
-main().catch((err) => {
+main().catch(err => {
   console.error(err);
   process.exit(1);
 });

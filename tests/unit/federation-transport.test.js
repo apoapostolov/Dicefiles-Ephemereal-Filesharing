@@ -104,6 +104,7 @@ describe("federation transport contracts", () => {
 
   test("sends the signed request over the guarded, address-pinned path", async () => {
     const http = require("http");
+
     const seen = {};
     const server = http.createServer((req, res) => {
       seen.method = req.method;
@@ -114,8 +115,9 @@ describe("federation transport contracts", () => {
       res.end(JSON.stringify({ ok: true, peerId: "beta" }));
     });
     await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
-    const port = server.address().port;
+    const {port} = server.address();
     const config = require("../../lib/config");
+
     const federation = config.get("federation");
     const previous = federation.peers[0].baseUrl;
     federation.peers[0].baseUrl = `http://127.0.0.1:${port}`;

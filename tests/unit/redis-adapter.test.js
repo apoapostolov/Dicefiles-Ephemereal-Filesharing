@@ -65,7 +65,7 @@ describe("redis adapter surface (shipped)", () => {
         calls.push(["set", a]);
         return "OK";
       },
-      get: async (k) => {
+      get: async k => {
         calls.push(["get", k]);
         return "val";
       },

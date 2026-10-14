@@ -172,7 +172,7 @@ export default class ArchiveModal extends Modal {
     container.appendChild(this._holder);
 
     // Escape closes the viewer (only when no sub-modal is open)
-    this._onKeyDown = (e) => {
+    this._onKeyDown = e => {
       if (e.key !== "Escape" || this._subHolder) {
         return;
       }
@@ -183,7 +183,7 @@ export default class ArchiveModal extends Modal {
     document.addEventListener("keydown", this._onKeyDown, true);
 
     // Click on the dim backdrop closes the viewer
-    this._holder.addEventListener("click", (e) => {
+    this._holder.addEventListener("click", e => {
       if (e.target === this._holder && !this._subHolder) {
         this._unmount();
         this.reject(new Error("cancelled"));
@@ -354,16 +354,17 @@ export default class ArchiveModal extends Modal {
       }
       const data = await res.json();
       this._format = data.format || "?";
-      this._allFiles = (data.files || []).filter((f) => !f.isDir);
+      this._allFiles = (data.files || []).filter(f => !f.isDir);
       this._tree = buildTree(data.files || []);
       this._setStatus(
-        this._allFiles.length
-          ? ""
-          : "Archive has no extractable files.",
+        this._allFiles.length ?
+          "" :
+          "Archive has no extractable files.",
       );
       this._renderTree();
       this._renderFiles();
-    } catch (ex) {
+    }
+    catch (ex) {
       this._setStatus(`Failed to load archive: ${ex.message}`, {
         error: true,
       });
@@ -397,7 +398,7 @@ export default class ArchiveModal extends Modal {
   _buildTreeNode(node, depth) {
     const frag = document.createDocumentFragment();
     frag.appendChild(this._makeTreeRow(node, depth));
-    if (!!this._folderExpanded.get(node.fullPath)) {
+    if (this._folderExpanded.get(node.fullPath)) {
       for (const child of node.children.values()) {
         frag.appendChild(this._buildTreeNode(child, depth + 1));
       }
@@ -406,7 +407,7 @@ export default class ArchiveModal extends Modal {
   }
 
   _makeTreeRow(node, depth = 0) {
-    const fullPath = node.fullPath;
+    const {fullPath} = node;
     const isChecked = !!this._folderChecked.get(fullPath);
     const isExpanded = !!this._folderExpanded.get(fullPath);
     const hasChildren = node.children.size > 0;
@@ -435,12 +436,12 @@ export default class ArchiveModal extends Modal {
         ...(hasChildren ? [] : ["av-tree-expander-leaf"]),
       ],
       attrs: {
-        type: "button",
+        "type": "button",
         "aria-label": isExpanded ? "Collapse" : "Expand",
       },
       text: hasChildren ? (isExpanded ? "▾" : "▸") : " ",
     });
-    expander.addEventListener("click", (e) => {
+    expander.addEventListener("click", e => {
       nukeEvent(e);
       if (!hasChildren) {
         return;
@@ -504,7 +505,7 @@ export default class ArchiveModal extends Modal {
    * Mirrors the sidebar tree checkbox so clicking either panel syncs the other.
    */
   _makeFilePanelFolderRow(node) {
-    const fullPath = node.fullPath;
+    const {fullPath} = node;
     const isChecked = !!this._folderChecked.get(fullPath);
     const fileCount = collectFiles(node).length;
 
@@ -533,7 +534,7 @@ export default class ArchiveModal extends Modal {
       classes: ["av-file-name"],
       attrs: { title: fullPath },
     });
-    nameEl.textContent = node.name + "/";
+    nameEl.textContent = `${node.name}/`;
     nameEl.addEventListener("click", () => cb.click());
 
     const countEl = dom("span", {
@@ -563,11 +564,12 @@ export default class ArchiveModal extends Modal {
     let base;
     if (rootChecked) {
       base = this._allFiles;
-    } else {
+    }
+    else {
       // Collect files from all checked folder nodes
       const result = [];
       const seen = new Set();
-      const visit = (node) => {
+      const visit = node => {
         if (this._folderChecked.get(node.fullPath)) {
           for (const f of collectFiles(node)) {
             if (!seen.has(f.path)) {
@@ -586,7 +588,8 @@ export default class ArchiveModal extends Modal {
       // If nothing is checked, show all files
       if (!result.length && !this._hasAnyFolderChecked()) {
         base = this._allFiles;
-      } else {
+      }
+      else {
         base = result;
       }
     }
@@ -596,7 +599,7 @@ export default class ArchiveModal extends Modal {
     if (!q) {
       return base;
     }
-    return base.filter((f) => {
+    return base.filter(f => {
       const name = (f.path.split("/").pop() || f.path).toLowerCase();
       return name.includes(q) || f.path.toLowerCase().includes(q);
     });
@@ -604,7 +607,9 @@ export default class ArchiveModal extends Modal {
 
   _hasAnyFolderChecked() {
     for (const v of this._folderChecked.values()) {
-      if (v) return true;
+      if (v) {
+        return true;
+      }
     }
     return false;
   }
@@ -626,9 +631,11 @@ export default class ArchiveModal extends Modal {
       if (this._tree) {
         if (this._searchQuery) {
           emptyText = "No files match this filter.";
-        } else if (this._allFiles && this._allFiles.length) {
+        }
+        else if (this._allFiles && this._allFiles.length) {
           emptyText = "No files in selection.";
-        } else {
+        }
+        else {
           emptyText = "Archive is empty.";
         }
       }
@@ -666,9 +673,9 @@ export default class ArchiveModal extends Modal {
 
       const pathEl = dom("span", {
         classes: ["av-file-path"],
-        text: entry.path.includes("/")
-          ? entry.path.slice(0, entry.path.lastIndexOf("/"))
-          : "",
+        text: entry.path.includes("/") ?
+          entry.path.slice(0, entry.path.lastIndexOf("/")) :
+          "",
         attrs: { title: entry.path },
       });
 
@@ -715,26 +722,30 @@ export default class ArchiveModal extends Modal {
   _updateFolderInfo() {
     let checked = 0;
     for (const [k, v] of this._folderChecked) {
-      if (k !== "" && v) checked++;
+      if (k !== "" && v) {
+        checked++;
+      }
     }
     if (this._folderInfoEl) {
       this._folderInfoEl.textContent =
-        checked > 0
-          ? `${checked} folder${checked === 1 ? "" : "s"} selected`
-          : "";
+        checked > 0 ?
+          `${checked} folder${checked === 1 ? "" : "s"} selected` :
+          "";
     }
   }
 
   _updateFileInfo() {
     let checked = 0;
     for (const v of this._fileChecked.values()) {
-      if (v) checked++;
+      if (v) {
+        checked++;
+      }
     }
     const visible = this._getVisibleFiles().length;
     if (this._fileInfoEl) {
       this._fileInfoEl.textContent =
-        `${visible} file${visible === 1 ? "" : "s"}` +
-        (checked > 0 ? ` · ${checked} selected` : "");
+        `${visible} file${visible === 1 ? "" : "s"}${
+          checked > 0 ? ` · ${checked} selected` : ""}`;
     }
   }
 
@@ -744,9 +755,9 @@ export default class ArchiveModal extends Modal {
     }
     const count = this._selectedDownloadFiles().length;
     this._dlBtn.textContent =
-      count > 0
-        ? `Download ${count} File${count === 1 ? "" : "s"}`
-        : "Download Selected";
+      count > 0 ?
+        `Download ${count} File${count === 1 ? "" : "s"}` :
+        "Download Selected";
     this._dlBtn.disabled = count === 0;
   }
 
@@ -762,7 +773,7 @@ export default class ArchiveModal extends Modal {
     if (!this._tree) {
       return;
     }
-    const visit = (node) => {
+    const visit = node => {
       if (node.children.size > 0) {
         this._folderExpanded.set(node.fullPath, expand);
       }
@@ -787,10 +798,10 @@ export default class ArchiveModal extends Modal {
     const visible = this._getVisibleFiles();
 
     // Prefer per-file checkbox selection
-    const explicitly = visible.filter((f) => this._fileChecked.get(f.path));
+    const explicitly = visible.filter(f => this._fileChecked.get(f.path));
     const targets = explicitly.length > 0 ? explicitly : visible;
 
-    return targets.map((f) => ({
+    return targets.map(f => ({
       key: `archive:${this.archiveKey}:${f.path}`,
       name: f.path.split("/").pop() || f.path,
       url: `/api/v1/archive/${this.archiveKey}/file?path=${encodeURIComponent(f.path)}`,
@@ -834,7 +845,7 @@ export default class ArchiveModal extends Modal {
       skipExisting: prefs.skipExisting,
       retries: prefs.maxRetries,
       concurrent: prefs.maxConcurrent,
-      onOptionsChange: (values) => registry.files.saveDownloadPrefs(values),
+      onOptionsChange: values => registry.files.saveDownloadPrefs(values),
     });
 
     this._subHolder = dom("div", { classes: ["av-sub-holder"] });
@@ -849,7 +860,8 @@ export default class ArchiveModal extends Modal {
     try {
       values = await modal.waitForStart();
       registry.files.saveDownloadPrefs(values);
-    } catch {
+    }
+    catch {
       modal.cancelRequested = true;
       await modalDone;
       this._removeSubHolder();
@@ -861,9 +873,9 @@ export default class ArchiveModal extends Modal {
       1,
       Math.min(4, Number(values.maxConcurrent) || 4),
     );
-    let done = 0,
-      failed = 0,
-      idx = 0;
+    let done = 0;
+    let failed = 0;
+    let idx = 0;
     const total = targets.length;
 
     const worker = async () => {
@@ -902,7 +914,8 @@ export default class ArchiveModal extends Modal {
             registry.files.markFilenameDownloaded(file.name);
             modal.upsertFileStatus(file.name, "success", attempt);
             break;
-          } catch (ex) {
+          }
+          catch (ex) {
             lastErr = ex;
           }
         }

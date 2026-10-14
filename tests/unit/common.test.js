@@ -4,7 +4,7 @@
  * Unit tests for common/index.js utilities.
  * These are pure functions with no external dependencies.
  */
-
+const { performance } = require("node:perf_hooks");
 const {
   toPrettySize,
   toPrettyInt,
@@ -126,6 +126,7 @@ describe("ofilter", () => {
         this.a = 1;
       }
     }
+
     Foo.prototype.proto = "inherited";
     const result = ofilter(new Foo(), new Set(["proto"]));
     expect(result.proto).toBeUndefined();
@@ -228,9 +229,9 @@ describe("randint", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe("sleep", () => {
   test("resolves after approximately the given ms", async () => {
-    const start = Date.now();
+    const start = performance.now();
     await sleep(50);
-    expect(Date.now() - start).toBeGreaterThanOrEqual(40);
+    expect(performance.now() - start).toBeGreaterThanOrEqual(40);
   });
 });
 
@@ -238,8 +239,19 @@ describe("sleep", () => {
 // debounce
 // ─────────────────────────────────────────────────────────────────────────────
 describe("debounce", () => {
-  test("throws when wrapped function has parameters", () => {
-    expect(() => debounce((x) => x)).toThrow();
+  test("coalesces event arguments and preserves the latest receiver", () => {
+    jest.useFakeTimers();
+    const callback = jest.fn(function(event) {
+      return [this, event];
+    });
+    const fn = debounce(callback, 20);
+    const owner = {};
+    fn("old");
+    fn.call(owner, "latest");
+    jest.advanceTimersByTime(20);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback.mock.results[0].value).toEqual([owner, "latest"]);
+    jest.useRealTimers();
   });
 
   test("fires the callback after the timeout", async () => {
@@ -261,7 +273,7 @@ describe("debounce", () => {
 describe("CoalescedUpdate", () => {
   test("fires callback with all recorded items", async () => {
     const items = [];
-    const cu = new CoalescedUpdate(30, (batch) => items.push(...batch));
+    const cu = new CoalescedUpdate(30, batch => items.push(...batch));
     cu.add("a");
     cu.add("b");
     cu.add("c");
@@ -271,7 +283,7 @@ describe("CoalescedUpdate", () => {
 
   test("deduplicates items (it is a Set)", async () => {
     const items = [];
-    const cu = new CoalescedUpdate(30, (batch) => items.push(...batch));
+    const cu = new CoalescedUpdate(30, batch => items.push(...batch));
     cu.add("x");
     cu.add("x");
     await sleep(80);
@@ -287,7 +299,7 @@ describe("memoize", () => {
   // memoize requires at least 1 argument; it caches by first argument
   test("caches result for single-arg functions", () => {
     let calls = 0;
-    const fn = memoize((x) => {
+    const fn = memoize(x => {
       calls++;
       return x * 2;
     });
@@ -299,7 +311,7 @@ describe("memoize", () => {
   });
 
   test("different args return different cached values", () => {
-    const fn = memoize((x) => x + 1);
+    const fn = memoize(x => x + 1);
     expect(fn(1)).toBe(2);
     expect(fn(2)).toBe(3);
   });

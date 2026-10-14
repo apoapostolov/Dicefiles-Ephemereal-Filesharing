@@ -42,11 +42,11 @@ describe("request-board (shipped)", () => {
 
   test("buildRequestBoard open first then fulfilled, newest within", () => {
     const board = buildRequestBoard(files);
-    expect(board.map((f) => f.key)).toEqual(["r3", "r1", "r2"]);
+    expect(board.map(f => f.key)).toEqual(["r3", "r1", "r2"]);
   });
 
   test("buildRequestBoard status filter + allowRequests off", () => {
-    expect(buildRequestBoard(files, { status: "fulfilled" }).map((f) => f.key)).toEqual([
+    expect(buildRequestBoard(files, { status: "fulfilled" }).map(f => f.key)).toEqual([
       "r2",
     ]);
     expect(buildRequestBoard(files, { allowRequests: false })).toEqual([]);

@@ -179,6 +179,9 @@ MCP_TRANSPORT=http MCP_PORT=3001 node scripts/mcp-server.js
 | `MCP_PORT` | `3001` | HTTP port |
 | `MCP_HOST` | `127.0.0.1` | Bind address for HTTP mode |
 | `MCP_API_TIMEOUT_MS` | `30000` | Timeout for each Dicefiles API call |
+| `MCP_AUTH_TOKEN` | empty | Incoming HTTP bearer token; required beyond loopback |
+| `MCP_ALLOWED_HOSTS` | localhost hosts | Accepted hostnames; required beyond loopback |
+| `MCP_ALLOWED_ORIGINS` | localhost hosts | Accepted Origin hostnames, without scheme or port |
 
 HTTP mode speaks MCP 2026-07-28, whose protocol core is stateless: no
 `initialize` handshake, no `Mcp-Session-Id`, and a fresh server instance per

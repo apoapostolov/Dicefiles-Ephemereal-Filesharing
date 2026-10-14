@@ -121,8 +121,8 @@ describe("plugin runtime adapters (shipped)", () => {
     });
     expect(dl.sdkAvailable).toBe(true);
     const entries = await dl.listFolder("https://mega.nz/folder/abc", {});
-    expect(entries.some((e) => e.name === "sheet.pdf")).toBe(true);
-    const file = entries.find((e) => e.name === "sheet.pdf");
+    expect(entries.some(e => e.name === "sheet.pdf")).toBe(true);
+    const file = entries.find(e => e.name === "sheet.pdf");
     const buf = await file.download();
     expect(Buffer.from(buf).toString()).toBe("PDFDATA");
   });
@@ -164,7 +164,7 @@ describe("plugin runtime adapters (shipped)", () => {
         },
       },
       getRoom: async () => ({ fileTTL: 24 }),
-      ingestFromBuffer: async (opts) => {
+      ingestFromBuffer: async opts => {
         uploads.push(opts);
         return { key: "up99", href: "/g/up99", name: opts.name, size: 9 };
       },
@@ -179,4 +179,11 @@ describe("plugin runtime adapters (shipped)", () => {
     expect(uploads[0].name).toBe("rules.pdf");
     expect(uploads[0].roomid).toBe("destRoom01");
   });
+});
+
+test("Mega metadata traversal is bounded and preserves nested names", () => {
+  const { flattenEntries } = require("../../lib/plugins/mega-folder/downloader");
+
+  expect(flattenEntries({ children: [{ name: "one", size: 1 }, { name: "folder", directory: true, children: [{ name: "two", size: 2 }] }] }).map(entry => entry.name)).toEqual(["one", "folder", "folder/two"]);
+  expect(() => flattenEntries({ children: Array.from({ length: 10001 }, (_, i) => ({ name: String(i), size: 1 })) })).toThrow("traversal limits");
 });

@@ -7,18 +7,15 @@ import {
   loadReaderOpts,
   READER_OPTS_DEFAULTS,
   saveProgress,
-  saveReaderOpts,
 } from "./opts";
 import { resolveBookPageTurn } from "../../../common/reader-page-turn";
 
-function dbg(label, ...args) { console.log(`[Reader] ${label}`, ...args); }
-function dbgErr(label, err) { console.error(`[Reader] ${label}`, err); }
-function dbgShow(container, text, isError = false) {
-  if (!container) return;
-  const el = document.createElement("div");
-  el.style.cssText = `font:12px/1.6 monospace;padding:4px 10px;color:${isError ? "#f87171" : "#94a3b8"};white-space:pre-wrap;word-break:break-all;`;
-  el.textContent = text;
-  container.appendChild(el);
+function dbg(label, ...args) {
+  console.log(`[Reader] ${label}`, ...args);
+}
+
+function dbgErr(label, err) {
+  console.error(`[Reader] ${label}`, err);
 }
 
 function epubResolve(basePath, relative) {
@@ -28,7 +25,8 @@ function epubResolve(basePath, relative) {
   }
   try {
     return new URL(rel, `epub://x/${basePath}`).pathname.slice(1);
-  } catch {
+  }
+  catch {
     return basePath + rel;
   }
 }
@@ -70,7 +68,7 @@ function extMime(p) {
 
 async function parseEpubChapters(zip) {
   const blobUrls = [];
-  const track = (u) => {
+  const track = u => {
     if (u) {
       blobUrls.push(u);
     }
@@ -88,9 +86,9 @@ async function parseEpubChapters(zip) {
     throw new Error("EPUB container.xml missing full-path");
   }
   const opfPath = decodeURIComponent(opfPathM[1]);
-  const opfBase = opfPath.includes("/")
-    ? opfPath.slice(0, opfPath.lastIndexOf("/") + 1)
-    : "";
+  const opfBase = opfPath.includes("/") ?
+    opfPath.slice(0, opfPath.lastIndexOf("/") + 1) :
+    "";
 
   // Parse OPF
   const opfXml = await (zipFile(zip, opfPath) || { async: () => "" }).async(
@@ -130,9 +128,9 @@ async function parseEpubChapters(zip) {
       continue;
     }
     const htmlStr = await htmlFile.async("string");
-    const chapterBase = item.href.includes("/")
-      ? item.href.slice(0, item.href.lastIndexOf("/") + 1)
-      : "";
+    const chapterBase = item.href.includes("/") ?
+      item.href.slice(0, item.href.lastIndexOf("/") + 1) :
+      "";
 
     // Collect + blob-ify CSS links
     const cssUrls = [];
@@ -155,9 +153,9 @@ async function parseEpubChapters(zip) {
         continue;
       }
       let cssText = await cssFile.async("string");
-      const cssBase = cssPath.includes("/")
-        ? cssPath.slice(0, cssPath.lastIndexOf("/") + 1)
-        : "";
+      const cssBase = cssPath.includes("/") ?
+        cssPath.slice(0, cssPath.lastIndexOf("/") + 1) :
+        "";
       // Replace url() references in CSS
       const urlRefs = [
         ...cssText.matchAll(/url\(\s*["']?([^)"'\s]+)["']?\s*\)/g),
@@ -223,9 +221,9 @@ async function parseEpubChapters(zip) {
     // 3. Replace href="..." on SVG <image> elements (EPUB3 without xlink prefix).
     //    Guard: only rewrite href when it belongs to an <image> tag so we don't
     //    accidentally blow up anchor links.
-    const hrefMatches = [...body.matchAll(/(<image\b[^>]*)\bhref="([^"]+)"/gi)]
-      .reverse()
-      .map((m) => {
+    const hrefMatches = [...body.matchAll(/(<image\b[^>]*)\bhref="([^"]+)"/gi)].
+      reverse().
+      map(m => {
         // Build a synthetic match object compatible with replaceAttr:
         // index must point to the start of href="..." within `body`.
         const hrefStart = m.index + m[1].length;
@@ -277,6 +275,11 @@ const BOOK_VP = 40;
  * Page N is revealed by: scroller.style.transform = translateX(−N · pageWidth).
  * Total pages: measured from a sentinel span appended at the end of scroller.
  */
+function bookColors() {
+  const style = getComputedStyle(document.documentElement);
+  return ["canvas", "text", "accent"].map(name => style.getPropertyValue(`--theme-${name}`).trim());
+}
+
 function buildSrcdoc(html, cssUrls, pageWidth, pageHeight, opts) {
   const o = opts || READER_OPTS_DEFAULTS;
   const HP = o.margin != null ? o.margin : 56; // horizontal padding (px)
@@ -286,9 +289,9 @@ function buildSrcdoc(html, cssUrls, pageWidth, pageHeight, opts) {
   const fontFamily = FONT_FAMILIES[o.fontFamily] || FONT_FAMILIES.georgia;
   const fontSize = `${o.fontSize || 1.05}em`;
   const lineHeight = o.lineSpacing || 1.75;
-  const linkTags = cssUrls
-    .map((h) => `<link rel="stylesheet" href="${h}">`)
-    .join("\n");
+  const linkTags = cssUrls.
+    map(h => `<link rel="stylesheet" href="${h}">`).
+    join("\n");
 
   // ── Column-stretching fix ─────────────────────────────────────────────────
   // CSS multi-column distributes the container's content-box width evenly
@@ -317,6 +320,7 @@ function buildSrcdoc(html, cssUrls, pageWidth, pageHeight, opts) {
 <html lang="en"><head><meta charset="utf-8">
 ${linkTags}
 <style>
+  :root { --book-bg: ${bookColors()[0]}; --book-fg: ${bookColors()[1]}; --book-link: ${bookColors()[2]}; }
   html, body {
     margin: 0; padding: 0;
     width: ${pageWidth}px;
@@ -325,7 +329,7 @@ ${linkTags}
     /* contain:paint clips the wide multi-column scroller so only the
        current page column is visible in the iframe viewport. */
     contain: paint;
-    background: #1a1a1a;
+    background: var(--book-bg);
   }
   #scroller {
     /* ── CSS multi-column pagination ─────────────────────────────────── */
@@ -344,7 +348,7 @@ ${linkTags}
     /* Provides the left margin for every page (column N sits at HP + N*pageWidth) */
     padding-left: ${HP}px;
     /* Typography */
-    color: #e8e8e8;
+    color: var(--book-fg);
     font-family: ${fontFamily};
     font-size: ${fontSize};
     line-height: ${lineHeight};
@@ -352,10 +356,10 @@ ${linkTags}
   img, svg, video { max-width: ${textW}px; height: auto; display: block; }
   /* Force all inline text colours to a readable light value, overriding
      publisher styles that may embed dark-on-dark colour declarations. */
-  *:not(a) { color: #e8e8e8 !important; background-color: transparent !important; }
-  a { color: #7ec8e3 !important; }
+  *:not(a) { color: var(--book-fg) !important; background-color: transparent !important; }
+  a { color: var(--book-link) !important; }
   p { margin: 0 0 0.85em; text-align: justify; }
-  h1,h2,h3,h4,h5,h6 { color: #f0f0f0 !important; margin-top: 0; break-after: avoid; }
+  h1,h2,h3,h4,h5,h6 { color: var(--book-fg) !important; margin-top: 0; break-after: avoid; }
   /* Avoid orphan lines at column boundaries */
   p { orphans: 2; widows: 2; }
   * { box-sizing: border-box; }
@@ -388,6 +392,13 @@ class BookReader {
     this._fileKey = null;
     this._opts = null; // reader typography options (set in open())
     this.onPageChange = null; // callback(chapterIdx) — set by Reader
+    this._syncTheme = () => {
+      const root = this._iframe?.contentDocument?.documentElement;
+      if (root) {
+        bookColors().forEach((value, index) => root.style.setProperty(["--book-bg", "--book-fg", "--book-link"][index], value));
+      }
+    };
+    addEventListener("dicefiles:theme", this._syncTheme);
   }
 
   /** Compute A5-proportioned page size constrained by the container.
@@ -402,12 +413,14 @@ class BookReader {
         // Container wider than A5 → height is the constraint
         this._pageHeight = cH;
         this._pageWidth = Math.floor(cH * A5);
-      } else {
+      }
+      else {
         // Container taller than A5 → width is the constraint
         this._pageWidth = cW;
         this._pageHeight = Math.floor(cW / A5);
       }
-    } else {
+    }
+    else {
       this._pageWidth = 420;
       this._pageHeight = 595;
     }
@@ -423,15 +436,16 @@ class BookReader {
     this._computePageSize();
     if (type === "mobi") {
       await this._openMobi(url);
-    } else {
+    }
+    else {
       await this._openEpub(url);
     }
     // Restore saved chapter + page
     const saved = loadProgress(this._fileKey);
     const startChapter =
-      saved && saved.chapter >= 0 && saved.chapter < this._total
-        ? saved.chapter
-        : 0;
+      saved && saved.chapter >= 0 && saved.chapter < this._total ?
+        saved.chapter :
+        0;
     const startPage = saved && saved.page >= 0 ? saved.page : 0;
     await this._renderChapter(startChapter, startPage);
   }
@@ -469,7 +483,7 @@ class BookReader {
       if (!ch) {
         return { html: "<p>(chapter unavailable)</p>", css: [] };
       }
-      return { html: ch.html, css: (ch.css || []).map((c) => c.href) };
+      return { html: ch.html, css: (ch.css || []).map(c => c.href) };
     }
     return (
       this._chapters[idx] || { html: "<p>(chapter unavailable)</p>", css: [] }
@@ -563,15 +577,16 @@ class BookReader {
                 Math.floor((sl - HP) / this._pageWidth) + 1,
               );
             }
-          } catch (_) {
+          }
+          catch (_) {
             /* no-op */
           }
 
           this._totalPagesInChapter = totalPages;
           const target =
-            startAtPage < 0
-              ? totalPages - 1
-              : Math.min(startAtPage, totalPages - 1);
+            startAtPage < 0 ?
+              totalPages - 1 :
+              Math.min(startAtPage, totalPages - 1);
           this._pageInChapter = target;
           if (target > 0) {
             scroller.style.transform = `translateX(${-target * this._pageWidth}px)`;
@@ -581,7 +596,8 @@ class BookReader {
           dbg(
             `Chapter ${idx + 1}: ${totalPages} pages (sentinel-based, HP=${HP})`,
           );
-        } catch (ex) {
+        }
+        catch (ex) {
           dbgErr("iframe rAF measure", ex);
           // Ensure buttons are always functional even if measurement throws.
           this._totalPagesInChapter = 1;
@@ -616,7 +632,8 @@ class BookReader {
       }
       scroller.style.transform =
         pageIdx === 0 ? "" : `translateX(${-pageIdx * this._pageWidth}px)`;
-    } catch (ex) {
+    }
+    catch (ex) {
       dbgErr("_scrollToPage", ex);
     }
   }
@@ -894,6 +911,7 @@ class BookReader {
 
   destroy() {
     this._destroyed = true;
+    removeEventListener("dicefiles:theme", this._syncTheme);
     if (this._parser) {
       this._parser.destroy();
       this._parser = null;

@@ -9,35 +9,36 @@ import registry from "./registry";
 import Scroller from "./scroller";
 import Tooltip from "./tooltip";
 import {
-    debounce,
-    dom,
-    nukeEvent,
-    roleToIcon,
-    roleToStatus,
-    toMessage,
-    toType,
+  debounce,
+  dom,
+  nukeEvent,
+  roleToIcon,
+  roleToStatus,
+  toMessage,
+  toType,
 } from "./util";
 
 const DATE_FORMAT_SHORT = (function () {
-  try {
-    return new Intl.DateTimeFormat("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hourCycle: "h23",
-    });
-  } catch (ex) {
-    return new Intl.DateTimeFormat("en-US", {
-      hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  }
+try {
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+}
+catch (ex) {
+  return new Intl.DateTimeFormat("en-US", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
 })();
 const DATE_FORMAT_LONG = new Intl.DateTimeFormat("eu");
 const WELCOME_BANNER_STATE_KEY = "dicefiles:welcome-banner-state";
-const WELCOME_BANNER_COMPACT_QUERY = "(max-width: 1350px)";
+const WELCOME_BANNER_COMPACT_QUERY = "(max-width: 760px)";
 
 export default new (class Messages extends EventEmitter {
   constructor() {
@@ -76,7 +77,7 @@ export default new (class Messages extends EventEmitter {
         threshold: 0.95,
       };
 
-      this.interectionObserver = new IntersectionObserver((entries) => {
+      this.interectionObserver = new IntersectionObserver(entries => {
         if (registry.roomie.hidden) {
           return;
         }
@@ -95,7 +96,7 @@ export default new (class Messages extends EventEmitter {
           e.target.dataset.seen = "true";
           seenMessages.add(id);
         }
-        this.msgs.forEach((m) => {
+        this.msgs.forEach(m => {
           if (!seenMessages.has(m.id)) {
             return;
           }
@@ -103,7 +104,8 @@ export default new (class Messages extends EventEmitter {
         });
         this._save();
       }, options);
-    } catch (ex) {
+    }
+    catch (ex) {
       this.intersectionObserver = new (class {
         observe() {}
         unobserve() {}
@@ -128,15 +130,15 @@ export default new (class Messages extends EventEmitter {
       this.scrollEnd();
     });
 
-    registry.chatbox.on("error", (e) => {
+    registry.chatbox.on("error", e => {
       this.add({
         volatile: true,
         role: "system",
         user: "Error",
-        msg: e,
+        msg: require("../common/user-error").userError(e),
       });
     });
-    registry.chatbox.on("warn", (e) => {
+    registry.chatbox.on("warn", e => {
       this.add({
         volatile: true,
         role: "system",
@@ -145,7 +147,7 @@ export default new (class Messages extends EventEmitter {
       });
     });
 
-    registry.config.on("change-disabled", async (v) => {
+    registry.config.on("change-disabled", async v => {
       if (!v) {
         return;
       }
@@ -186,7 +188,7 @@ export default new (class Messages extends EventEmitter {
       { passive: true },
     );
 
-    this._waitConfig = new Promise((r) =>
+    this._waitConfig = new Promise(r =>
       registry.config.once("change-historySize", r),
     );
   }
@@ -212,7 +214,8 @@ export default new (class Messages extends EventEmitter {
         }
         file.external = true;
         file = new File(file);
-      } catch (ex) {
+      }
+      catch (ex) {
         file.unknown = true;
         return null;
       }
@@ -229,7 +232,7 @@ export default new (class Messages extends EventEmitter {
   }
 
   setLastMessageMarker() {
-    const perma = this.els.filter((e) => e.dataset.volatile !== "true");
+    const perma = this.els.filter(e => e.dataset.volatile !== "true");
     const lastSeen = perma.reduce((prev, cur) => {
       cur.classList.remove("lastseen");
       return cur.dataset.seen === "true" ? cur : prev;
@@ -270,7 +273,8 @@ export default new (class Messages extends EventEmitter {
         }
       }
       registry.roomie.installTooltip(new UserTooltip(info), e);
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error(ex);
     }
   }
@@ -298,7 +302,8 @@ export default new (class Messages extends EventEmitter {
     const subjects = this.bannable.get(e.target);
     if (e.shiftKey) {
       registry.roomie.showUnbanModal(subjects);
-    } else {
+    }
+    else {
       registry.roomie.showBanModal(subjects, "spamming");
     }
   }
@@ -316,7 +321,8 @@ export default new (class Messages extends EventEmitter {
     if (m.sdate) {
       m.date = new Date(registry.roomie.fromServerTime(m.sdate));
       delete m.sdate;
-    } else {
+    }
+    else {
       m.date = m.date || new Date();
     }
     let notify = false;
@@ -327,7 +333,8 @@ export default new (class Messages extends EventEmitter {
           break;
         }
       }
-    } else if (m.notify) {
+    }
+    else if (m.notify) {
       notify = true;
     }
     m.notify = false;
@@ -411,7 +418,8 @@ export default new (class Messages extends EventEmitter {
         user.addEventListener("mouseenter", this.onuserenter, {
           passive: true,
         });
-      } else {
+      }
+      else {
         user = dom("span", {
           classes: ucls,
           text: m.user,
@@ -501,27 +509,28 @@ export default new (class Messages extends EventEmitter {
     const shouldForceScroll = !!msg.querySelector(".chatgif-wrap");
     this.queue.push(e);
     if (notify) {
-      registry.roomie
-        .displayNotification({
+      registry.roomie.
+        displayNotification({
           user: m.user,
           msg: msg.textContent,
-        })
-        .catch(console.error);
+        }).
+        catch(console.error);
     }
     if (!this.flushing) {
       this.flushing = this.flush();
     }
     if (shouldForceScroll) {
-      Promise.resolve(this.flushing)
-        .then(() => this.scrollEnd())
-        .catch(console.error);
+      Promise.resolve(this.flushing).
+        then(() => this.scrollEnd()).
+        catch(console.error);
       const mediaEls = e.querySelectorAll(".chatgif");
-      mediaEls.forEach((media) => {
+      mediaEls.forEach(media => {
         const forceScroll = () => this.scrollEnd();
         if (media.tagName === "IMG") {
           if (media.complete) {
             setTimeout(forceScroll, 0);
-          } else {
+          }
+          else {
             media.addEventListener("load", forceScroll, { once: true });
             media.addEventListener("error", forceScroll, { once: true });
           }
@@ -536,127 +545,130 @@ export default new (class Messages extends EventEmitter {
   addMessageParts(msg, parts) {
     for (const p of parts) {
       switch (p.t) {
-        case "b":
-          msg.appendChild(dom("br"));
-          break;
+      case "b":
+        msg.appendChild(dom("br"));
+        break;
 
-        case "f": {
-          const info = registry.files.get(p.key) || p;
-          const url = new URL(info.href, document.location);
-          url.pathname += `/${info.name}`;
-          const file = dom("a", {
-            classes: ["chatfile"],
-            attrs: {
-              target: "_blank",
-              rel: "nofollow",
-              href: url.href,
-            },
-            text: info.name,
-          });
-          const icon = dom("span", {
-            classes: ["icon", `i-${toType(info.type)}`],
-          });
-          file.insertBefore(icon, file.firstChild);
-          this.files.set(file, info);
-          if (info.client) {
-            this.completeFile(file)
-              .then((f) => {
-                if (!f || f.unknown) {
-                  return;
-                }
-                icon.className = `icon  i-${toType(f.type)}`;
-                file.href = f.url;
-                file.lastChild.textContent = f.name;
-              })
-              .catch(console.error);
-          }
-          file.addEventListener("mouseenter", this.onfileenter, {
-            passive: true,
-          });
-          file.addEventListener("click", this.onfileclick);
-          msg.appendChild(file);
-          break;
+      case "f": {
+        const info = registry.files.get(p.key) || p;
+        const url = new URL(info.href, document.location);
+        url.pathname += `/${info.name}`;
+        const file = dom("a", {
+          classes: ["chatfile"],
+          attrs: {
+            target: "_blank",
+            rel: "nofollow",
+            href: url.href,
+          },
+          text: info.name,
+        });
+        const icon = dom("span", {
+          classes: ["icon", `i-${toType(info.type)}`],
+        });
+        file.insertBefore(icon, file.firstChild);
+        this.files.set(file, info);
+        if (info.client) {
+          this.completeFile(file).
+            then(f => {
+              if (!f || f.unknown) {
+                return;
+              }
+              icon.className = `icon  i-${toType(f.type)}`;
+              file.href = f.url;
+              file.lastChild.textContent = f.name;
+            }).
+            catch(console.error);
         }
+        file.addEventListener("mouseenter", this.onfileenter, {
+          passive: true,
+        });
+        file.addEventListener("click", this.onfileclick);
+        msg.appendChild(file);
+        break;
+      }
 
-        case "u": {
-          const embed = this.toGifEmbed(p.v);
-          if (embed) {
-            const mediaWrap = dom("span", { classes: ["chatgif-wrap"] });
-            let media;
-            if (embed.type === "video") {
-              media = dom("video", {
-                classes: ["chatgif"],
-                attrs: {
-                  src: embed.src,
-                  controls: "controls",
-                  preload: "metadata",
-                  muted: "muted",
-                  playsinline: "playsinline",
-                },
-              });
-            } else {
-              media = dom("img", {
-                classes: ["chatgif"],
-                attrs: {
-                  src: embed.src,
-                  alt: "GIF preview",
-                  loading: "lazy",
-                  referrerpolicy: "no-referrer",
-                },
-              });
-            }
-            mediaWrap.appendChild(media);
-            msg.appendChild(mediaWrap);
-          } else {
-            const a = dom("a", {
+      case "u": {
+        const embed = this.toGifEmbed(p.v);
+        if (embed) {
+          const mediaWrap = dom("span", { classes: ["chatgif-wrap"] });
+          let media;
+          if (embed.type === "video") {
+            media = dom("video", {
+              classes: ["chatgif"],
               attrs: {
-                target: "_blank",
-                rel: "nofollow,noopener,noreferrer",
-                href: p.v,
+                src: embed.src,
+                controls: "controls",
+                preload: "metadata",
+                muted: "muted",
+                playsinline: "playsinline",
               },
-              text: p.n || p.v.replace(/^https?:\/\//, ""),
             });
-            msg.appendChild(a);
           }
-          break;
+          else {
+            media = dom("img", {
+              classes: ["chatgif"],
+              attrs: {
+                src: embed.src,
+                alt: "GIF preview",
+                loading: "lazy",
+                referrerpolicy: "no-referrer",
+              },
+            });
+          }
+          mediaWrap.appendChild(media);
+          msg.appendChild(mediaWrap);
         }
-
-        case "p": {
-          const a = dom("span", {
-            classes: ["u", p.r],
-            text: p.v,
-          });
-          msg.appendChild(a);
-          break;
-        }
-
-        case "r": {
+        else {
           const a = dom("a", {
-            classes: ["r"],
             attrs: {
               target: "_blank",
-              href: `/r/${p.v}`,
+              rel: "nofollow,noopener,noreferrer",
+              href: p.v,
             },
-            text: `${p.n || p.v}`,
+            text: p.n || p.v.replace(/^https?:\/\//, ""),
           });
           msg.appendChild(a);
-          break;
         }
+        break;
+      }
 
-        case "raw": {
-          if (typeof p.h === "string") {
-            const node = dom("span", { classes: ["raw"] });
-            node.innerHTML = p.h;
-            msg.appendChild(node);
-          } else {
-            msg.appendChild(p.h);
-          }
-          break;
+      case "p": {
+        const a = dom("span", {
+          classes: ["u", p.r],
+          text: p.v,
+        });
+        msg.appendChild(a);
+        break;
+      }
+
+      case "r": {
+        const a = dom("a", {
+          classes: ["r"],
+          attrs: {
+            target: "_blank",
+            href: `/r/${p.v}`,
+          },
+          text: `${p.n || p.v}`,
+        });
+        msg.appendChild(a);
+        break;
+      }
+
+      case "raw": {
+        if (typeof p.h === "string") {
+          const node = dom("span", { classes: ["raw"] });
+          node.innerHTML = p.h;
+          msg.appendChild(node);
         }
+        else {
+          msg.appendChild(p.h);
+        }
+        break;
+      }
 
-        default:
-          msg.appendChild(document.createTextNode(p.v));
-          break;
+      default:
+        msg.appendChild(document.createTextNode(p.v));
+        break;
       }
     }
   }
@@ -666,7 +678,7 @@ export default new (class Messages extends EventEmitter {
       const u = new URL(url);
       const host = u.hostname.toLowerCase().replace(/^www\./, "");
       const path = u.pathname;
-      // eslint-disable-next-line prefer-destructuring
+
       const ext = (path.match(/\.(gif|webm|mp4)$/i) || [])[1];
 
       if (ext) {
@@ -700,7 +712,8 @@ export default new (class Messages extends EventEmitter {
           return { type: "video", src: u.href };
         }
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       // ignore invalid urls for embedding
     }
     return null;
@@ -709,7 +722,7 @@ export default new (class Messages extends EventEmitter {
   onremovemessages(ids) {
     ids = new Set(ids);
     if (this.restoring) {
-      this.restoring = this.restoring.filter((m) => !ids.has(m.id));
+      this.restoring = this.restoring.filter(m => !ids.has(m.id));
     }
     const mod = registry.chatbox.role === "mod";
     const collected = new Map();
@@ -719,7 +732,8 @@ export default new (class Messages extends EventEmitter {
       }
       if (mod) {
         m.channel = "Removed";
-      } else {
+      }
+      else {
         Object.assign(m, {
           highlight: false,
           me: false,
@@ -789,7 +803,8 @@ export default new (class Messages extends EventEmitter {
     if (end) {
       // nasty but meh
       setTimeout(() => this.scrollEnd(), 10);
-    } else {
+    }
+    else {
       this.showEndMarker();
     }
 
@@ -817,7 +832,8 @@ export default new (class Messages extends EventEmitter {
         this.addMessageParts(motdSpan, motd);
         this.motdEl.appendChild(motdSpan);
         motdWrap && motdWrap.classList.remove("hidden");
-      } else {
+      }
+      else {
         motdWrap && motdWrap.classList.add("hidden");
       }
     }
@@ -841,7 +857,8 @@ export default new (class Messages extends EventEmitter {
     let storedBannerState = null;
     try {
       storedBannerState = localStorage.getItem(WELCOME_BANNER_STATE_KEY);
-    } catch {
+    }
+    catch {
       // Storage can be unavailable in privacy-restricted browser contexts.
     }
     let hasBannerPreference =
@@ -864,20 +881,21 @@ export default new (class Messages extends EventEmitter {
           WELCOME_BANNER_STATE_KEY,
           compact ? "compact" : "expanded",
         );
-      } catch {
+      }
+      catch {
         // The current page still keeps the selected state when storage fails.
       }
     };
 
     setBannerCompact(
-      hasBannerPreference
-        ? storedBannerState === "compact"
-        : compactMedia.matches,
+      hasBannerPreference ?
+        storedBannerState === "compact" :
+        compactMedia.matches,
     );
     toggle.addEventListener("click", () => {
       setBannerCompact(!root.classList.contains("welcome-compact"), true);
     });
-    compactMedia.addEventListener("change", (event) => {
+    compactMedia.addEventListener("change", event => {
       if (!hasBannerPreference) {
         setBannerCompact(event.matches);
       }
@@ -889,7 +907,7 @@ export default new (class Messages extends EventEmitter {
     const ttl = tpl.querySelector(".welcome_ttl");
     ttl.textContent = registry.config.get("ttl");
     const copy = tpl.querySelector(".welcome_copy");
-    copy.addEventListener("click", (e) => {
+    copy.addEventListener("click", e => {
       try {
         e.preventDefault();
         e.stopPropagation();
@@ -901,7 +919,8 @@ export default new (class Messages extends EventEmitter {
         copy.removeChild(i);
         copy.classList.add("copied");
         setTimeout(() => copy.classList.remove("copied"), 2000);
-      } catch (ex) {
+      }
+      catch (ex) {
         console.error(ex);
       }
     });
@@ -928,7 +947,7 @@ export default new (class Messages extends EventEmitter {
     };
 
     if (renameWrap && renameInput && renameBtn) {
-      renameWrap.addEventListener("submit", async (e) => {
+      renameWrap.addEventListener("submit", async e => {
         nukeEvent(e);
         if (!canRename()) {
           return;
@@ -943,9 +962,11 @@ export default new (class Messages extends EventEmitter {
         renameBtn.setAttribute("disabled", "disabled");
         try {
           await registry.socket.makeCall("setconfig", "name", name);
-        } catch (ex) {
+        }
+        catch (ex) {
           this.addSystemMessage(ex.message || ex.toString());
-        } finally {
+        }
+        finally {
           renameBtn.removeAttribute("disabled");
           syncRenameUi();
         }
@@ -995,8 +1016,9 @@ export default new (class Messages extends EventEmitter {
     this.restoring = null;
     if (registry.config.has("name")) {
       this.addWelcome();
-    } else {
-      await new Promise((r) => registry.config.on("change-name", r));
+    }
+    else {
+      await new Promise(r => registry.config.on("change-name", r));
       this.addWelcome();
     }
     if (stored) {

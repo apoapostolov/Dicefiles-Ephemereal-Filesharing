@@ -1,42 +1,62 @@
 :root {
-  --main-bg: #333333;
-  --text-fg: #fefefe;
-  --dark-fg: #aeaeae;
-  --dark-bg: #101010;
-  --disabled-fg: white;
-  --disabled-bg: #221818;
-  --lite-bg: #4f4f4f;
-  --hi-fg: #f4f3f3;
-  --hi-bg: #282828;
-  --odd-bg: #202020;
-  --sel-bg: #444444;
-  --odd-sel-bg: #555555;
-  --upload-bg: rgb(66, 66, 66);
-  --err-bg: #f75353;
-  --role-user-fg: #23d16f;
-  --role-mod-fg: #d880fc;
-  --role-system-fg: #ff6c00;
-  /* Plugin/automation bots — distinct cyan pill (not green user / purple mod / orange system) */
-  --role-bot-fg: #3ecbff;
-  --role-bot-bg: rgba(62, 203, 255, 0.22);
-  --role-bot-border: rgba(62, 203, 255, 0.55);
+  color-scheme: dark;
+  --theme-canvas: #101010;
+  --theme-panel: #202020;
+  --theme-chrome: #333333;
+  --theme-text: #f4f4f4;
+  --theme-muted: #b4b4b4;
+  --theme-accent: #dedede;
+  --theme-danger: #ff9b9b;
+  --theme-success: #a1dbac;
+  --theme-warning: #efd08c;
+  --shadow-color: rgb(0 0 0 / 30%);
+  --main-bg: var(--theme-chrome);
+  --text-fg: var(--theme-text);
+  --dark-fg: var(--theme-muted);
+  --dark-bg: var(--theme-canvas);
+  --panel-bg: var(--theme-panel);
+  --accent: var(--theme-accent);
+  --danger: var(--theme-danger);
+  --success: var(--theme-success);
+  --warning: var(--theme-warning);
+  --accent-soft: color-mix(in srgb, var(--accent) 18%, transparent);
+  --danger-soft: color-mix(in srgb, var(--danger) 18%, transparent);
+  --success-soft: color-mix(in srgb, var(--success) 18%, transparent);
+  --warning-soft: color-mix(in srgb, var(--warning) 18%, transparent);
+  --disabled-fg: var(--dark-fg);
+  --disabled-bg: var(--panel-bg);
+  --lite-bg: color-mix(in srgb, var(--theme-chrome) 75%, var(--text-fg));
+  --hi-fg: var(--text-fg);
+  --hi-bg: var(--panel-bg);
+  --odd-bg: var(--panel-bg);
+  --sel-bg: color-mix(in srgb, var(--accent) 22%, var(--dark-bg));
+  --odd-sel-bg: color-mix(in srgb, var(--accent) 26%, var(--panel-bg));
+  --upload-bg: var(--main-bg);
+  --err-bg: color-mix(in srgb, var(--danger) 18%, var(--panel-bg));
+  --role-user-fg: var(--success);
+  --role-mod-fg: color-mix(in srgb, var(--accent) 70%, var(--text-fg));
+  --role-system-fg: var(--warning);
+  --role-bot-fg: var(--accent);
+  --role-bot-bg: var(--accent-soft);
+  --role-bot-border: var(--control-border-hover);
   --base-size: 12pt;
   --base-font: 'Rubik', 'Cairo', sans-serif;
   --files-size: 11pt;
   --detail-size: 8pt;
-  --unread-marker-color: rgba(200, 0, 0, 0.3);
-  --surface-1: rgba(255, 255, 255, 0.06);
-  --surface-2: rgba(255, 255, 255, 0.12);
-  --surface-3: rgba(255, 255, 255, 0.18);
-  --hairline: rgba(255, 255, 255, 0.14);
-  --focus-ring: rgba(255, 255, 255, 0.32);
-  --soft-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
-  /* Dark-theme scrollbars (native + custom scroller thumb) */
+  --unread-marker-color: var(--danger-soft);
+  --control-border-hover: color-mix(in srgb, var(--text-fg) 36%, transparent);
+  --surface-1: color-mix(in srgb, var(--text-fg) 6%, transparent);
+  --surface-2: color-mix(in srgb, var(--text-fg) 12%, transparent);
+  --surface-3: color-mix(in srgb, var(--text-fg) 18%, var(--panel-bg));
+  --hairline: color-mix(in srgb, var(--text-fg) 22%, transparent);
+  --focus-ring: var(--accent);
+  --overlay-bg: color-mix(in srgb, var(--dark-bg) 85%, transparent);
+  --soft-shadow: 0 4px 14px var(--shadow-color);
   --scrollbar-size: 10px;
-  --scrollbar-track: rgba(0, 0, 0, 0.35);
-  --scrollbar-thumb: rgba(255, 255, 255, 0.18);
-  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.32);
-  --scrollbar-thumb-active: rgba(255, 255, 255, 0.42);
+  --scrollbar-track: var(--dark-bg);
+  --scrollbar-thumb: var(--hairline);
+  --scrollbar-thumb-hover: var(--control-border-hover);
+  --scrollbar-thumb-active: var(--dark-fg);
 }
 
 html {
@@ -115,7 +135,7 @@ nav {
   padding: 0 1ex;
   grid-area: nav;
   align-self: center;
-  border-bottom: 1px solid rgba(128,128,128,0.4);
+  border-bottom: 1px solid var(--hairline);
   height: 100%;
 }
 
@@ -181,14 +201,14 @@ button {
   cursor: pointer;
   box-sizing: border-box;
   border-radius: 2px;
-  background-color: rgba(255,255,255,0.8);
-  color: black;
+  background-color: var(--panel-bg);
+  color: var(--text-fg);
 }
 
 button:hover,
 button:focus {
   box-shadow: 0 0 0 2px var(--focus-ring), var(--soft-shadow);
-  background-color: rgb(255,255,255);
+  background-color: var(--panel-bg);
   outline: 0;
 }
 
@@ -276,7 +296,7 @@ footer > * > a {
   width: 0px !important;
   height: 0px !important;
   display: inline;
-  background-image: url(/loader.png), url();
+  background-image: url(/loader.png), none;
 }
 
 .tmpl {

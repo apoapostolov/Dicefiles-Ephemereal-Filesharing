@@ -18,7 +18,7 @@ Read this before changing colors, layout, chrome, or “themes.” Pair it with:
 
 1. **Stack is vanilla client JS + EJS + Webpack CSS.** There is no React/Next/Tailwind app shell. Do not introduce a framework “just for theming.” Prefer editing `entries/css/*` and existing DOM patterns in `client/` + `views/`.
 2. **Greytone product chrome is intentional.** CONTRIBUTING: keep visual changes consistent with the current greytone theme unless the human explicitly asks for a new theme or a redesign.
-3. **All themeable color goes through CSS variables** in `entries/css/base.css`. Never hard-code `black` / `white` / random hex for chrome that should re-theme. Feature-only accents (e.g. green `is-new` pills) may stay fixed; document why.
+3. **All themeable color goes through CSS variables** in `entries/css/base.css`. Never hard-code `black` / `white` / random hex for chrome that should re-theme. Feature accents also use semantic tokens (`--success`, `--warning`, `--danger`).
 4. **Canonical toolbar size/shape** is defined in UI_STYLE.md (`#tools .btn`, `.filterbtn`, `.btn-pill`). Match those; do not invent a second button system.
 5. **Icons:** custom `symbols.woff` + `entries/css/symbols.css` (`.i-*`). No emoji in UI chrome. New glyphs require font + CSS, or a rare inline SVG exception.
 6. **Body role classes drive chrome:** `mod`, `owner`, `regular`, `authed`, `unauthed`, `noips`, `noreports`, `newroom` (see `client/roomie.js`). Theme CSS must not break `body.mod` / `body.owner` visibility rules (e.g. `.selection-pill`).

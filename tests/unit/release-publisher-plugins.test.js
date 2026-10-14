@@ -299,7 +299,7 @@ describe("Telegram release publisher", () => {
       },
       [],
     );
-    ctx.dicefiles.createRequest = async (spec) => {
+    ctx.dicefiles.createRequest = async spec => {
       created.push(spec);
       return { name: spec.text };
     };
@@ -387,7 +387,8 @@ describe("bot runtime extensions", () => {
         method: "POST",
         body: { hello: "world" },
       });
-    } catch (ex) {
+    }
+    catch (ex) {
       expect(ex.message).not.toContain("secret-token");
     }
   });
@@ -440,7 +441,7 @@ describe("bot runtime extensions", () => {
     const calls = [];
     const events = createMemoryEventLease();
     const runtime = createRoomPluginRuntime({
-      loadModule: (id) =>
+      loadModule: id =>
         require("../../lib/plugins/registry").loadPluginModule(id, {
           pluginsRoot: path.join(__dirname, "../../lib/plugins"),
         }),
@@ -478,7 +479,7 @@ describe("bot runtime extensions", () => {
 
   test("room catalog exposes both release publishers and their contracts", () => {
     const runtime = createRoomPluginRuntime({
-      loadModule: (id) =>
+      loadModule: id =>
         require("../../lib/plugins/registry").loadPluginModule(id, {
           pluginsRoot: path.join(__dirname, "../../lib/plugins"),
         }),

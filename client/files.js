@@ -6,6 +6,7 @@ import DownloadBatchModal from "./files/downloadmodal";
 import File from "./files/file";
 import * as filesfilter from "./files/filter";
 import Gallery from "./files/gallery";
+import ToolbarDropdown from "./files/toolbar-dropdown";
 // Reader is lazy-loaded; progress cleanup uses dynamic import.
 import RequestModal, { RequestViewModal } from "./files/requestmodal";
 import RequestBoardModal from "./files/requestboard";
@@ -26,14 +27,12 @@ import {
   normalizeVisitState,
   wasFulfilledSince,
 } from "../lib/room/continuity";
+import { dismissProgressRecord, listProgressRecords } from "../lib/room/reader-progress";
 import ScrollState from "./files/scrollstate";
 import { REMOVALS } from "./files/tracker";
 import Upload from "./files/upload";
-import {
-  computeWindow,
-  shouldVirtualize,
-  sliceWindow,
-} from "./files/windowing";
+import UploadModal from "./files/upload-modal";
+import { collectDroppedFiles } from "../common/drop-input";
 import { getVisibleWindow as computeVisibleWindow } from "./files/list-window";
 import {
   SORT_MODES as LIST_SORT_MODES,
@@ -42,7 +41,6 @@ import {
   normalizeSortMode,
   parseFilterState,
   serializeFilterState,
-  sortFiles,
 } from "./files/list-state";
 import registry from "./registry";
 import Scroller from "./scroller";
@@ -85,6 +83,10 @@ export default new (class Files extends EventEmitter {
     this.filter = document.querySelector("#filter");
     this.filterClear = document.querySelector("#filter-clear");
     this.filterStatus = document.querySelector("#filter-status");
+    this.mobileSortEl = document.querySelector("#sort-mode-mobile");
+    this.mobileViewEl = document.querySelector("#view-mode-mobile");
+    this.sortDropdown = null;
+    this.viewDropdown = null;
     this.newStatus = document.querySelector("#new-status");
     this.downloadNewEl = document.querySelector("#downloadnew");
     this.downloadAllEl = document.querySelector("#downloadall");
@@ -105,6 +107,23 @@ export default new (class Files extends EventEmitter {
     this.newFiles = false;
     this.selectionStart = null;
     this.galleryMode = false;
+    this.galleryPage = 0;
+    this.galleryPager = document.createElement("nav");
+    this.galleryPager.className = "gallery-pager";
+    this.galleryPager.setAttribute("aria-label", "Gallery pages");
+    this.galleryPager.hidden = true;
+    this.galleryPrevious = document.createElement("button");
+    this.galleryPrevious.type = "button";
+    this.galleryPrevious.textContent = "Previous";
+    this.galleryNext = document.createElement("button");
+    this.galleryNext.type = "button";
+    this.galleryNext.textContent = "Next";
+    this.galleryPageStatus = document.createElement("span");
+    this.galleryPageStatus.setAttribute("role", "status");
+    this.galleryPager.append(this.galleryPrevious, this.galleryPageStatus, this.galleryNext);
+    this.el.parentElement.appendChild(this.galleryPager);
+    this.galleryPrevious.addEventListener("click", () => this.changeGalleryPage(-1));
+    this.galleryNext.addEventListener("click", () => this.changeGalleryPage(1));
     this.linksMode = false;
     this.ownUploadKeys = new Set();
     this.newFileKeys = new Set();
@@ -117,6 +136,9 @@ export default new (class Files extends EventEmitter {
     this.resumeEntries = [];
     this._continuityRefreshVersion = 0;
     this.continuityEl = document.querySelector("#continuity");
+    this.dismissedResumeKeys = new Set();
+    this.continuityResumeCardEl = document.querySelector("#continuity-resume-card");
+    this.continuityDismissEl = document.querySelector("#continuity-resume-dismiss");
     this.continuityResumeEl = document.querySelector("#continuity-resume");
     this.continuityResumeNameEl = document.querySelector(
       "#continuity-resume-name",
@@ -182,6 +204,11 @@ export default new (class Files extends EventEmitter {
     this.setFileStyle = idle(this.setFileStyle);
     this.onfilterbutton = this.onfilterbutton.bind(this);
     this.onuploadbutton = this.onuploadbutton.bind(this);
+    document.querySelector("#up").addEventListener("click", () => {
+      if (this.canUpload) {
+        registry.roomie.showModal(new UploadModal(this)).catch(() => {});
+      }
+    });
     this.ondragenter = this.ondragenter.bind(this);
     this.ondragleave = this.ondragleave.bind(this);
     this.onleave = this.onleave.bind(this);
@@ -193,7 +220,7 @@ export default new (class Files extends EventEmitter {
     addEventListener("dragleave", this.ondragleave, true);
     addEventListener("mouseout", this.ondragleave, true);
 
-    this.filterButtons.forEach((e) => {
+    this.filterButtons.forEach(e => {
       e.addEventListener("click", this.onfilterbutton, true);
       e.addEventListener("contextmenu", this.onfilterbutton, true);
     });
@@ -220,12 +247,12 @@ export default new (class Files extends EventEmitter {
       passive: true,
     });
 
-    document
-      .querySelector("#selectall")
-      .addEventListener("click", this.selectAll.bind(this));
-    document
-      .querySelector("#clearselection")
-      .addEventListener("click", this.clearSelection.bind(this));
+    document.
+      querySelector("#selectall").
+      addEventListener("click", this.selectAll.bind(this));
+    document.
+      querySelector("#clearselection").
+      addEventListener("click", this.clearSelection.bind(this));
     this.downloadNewEl.addEventListener("click", this.downloadNew.bind(this));
     this.downloadAllEl.addEventListener("click", this.downloadAll.bind(this));
     this.createRequestEl.addEventListener(
@@ -258,6 +285,32 @@ export default new (class Files extends EventEmitter {
     this.linkModeEl = document.querySelector("#linkmode");
     if (this.linkModeEl) {
       this.linkModeEl.addEventListener("click", this.linkMode.bind(this));
+    }
+    if (this.mobileSortEl) {
+      this.sortDropdown = new ToolbarDropdown(this.mobileSortEl, [
+        { value: "newest", label: "Newest first" },
+        { value: "largest", label: "Largest first" },
+        { value: "expiring", label: "Expiring soon" },
+      ].map(item => ({ ...item, glyph: () => document.querySelector(`#sort-${item.value} svg`).cloneNode(true) })), value => this.setSortMode(value));
+      this.sortDropdown.setSelected(this.sortMode);
+    }
+    if (this.mobileViewEl) {
+      this.viewDropdown = new ToolbarDropdown(this.mobileViewEl, [
+        { value: "list", label: "List", icon: "i-list" },
+        { value: "gallery", label: "Gallery", icon: "i-grid" },
+        { value: "links", label: "Links Archive" },
+      ].map(item => ({ ...item, glyph: () => item.icon ? dom("span", { classes: [item.icon] }) : this.linkModeEl.querySelector("svg").cloneNode(true) })), value => {
+        if (value === "links") {
+          if (registry.config.get("linkCollection") !== false && !this.linksMode) {
+            this.linkMode();
+          }
+        }
+        else if (["list", "gallery"].includes(value)) {
+          this.applyViewMode(value === "gallery");
+        }
+        this.syncMobileViewMode();
+      });
+      this.syncMobileViewMode();
     }
 
     // Filter preset button wiring
@@ -296,6 +349,7 @@ export default new (class Files extends EventEmitter {
         true,
       );
     }
+    this.continuityDismissEl?.addEventListener("click", () => this.dismissResumeReading());
     if (this.continuityResumeEl) {
       this.continuityResumeEl.addEventListener(
         "click",
@@ -337,9 +391,9 @@ export default new (class Files extends EventEmitter {
   }
 
   get visible() {
-    return Array.from(document.querySelectorAll(".file:not(.upload)"))
-      .map((e) => this.elmap.get(e))
-      .filter((e) => e);
+    return Array.from(document.querySelectorAll(".file:not(.upload)")).
+      map(e => this.elmap.get(e)).
+      filter(e => e);
   }
 
   init() {
@@ -387,10 +441,13 @@ export default new (class Files extends EventEmitter {
     });
     addEventListener("pagehide", this.onleave, { passive: true });
     addEventListener("beforeunload", this.onleave, { passive: true });
-    addEventListener(
-      "dicefiles:reader-progress",
-      debounce(() => this.refreshContinuity(), 500),
-    );
+    const refreshProgress = debounce(() => this.refreshContinuity(), 500);
+    addEventListener("dicefiles:reader-progress", event => {
+      if (event.detail?.fileKey) {
+        this.dismissedResumeKeys.delete(event.detail.fileKey);
+      }
+      refreshProgress();
+    });
   }
 
   updateCapabilityButtons() {
@@ -411,9 +468,11 @@ export default new (class Files extends EventEmitter {
       this.linkModeEl.classList.toggle("hidden", linkCollection === false);
       // If we're in links mode and it just got disabled, exit links mode
       if (linkCollection === false && this.linksMode) {
-        this.normalMode();
+        this.applyViewMode(this.galleryMode);
       }
     }
+    this.viewDropdown?.setDisabled("links", linkCollection === false);
+    this.syncMobileViewMode();
   }
 
   openRequestBoard(initialStatus) {
@@ -422,9 +481,9 @@ export default new (class Files extends EventEmitter {
     }
     const status =
       typeof initialStatus === "string" ? initialStatus : undefined;
-    registry.roomie
-      .showModal(new RequestBoardModal(this, { status }))
-      .catch((ex) => {
+    registry.roomie.
+      showModal(new RequestBoardModal(this, { status })).
+      catch(ex => {
         if (ex) {
           console.error(ex);
         }
@@ -498,7 +557,7 @@ export default new (class Files extends EventEmitter {
       openRequestKey: next.openRequestKey,
       filesReady: this._filesListReady,
       openAlreadyDone: this._deepLinkOpenDone,
-      lookup: (key) => this.get(key) || null,
+      lookup: key => this.get(key) || null,
     });
 
     if (openPlan.tryOpenRequest) {
@@ -506,7 +565,8 @@ export default new (class Files extends EventEmitter {
       if (req && req.isRequest) {
         registry.roomie.showModal(new RequestViewModal(req)).catch(() => {});
       }
-    } else if (openPlan.tryOpenFile) {
+    }
+    else if (openPlan.tryOpenFile) {
       const file = this.get(openPlan.tryOpenFile);
       if (file && !file.isRequest) {
         this.gallery.open(file);
@@ -531,7 +591,8 @@ export default new (class Files extends EventEmitter {
       this.newSinceServerTime = state.lastSeenServerTime;
       this.knownLinkedKeys = state.knownLinkedKeys;
       this.knownLinkedRooms = state.knownLinkedRooms;
-    } catch (ex) {
+    }
+    catch (ex) {
       this.newSinceServerTime = fallback;
       this.knownLinkedKeys = null;
       this.knownLinkedRooms = null;
@@ -551,7 +612,8 @@ export default new (class Files extends EventEmitter {
           knownLinkedRooms: linkedRooms,
         }),
       );
-    } catch (ex) {
+    }
+    catch (ex) {
       // ignored
     }
     return { seenAt, linkedKeys, linkedRooms };
@@ -562,10 +624,10 @@ export default new (class Files extends EventEmitter {
   }
 
   currentLinkedKeys() {
-    return this.files
-      .filter((file) => isLinkedFile(file))
-      .map((file) => file.key)
-      .filter(Boolean);
+    return this.files.
+      filter(file => isLinkedFile(file)).
+      map(file => file.key).
+      filter(Boolean);
   }
 
   currentLinkedRooms() {
@@ -619,21 +681,19 @@ export default new (class Files extends EventEmitter {
       this.delayedUpdateStatus();
     }
     const digest = buildActivityDigest(
-      this.files.filter((file) => !this.ownUploadKeys.has(file.key)),
+      this.files.filter(file => !this.ownUploadKeys.has(file.key)),
       this.continuityState,
       viewer,
     );
     let resumeEntries;
     try {
-      const { listProgress } = await import(
-        /* webpackChunkName: "reader" */ "./files/reader/opts"
-      );
       resumeEntries = buildResumeEntries(
         this.files,
-        listProgress(new Set(this.filemap.keys())),
+        listProgressRecords(localStorage, new Set(this.filemap.keys())).filter(record => !this.dismissedResumeKeys.has(record.fileKey)),
         3,
       );
-    } catch (ex) {
+    }
+    catch (ex) {
       resumeEntries = [];
     }
     // Multiple file/progress events may overlap while the reader chunk loads.
@@ -647,15 +707,15 @@ export default new (class Files extends EventEmitter {
     const resume = this.resumeEntries[0];
     const newCount = this.continuityDigest.total;
     const downloadCount = this.continuityDownloadable.length;
-    this.continuityResumeEl.classList.toggle("hidden", !resume);
+    this.continuityResumeCardEl.classList.toggle("hidden", !resume);
     this.continuityDigestControlEl.classList.toggle("hidden", !newCount);
     this.continuityMarkSeenEl.classList.toggle("hidden", !newCount);
     this.continuityDownloadAllEl.disabled = downloadCount === 0;
-    this.continuityDownloadAllEl.title = downloadCount
-      ? `Download all ${downloadCount} new upload${
-          downloadCount === 1 ? "" : "s"
-        }`
-      : "No downloadable uploads";
+    this.continuityDownloadAllEl.title = downloadCount ?
+      `Download all ${downloadCount} new upload${
+        downloadCount === 1 ? "" : "s"
+      }` :
+      "No downloadable uploads";
     this.continuityDownloadAllEl.setAttribute(
       "aria-label",
       this.continuityDownloadAllEl.title,
@@ -663,12 +723,14 @@ export default new (class Files extends EventEmitter {
     if (resume) {
       this.continuityResumeNameEl.textContent = resume.file.name;
       this.continuityResumeEl.title = `Resume ${resume.file.name}`;
+      this.continuityDismissEl.setAttribute("aria-label", `Dismiss ${resume.file.name} from Continue reading`);
     }
     if (newCount) {
       this.continuityDigestCountEl.textContent = `${newCount} new ${
         newCount === 1 ? "upload" : "uploads"
       }`;
-    } else {
+    }
+    else {
       this.continuityDigestEl.classList.add("hidden");
       this.continuityDigestToggleEl.setAttribute("aria-expanded", "false");
     }
@@ -686,10 +748,10 @@ export default new (class Files extends EventEmitter {
     if (!this.continuityDigest) {
       return [];
     }
-    return this.continuityDigest.keys
-      .map((key) => this.filemap.get(key))
-      .filter(
-        (file) =>
+    return this.continuityDigest.keys.
+      map(key => this.filemap.get(key)).
+      filter(
+        file =>
           file &&
           !file.expired &&
           !file.isRequest &&
@@ -723,21 +785,21 @@ export default new (class Files extends EventEmitter {
       );
       for (const file of files) {
         const source =
-          key === "linked"
-            ? (file.meta &&
+          key === "linked" ?
+            (file.meta &&
                 (file.meta.linkedRoomName || file.meta.linkedFrom)) ||
               file.linkedFrom ||
-              "linked room"
-            : key === "bots"
-              ? (file.meta &&
+              "linked room" :
+            key === "bots" ?
+              (file.meta &&
                   (file.meta.botName || file.meta.plugin)) ||
-                "bot"
-              : key === "fulfilledRequests"
-                ? file.fulfilledByNick || "fulfilled"
-                : "";
+                "bot" :
+              key === "fulfilledRequests" ?
+                file.fulfilledByNick || "fulfilled" :
+                "";
         const row = dom("button", {
           attrs: {
-            type: "button",
+            "type": "button",
             "data-file-key": file.key,
           },
           classes: ["continuity-item"],
@@ -774,6 +836,21 @@ export default new (class Files extends EventEmitter {
     );
   }
 
+  async dismissResumeReading() {
+    const entry = this.resumeEntries[0];
+    if (!entry?.file) {
+      return;
+    }
+    this.dismissedResumeKeys.add(entry.file.key);
+    try {
+      dismissProgressRecord(localStorage, entry.file.key);
+    }
+    catch (_) { /* Session dismissal still works without storage. */ }
+    await this.refreshContinuity();
+    const next = this.resumeEntries.length ? this.continuityDismissEl : this.filter;
+    next?.focus({ preventScroll: true });
+  }
+
   async resumeReading() {
     const entry = this.resumeEntries[0];
     if (!entry || !entry.file) {
@@ -781,7 +858,8 @@ export default new (class Files extends EventEmitter {
     }
     try {
       await this.gallery.read(entry.file);
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error(ex);
     }
   }
@@ -856,17 +934,18 @@ export default new (class Files extends EventEmitter {
   }
 
   persistViewMode() {
-    const value = this.linksMode
-      ? "links"
-      : this.galleryMode
-        ? "gallery"
-        : "list";
+    const value = this.linksMode ?
+      "links" :
+      this.galleryMode ?
+        "gallery" :
+        "list";
     try {
       if (this.viewModeKey) {
         localStorage.setItem(this.viewModeKey, value);
       }
       localStorage.setItem(VIEW_MODE_GLOBAL_KEY, value);
-    } catch (ex) {
+    }
+    catch (ex) {
       // ignored
     }
   }
@@ -878,7 +957,8 @@ export default new (class Files extends EventEmitter {
       if (mode !== "gallery" && mode !== "list" && mode !== "links") {
         mode = localStorage.getItem(VIEW_MODE_GLOBAL_KEY);
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       mode = null;
     }
     if (mode !== "gallery" && mode !== "list" && mode !== "links") {
@@ -889,7 +969,8 @@ export default new (class Files extends EventEmitter {
       // Links mode restore is deferred to after links.init() runs
       // We store the intent and apply after init
       this._pendingLinksRestore = true;
-    } else {
+    }
+    else {
       this.applyViewMode(mode === "gallery", false);
     }
   }
@@ -958,15 +1039,16 @@ export default new (class Files extends EventEmitter {
       e.preventDefault();
       e.stopPropagation();
       const { tag, tagValue } = el.dataset;
-      let val = /[\s'"]/.test(tagValue)
-        ? `'${tagValue.replace(/'/g, "\\'")}'`
-        : tagValue;
+      let val = /[\s'"]/.test(tagValue) ?
+        `'${tagValue.replace(/'/g, "\\'")}'` :
+        tagValue;
       if (val === "true") {
         val = "";
       }
       if (e.button || e.shiftKey) {
         this.filter.value = `${this.filter.value} -${tag}:${val}`.trim();
-      } else {
+      }
+      else {
         this.filter.value = `${tag}:${val}`.trim();
       }
       this.doFilter();
@@ -1046,16 +1128,18 @@ export default new (class Files extends EventEmitter {
       const { filterButtons: btns } = this;
       if (e.button) {
         const anyEnabled = btns.some(
-          (e) => e !== btn && !e.classList.contains("disabled"),
+          e => e !== btn && !e.classList.contains("disabled"),
         );
-        btns.forEach((e) => {
+        btns.forEach(e => {
           e.classList[e === btn || !anyEnabled ? "remove" : "add"]("disabled");
         });
-      } else {
+      }
+      else {
         const act = btn.classList.contains("disabled") ? "remove" : "add";
         btn.classList[act]("disabled");
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error(ex);
     }
     this.doFilter();
@@ -1066,7 +1150,7 @@ export default new (class Files extends EventEmitter {
   }
 
   clearFilter() {
-    this.filterButtons.forEach((e) => e.classList.remove("disabled"));
+    this.filterButtons.forEach(e => e.classList.remove("disabled"));
     this.filter.value = "";
 
     this.doFilter();
@@ -1078,6 +1162,7 @@ export default new (class Files extends EventEmitter {
   }
 
   doFilter() {
+    this.galleryPage = 0;
     this.filterFunc = filesfilter.toFilterFuncs(
       this.filterButtons,
       this.filter.value,
@@ -1103,7 +1188,8 @@ export default new (class Files extends EventEmitter {
         showingNewOnly: this.showingNewOnly,
       });
       localStorage.setItem(this.filterStateKey, payload);
-    } catch (_) {
+    }
+    catch (_) {
       /* no-op */
     }
   }
@@ -1115,7 +1201,8 @@ export default new (class Files extends EventEmitter {
     let raw = null;
     try {
       raw = localStorage.getItem(this.filterStateKey);
-    } catch (_) {
+    }
+    catch (_) {
       return;
     }
     const state = parseFilterState(raw);
@@ -1137,7 +1224,8 @@ export default new (class Files extends EventEmitter {
         );
       }
       this.doFilter();
-    } finally {
+    }
+    finally {
       this._restoringFilter = false;
       this.persistFilterState();
     }
@@ -1148,14 +1236,16 @@ export default new (class Files extends EventEmitter {
     let result;
     if (filterFunc === filesfilter.NONE) {
       result = [];
-    } else if (filterFunc) {
+    }
+    else if (filterFunc) {
       result = files.filter(filterFunc);
-    } else {
+    }
+    else {
       result = files;
     }
     if (this.showingNewOnly) {
       result = result.filter(
-        (f) => Number(f.uploaded) > this.newSinceServerTime,
+        f => Number(f.uploaded) > this.newSinceServerTime,
       );
     }
     return result;
@@ -1165,7 +1255,7 @@ export default new (class Files extends EventEmitter {
     const files = this.filtered(this.files);
     if (!files || !files.length) {
       return APOOL.schedule(null, () => {
-        this.visible.forEach((e) => e.el.parentElement.removeChild(e.el));
+        this.visible.forEach(e => e.el.parentElement.removeChild(e.el));
       });
     }
 
@@ -1174,7 +1264,7 @@ export default new (class Files extends EventEmitter {
     // Remove now hidden
     let diff = false;
     const remove = [];
-    visible.forEach((e) => {
+    visible.forEach(e => {
       if (fileset.has(e)) {
         return;
       }
@@ -1209,8 +1299,11 @@ export default new (class Files extends EventEmitter {
   updateStatus() {
     if (!this.files.length) {
       this.filterStatus.classList.add("hidden");
-    } else {
+    }
+    else {
       const text = `${this.visible.length} of ${this.files.length} files`;
+      this.filterStatus.setAttribute("data-compact-text", `${this.visible.length}/${this.files.length}`);
+      this.filterStatus.setAttribute("title", text);
       if (this.filterStatus.textContent !== text) {
         this.filterStatus.textContent = text;
       }
@@ -1223,18 +1316,19 @@ export default new (class Files extends EventEmitter {
 
     if (!this.newFiles) {
       this.newStatus.classList.add("hidden");
-    } else {
+    }
+    else {
       this.newStatus.classList.remove("hidden");
     }
     this.updateDownloadButtons();
   }
 
   get allDownloadable() {
-    return this.files.filter((f) => !f.expired && !(f.meta && f.meta.request));
+    return this.files.filter(f => !f.expired && !(f.meta && f.meta.request));
   }
 
   get newDownloadable() {
-    return this.allDownloadable.filter((f) =>
+    return this.allDownloadable.filter(f =>
       f.el.classList.contains("is-new"),
     );
   }
@@ -1267,17 +1361,17 @@ export default new (class Files extends EventEmitter {
       const modal = new RequestModal();
       const payload = await registry.roomie.showModal(modal);
       const text =
-        typeof payload === "string"
-          ? payload.trim()
-          : ((payload && payload.text) || "").trim();
+        typeof payload === "string" ?
+          payload.trim() :
+          ((payload && payload.text) || "").trim();
       const requestUrl =
-        payload && typeof payload === "object"
-          ? (payload.url || "").trim()
-          : "";
+        payload && typeof payload === "object" ?
+          (payload.url || "").trim() :
+          "";
       const requestImage =
-        payload && typeof payload === "object"
-          ? (payload.requestImage || "").trim()
-          : "";
+        payload && typeof payload === "object" ?
+          (payload.requestImage || "").trim() :
+          "";
       if (!text) {
         return;
       }
@@ -1293,7 +1387,7 @@ export default new (class Files extends EventEmitter {
             url: requestUrl,
             requestImage,
           },
-          (rv) => {
+          rv => {
             clearTimeout(timeout);
             resolve(rv || {});
           },
@@ -1302,7 +1396,8 @@ export default new (class Files extends EventEmitter {
       if (ack.err) {
         throw new Error(ack.err);
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       if (!ex || ex.message === "cancelled") {
         return;
       }
@@ -1320,7 +1415,8 @@ export default new (class Files extends EventEmitter {
       let result;
       try {
         result = await registry.roomie.showModal(modal);
-      } catch (ex) {
+      }
+      catch (ex) {
         if (!ex || ex.message === "cancelled") {
           return;
         }
@@ -1332,11 +1428,11 @@ export default new (class Files extends EventEmitter {
       const { action } = result;
       if (action === "remove" || action === "fulfill" || action === "reopen") {
         const status =
-          action === "reopen"
-            ? "open"
-            : action === "remove"
-              ? "removed"
-              : "fulfilled";
+          action === "reopen" ?
+            "open" :
+            action === "remove" ?
+              "removed" :
+              "fulfilled";
         const ack = await new Promise((resolve, reject) => {
           const timeout = setTimeout(
             () => reject(new Error("Request timeout")),
@@ -1345,7 +1441,7 @@ export default new (class Files extends EventEmitter {
           registry.socket.emit(
             "requeststatus",
             { key: fileInst.key, status },
-            (rv) => {
+            rv => {
               clearTimeout(timeout);
               resolve(rv || {});
             },
@@ -1355,7 +1451,8 @@ export default new (class Files extends EventEmitter {
           throw new Error(ack.err);
         }
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       if (!ex || ex.message === "cancelled") {
         return;
       }
@@ -1373,7 +1470,8 @@ export default new (class Files extends EventEmitter {
       }
       const parsed = JSON.parse(raw);
       return parsed && typeof parsed === "object" ? parsed : fallback;
-    } catch (ex) {
+    }
+    catch (ex) {
       return fallback;
     }
   }
@@ -1381,7 +1479,8 @@ export default new (class Files extends EventEmitter {
   writeLocalJSON(key, value) {
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch (ex) {
+    }
+    catch (ex) {
       // ignored
     }
   }
@@ -1418,7 +1517,7 @@ export default new (class Files extends EventEmitter {
     }
     const data = this.readLocalJSON(this.downloadedNamesKey, { names: [] });
     this.downloadedNameSet = new Set(
-      (data.names || []).map((e) => e.toString().toLowerCase()),
+      (data.names || []).map(e => e.toString().toLowerCase()),
     );
     return this.downloadedNameSet;
   }
@@ -1453,7 +1552,7 @@ export default new (class Files extends EventEmitter {
         1,
         Math.min(4, Number(options.maxConcurrent) || 4),
       ),
-      remainingKeys: files.map((f) => f.key),
+      remainingKeys: files.map(f => f.key),
       createdAt: Date.now(),
       started: false,
     };
@@ -1478,7 +1577,8 @@ export default new (class Files extends EventEmitter {
   clearBatchQueue() {
     try {
       localStorage.removeItem(this.batchQueueKey);
-    } catch (ex) {
+    }
+    catch (ex) {
       // ignored
     }
   }
@@ -1500,9 +1600,9 @@ export default new (class Files extends EventEmitter {
       this.clearBatchQueue();
       return;
     }
-    const files = queue.remainingKeys
-      .map((key) => this.filemap.get(key))
-      .filter((f) => f && !f.expired && !(f.meta && f.meta.request));
+    const files = queue.remainingKeys.
+      map(key => this.filemap.get(key)).
+      filter(f => f && !f.expired && !(f.meta && f.meta.request));
     if (!files.length) {
       this.clearBatchQueue();
       return;
@@ -1533,7 +1633,7 @@ export default new (class Files extends EventEmitter {
       skipExisting: queueState.skipExisting,
       retries: queueState.maxRetries,
       concurrent: queueState.maxConcurrent,
-      onOptionsChange: (values) => {
+      onOptionsChange: values => {
         this.saveDownloadPrefs(values);
         queueState.skipExisting = !!values.skipExisting;
         queueState.maxRetries = Math.max(
@@ -1569,7 +1669,8 @@ export default new (class Files extends EventEmitter {
       );
       this.saveDownloadPrefs(values);
       this.persistBatchQueue(queueState);
-    } catch (ex) {
+    }
+    catch (ex) {
       // Cancelled before start
       modal.cancelRequested = true;
       this.clearBatchQueue();
@@ -1585,7 +1686,8 @@ export default new (class Files extends EventEmitter {
     let result = null;
     try {
       result = await this.runBatchDownload(targets, modal, queueState);
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error(ex);
     }
     await modalPromise;
@@ -1615,12 +1717,12 @@ export default new (class Files extends EventEmitter {
       total,
     );
 
-    const removeRemaining = (key) => {
+    const removeRemaining = key => {
       if (!queueState || !Array.isArray(queueState.remainingKeys)) {
         return;
       }
       queueState.remainingKeys = queueState.remainingKeys.filter(
-        (k) => k !== key,
+        k => k !== key,
       );
       this.persistBatchQueue(queueState);
     };
@@ -1667,7 +1769,8 @@ export default new (class Files extends EventEmitter {
             this.markFilenameDownloaded(file.name);
             modal.upsertFileStatus(file.name, "success", attempt);
             break;
-          } catch (ex) {
+          }
+          catch (ex) {
             lastErr = ex;
             if (attempt < maxAttempts) {
               modal.upsertFileStatus(
@@ -1730,7 +1833,8 @@ export default new (class Files extends EventEmitter {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-    } finally {
+    }
+    finally {
       setTimeout(() => URL.revokeObjectURL(url), 2500);
     }
   }
@@ -1742,12 +1846,14 @@ export default new (class Files extends EventEmitter {
       let entries = [];
       if (this.ubutton.webkitEntries && this.ubutton.webkitEntries.length) {
         entries = Array.from(this.ubutton.webkitEntries);
-      } else {
+      }
+      else {
         files = Array.from(this.ubutton.files);
       }
       this.ubutton.parentElement.reset();
       this.queueUploads(entries, files);
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error("failed to handle button upload", ex);
     }
   }
@@ -1769,6 +1875,13 @@ export default new (class Files extends EventEmitter {
   }
 
   ondragenter(e) {
+    if (document.querySelector(".modal-upload")) {
+      e.preventDefault();
+      if (!e.target.closest?.(".modal-upload")) {
+        e.stopPropagation(); e.dataTransfer.dropEffect = "none";
+      }
+      return;
+    }
     if (this.requestModalOpen) {
       e.preventDefault();
       e.stopPropagation();
@@ -1798,6 +1911,9 @@ export default new (class Files extends EventEmitter {
   }
 
   ondragleave(e) {
+    if (document.querySelector(".modal-upload")) {
+      return;
+    }
     if (this.requestModalOpen) {
       e.preventDefault();
       e.stopPropagation();
@@ -1811,6 +1927,13 @@ export default new (class Files extends EventEmitter {
   }
 
   async ondrop(e) {
+    if (document.querySelector(".modal-upload")) {
+      e.preventDefault();
+      if (!e.target.closest?.(".modal-upload")) {
+        e.stopPropagation();
+      }
+      return;
+    }
     if (this.requestModalOpen) {
       e.preventDefault();
       e.stopPropagation();
@@ -1834,32 +1957,10 @@ export default new (class Files extends EventEmitter {
     e.preventDefault();
     e.stopPropagation();
     try {
-      await registry.init();
-      const files = [];
-      const entries = [];
-      const { dataTransfer: data } = e;
-      if (data.items && data.items.length) {
-        for (const file of Array.from(data.items)) {
-          if (file.kind !== "file") {
-            continue;
-          }
-          if (file.webkitGetAsEntry) {
-            entries.push(file.webkitGetAsEntry());
-            continue;
-          }
-          files.push(file.getAsFile());
-        }
-        data.items.clear();
-      }
-      if (!entries.length) {
-        for (const file of Array.from(data.files)) {
-          files.push(file);
-        }
-        data.clearData();
-      }
-      console.log(entries, files);
+      const { files, entries } = collectDroppedFiles(e.dataTransfer);
       this.queueUploads(entries, files);
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error("failed to handle drop", ex);
     }
   }
@@ -1869,7 +1970,8 @@ export default new (class Files extends EventEmitter {
       if (entry.isFile) {
         try {
           files.push(await this.toFile(entry));
-        } catch (ex) {
+        }
+        catch (ex) {
           console.error("failed to get file for entry", entry);
         }
         continue;
@@ -1877,7 +1979,8 @@ export default new (class Files extends EventEmitter {
       if (entry.isDirectory) {
         try {
           await this.readDir(entry, files);
-        } catch (ex) {
+        }
+        catch (ex) {
           console.error("failed to read directory", entry);
         }
         continue;
@@ -1888,8 +1991,8 @@ export default new (class Files extends EventEmitter {
 
   async readDir(entry, files) {
     const reader = entry.createReader();
-    await new Promise((resolve) => {
-      reader.readEntries(async (entries) => {
+    await new Promise(resolve => {
+      reader.readEntries(async entries => {
         await this.processEntries(entries, files);
         resolve();
       });
@@ -1904,18 +2007,19 @@ export default new (class Files extends EventEmitter {
     try {
       await registry.init();
       await this.processEntries(entries, files);
-      sort(files, (f) => f.name, naturalCaseSort).reverse();
-      const uploads = files
-        .filter((f) => !ROBOCOPFILES.test(f.name))
-        .map((f) => new Upload(this, f));
+      sort(files, f => f.name, naturalCaseSort).reverse();
+      const uploads = files.
+        filter(f => !ROBOCOPFILES.test(f.name)).
+        map(f => new Upload(this, f));
       if (!uploads.length) {
         return;
       }
-      uploads.forEach((u) => this.uploadOne(u));
+      uploads.forEach(u => this.uploadOne(u));
       await this.addUploadElements(uploads);
       this.adjustEmpty();
       uploads[0].el.scrollIntoView(false);
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error(ex);
     }
   }
@@ -1944,8 +2048,8 @@ export default new (class Files extends EventEmitter {
       if (replace) {
         await this.clear();
       }
-      const files = data.files
-        .filter((f) => {
+      const files = data.files.
+        filter(f => {
           const existing = this.filemap.get(f.key);
           if (!existing) {
             return true;
@@ -1956,8 +2060,8 @@ export default new (class Files extends EventEmitter {
             }),
           );
           return false;
-        })
-        .map((f) => {
+        }).
+        map(f => {
           f = Object.assign({}, f, { isNew: this.isFileNew(f) });
           f = new File(this, f);
           if (f.expired) {
@@ -1967,8 +2071,8 @@ export default new (class Files extends EventEmitter {
           this.emit("file-added", f, replace);
           this.emit(`file-added-${f.key}`, f, replace);
           return f;
-        })
-        .filter((e) => e);
+        }).
+        filter(e => e);
       if (files.length) {
         await this.addFileElements(files);
       }
@@ -2037,10 +2141,11 @@ export default new (class Files extends EventEmitter {
   }
 
   clear() {
-    Array.from(this.el.querySelectorAll(".file:not(.upload)")).forEach((f) => {
+    Array.from(this.el.querySelectorAll(".file:not(.upload)")).forEach(f => {
       try {
         this.el.removeChild(f);
-      } catch (ex) {
+      }
+      catch (ex) {
         // ignored
       }
     });
@@ -2053,7 +2158,8 @@ export default new (class Files extends EventEmitter {
   adjustEmpty(forceOn) {
     if (!forceOn && this.el.childElementCount) {
       document.body.classList.remove("empty");
-    } else {
+    }
+    else {
       document.body.classList.add("empty");
     }
   }
@@ -2093,7 +2199,7 @@ export default new (class Files extends EventEmitter {
   }
 
   normalizeListRows() {
-    this.visible.forEach((f) => {
+    this.visible.forEach(f => {
       f.el.style.width = "100%";
       f.el.style.maxWidth = "100%";
       f.el.style.flex = "0 0 auto";
@@ -2117,18 +2223,44 @@ export default new (class Files extends EventEmitter {
     return computeVisibleWindow(this, files);
   }
 
+  async changeGalleryPage(delta) {
+    const windowed = this.getVisibleWindow(this.files);
+    this.galleryPage = Math.max(0, Math.min(windowed.pages - 1, this.galleryPage + delta));
+    this.el.scrollTop = 0;
+    await this.insertFilesIntoDOM(this.files);
+    const [first] = this.visible;
+    if (first) {
+      first.nameEl.focus({ preventScroll: true });
+    }
+    this.scroller.update();
+  }
+
   insertFilesIntoDOM(files, remove) {
+    const focused = document.activeElement;
+    const focusedRow = focused && focused.closest(".file");
     if (remove) {
-      remove.forEach((el) => {
+      remove.forEach(el => {
         if (el && el.parentElement) {
           el.parentElement.removeChild(el);
         }
       });
     }
-    const windowed = this.getVisibleWindow(files);
-    const toInsert = windowed.virtualized
-      ? windowed.items
-      : Array.from(this.filtered(files));
+    const windowed = this.getVisibleWindow(this.files);
+    const toInsert = windowed.items;
+    const keep = new Set(toInsert.map(file => file.el));
+    for (const child of Array.from(this.el.children)) {
+      if (child.classList.contains("file") && !child.classList.contains("upload") && !keep.has(child)) {
+        child.remove();
+      }
+    }
+    this.galleryPager.hidden = this.linksMode || !this.galleryMode || windowed.pages <= 1;
+    this.el.classList.toggle("gallery-paged", !this.galleryPager.hidden);
+    if (windowed.galleryPaged) {
+      this.galleryPage = windowed.page;
+      this.galleryPrevious.disabled = windowed.page === 0;
+      this.galleryNext.disabled = windowed.page + 1 >= windowed.pages;
+      this.galleryPageStatus.textContent = `Page ${windowed.page + 1} of ${windowed.pages} · ${windowed.total} files`;
+    }
     if (windowed.virtualized) {
       this._virtStart = windowed.start;
       this._virtEnd = windowed.end;
@@ -2170,27 +2302,29 @@ export default new (class Files extends EventEmitter {
       }
     }
 
-    let head = this.el.querySelector(".file:not(.upload)");
+    const anchor = windowed.virtualized ? bottomSpacer : null;
     for (const f of toInsert) {
-      if (head) {
-        this.el.insertBefore(f.el, head);
-      } else {
-        this.el.appendChild(f.el);
-        this.setFileStyle(f);
-      }
+      this.el.insertBefore(f.el, anchor);
+      this.setFileStyle(f);
       if (this.galleryMode) {
         f.adjustPreview();
       }
-      head = f.el;
+    }
+    if (focusedRow && !focusedRow.isConnected && toInsert[0]) {
+      toInsert[0].nameEl.focus({ preventScroll: true });
+    }
+    else if (focused && focused.isConnected && document.activeElement !== focused) {
+      focused.focus({ preventScroll: true });
     }
 
     // Sample row height for subsequent windows.
-    if (toInsert.length && toInsert[0].el) {
+    if (!this.galleryMode && toInsert.length && toInsert[0].el) {
       const h = toInsert[0].el.offsetHeight;
       if (h > 20) {
         this._rowHeightHint = h;
       }
     }
+    this.delayedUpdateStatus();
   }
 
   async addFileElements(files) {
@@ -2199,13 +2333,15 @@ export default new (class Files extends EventEmitter {
       // XXX not restore save
       if (!this.files.length) {
         this.files = files;
-        this.filemap = new Map(this.files.map((f) => [f.key, f]));
-      } else {
+        this.filemap = new Map(this.files.map(f => [f.key, f]));
+      }
+      else {
         this.files.push(...files);
         if (files.length > 5) {
-          this.filemap = new Map(this.files.map((f) => [f.key, f]));
-        } else {
-          files.forEach((e) => this.filemap.set(e.key, e));
+          this.filemap = new Map(this.files.map(f => [f.key, f]));
+        }
+        else {
+          files.forEach(e => this.filemap.set(e.key, e));
         }
       }
       this.adjustEmpty();
@@ -2228,7 +2364,8 @@ export default new (class Files extends EventEmitter {
       if (this.pendingNotificationHighlightKey) {
         this.highlightFromNotification(this.pendingNotificationHighlightKey);
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error(ex);
     }
   }
@@ -2245,7 +2382,8 @@ export default new (class Files extends EventEmitter {
     this.pendingNotificationHighlightKey = null;
     try {
       file.el.scrollIntoView({ block: "center", behavior: "smooth" });
-    } catch (ex) {
+    }
+    catch (ex) {
       file.el.scrollIntoView(false);
     }
     file.el.classList.add("notification-focus");
@@ -2264,11 +2402,13 @@ export default new (class Files extends EventEmitter {
     }
     const [head] = visible;
     if (this.sortMode === "largest") {
-      sort(visible, (e) => e.size || 0).reverse();
-    } else if (this.sortMode === "expiring") {
-      sort(visible, (e) => Number(e.expires) || Infinity);
-    } else {
-      sort(visible, (e) => e.uploaded).reverse(); // newest (default)
+      sort(visible, e => e.size || 0).reverse();
+    }
+    else if (this.sortMode === "expiring") {
+      sort(visible, e => Number(e.expires) || Infinity);
+    }
+    else {
+      sort(visible, e => e.uploaded).reverse(); // newest (default)
     }
     let idx = 0;
     const { el } = this;
@@ -2292,7 +2432,8 @@ export default new (class Files extends EventEmitter {
     try {
       const saved = this.sortModeKey && localStorage.getItem(this.sortModeKey);
       this.sortMode = normalizeSortMode(saved, this.sortMode);
-    } catch (_) {
+    }
+    catch (_) {
       /* no-op */
     }
     this.updateSortButtons();
@@ -2307,14 +2448,17 @@ export default new (class Files extends EventEmitter {
       if (this.sortModeKey) {
         localStorage.setItem(this.sortModeKey, mode);
       }
-    } catch (_) {
+    }
+    catch (_) {
       /* no-op */
     }
     this.updateSortButtons();
-    this.sortFiles();
+    this.galleryPage = 0;
+    this.insertFilesIntoDOM(this.files);
   }
 
   updateSortButtons() {
+    this.sortDropdown?.setSelected(this.sortMode);
     if (this.sortNewestEl) {
       const on = this.sortMode === "newest";
       this.sortNewestEl.classList.toggle("active", on);
@@ -2355,7 +2499,8 @@ export default new (class Files extends EventEmitter {
     }
     try {
       return JSON.parse(localStorage.getItem(this.presetsKey) || "[]");
-    } catch (_) {
+    }
+    catch (_) {
       return [];
     }
   }
@@ -2366,7 +2511,8 @@ export default new (class Files extends EventEmitter {
     }
     try {
       localStorage.setItem(this.presetsKey, JSON.stringify(presets));
-    } catch (_) {
+    }
+    catch (_) {
       /* no-op */
     }
   }
@@ -2379,12 +2525,12 @@ export default new (class Files extends EventEmitter {
     const trimmed = name.trim();
     const buttonState = {};
     if (this.filterButtons) {
-      this.filterButtons.forEach((b) => {
+      this.filterButtons.forEach(b => {
         buttonState[b.id.replace(/^filter-/, "")] =
           !b.classList.contains("disabled");
       });
     }
-    const presets = this.loadPresets().filter((p) => p.name !== trimmed);
+    const presets = this.loadPresets().filter(p => p.name !== trimmed);
     presets.push({
       name: trimmed,
       query: this.filter ? this.filter.value : "",
@@ -2399,7 +2545,7 @@ export default new (class Files extends EventEmitter {
       this.filter.value = preset.query || "";
     }
     if (this.filterButtons && preset.buttons) {
-      this.filterButtons.forEach((b) => {
+      this.filterButtons.forEach(b => {
         const key = b.id.replace(/^filter-/, "");
         b.classList.toggle("disabled", !preset.buttons[key]);
       });
@@ -2408,7 +2554,7 @@ export default new (class Files extends EventEmitter {
   }
 
   deletePreset(name) {
-    const presets = this.loadPresets().filter((p) => p.name !== name);
+    const presets = this.loadPresets().filter(p => p.name !== name);
     this._savePresets(presets);
     this.renderPresets();
   }
@@ -2428,7 +2574,7 @@ export default new (class Files extends EventEmitter {
       const del = document.createElement("button");
       del.className = "preset-pill-del i-clear";
       del.title = `Delete "${preset.name}"`;
-      del.addEventListener("click", (e) => {
+      del.addEventListener("click", e => {
         e.stopPropagation();
         this.deletePreset(preset.name);
       });
@@ -2470,7 +2616,8 @@ export default new (class Files extends EventEmitter {
           this.files.splice(this.files.indexOf(f), 1);
         }
       }
-    } finally {
+    }
+    finally {
       this.adjustEmpty();
       this.delayedUpdateStatus();
     }
@@ -2481,15 +2628,16 @@ export default new (class Files extends EventEmitter {
       for (const u of uploads) {
         this.el.insertBefore(u.el, this.el.firstChild);
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error(ex);
     }
   }
 
   get selection() {
-    return Array.from(document.querySelectorAll(".file.selected"))
-      .map((e) => this.elmap.get(e))
-      .filter((e) => e);
+    return Array.from(document.querySelectorAll(".file.selected")).
+      map(e => this.elmap.get(e)).
+      filter(e => e);
   }
 
   select(file, e) {
@@ -2501,7 +2649,8 @@ export default new (class Files extends EventEmitter {
       if (!this.selectionStart) {
         [this.selectionStart] = visible;
         startIdx = 0;
-      } else {
+      }
+      else {
         startIdx = visible.indexOf(this.selectionStart);
         if (startIdx < 0) {
           [this.selectionStart] = visible;
@@ -2513,30 +2662,33 @@ export default new (class Files extends EventEmitter {
         [startIdx, endIdx] = [endIdx, startIdx];
       }
       this._clearSelection();
-      visible
-        .slice(startIdx, endIdx + 1)
-        .forEach((e) => e.el.classList.add("selected"));
-    } else if (ctrl || meta) {
+      visible.
+        slice(startIdx, endIdx + 1).
+        forEach(e => e.el.classList.add("selected"));
+    }
+    else if (ctrl || meta) {
       file.el.classList.toggle("selected");
-    } else {
+    }
+    else {
       const already = file.el.classList.contains("selected");
       this._clearSelection();
       if (!already) {
         file.el.classList.add("selected");
         this.selectionStart = file;
-      } else {
+      }
+      else {
         this.selectionStart = null;
       }
     }
   }
 
   _clearSelection() {
-    this.selection.forEach((e) => e.el.classList.remove("selected"));
+    this.selection.forEach(e => e.el.classList.remove("selected"));
   }
 
   selectAll() {
     this.selectionStart = null;
-    this.visible.forEach((f) => f.el.classList.add("selected"));
+    this.visible.forEach(f => f.el.classList.add("selected"));
   }
 
   clearSelection() {
@@ -2583,9 +2735,9 @@ export default new (class Files extends EventEmitter {
 
   trashFiles(files) {
     // Linked mirrors are owned by the source room — never trash from destination.
-    const keys = files
-      .filter((e) => e && e.key && !e.isLinked)
-      .map((e) => e.key);
+    const keys = files.
+      filter(e => e && e.key && !e.isLinked).
+      map(e => e.key);
     if (!keys.length) {
       registry.messages.addSystemMessage(
         "Linked files cannot be removed here — manage them in the source room.",
@@ -2604,7 +2756,7 @@ export default new (class Files extends EventEmitter {
     if (!selection.length) {
       return subjects;
     }
-    selection.forEach((f) => {
+    selection.forEach(f => {
       if (f.ip) {
         subjects.ips.push(f.ip);
       }
@@ -2628,7 +2780,7 @@ export default new (class Files extends EventEmitter {
   }
 
   blacklist() {
-    const selected = this.selection.map((e) => e.key);
+    const selected = this.selection.map(e => e.key);
     if (!selected.length) {
       return;
     }
@@ -2636,9 +2788,9 @@ export default new (class Files extends EventEmitter {
   }
 
   whitelist() {
-    const selected = this.selection
-      .filter((e) => e.tagsMap.has("hidden"))
-      .map((e) => e.key);
+    const selected = this.selection.
+      filter(e => e.tagsMap.has("hidden")).
+      map(e => e.key);
     if (!selected.length) {
       return;
     }
@@ -2649,7 +2801,7 @@ export default new (class Files extends EventEmitter {
     const ips = new Set(subjects.ips);
     const accounts = new Set(subjects.accounts);
     const a = accounts.size > 0;
-    const purges = this.files.filter((f) => {
+    const purges = this.files.filter(f => {
       return ips.has(f.ip) || (a && f.meta && accounts.has(f.meta.account));
     });
     this.trashFiles(purges);
@@ -2669,21 +2821,25 @@ export default new (class Files extends EventEmitter {
     }
 
     this.galleryMode = !!galleryMode;
+    this._virtStart = null;
+    this._virtEnd = null;
+    this.insertFilesIntoDOM(this.files);
     if (this.galleryMode) {
       this.nailOffEl.classList.remove("active");
       this.el.classList.remove("listmode");
       this.nailOnEl.classList.add("active");
       this.el.classList.add("gallerymode");
-      this.visible.forEach((f) => {
+      this.visible.forEach(f => {
         f.el.style.removeProperty("width");
         f.el.style.removeProperty("max-width");
         f.el.style.removeProperty("flex");
       });
 
       APOOL.schedule(null, () =>
-        this.visible.forEach((f) => f.adjustPreview()),
+        this.visible.forEach(f => f.adjustPreview()),
       );
-    } else {
+    }
+    else {
       this.nailOffEl.classList.add("active");
       this.el.classList.add("listmode");
       this.nailOnEl.classList.remove("active");
@@ -2692,6 +2848,7 @@ export default new (class Files extends EventEmitter {
       requestAnimationFrame(() => this.normalizeListRows());
     }
 
+    this.syncMobileViewMode();
     if (persist) {
       this.persistViewMode();
     }
@@ -2712,9 +2869,12 @@ export default new (class Files extends EventEmitter {
       // Restore correct nail active state
       if (this.galleryMode) {
         this.nailOnEl.classList.add("active");
-      } else {
+      }
+      else {
         this.nailOffEl.classList.add("active");
       }
+      this.insertFilesIntoDOM(this.files);
+      this.syncMobileViewMode();
       this.persistViewMode();
       return;
     }
@@ -2722,6 +2882,7 @@ export default new (class Files extends EventEmitter {
     this.nailOffEl.classList.remove("active");
     this.nailOnEl.classList.remove("active");
     this.linksMode = true;
+    this.galleryPager.hidden = true;
     this.el.classList.add("hidden");
     if (registry.links) {
       registry.links.show();
@@ -2729,7 +2890,12 @@ export default new (class Files extends EventEmitter {
     if (this.linkModeEl) {
       this.linkModeEl.classList.add("active");
     }
+    this.syncMobileViewMode();
     this.persistViewMode();
+  }
+
+  syncMobileViewMode() {
+    this.viewDropdown?.setSelected(this.linksMode ? "links" : this.galleryMode ? "gallery" : "list");
   }
 
   nailOff() {

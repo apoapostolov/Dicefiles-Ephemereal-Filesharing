@@ -5,7 +5,7 @@
   display: none;
   flex-direction: column;
   z-index: 1500;
-  background: #111;
+  background: var(--dark-bg);
   overflow: hidden;
   position: relative; /* anchor for #reader-opts-modal */
 }
@@ -26,8 +26,8 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.45rem 0.9rem;
-  background: #1c1c1c;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--hairline);
   flex: 0 0 auto;
   user-select: none;
   min-height: 2.6rem;
@@ -37,7 +37,7 @@
   flex: 0 0 auto;
   cursor: pointer;
   font-size: 1.1rem;
-  color: rgba(210, 210, 210, 0.82);
+  color: var(--text-fg);
   width: 2.1rem;
   height: 2.1rem;
   padding: 0;
@@ -52,8 +52,8 @@
 }
 
 #reader-close:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--surface-2);
+  color: var(--text-fg);
 }
 
 #reader-title {
@@ -62,7 +62,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #e0e0e0;
+  color: var(--text-fg);
   font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -71,7 +71,7 @@
 #reader-info {
   flex: 0 0 auto;
   font-size: 0.78rem;
-  color: rgba(200, 200, 200, 0.7);
+  color: var(--dark-fg);
   white-space: nowrap;
   letter-spacing: 0.02em;
 }
@@ -81,17 +81,17 @@
   flex: 0 0 auto;
   display: inline-flex;
   align-items: stretch;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--hairline);
   border-radius: 6px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-1);
 }
 
 .reader-zoom-pill button {
   cursor: pointer;
   font-size: 1.05rem;
   font-weight: 700;
-  color: rgba(200, 200, 200, 0.8);
+  color: var(--dark-fg);
   width: 2.1rem;
   height: 2.1rem;
   padding: 0;
@@ -108,12 +108,12 @@
 }
 
 .reader-zoom-pill button:first-child {
-  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  border-right: 1px solid var(--hairline);
 }
 
 .reader-zoom-pill button:hover {
-  background: rgba(255, 255, 255, 0.13);
-  color: #fff;
+  background: var(--surface-2);
+  color: var(--text-fg);
 }
 
 /* Download button */
@@ -121,7 +121,7 @@
   flex: 0 0 auto;
   cursor: pointer;
   font-size: 1rem;
-  color: rgba(210, 210, 210, 0.82);
+  color: var(--text-fg);
   width: 2.1rem;
   height: 2.1rem;
   padding: 0;
@@ -129,8 +129,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--hairline);
+  background: var(--surface-1);
   line-height: 1;
   text-decoration: none;
   transition:
@@ -139,8 +139,8 @@
 }
 
 #reader-download:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: var(--surface-2);
+  color: var(--text-fg);
 }
 
 /* prev/next buttons (epub only) */
@@ -149,7 +149,7 @@
   flex: 0 0 auto;
   cursor: pointer;
   font-size: 0.85rem;
-  color: rgba(210, 210, 210, 0.8);
+  color: var(--text-fg);
   height: 2.1rem;
   min-width: 2.1rem;
   padding: 0 0.6rem;
@@ -157,8 +157,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--hairline);
+  background: var(--surface-1);
   white-space: nowrap;
   transition:
     background 0.15s,
@@ -167,8 +167,8 @@
 
 #reader-prev:hover,
 #reader-next:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: var(--surface-2);
+  color: var(--text-fg);
 }
 
 /* ── scrollable content area ─────────────────────────────────────────────── */
@@ -182,7 +182,7 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1.2rem 0.6rem;
-  background: #161616;
+  background: var(--dark-bg);
   /* Inherits product dark scrollbar tokens from base.css */
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   scrollbar-width: thin;
@@ -214,17 +214,17 @@
 
 .reader-page-wrap {
   display: block;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 4px 24px var(--shadow-color);
   border-radius: 3px;
   overflow: hidden;
-  background: #fff;
+  background: var(--panel-bg);
   max-width: 100%;
   flex-shrink: 0; /* prevent flexbox from collapsing pages to fit container height */
   align-self: center; /* A5-sized pages are narrower than the container — keep them centered */
 }
 
 .reader-page-placeholder {
-  background: #1e1e1e;
+  background: var(--panel-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -248,15 +248,15 @@
   overflow: hidden;
   isolation: isolate;
   perspective: 1400px;
-  background: #1a1a1a;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.65);
+  background: var(--panel-bg);
+  box-shadow: 0 4px 24px var(--shadow-color);
   border-radius: 3px;
 }
 
 /* A5-sized iframe — JS sets explicit width/height; center it in content area */
 .reader-book-iframe {
   border: none;
-  background: #1a1a1a;
+  background: var(--panel-bg);
   display: block;
   flex-shrink: 0;
   border-radius: inherit;
@@ -279,14 +279,14 @@
   border-radius: 48% 10% 10% 48% / 8% 48% 48% 8%;
   background: linear-gradient(
     90deg,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.5) 24%,
-    rgba(232, 232, 224, 0.18) 47%,
-    rgba(255, 255, 255, 0.34) 50%,
-    rgba(52, 52, 50, 0.44) 58%,
-    rgba(0, 0, 0, 0) 100%
+    transparent 0%,
+    var(--overlay-bg) 24%,
+    var(--surface-3) 47%,
+    var(--surface-3) 50%,
+    var(--surface-1) 58%,
+    transparent 100%
   );
-  filter: drop-shadow(0 0 14px rgba(0, 0, 0, 0.62));
+  filter: drop-shadow(0 0 14px var(--text-fg));
   will-change: transform, opacity;
 }
 
@@ -298,12 +298,12 @@
   left: -21%;
   background: linear-gradient(
     270deg,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.5) 24%,
-    rgba(232, 232, 224, 0.18) 47%,
-    rgba(255, 255, 255, 0.34) 50%,
-    rgba(52, 52, 50, 0.44) 58%,
-    rgba(0, 0, 0, 0) 100%
+    transparent 0%,
+    var(--overlay-bg) 24%,
+    var(--surface-3) 47%,
+    var(--surface-3) 50%,
+    var(--surface-1) 58%,
+    transparent 100%
   );
 }
 
@@ -333,7 +333,7 @@
   height: auto;
   object-fit: contain;
   margin: 0 auto;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 4px 24px var(--shadow-color);
   border-radius: 2px;
   user-select: none;
 }
@@ -353,7 +353,7 @@
   flex: 0 0 auto;
   display: flex;
   border-radius: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--hairline);
   overflow: hidden;
 }
 
@@ -361,7 +361,7 @@
   flex: 0 0 auto;
   cursor: pointer;
   font-size: 0.8rem;
-  color: rgba(180, 180, 180, 0.75);
+  color: var(--dark-fg);
   height: 2.1rem;
   min-width: 2.1rem;
   padding: 0 0.65rem;
@@ -369,8 +369,8 @@
   align-items: center;
   justify-content: center;
   border: none;
-  border-right: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.04);
+  border-right: 1px solid var(--hairline);
+  background: var(--surface-1);
   white-space: nowrap;
   transition:
     background 0.15s,
@@ -382,34 +382,34 @@
 }
 
 .reader-view-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--surface-2);
+  color: var(--text-fg);
 }
 
 /* Suppress browser-default focus background — keep only the outline */
 .reader-view-btn:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-1);
 }
 
 .reader-view-btn:focus-visible {
-  outline: 2px solid rgba(99, 179, 237, 0.6);
+  outline: 2px solid var(--accent-soft);
   outline-offset: -2px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-1);
 }
 
 .reader-view-btn.active:focus,
 .reader-view-btn.active:focus-visible {
-  background: rgba(99, 179, 237, 0.18);
+  background: var(--accent-soft);
 }
 
 .reader-view-btn.active {
-  background: rgba(99, 179, 237, 0.18);
-  color: #90cdf4;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .reader-view-btn.active:hover {
-  background: rgba(99, 179, 237, 0.28);
+  background: var(--accent-soft);
 }
 
 .reader-view-btn:disabled {
@@ -451,7 +451,7 @@
   flex: 0 0 auto;
   cursor: pointer;
   font-size: 1rem;
-  color: rgba(210, 210, 210, 0.82);
+  color: var(--text-fg);
   height: 2.1rem;
   min-width: 2.1rem;
   padding: 0 0.5rem;
@@ -459,27 +459,27 @@
   align-items: center;
   justify-content: center;
   border-radius: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--hairline);
+  background: var(--surface-1);
   transition:
     background 0.15s,
     color 0.15s;
 }
 #reader-fullscreen:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--surface-2);
+  color: var(--text-fg);
 }
 #reader-fullscreen:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-1);
 }
 #reader-fullscreen:focus-visible {
-  outline: 2px solid rgba(99, 179, 237, 0.6);
+  outline: 2px solid var(--accent-soft);
   outline-offset: -2px;
 }
 #reader-fullscreen.active {
-  background: rgba(99, 179, 237, 0.18);
-  color: #90cdf4;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 /* Focus reading mode: #reader takes the entire viewport */
@@ -538,9 +538,9 @@ body.focus-reading #reader-content:has(.reader-book-iframe) {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(230, 230, 230, 0.95);
-  background: rgba(0, 0, 0, 0.58);
-  border: 1px solid rgba(160, 160, 160, 0.65);
+  color: var(--text-fg);
+  background: var(--overlay-bg);
+  border: 1px solid var(--hairline);
   border-radius: 8px;
   white-space: nowrap;
   backdrop-filter: blur(6px);
@@ -554,9 +554,9 @@ body.focus-reading #reader-content:has(.reader-book-iframe) {
 }
 
 .gallery-read-now:hover {
-  background: rgba(0, 0, 0, 0.8);
-  border-color: rgba(210, 210, 210, 0.88);
-  color: #fff;
+  background: var(--overlay-bg);
+  border-color: var(--hairline);
+  color: var(--text-fg);
 }
 
 .gallery-read-now.loading,
@@ -564,7 +564,7 @@ body.focus-reading #reader-content:has(.reader-book-iframe) {
   opacity: 0.72;
   cursor: wait;
   pointer-events: none;
-  border-color: rgba(180, 180, 180, 0.55);
+  border-color: var(--hairline);
 }
 
 /* ── Reader options button (EPUB / MOBI only) ────────────────────────────── */
@@ -575,36 +575,36 @@ body.focus-reading #reader-content:has(.reader-book-iframe) {
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: rgba(210, 210, 210, 0.82);
+  color: var(--text-fg);
   height: 2.1rem;
   padding: 0 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--hairline);
+  background: var(--surface-1);
   white-space: nowrap;
   transition:
     background 0.15s,
     color 0.15s;
 }
 #reader-opts:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--surface-2);
+  color: var(--text-fg);
 }
 #reader-opts:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-1);
 }
 #reader-opts:focus-visible {
-  outline: 2px solid rgba(99, 179, 237, 0.6);
+  outline: 2px solid var(--accent-soft);
   outline-offset: -2px;
 }
 #reader-opts.active {
-  background: rgba(99, 179, 237, 0.18);
-  color: #90cdf4;
-  border-color: rgba(99, 179, 237, 0.35);
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent-soft);
 }
 
 /* ── Reader options modal ────────────────────────────────────────────────── */
@@ -614,13 +614,13 @@ body.focus-reading #reader-content:has(.reader-book-iframe) {
   top: calc(var(--reader-bar-h, 2.8rem) + 6px);
   right: 10px;
   z-index: 9100;
-  background: #1e2028;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--panel-bg);
+  border: 1px solid var(--hairline);
   border-radius: 10px;
   padding: 1rem 1.1rem;
   min-width: 280px;
   max-width: 330px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 8px 32px var(--shadow-color);
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -637,7 +637,7 @@ body.focus-reading #reader-content:has(.reader-book-iframe) {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(180, 180, 180, 0.55);
+  color: var(--dark-fg);
 }
 
 /* Font family swatches */
@@ -654,40 +654,40 @@ body.focus-reading #reader-content:has(.reader-book-iframe) {
   gap: 0.3rem;
   padding: 0.55rem 0.4rem 0.45rem;
   border-radius: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--hairline);
+  background: var(--surface-1);
   cursor: pointer;
   transition:
     background 0.15s,
     border-color 0.15s;
-  color: #ccc;
+  color: var(--dark-fg);
 }
 
 .rom-font-btn span {
   font-size: 1.4rem;
   line-height: 1;
-  color: #e8e8e8;
+  color: var(--text-fg);
 }
 
 .rom-font-btn small {
   font-size: 0.64rem;
-  color: rgba(180, 180, 180, 0.65);
+  color: var(--dark-fg);
   white-space: nowrap;
 }
 
 .rom-font-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.22);
+  background: var(--surface-2);
+  border-color: var(--hairline);
 }
 
 .rom-font-btn.active {
-  background: rgba(99, 179, 237, 0.16);
-  border-color: rgba(99, 179, 237, 0.5);
-  color: #90cdf4;
+  background: var(--accent-soft);
+  border-color: var(--accent-soft);
+  color: var(--accent);
 }
 
 .rom-font-btn.active small {
-  color: #90cdf4;
+  color: var(--accent);
 }
 
 /* Stepper row (font size) */
@@ -701,9 +701,9 @@ body.focus-reading #reader-content:has(.reader-book-iframe) {
   width: 2rem;
   height: 2rem;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.05);
-  color: #ccc;
+  border: 1px solid var(--hairline);
+  background: var(--surface-1);
+  color: var(--dark-fg);
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
@@ -717,15 +717,15 @@ body.focus-reading #reader-content:has(.reader-book-iframe) {
 }
 
 .rom-step-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: var(--surface-2);
+  color: var(--text-fg);
 }
 
 #rom-size-val {
   flex: 1;
   text-align: center;
   font-size: 0.88rem;
-  color: #ddd;
+  color: var(--text-fg);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -739,9 +739,9 @@ body.focus-reading #reader-content:has(.reader-book-iframe) {
   flex: 1;
   height: 2rem;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(180, 180, 180, 0.75);
+  border: 1px solid var(--hairline);
+  background: var(--surface-1);
+  color: var(--dark-fg);
   font-size: 0.8rem;
   cursor: pointer;
   display: flex;
@@ -755,12 +755,16 @@ body.focus-reading #reader-content:has(.reader-book-iframe) {
 }
 
 .rom-choice-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--surface-2);
+  color: var(--text-fg);
 }
 
 .rom-choice-btn.active {
-  background: rgba(99, 179, 237, 0.18);
-  border-color: rgba(99, 179, 237, 0.45);
-  color: #90cdf4;
+  background: var(--accent-soft);
+  border-color: var(--accent-soft);
+  color: var(--accent);
 }
+
+#reader-close { border: 0; background: transparent; }
+#reader-close:focus-visible { outline: 2px solid var(--text-fg); outline-offset: -2px; }
+@media (pointer: coarse) { #reader-close { min-width: 44px; min-height: 44px; } }

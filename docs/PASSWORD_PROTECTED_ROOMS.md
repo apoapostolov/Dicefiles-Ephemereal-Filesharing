@@ -1,7 +1,7 @@
 # Password-protected rooms
 
 **Status:** Shared rotating community passwords are implemented for v1.4.5.
-Cohort and personal credentials remain an additive future phase.
+Cohort and personal credentials are now implemented in the unreleased maintenance round.
 **Scope:** First-class shared and personal room access credentials
 
 ## Summary
@@ -989,3 +989,26 @@ complexity.
 These decisions do not change the core contract: secrets remain private,
 authorization is server-side and period-bounded, every content path uses one
 guard, and rotation invalidates old grants predictably.
+
+## Unreleased cohort and personal credentials
+
+Room Options provides creation, metadata, rotation, reveal and revocation controls.
+Each room supports 50 additional credentials. Cohort passwords can be shared;
+personal passwords bind to the first signed-in account or first browser unless
+an accountId was specified through the API. Optional activation limits count
+browser bindings; zero is unlimited and personal defaults to one. Credentials
+expire within one year. Monthly, fixed-day and manual rotation are supported by
+the API; the UI offers monthly/manual. Prepared-next management remains a feature
+of the shared community password, not additional credentials.
+
+Argon2 verifiers and encrypted reveal material remain private. Normal APIs return
+metadata only; revealing requires room-access:secrets. Rotation and individual
+revocation invalidate that credential's period/revision grants, with a bounded
+administration/activation history. Other credentials remain valid. Grants are
+browser-bound even for account credentials; this does not provide account-wide
+passwordless grants across new devices. Local history and grant cookies are not
+synchronized between browsers.
+
+Room policy and owner state are read from authoritative Redis. Claims and releases
+check the authorized policy within their mutation, so concurrent revocation
+returns 403. Socket access rechecks after the policy epoch changes.

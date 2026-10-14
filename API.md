@@ -1054,18 +1054,19 @@ summarize any unusual patterns."` Or build a simple rule: if more than 5
 - Body:
 
 ```json
-{
-  "roomid": "AbCdEf1234",
-  "items": [
-    { "url": "https://example.com/book.pdf", "name": "book.pdf" },
-    { "url": "https://example.com/cover.jpg" }
-  ]
-}
+[
+  { "roomid": "AbCdEf1234", "url": "https://example.com/book.pdf", "name": "book.pdf" },
+  { "roomid": "AbCdEf1234", "url": "https://example.com/cover.jpg" }
+]
 ```
 
 - Max 20 items per call; max 100 MB per file; 60 s fetch timeout per URL.
-- `name` defaults to the last URL path segment.
-- `roomid` can also be specified per item (overrides the top-level value).
+- `name` defaults to `unnamed`; supply it to preserve a filename. Torrent URLs
+  retain a `.torrent` suffix for metadata parsing.
+- `roomid` is required on each item. The body is an array, not an object wrapper.
+- Magnet URIs are stored as `.magnet` metadata files; torrent URLs/files expose
+  `meta.torrent` (v1/v2 hashes, files, trackers and other fields). No torrent payload
+  is downloaded. See [torrent metadata](docs/TORRENTS.md) for limits and discovery.
 
 ```json
 {
@@ -1078,9 +1079,8 @@ summarize any unusual patterns."` Or build a simple rule: if more than 5
       "href": "/g/abc123"
     },
     {
-      "ok": false,
       "url": "https://example.com/cover.jpg",
-      "error": "fetch failed: 404"
+      "err": "fetch failed: 404"
     }
   ]
 }
@@ -1105,10 +1105,8 @@ summarize any unusual patterns."` Or build a simple rule: if more than 5
 > // Discord bot handler
 > const urls = message.content.match(/https?:\/\/\S+/g) || [];
 > if (!urls.length) return;
-> const { results } = await api("POST", "/batch-upload", {
->   roomid: ROOM,
->   items: urls.slice(0, 20).map((url) => ({ url })),
-> });
+> const { results } = await api("POST", "/batch-upload",
+>   urls.slice(0, 20).map(url => ({ url, roomid: ROOM })));
 > const ok = results.filter((r) => r.ok).map((r) => r.href);
 > const fail = results.filter((r) => !r.ok).length;
 > reply(`Uploaded ${ok.length} files${fail ? ` (${fail} failed)` : ""}`);
@@ -1890,3 +1888,50 @@ Ordinary automation content scopes do not bypass this boundary. A trusted room
 service must also receive the explicit `room-access:bypass` scope before it may
 list, post, upload, or mutate protected-room content. Keep bypass off
 general-purpose and monitoring keys.
+
+## Unreleased maintenance APIs
+
+### Bounded results
+
+GET /api/v1/files and archive /ls accept limit (1–500) and cursor. Paginated
+responses add pagination with nextCursor. Keep filters identical across pages;
+signed cursors expire in 30 minutes. Unpaged legacy responses retain their shape,
+with an 8 MiB ceiling. Pages are bounded to 4 MiB; oversized entries return 413.
+
+### Remote providers
+
+GET /api/v1/remote-import/providers requires room-plugins:read. POST
+/api/v1/remote-import/validate-source takes {url, providers?} with the same scope;
+it parses and validates the provider selection without importing content.
+
+### Storage moves
+
+GET /api/v1/admin/storage/migrations requires admin:read and accepts limit/cursor.
+POST to the same URL requires admin:storage. Select hashes (at most 500) and
+targetVolumeId, or mode=drain/rebalance with sourceVolumeId, optional targetVolumeId
+and maxBlobs (default 100, maximum 500). dryRun defaults true. Set false to queue.
+POST /api/v1/admin/storage/migrations/:id/:action accepts pause, resume, rollback.
+PATCH /api/v1/admin/storage/volumes/:id/drain takes {draining:boolean}.
+
+Moves reserve destination space, stream blob and sidecars, verify SHA-256 and
+size, fsync, then atomically change storage metadata. Source copies remain for
+24 hours, permitting rollback if all current assets still match. Pause/resume and
+journal state survive restart. Draining rejects new allocations; already reserved
+uploads can finish. Drain remains enabled until explicitly cleared.
+
+### Cohort and personal access
+
+Protected rooms expose /api/v1/rooms/:id/access-credentials. GET requires
+room-access:read; POST/PATCH/DELETE require room-access:write. POST takes label,
+mode=cohort/personal, optional binding=account/browser, accountId, rotation,
+days, expiresAt, maxActivations and password. A room supports 50 credentials;
+expiry is within one year, activation limits are 0–1000 (0 means unlimited), and
+custom passwords require 12–256 characters. Personal defaults to one activation.
+
+POST /:credentialId/rotations rotates one credential; POST /:credentialId/reveals
+requires room-access:secrets and returns the current password with no-store.
+GET /api/v1/rooms/:id/access-audit returns a paginated, 200-entry history with
+room-access:read. Ordinary reads and writes return no password. Revocation and
+rotation invalidate grants for that credential; other credentials remain usable.
+Claim/release mutations check the authorized password policy in the same Redis
+operation, returning 403 if the policy changed and 409 for competing mutations.

@@ -1,12 +1,14 @@
 "use strict";
 
+const { messageLimit } = require("./torrent-input");
+
 // Replace url-regex (ReDoS-vulnerable) with url-regex-safe.
 // The API is identical: calling the function returns a RegExp; we use .source
 // to embed it into the composite splitting regex.
-const SCHEME_REGEX = /^(?:https?|ftp|irc):/;
+const SCHEME_REGEX = /^(?:https?|ftp|irc|magnet):/;
 const WHITE_REGEX = /^[\r\n]+$/;
 const URL_REGEX = new RegExp(
-  `([\r\n]+|[#@][a-z0-9_-]+|${require("url-regex-safe")({ exact: false }).source})`,
+  `([\r\n]+|magnet:\\?[^\\s<>]+|[#@][a-z0-9_-]+|${require("url-regex-safe")({ exact: false }).source})`,
   "ig",
 );
 
@@ -78,7 +80,7 @@ async function mapMessagePart(v, i, rec) {
 
 async function toMessage(URL, resolveRoom, resolveFile, msg) {
   msg = msg.trim();
-  if (msg.length > 300) {
+  if (msg.length > messageLimit(msg)) {
     throw new Error("Message too long");
   }
 

@@ -3,7 +3,7 @@
 ## File list virtualization
 
 - Pure helpers: `client/files/windowing.js` (`computeWindow`, `sliceWindow`, `shouldVirtualize`).
-- Threshold: virtualize when filtered count ≥ **120** (gallery/links modes stay full-render).
+- Threshold: virtualize when filtered count ≥ **120** (gallery uses 100-tile pages; links retain their existing rendering).
 - Unit tests (`tests/unit/windowing.test.js`) drive a **500-file** synthetic set and assert the mounted window stays well under 80 rows for a 600px viewport / 40px row height with overscan 5.
 
 ## Cold room payload
@@ -22,4 +22,12 @@
 
 ## Redis
 
-- node-redis **v4** with Lua scripts loaded at connect; rate-limit and distributed maps use the same script surface as 1.3.x.
+- node-redis **v6** with Lua scripts loaded at connect; rate-limit and distributed maps use the same script surface as 1.3.x.
+
+## Unreleased bounded work
+
+Disk probes use async filesystem calls, coalesce concurrent probes and fail closed
+after two seconds. Gallery paging bounds mounted tiles to 100 while preserving
+global sorting. Continue Reading reads its small local history directly and does
+not load the reader bundle. These resource bounds do not establish a production
+throughput improvement; measure on the deployment workload.

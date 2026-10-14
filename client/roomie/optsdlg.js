@@ -182,6 +182,7 @@ export class OptionsModal extends Modal {
       "passwordcopynext",
       "passwordperiod",
       "passwordstatus",
+      "credentiallabel", "credentialmode", "credentialbinding", "credentiallimit", "credentialrotation", "credentialpassword", "credentialcreate", "credentialrows", "credentialstatus",
       "pluginpick",
       "plugininvite",
       "plugindesc",
@@ -207,6 +208,14 @@ export class OptionsModal extends Modal {
     for (const f of fields) {
       this[f] = this.el.elements[f] || this.el.querySelector(`[name="${f}"]`);
     }
+    if (this.credentialcreate) {
+      this.credentialcreate.addEventListener("click", () => this.createCredential());
+    }
+    if (this.credentialmode) {
+      this.credentialmode.addEventListener("change", () => {
+        this.credentiallimit.value = this.credentialmode.value === "personal" ? "1" : "0";
+      });
+    }
     this.passwordSecrets = { current: "", next: "" };
     this.passwordRevealed = { current: false, next: false };
 
@@ -224,6 +233,7 @@ export class OptionsModal extends Modal {
     this.activeTab = "general";
     this.pluginCatalog = [];
     this.roomPlugins = [];
+    this.remoteProviders = [];
     this.editingPluginId = null;
 
     this.owners.addEventListener("click", this.onowners.bind(this));
@@ -444,7 +454,7 @@ export class OptionsModal extends Modal {
       ) :
       [];
     this._initialFederationSerialized = JSON.stringify(
-      this.federationLinks.map(({ status, error, ...row }) => row),
+      this.federationLinks.map(({ status: _status, error: _error, ...row }) => row),
     );
     this.renderFederationPeerOptions();
     this.renderFederationTable();
@@ -548,6 +558,7 @@ export class OptionsModal extends Modal {
       );
       this.pluginCatalog = (rv && rv.catalog) || [];
       this.roomPlugins = (rv && rv.roomPlugins) || [];
+      this.remoteProviders = (rv && rv.remoteProviders) || [];
       this.renderPluginCatalog();
       this.renderPluginTable();
     }
@@ -771,6 +782,9 @@ export class OptionsModal extends Modal {
         "";
     }
     this.renderPluginEditorFields(p);
+    if (p.id === "remote-import" && this.pluginstatus) {
+      this.pluginstatus.textContent = this.remoteProviders.map(provider => `${provider.name}: ${!provider.enabled ? "disabled" : provider.availability?.available === false ? "unavailable" : "available"} (${provider.capabilities.join(", ")})${provider.circuitOpenUntil > Date.now() ? " (temporarily paused)" : ""}`).join(" · ");
+    }
     this.renderPluginOperationalState(p);
   }
 
@@ -787,6 +801,9 @@ export class OptionsModal extends Modal {
         const details = [];
         if (summary.uploaded != null) {
           details.push(`${summary.uploaded} uploaded`);
+        }
+        if (summary.providerErrors) {
+          details.push(`${summary.providerErrors} provider errors`);
         }
         if (summary.skipped != null) {
           details.push(`${summary.skipped} skipped`);
@@ -1665,10 +1682,99 @@ export class OptionsModal extends Modal {
         null,
       );
       this.renderPasswordAccessState(state);
+      await this.refreshCredentials();
     }
     catch (ex) {
       this.passwordstatus.textContent =
         ex.message || "Could not load access settings.";
+    }
+  }
+
+  async refreshCredentials(focusId, focusAction) {
+    if (!this.credentialrows) {
+      return;
+    }
+    try {
+      const credentials = await registry.socket.makeCall("setconfig", "listAccessCredentials", null);
+      this.credentialrows.replaceChildren();
+      if (!credentials.length) {
+        const row = this.credentialrows.insertRow(); const cell = row.insertCell(); cell.colSpan = 3; cell.textContent = "No additional credentials.";
+      }
+      for (const credential of credentials) {
+        const row = this.credentialrows.insertRow();
+        row.dataset.credentialId = credential.id;
+        row.insertCell().textContent = credential.label;
+        row.insertCell().textContent = `${credential.mode} · ${credential.state} · ${credential.activations}/${credential.maxActivations || "no limit"} browsers · ends ${new Date(credential.endsAt).toLocaleDateString()}`;
+        const actions = row.insertCell(); const group = document.createElement("div"); group.className = "roomopts-actions"; actions.appendChild(group);
+        const secret = document.createElement("code"); secret.className = "roomopts-password-value"; secret.hidden = true;
+        const button = (label, action) => {
+          const element = document.createElement("button"); element.type = "button"; element.textContent = label; element.dataset.action = label;
+          element.addEventListener("click", async () => {
+            element.disabled = true;
+            try {
+              await action(element);
+            }
+            catch (error) {
+              this.credentialstatus.textContent = error.message || "Credential action failed.";
+            }
+            finally {
+              element.disabled = false;
+            }
+          }); group.appendChild(element); return element;
+        };
+        button("Reveal", async element => {
+          if (!secret.hidden) {
+            secret.hidden = true; secret.textContent = ""; element.textContent = "Reveal"; return;
+          }
+          const value = await registry.socket.makeCall("setconfig", "revealAccessCredential", { id: credential.id });
+          secret.textContent = value.password; secret.hidden = false; element.textContent = "Hide";
+        });
+        button("Rotate", async () => {
+          if (!await this.owner.confirmDestructive(`Rotate the password for ${credential.label}? Existing grants for this credential will stop working.`, "Rotate credential", "Rotate")) {
+            return;
+          }
+          await registry.socket.makeCall("setconfig", "updateAccessCredential", { id: credential.id, updates: { rotate: true } });
+          await this.refreshCredentials(credential.id, "Rotate"); this.credentialstatus.textContent = "Credential rotated. Reveal the new password to share it privately.";
+        });
+        button(credential.state === "suspended" ? "Resume" : "Suspend", async () => {
+          await registry.socket.makeCall("setconfig", "updateAccessCredential", { id: credential.id, updates: { state: credential.state === "suspended" ? "active" : "suspended" } });
+          await this.refreshCredentials(credential.id, credential.state === "suspended" ? "Suspend" : "Resume"); this.credentialstatus.textContent = "Credential access updated.";
+        });
+        button("Revoke", async () => {
+          if (!await this.owner.confirmDestructive(`Revoke ${credential.label}? Its password and visitor grants will stop working.`, "Revoke credential", "Revoke")) {
+            return;
+          }
+          await registry.socket.makeCall("setconfig", "revokeAccessCredential", { id: credential.id });
+          await this.refreshCredentials(); this.credentiallabel.focus(); this.credentialstatus.textContent = "Credential revoked.";
+        });
+        actions.appendChild(secret);
+      }
+      this.credentialcreate.disabled = !this.passwordenabled.checked;
+      if (focusId) {
+        this.credentialrows.querySelector(`[data-credential-id="${focusId}"] button[data-action="${focusAction}"]`)?.focus();
+      }
+    }
+    catch (error) {
+      this.credentialstatus.textContent = error.message || "Could not load credentials.";
+    }
+  }
+
+  async createCredential() {
+    this.credentialcreate.disabled = true;
+    try {
+      const body = { label: this.credentiallabel.value.trim(), mode: this.credentialmode.value, binding: this.credentialbinding.value, rotation: this.credentialrotation.value, maxActivations: Number(this.credentiallimit.value) };
+      if (this.credentialpassword.value) {
+        body.password = this.credentialpassword.value;
+      }
+      await registry.socket.makeCall("setconfig", "createAccessCredential", body);
+      this.credentialpassword.value = ""; this.credentiallabel.value = "";
+      await this.refreshCredentials(); this.credentialstatus.textContent = "Credential added. Reveal its password to share it privately.";
+    }
+    catch (error) {
+      this.credentialstatus.textContent = error.message || "Could not add credential.";
+    }
+    finally {
+      this.credentialcreate.disabled = !this.passwordenabled.checked;
     }
   }
 
@@ -1692,6 +1798,7 @@ export class OptionsModal extends Modal {
       );
       this.passwordcustom.value = "";
       this.renderPasswordAccessState(state);
+      await this.refreshCredentials();
       this.passwordstatus.textContent = state.enabled ?
         "Password access is active. Share the current password privately." :
         "Password access is disabled.";
@@ -2492,7 +2599,7 @@ will NOT be aborted, and they also retain their chat histories.`,
         await socket.makeCall("setconfig", "linkedRooms", linkedPayload);
       }
       const federationPayload = this.federationLinks.map(
-        ({ status, error, peerName, roomName, ...row }) => row,
+        ({ status: _status, error: _error, peerName: _peerName, roomName: _roomName, ...row }) => row,
       );
       if (
         JSON.stringify(federationPayload) !==

@@ -1,6 +1,6 @@
 # Multi-host remote imports
 
-**Status:** Proposal for Dicefiles 1.4.6
+**Status:** Implemented in the unreleased maintenance round; live provider acceptance remains deployment-specific.
 **Audience:** Maintainers, plugin authors, and self-hosting operators
 **Existing foundation:** Mega.nz, Pixeldrain, the shared downloader registry,
 the Remote Host Import room bot, streamed ingestion, run leases, and durable
@@ -29,7 +29,7 @@ controls.
 
 ### Required for 1.4.6
 
-- Gofile public and authenticated folder imports.
+- Gofile public share codes and authenticated folder imports through the official Premium API.
 - Password-protected Gofile folder support when the operator supplies the
   password through protected plugin configuration.
 - Recursive traversal with depth, page, file-count, per-file byte, and per-run
@@ -679,3 +679,32 @@ Use fake executables in a temporary directory to verify:
 - Pixeldrain official API documentation: https://pixeldrain.com/api
 - Plowshare: https://github.com/mcrapet/plowshare
 - MEGAcmd: https://github.com/meganz/MEGAcmd
+
+## Current implementation and deployment acceptance
+
+The registry supports version 1 providers and a bounded adapter for existing
+Mega.nz integrations. Pixeldrain streams through the outbound guard. Mega.nz
+keeps its supported SDK interface and lazy stream downloads, with metadata
+traversal capped at 10,000 entries and eight levels. Native Gofile listing uses
+100-entry pages, breadth-first traversal and bounded JSON. Folder passwords are
+SHA-256 transformed; downloads remain on approved HTTPS Gofile hosts.
+
+Gofile's current GET /contents endpoint is Premium-only, including public share
+codes. Supply a Premium account token using the private plugin credential field
+or GOFILE_TOKEN. error-notPremium produces PREMIUM_REQUIRED. Guest-token or HTML
+scraping workarounds are not implemented. See the official
+[Gofile API](https://gofile.io/api). Live account-backed downloads remain to be
+validated with operator-owned examples.
+
+Runs rotate their starting source through Redis, interleave sources, retry
+retryable failures with jitter/Retry-After, and temporarily open provider circuits.
+The run has one five-minute deadline. Provider failures appear as structured
+codes in run summaries. REST/MCP expose provider status and parse-only validation;
+Room Options shows capabilities and availability.
+
+Plowshare remains disabled by default. Explicitly configure enabled, allowedModules
+(mediafire/4shared), absolute binary paths and an optional absolute module config
+directory. Fixed arguments, private temporary directories, time/output limits and
+a public-IP egress proxy guard subprocess traffic. Installed modules and v2 tools
+must pass the availability probe. CAPTCHA, interactive premium login and arbitrary
+modules are unsupported. No real Plowshare account credentials were exercised.

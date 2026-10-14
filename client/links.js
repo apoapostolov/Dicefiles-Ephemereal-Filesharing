@@ -1,6 +1,7 @@
 import EventEmitter from "events";
 import registry from "./registry";
 import Scroller from "./scroller";
+import { TorrentMetadataModal } from "./torrent-metadata";
 
 export default new (class Links extends EventEmitter {
   constructor() {
@@ -147,18 +148,18 @@ export default new (class Links extends EventEmitter {
   createLinkElement(link) {
     const isNew = this.isLinkNew(link);
 
-    const el = document.createElement("a");
+    const el = document.createElement("div");
     el.className = "file";
-    el.href = link.url;
-    el.target = "_blank";
-    el.rel = "noopener noreferrer";
     if (isNew) {
       el.classList.add("is-new");
     }
 
     // Name column: primary line (name + NEW pill) stacked above URL subtitle
-    const nameEl = document.createElement("span");
+    const nameEl = document.createElement("a");
     nameEl.className = "name";
+    nameEl.href = link.url;
+    nameEl.target = "_blank";
+    nameEl.rel = "noopener noreferrer";
 
     const namePrimaryEl = document.createElement("span");
     namePrimaryEl.className = "name-primary";
@@ -197,6 +198,15 @@ export default new (class Links extends EventEmitter {
     // Detail column: age only
     const detailEl = document.createElement("span");
     detailEl.className = "detail";
+    if (link.meta?.torrent) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "torrent-info i-info";
+      button.title = `Torrent details for ${link.name}`;
+      button.setAttribute("aria-label", button.title);
+      button.onclick = () => registry.roomie.showModal(new TorrentMetadataModal(link.meta.torrent, link.name)).catch(() => {});
+      detailEl.appendChild(button);
+    }
 
     const ageSpan = document.createElement("span");
     ageSpan.className = "ttl";

@@ -11,7 +11,6 @@
  *   - listArchive()    — unsupported format rejection
  */
 
-const path = require("path");
 
 // ── detectFormat ──────────────────────────────────────────────────────────────
 
@@ -115,8 +114,8 @@ describe("resolveFormat", () => {
 
   function withMagic(type) {
     const byteMaps = {
-      zip: [0x50, 0x4b, 0x03, 0x04],
-      rar: [0x52, 0x61, 0x72, 0x21],
+      "zip": [0x50, 0x4b, 0x03, 0x04],
+      "rar": [0x52, 0x61, 0x72, 0x21],
       "7z": [0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c],
     };
     const bytes = byteMaps[type] || [];

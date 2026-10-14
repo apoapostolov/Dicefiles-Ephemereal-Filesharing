@@ -1,5 +1,5 @@
 "use strict";
-/* eslint-disable no-magic-numbers */
+
 
 const DEFAULT_LIMIT = 3000;
 

@@ -1,5 +1,7 @@
 "use strict;";
 
+import { userError } from "../common/user-error";
+
 import qrcode from "qrcode";
 
 const accountTabs = Array.from(document.querySelectorAll(".account-tab"));
@@ -63,7 +65,7 @@ acct.addEventListener("submit", async e => {
       body: JSON.stringify(opts)
     });
     if (!res.ok) {
-      throw new Error("Server err'ed out, sorry! Please try again later");
+      throw new Error("The service could not complete the request. Please try again later.");
     }
     res = await res.json();
     if (res.err) {
@@ -72,7 +74,7 @@ acct.addEventListener("submit", async e => {
     alert("Saved!");
   }
   catch (ex) {
-    alert(ex.message || ex);
+    alert(userError(ex));
     console.trace(ex);
   }
   finally {
@@ -101,7 +103,7 @@ async function tfaGetChallenge() {
       body: JSON.stringify(opts)
     });
     if (!res.ok) {
-      throw new Error("Server err'ed out, sorry! Please try again later");
+      throw new Error("The service could not complete the request. Please try again later.");
     }
     res = await res.json();
     if (res.err) {
@@ -125,7 +127,7 @@ async function tfaGetChallenge() {
     document.querySelector("#challenged").focus();
   }
   catch (ex) {
-    alert(ex.message || ex);
+    alert(userError(ex));
     console.trace(ex);
   }
 }
@@ -146,7 +148,7 @@ async function tfaDisable() {
       body: JSON.stringify(opts)
     });
     if (!res.ok) {
-      throw new Error("Server err'ed out, sorry! Please try again later");
+      throw new Error("The service could not complete the request. Please try again later.");
     }
     res = await res.json();
     if (res.err) {
@@ -158,7 +160,7 @@ async function tfaDisable() {
     challenger.style.display = "none";
   }
   catch (ex) {
-    alert(ex.message || ex);
+    alert(userError(ex));
     console.trace(ex);
   }
 }
@@ -180,7 +182,7 @@ async function tfaComplete() {
       body: JSON.stringify(opts)
     });
     if (!res.ok) {
-      throw new Error("Server err'ed out, sorry! Please try again later");
+      throw new Error("The service could not complete the request. Please try again later.");
     }
     res = await res.json();
     if (res.err) {
@@ -192,7 +194,7 @@ async function tfaComplete() {
     challenger.style.display = "none";
   }
   catch (ex) {
-    alert(ex.message || ex);
+    alert(userError(ex));
     console.trace(ex);
   }
 }

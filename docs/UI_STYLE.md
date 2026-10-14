@@ -10,7 +10,7 @@ The header buttons (located in the `#tools` navigation bar) are the primary way 
 
 ### Toolbar padding
 
-`#room > #tools` has `padding: 3px 0.35rem` — 3 px of breathing room above and below the button row. Do not reduce this to 0.
+`#room > #tools` has `padding: 4px var(--tools-pad-x)` — 3 px of breathing room above and below the button row. Do not reduce this to 0. Desktop uses one row; tablets (761–1350px) use filters/search above controls; phones (up to 760px) use filters, controls, then search/count/Upload.
 
 ### Base Styling
 
@@ -46,8 +46,8 @@ If a button represents a toggleable state (like view modes or the links archive)
 
 ```css
 #my-new-feature.btn.active {
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: rgb(0 0 0 / 75%) 0px 0px 6px 0px inset;
+  background: var(--sel-bg);
+  box-shadow: var(--shadow-color) 0px 0px 6px 0px inset;
 }
 ```
 
@@ -145,48 +145,24 @@ The `.count-pill` inside will automatically be styled as a rounded badge.
 
 ## 3. Colors and Variables
 
-All colors must use CSS custom properties defined in `entries/css/base.css`. Never hard-code a color that should respond to theming.
+All component colors must use semantic CSS custom properties defined in `entries/css/base.css`. Never hard-code a color that should respond to theming.
 
-### Palette
+### Theme roles
 
-| Variable                          | Hex / value                   | Usage                                                    |
-| --------------------------------- | ----------------------------- | -------------------------------------------------------- |
-| `--main-bg`                       | `#333333`                     | Primary surface — navbars, modal headers, footer         |
-| `--dark-bg`                       | `#101010`                     | Deepest background — chat, file panel                    |
-| `--lite-bg`                       | `#4f4f4f`                     | Raised surface — modal header/footer bars, tooltip names |
-| `--odd-bg`                        | `#202020`                     | Alternating row tint in list views                       |
-| `--sel-bg`                        | `#444444`                     | Selected row background                                  |
-| `--odd-sel-bg`                    | `#555555`                     | Selected row background on even rows                     |
-| `--upload-bg`                     | `rgb(66,66,66)`               | Upload-in-progress row background                        |
-| `--err-bg`                        | `#f75353`                     | Error state (e.g. failed upload row)                     |
-| `--text-fg`                       | `#fefefe`                     | Primary text                                             |
-| `--dark-fg`                       | `#aeaeae`                     | Muted / secondary text, default link color               |
-| `--hi-fg` / `--hi-bg`             | `#f4f3f3` / `#282828`         | Highlighted message (mention, ping)                      |
-| `--disabled-fg` / `--disabled-bg` | `white` / `#221818`           | Disabled input states                                    |
-| `--surface-1`                     | `rgba(255,255,255,0.06)`      | Subtle overlay                                           |
-| `--surface-2`                     | `rgba(255,255,255,0.12)`      | Default button fill                                      |
-| `--surface-3`                     | `rgba(255,255,255,0.18)`      | Hover fill for buttons                                   |
-| `--hairline`                      | `rgba(255,255,255,0.14)`      | All borders and dividers                                 |
-| `--focus-ring`                    | `rgba(255,255,255,0.32)`      | Keyboard focus outline                                   |
-| `--soft-shadow`                   | `0 4px 14px rgba(0,0,0,0.22)` | Elevation shadow                                         |
-| `--role-user-fg`                  | `#23d16f`                     | Registered user nick colour                              |
-| `--role-mod-fg`                   | `#d880fc`                     | Moderator nick colour                                    |
-| `--role-system-fg`                | `#ff6c00`                     | System message colour                                    |
+Graphite is the neutral default; Appearance offers 34 palettes. See
+[THEMES.md](./THEMES.md) for the complete system and contrast checks.
+Palette primitives live in `common/themes.js` and generated `themes.css`;
+semantic color roles are defined in `base.css`. Components use those variables,
+including status accents, borders, overlays and shadows. Do not introduce new
+literal colors or fixed feature tints. Original uploaded media is exempt.
 
-### Typography
-
-| Variable        | Value                          | Usage                                    |
-| --------------- | ------------------------------ | ---------------------------------------- |
-| `--base-size`   | `12pt`                         | Root font size, inherited everywhere     |
-| `--base-font`   | `'Rubik', 'Cairo', sans-serif` | Body and UI text                         |
-| `--files-size`  | `11pt`                         | File list row font size                  |
-| `--detail-size` | `8pt`                          | File row detail column (size, TTL, etc.) |
-
-### Rules
-
-- Always use variables when the color has semantic meaning (surface, border, text role).
-- Hard-coded colors are only acceptable for feature-specific decoration that is intentionally not theme-aware (e.g. the green `is-new` pill tint `#ddf2e3`).
-- Never use `color: black` or `background: white` for UI chrome.
+| Role | Variables |
+| --- | --- |
+| Canvas / panel / chrome | `--dark-bg`, `--panel-bg`, `--main-bg` |
+| Primary / secondary text | `--text-fg`, `--dark-fg` |
+| Interaction / focus | `--accent`, `--accent-soft`, `--focus-ring` |
+| Borders / overlays | `--hairline`, `--surface-1` through `--surface-3`, `--overlay-bg` |
+| Feedback | `--success`, `--warning`, `--danger` and their `-soft` variants |
 
 ---
 

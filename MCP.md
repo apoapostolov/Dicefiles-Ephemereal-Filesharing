@@ -2,7 +2,7 @@
 
 This reference is written for developers who want to connect AI clients (Claude Desktop,
 Cursor, Continue, OpenClaw, AutoGen) to a Dicefiles instance via the
-[Model Context Protocol](https://modelcontextprotocol.io). It covers setup, all 36
+[Model Context Protocol](https://modelcontextprotocol.io). It covers setup, all 49
 exposed tools, security configuration, and worked multi-step workflows.
 
 ---
@@ -38,7 +38,7 @@ yarn install
 Smoke-test the server before wiring it into any client:
 
 ```bash
-DICEFILES_BASE_URL=http://localhost:9090 \
+DICEFILES_BASE_URL=http://localhost:10005 \
 DICEFILES_API_KEY=your-api-key-here \
 node scripts/mcp-server.js
 # → [dicefiles-mcp] Stdio transport ready. Waiting for MCP client...
@@ -49,12 +49,16 @@ Environment variables accepted by the server:
 
 | Variable             | Default                 | Description                                   |
 | -------------------- | ----------------------- | --------------------------------------------- |
-| `DICEFILES_BASE_URL` | `http://localhost:9090` | Base URL of your Dicefiles instance           |
+| `DICEFILES_BASE_URL` | `http://localhost:10005` | Base URL of your Dicefiles instance           |
 | `DICEFILES_API_KEY`  | _(empty)_               | Automation API key — warning printed if unset |
 | `MCP_TRANSPORT`      | `stdio`                 | `stdio` (default) or `http`                   |
 | `MCP_PORT`           | `3001`                  | Listening port when `MCP_TRANSPORT=http`      |
 | `MCP_HOST`           | `127.0.0.1`             | Bind address when `MCP_TRANSPORT=http`        |
 | `MCP_API_TIMEOUT_MS` | `30000`                 | Per-request timeout for Dicefiles API calls   |
+| `MCP_AUTH_TOKEN` | _(empty)_ | Incoming bearer token for fixed-key mode; remote bindings require this or OAuth |
+| `MCP_OAUTH_CONFIG` | _(empty)_ | Absolute path to private OAuth resource-server configuration; mutually exclusive with MCP_AUTH_TOKEN |
+| `MCP_ALLOWED_HOSTS`  | _(localhost hosts)_     | Comma-separated allowed hostnames, without ports; required beyond loopback |
+| `MCP_ALLOWED_ORIGINS` | _(localhost hosts)_    | Comma-separated Origin hostnames without scheme/port; absent Origin headers are accepted |
 
 ---
 
@@ -77,7 +81,7 @@ Add a `dicefiles` entry under `mcpServers`:
       "command": "node",
       "args": ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
       "env": {
-        "DICEFILES_BASE_URL": "http://localhost:9090",
+        "DICEFILES_BASE_URL": "http://localhost:10005",
         "DICEFILES_API_KEY": "your-api-key-here"
       }
     }
@@ -85,7 +89,7 @@ Add a `dicefiles` entry under `mcpServers`:
 }
 ```
 
-Restart Claude Desktop. All 36 tools appear in the tool picker. Try: _"Use the
+Restart Claude Desktop. All 49 tools appear in the tool picker. Try: _"Use the
 `server_health` tool to check my Dicefiles instance."_
 
 ---
@@ -106,7 +110,7 @@ Create `.vscode/mcp.json` in the project root:
       "command": "node",
       "args": ["${workspaceFolder}/scripts/mcp-server.js"],
       "env": {
-        "DICEFILES_BASE_URL": "http://localhost:9090",
+        "DICEFILES_BASE_URL": "http://localhost:10005",
         "DICEFILES_API_KEY": "your-api-key-here"
       }
     }
@@ -128,7 +132,7 @@ add:
         "command": "node",
         "args": ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
         "env": {
-          "DICEFILES_BASE_URL": "http://localhost:9090",
+          "DICEFILES_BASE_URL": "http://localhost:10005",
           "DICEFILES_API_KEY": "your-api-key-here"
         }
       }
@@ -155,7 +159,7 @@ tools will be listed.
       "command": "node",
       "args": ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
       "env": {
-        "DICEFILES_BASE_URL": "http://localhost:9090",
+        "DICEFILES_BASE_URL": "http://localhost:10005",
         "DICEFILES_API_KEY": "your-api-key-here"
       }
     }
@@ -163,7 +167,7 @@ tools will be listed.
 }
 ```
 
-Save and reload. Antigravity's agent can call all 36 tools.
+Save and reload. Antigravity's agent can call all 49 tools.
 
 ---
 
@@ -179,7 +183,7 @@ project root):
       "command": "node",
       "args": ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
       "env": {
-        "DICEFILES_BASE_URL": "http://localhost:9090",
+        "DICEFILES_BASE_URL": "http://localhost:10005",
         "DICEFILES_API_KEY": "your-api-key-here"
       }
     }
@@ -195,8 +199,8 @@ Add new MCP server**.
 ### 2.6 Codex CLI
 
 Codex uses TOML format at `~/.codex/config.toml`. The same file is shared by both the
-CLI and the Codex VS Code extension. **Note: Codex currently supports stdio servers
-only — the HTTP transport below is not compatible.**
+CLI and the Codex VS Code extension. This example configures the local stdio
+transport.
 
 ```toml
 # ~/.codex/config.toml
@@ -206,7 +210,7 @@ command = "node"
 args    = ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"]
 
 [mcp_servers.dicefiles.env]
-DICEFILES_BASE_URL = "http://localhost:9090"
+DICEFILES_BASE_URL = "http://localhost:10005"
 DICEFILES_API_KEY  = "your-api-key-here"
 ```
 
@@ -232,7 +236,7 @@ combined), not separate `command` and `args` fields:
       "type": "local",
       "command": ["node", "/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
       "environment": {
-        "DICEFILES_BASE_URL": "http://localhost:9090",
+        "DICEFILES_BASE_URL": "http://localhost:10005",
         "DICEFILES_API_KEY": "your-api-key-here"
       }
     }
@@ -261,7 +265,7 @@ Add Dicefiles to `~/.config/mcporter.json`:
       "command": "node",
       "args": ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
       "env": {
-        "DICEFILES_BASE_URL": "http://localhost:9090",
+        "DICEFILES_BASE_URL": "http://localhost:10005",
         "DICEFILES_API_KEY": "your-api-key-here"
       }
     }
@@ -289,7 +293,7 @@ cp /path/to/Dicefiles/scripts/openclaw-dicefiles-skill/SKILL.md \
    ~/.claude/skills/dicefiles/
 ```
 
-The skill teaches the agent the full 36-tool inventory, recommended call sequences,
+The skill teaches the agent the full 49-tool inventory, recommended call sequences,
 error handling, and fulfillment loop patterns. See
 `scripts/openclaw-dicefiles-skill/SKILL.md` for the full skill definition.
 
@@ -308,7 +312,40 @@ MCP_TRANSPORT=http MCP_PORT=3001 node scripts/mcp-server.js
 
 Point your orchestrator at `http://127.0.0.1:3001/mcp`. The server implements the
 Streamable HTTP MCP transport over stateless request/response (`POST /mcp` for
-JSON-RPC). Set `MCP_HOST=0.0.0.0` to accept remote connections.
+JSON-RPC). SDK v2.3.1 also supports older HTTP clients through a stateless fallback.
+
+For a remote reverse proxy, configure an incoming token and the public hostname:
+
+```bash
+MCP_TRANSPORT=http MCP_HOST=0.0.0.0 \
+MCP_AUTH_TOKEN=replace-with-a-strong-separate-token \
+MCP_ALLOWED_HOSTS=mcp.example.com node scripts/mcp-server.js
+```
+
+Remote binding fails at startup if either value is missing. Clients send
+`Authorization: Bearer <MCP_AUTH_TOKEN>`; this is separate from the upstream
+`DICEFILES_API_KEY`. All authorized callers share that upstream key's scopes.
+Browser clients with an `Origin` header also need its hostname explicitly
+listed in `MCP_ALLOWED_ORIGINS` (for example, `agent.example.com`, without scheme
+or port); this does not enable cross-origin CORS access.
+Request bodies are limited to 1 MiB.
+
+A modern request includes the protocol and client metadata on every call:
+
+```bash
+curl http://127.0.0.1:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2026-07-28' \
+  -H 'Mcp-Method: tools/list' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"example","version":"1.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'
+```
+
+Add the bearer header if `MCP_AUTH_TOKEN` is configured. For `tools/call`, also
+send `Mcp-Name` matching `params.name`. Use an SDK client to build these requests
+in applications. HTTP remains stateless because the tools wrap independent REST
+calls; room state, subscriptions, and request claims remain in Dicefiles/Redis.
+Server-initiated sampling and interactive elicitation are outside this wrapper.
 
 Protect the port with a reverse proxy (nginx, Caddy) and TLS before exposing it
 beyond localhost.
@@ -349,6 +386,12 @@ beyond localhost.
 | 28  | `run_room_plugin`        | `room-plugins:run` | No |
 | 29  | `inspect_room_plugin_sync_memory` | `room-plugins:read` | No |
 | 30  | `clear_room_plugin_sync_memory` | `room-plugins:write` | No |
+| 31  | `get_storage_volumes` | `storage:read` | No |
+| 32  | `preview_storage_placement` | `storage:read` | No |
+| 33  | `get_room_password_access` | `room-access:read` | No |
+| 34  | `configure_room_password_access` | `room-access:write` | No |
+| 35  | `rotate_room_password` | `room-access:write` | No |
+| 36  | `reveal_room_passwords` | `room-access:secrets` | No |
 
 ---
 
@@ -498,9 +541,11 @@ Fetch one or more public URLs server-side and store them as uploads in a room.
 | Field    | Type             | Required | Limits                                     |
 | -------- | ---------------- | -------- | ------------------------------------------ |
 | `roomid` | string           | Yes      |                                            |
-| `urls`   | array of strings | Yes      | 1–20 URLs, each a valid `http`/`https` URL |
+| `urls`   | array of strings | Yes      | 1–20 HTTP/HTTPS URLs or magnet URIs (16 KiB each) |
 
-Max 100 MB per file, 60 second server-side fetch timeout.
+Max 100 MB per file, 60 second server-side fetch timeout. Magnet/torrent inputs
+import metadata only; see [TORRENTS.md](docs/TORRENTS.md). The MCP wrapper sends
+the batch body as an array with `roomid` on each item.
 
 - **Response**: `{ ok, results: [{ url, key?, err? }] }`
 
@@ -624,7 +669,7 @@ Download a file from the room and return it as a base64 string.
 | Field      | Type   | Required | Default   | Notes                                                |
 | ---------- | ------ | -------- | --------- | ---------------------------------------------------- |
 | `key`      | string | Yes      |           | File key                                             |
-| `maxBytes` | number | No       | 5 242 880 | Abort if file exceeds this byte count (5 MB default) |
+| `maxBytes` | integer | No       | 5 242 880 | Abort while streaming if this limit is exceeded; 1–20 MiB, default 5 MiB |
 
 - **Response**: `{ ok, key, filename, contentType, sizeBytes, content_base64 }` or `{ ok: false, err, sizeBytes }` if over limit.
 
@@ -924,9 +969,9 @@ call never reads as a success.
 - **HTTP mode** (`MCP_TRANSPORT=http`): the server binds on `127.0.0.1:MCP_PORT` and
   validates the `Host` and `Origin` headers before every request, so a hostile page
   cannot point its own domain at the local port and call your tools. Binding beyond
-  loopback is opt-in through `MCP_HOST`; once you do it, every caller that reaches
-  the port can spend the configured `DICEFILES_API_KEY`, so put it behind a reverse
-  proxy with TLS and its own authentication.
+  loopback requires `MCP_AUTH_TOKEN` and `MCP_ALLOWED_HOSTS`. Put the endpoint
+  behind TLS. The token grants access to the configured `DICEFILES_API_KEY`'s
+  scopes; use a dedicated scoped upstream key for each deployment.
 
 ### 5.5 Protocol Version
 
@@ -1037,3 +1082,62 @@ await mcp.call("post_room_chat", {
 ---
 
 _See also: [API.md](API.md) for the underlying REST API reference._
+
+## Maintenance additions (unreleased)
+
+HTTP remains stateless: each request receives a fresh SDK server with its caller's
+tool catalog. Stateful room data stays in Redis. Stdio uses the configured upstream
+API key. Object results include structuredContent alongside readable text.
+
+### Bounded listing
+
+list_files and archive_list_contents accept limit (1–500, default 100) and cursor.
+Pass pagination.nextCursor to the next call; keep filters unchanged. Cursors are
+signed, expire after 30 minutes, and exclude files newer than the first page.
+Legacy REST reads without pagination preserve their response shape but stop at
+8 MiB; paginated responses and MCP JSON reads are bounded to 4 MiB.
+
+### Separate caller identities
+
+Set MCP_TRANSPORT=http and MCP_OAUTH_CONFIG to a private JSON file (chmod 600).
+Use an HTTPS reverse proxy, an explicit MCP_ALLOWED_HOSTS list, and the exact
+external /mcp URL as the resource audience. Example configuration with placeholders:
+
+```json
+{
+  "issuer": "https://identity.example/",
+  "resource": "https://mcp.example/mcp",
+  "jwks": "https://identity.example/.well-known/jwks.json",
+  "principals": {
+    "operator-subject": {
+      "apiKey": "PRIVATE_DICEFILES_SCOPED_KEY",
+      "scopes": ["mcp", "files:read", "requests:read"]
+    }
+  }
+}
+```
+
+Tokens must be signed with RS256, ES256, or EdDSA and contain sub, iat, exp, the
+configured issuer, audience, and scope. Granted scopes are the intersection of the
+JWT and mapped principal scopes; mcp is mandatory. Unknown callers receive 401;
+missing required scope receives 403. The caller's mapped Dicefiles key is used
+upstream. Provision the identity provider separately. Protected-resource metadata
+is served at /.well-known/oauth-protected-resource/mcp.
+
+### Additional tools
+
+| Tool | Required Dicefiles scope | Purpose |
+| --- | --- | --- |
+| list_remote_import_providers | room-plugins:read | Provider capability, availability and circuit status |
+| validate_remote_import_source | room-plugins:read | Parse an allowed URL without importing |
+| list_storage_migrations | admin:read | Paginated durable move journal |
+| plan_storage_migration | admin:storage | Move, drain or rebalance; dryRun defaults true |
+| control_storage_migration | admin:storage | Pause, resume or rollback |
+| set_storage_volume_draining | admin:storage | Reject new allocations or re-enable a volume |
+| list_room_access_credentials | room-access:read | Credential metadata without passwords |
+| create_room_access_credential | room-access:write | Cohort/personal credential creation |
+| update_room_access_credential | room-access:write | Label, state and activation limits |
+| revoke_room_access_credential | room-access:write | Individual credential and grant revocation |
+| rotate_room_access_credential | room-access:write | Rotate one credential |
+| reveal_room_access_credential | room-access:secrets | Reveal current password for private distribution |
+| get_room_access_audit | room-access:read | Bounded administration/activation history |

@@ -3,22 +3,27 @@
 const {memoize} = require("./memoize");
 
 function debounce(fn, to) {
-  if (fn.length) {
-    throw new Error("cannot have params");
-  }
   to = to || 100;
   let timer;
+  let latestArgs;
+  let receiver;
 
   const run = function() {
     timer = 0;
-    fn.call(this);
+    const args = latestArgs;
+    const context = receiver;
+    latestArgs = receiver = null;
+    fn.apply(context, args);
   };
 
-  return function() {
+  // Coalesce calls without postponing the deadline; retain the latest event.
+  return function(...args) {
+    latestArgs = args;
+    receiver = this;
     if (timer) {
       return;
     }
-    timer = setTimeout(run.bind(this), to);
+    timer = setTimeout(run, to);
   };
 }
 
@@ -77,7 +82,6 @@ const units = [
 const fixer = function(digits) {
   let f = formatters.get(digits);
   if (!f) {
-    // eslint-disable-next-line
     formatters.set(digits, f = new Intl.NumberFormat(undefined, {
       minimumFractionDigits: digits,
       maximumFractionDigits: digits,
@@ -112,7 +116,6 @@ return function prettySize(n) {
 })(false);
 
 const toPrettyInt = (function() {
-// eslint-disable-next-line
 const formatter = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 0,
 });
@@ -174,7 +177,6 @@ function toPrettyDuration(s, short) {
 }
 
 const toPrettyETA = (function() {
-// eslint-disable-next-line
 const fmt = new Intl.NumberFormat(undefined, {
   minimumIntegerDigits: 2,
   maximumFractionDigits: 0

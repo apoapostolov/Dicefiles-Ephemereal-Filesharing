@@ -3,15 +3,24 @@
 import { dom } from "../../util";
 import { loadProgress, saveProgress } from "./opts";
 
-function dbg(label, ...args) { console.log(`[Reader] ${label}`, ...args); }
-function dbgErr(label, err) { console.error(`[Reader] ${label}`, err); }
+function dbg(label, ...args) {
+  console.log(`[Reader] ${label}`, ...args);
+}
+
+function dbgErr(label, err) {
+  console.error(`[Reader] ${label}`, err);
+}
+
 function dbgShow(container, text, isError = false) {
-  if (!container) return;
+  if (!container) {
+    return;
+  }
   const el = document.createElement("div");
-  el.style.cssText = `font:12px/1.6 monospace;padding:4px 10px;color:${isError ? "#f87171" : "#94a3b8"};white-space:pre-wrap;word-break:break-all;`;
+  el.style.cssText = `font:12px/1.6 monospace;padding:4px 10px;color:${isError ? "var(--danger)" : "var(--dark-fg)"};white-space:pre-wrap;word-break:break-all;`;
   el.textContent = text;
   container.appendChild(el);
 }
+
 const PDF_WORKER_SRC = `/pdf.worker.js?v=${window.__CV__ || "1"}`;
 
 class PDFReader {
@@ -19,6 +28,9 @@ class PDFReader {
     this.container = container;
     this.infoEl = infoEl;
     this.pdfDoc = null;
+    this.loadingTask = null;
+    this.renderTasks = new Set();
+    this.visibilityObservers = new Set();
     this.totalPages = 0;
     this.renderedPages = new Set();
     this.observer = null;
@@ -36,7 +48,7 @@ class PDFReader {
     dbg("PDFReader.open() url =", url);
     dbgShow(this.container, `Opening PDF: ${url}`);
 
-    // PDF.js 4 is ESM. Keep the default fallback for compatibility with
+    // PDF.js is ESM. Keep the default fallback for compatibility with
     // distributions that expose the API object as a default export.
     let pdfjsLib;
     try {
@@ -50,7 +62,8 @@ class PDFReader {
         this.container,
         `pdfjs-dist loaded, getDocument=${typeof pdfjsLib.getDocument}`,
       );
-    } catch (ex) {
+    }
+    catch (ex) {
       dbgErr("pdfjs-dist import failed", ex);
       dbgShow(
         this.container,
@@ -67,14 +80,25 @@ class PDFReader {
     dbg("Calling getDocument…");
     dbgShow(this.container, "Calling pdfjsLib.getDocument()…");
     try {
-      this.pdfDoc = await pdfjsLib.getDocument({
+      if (this._destroyed) {
+        return;
+      }
+      this.loadingTask = pdfjsLib.getDocument({
         url,
         disableAutoFetch: false,
         disableStream: false,
         isEvalSupported: false,
         rangeChunkSize: 65536,
-      }).promise;
-    } catch (ex) {
+      });
+      this.pdfDoc = await this.loadingTask.promise;
+      if (this._destroyed) {
+        return;
+      }
+    }
+    catch (ex) {
+      if (this._destroyed) {
+        return;
+      }
       dbgErr("getDocument failed", ex);
       dbgShow(
         this.container,
@@ -130,7 +154,8 @@ class PDFReader {
         this.container,
         `Scale (A5): ${this.scale.toFixed(3)} (displayW=${pageDisplayW}px, h=${this._pageHeight}px)`,
       );
-    } else {
+    }
+    else {
       dbg("WARN: container has zero width, using fallback scale", this.scale);
       dbgShow(
         this.container,
@@ -143,9 +168,9 @@ class PDFReader {
     // would immediately fire onPageChange(0) and overwrite the stored progress.
     const saved = loadProgress(this._fileKey);
     const startPage =
-      saved && saved.page >= 1 && saved.page <= this.totalPages
-        ? saved.page
-        : 1;
+      saved && saved.page >= 1 && saved.page <= this.totalPages ?
+        saved.page :
+        1;
     this._updateInfo(startPage, this.totalPages);
     this._buildPagePlaceholders(startPage);
     this._setupObserver();
@@ -198,7 +223,7 @@ class PDFReader {
     );
 
     this.observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             const pageNum = parseInt(entry.target.dataset.page, 10);
@@ -245,6 +270,9 @@ class PDFReader {
 
     try {
       const page = await this.pdfDoc.getPage(pageNum);
+      if (this._destroyed) {
+        return;
+      }
       const viewport = page.getViewport({ scale: this.scale });
 
       dbg(
@@ -265,18 +293,32 @@ class PDFReader {
         throw new Error(`getContext('2d') returned null for page ${pageNum}`);
       }
 
-      await page.render({ canvasContext: ctx, viewport }).promise;
+      const task = page.render({ canvasContext: ctx, viewport });
+      this.renderTasks.add(task);
+      try {
+        await task.promise;
+      }
+      finally {
+        this.renderTasks.delete(task);
+      }
+      if (this._destroyed) {
+        return;
+      }
       dbg(`_renderPage: page ${pageNum} rendered OK`);
 
       // Scroll-tracking: which page is visible
       this._trackVisible(wrapperEl, pageNum);
-    } catch (ex) {
+    }
+    catch (ex) {
+      if (this._destroyed) {
+        return;
+      }
       dbgErr(`_renderPage page ${pageNum} failed`, ex);
       // Show the error on the page placeholder itself
       wrapperEl.textContent = "";
       const errEl = document.createElement("div");
       errEl.style.cssText =
-        "padding:1rem;color:#f87171;font:13px monospace;background:#1a0000;border-radius:4px;";
+        "padding:1rem;color:var(--danger);font:13px monospace;background:var(--err-bg);border-radius:4px;";
       errEl.textContent = `Page ${pageNum} render error: ${ex.message || ex}`;
       wrapperEl.appendChild(errEl);
     }
@@ -296,6 +338,7 @@ class PDFReader {
         threshold: 0.3,
       },
     );
+    this.visibilityObservers.add(vis);
     vis.observe(wrapperEl);
   }
 
@@ -344,9 +387,19 @@ class PDFReader {
       this.observer.disconnect();
       this.observer = null;
     }
-    if (this.pdfDoc) {
-      this.pdfDoc.destroy();
-      this.pdfDoc = null;
+    for (const task of this.renderTasks) {
+      task.cancel();
+    }
+    this.renderTasks.clear();
+    for (const observer of this.visibilityObservers) {
+      observer.disconnect();
+    }
+    this.visibilityObservers.clear();
+    const task = this.loadingTask;
+    this.loadingTask = null;
+    this.pdfDoc = null;
+    if (task) {
+      Promise.resolve(task.destroy()).catch(() => {});
     }
     this.container.textContent = "";
     this.canvases = [];

@@ -28,8 +28,10 @@ function compareFiles(a, b, mode) {
   switch (mode) {
   case "largest":
     return (Number(b.size) || 0) - (Number(a.size) || 0);
+
   case "expiring":
     return (Number(a.expires) || 0) - (Number(b.expires) || 0);
+
   case "newest":
   default:
     return (Number(b.uploaded) || 0) - (Number(a.uploaded) || 0);
@@ -77,7 +79,8 @@ function parseFilterState(raw) {
   let parsed;
   try {
     parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-  } catch (_) {
+  }
+  catch (_) {
     return null;
   }
   if (!parsed || typeof parsed !== "object") {
@@ -115,9 +118,9 @@ function collectFilterButtonState(buttons) {
       continue;
     }
     const disabled =
-      b.classList && typeof b.classList.contains === "function"
-        ? b.classList.contains("disabled")
-        : false;
+      b.classList && typeof b.classList.contains === "function" ?
+        b.classList.contains("disabled") :
+        false;
     out[key] = !disabled;
   }
   return out;

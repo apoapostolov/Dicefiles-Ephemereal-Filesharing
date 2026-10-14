@@ -3,6 +3,8 @@
 
 import io from "socket.io-client";
 import registry from "./registry";
+import { userError } from "../common/user-error";
+import { captureAuthentication } from "../common/auth-state";
 
 function getSubtleCrypto() {
   try {
@@ -87,7 +89,8 @@ export default async function createSocket() {
     if (guestInvite) {
       params.set("invite", guestInvite);
     }
-  } catch (_) {
+  }
+  catch (_) {
     /* ignore */
   }
   if (nick) {
@@ -115,6 +118,8 @@ export default async function createSocket() {
     randomizationFactor: 0.7,
     reconnectionDelayMax: 10000,
   });
+  // Capture early authentication events before asynchronous component init.
+  captureAuthentication(socket);
   // The socket has captured the one-time credential. Remove it from the
   // address bar so copying an unrelated room/deep link does not leak it.
   if (guestInvite && window.history && window.history.replaceState) {
@@ -127,7 +132,8 @@ export default async function createSocket() {
         "",
         cleanUrl.href,
       );
-    } catch (_) {
+    }
+    catch (_) {
       /* ignore */
     }
   }
@@ -138,12 +144,12 @@ export default async function createSocket() {
       try {
         const timeout = setTimeout(() => {
           socket.removeListener(callbackKey);
-          reject(new Error("Call timeout"));
+          reject(new Error(userError("Call timeout")));
         }, 20000);
         const rresolve = rv => {
           clearTimeout(timeout);
           if (rv && rv.err) {
-            reject(new Error(rv.err));
+            reject(new Error(userError(rv.err)));
             return;
           }
           resolve(rv);
@@ -184,18 +190,24 @@ export default async function createSocket() {
     params = Object.assign({token}, params);
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
-    let res = await fetch(`/api/${endp}`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(params),
-      credentials: "same-origin",
-    });
+    let res;
+    try {
+      res = await fetch(`/api/${endp}`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(params),
+        credentials: "same-origin",
+      });
+    }
+    catch (_) {
+      throw new Error(userError("network"));
+    }
     if (!res.ok) {
-      throw new Error("Server returned an error");
+      throw new Error(userError("", res.status));
     }
     res = await res.json();
     if (res && res.err) {
-      throw new Error(res.err);
+      throw new Error(userError(res.err));
     }
     return res;
   };

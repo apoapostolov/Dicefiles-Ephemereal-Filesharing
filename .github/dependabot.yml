@@ -17,6 +17,9 @@ updates:
       # Group all dev dependency updates together
       dev-deps:
         dependency-type: development
+        update-types:
+          - minor
+          - patch
     ignore:
       # Major upgrades for these packages require manual vetting
       - dependency-name: "webpack"
@@ -33,3 +36,7 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "redis"
         update-types: ["version-update:semver-major"]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

@@ -46,7 +46,7 @@ export default class RequestBoardModal extends Modal {
           "rb-filter-btn",
           ...(id === this.filterStatus ? ["active"] : []),
         ],
-        attrs: { type: "button", "data-status": id },
+        attrs: { "type": "button", "data-status": id },
         text: label,
       });
       btn.addEventListener("click", () => {
@@ -63,9 +63,9 @@ export default class RequestBoardModal extends Modal {
       registry.config.get("deepLinks"),
     );
     this.shareBtn.disabled = !deepLinksEnabled;
-    this.shareBtn.title = deepLinksEnabled
-      ? "Copy a link that opens this request-board view"
-      : "Enable shareable deep links in Room Options first";
+    this.shareBtn.title = deepLinksEnabled ?
+      "Copy a link that opens this request-board view" :
+      "Enable shareable deep links in Room Options first";
     this.shareBtn.addEventListener("click", () => this.copyShareLink());
     this.filterRow.appendChild(this.shareBtn);
 
@@ -100,7 +100,8 @@ export default class RequestBoardModal extends Modal {
       if (REQUEST_BOARD_STATUSES.includes(stored)) {
         return stored;
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       // ignored
     }
     return "all";
@@ -113,7 +114,8 @@ export default class RequestBoardModal extends Modal {
     this.filterStatus = status;
     try {
       localStorage.setItem(this.storageKey, status);
-    } catch (ex) {
+    }
+    catch (ex) {
       // ignored
     }
     for (const btn of this.filterRow.querySelectorAll(".rb-filter-btn")) {
@@ -135,7 +137,8 @@ export default class RequestBoardModal extends Modal {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(url);
         copied = true;
-      } else {
+      }
+      else {
         const input = dom("textarea", {
           attrs: {
             style: "position:fixed;left:-99999px;top:0;opacity:0",
@@ -147,7 +150,8 @@ export default class RequestBoardModal extends Modal {
         copied = document.execCommand("copy");
         input.remove();
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       copied = false;
     }
     const original = "Copy view link";
@@ -213,7 +217,8 @@ export default class RequestBoardModal extends Modal {
           const file = this.owner.get(f.key) || f;
           await registry.roomie.showModal(new RequestViewModal(file));
           this.renderList();
-        } catch (ex) {
+        }
+        catch (ex) {
           if (ex) {
             console.error(ex);
           }

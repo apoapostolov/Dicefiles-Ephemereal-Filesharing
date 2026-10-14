@@ -115,8 +115,9 @@ describe("deep-links (shipped)", () => {
       resolveDeepLinkOpenPlan,
       shouldApplyDeepLinkListIntents,
     } = require("../../lib/room/deep-links");
+
     const map = new Map();
-    const lookup = (k) => map.get(k) || null;
+    const lookup = k => map.get(k) || null;
 
     // Phase 1: config arrived, filemap empty — must NOT mark open done
     const pending = resolveDeepLinkOpenPlan({
@@ -221,7 +222,7 @@ describe("deep-links (shipped)", () => {
         openRequestKey: next.openRequestKey,
         filesReady,
         openAlreadyDone: openDone,
-        lookup: (k) => filemap.get(k) || null,
+        lookup: k => filemap.get(k) || null,
       });
       if (plan.tryOpenFile) {
         opened = plan.tryOpenFile;

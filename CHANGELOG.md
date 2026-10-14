@@ -1,5 +1,58 @@
 # Changelog
 
+## Unreleased
+
+- Upload has a prominent file drop zone, concise link controls, keyboard focus
+  handling and right-aligned actions.
+- Tablet widths keep chat and files side by side with two grouped toolbar rows.
+  Phones use three compact rows for file types, controls, then search/count/Upload. Saved pane
+  widths respect the responsive grid.
+- Tight sidebars keep presence and identity on one line; compact phone file
+  rows leave more space for filenames. Cover Download and Close share matching controls.
+- Account menus accept debounced event handlers and preserve early sign-in state.
+  Common errors provide plain-language recovery instructions.
+- A private `.env` supports ordered, validated flags and credentials. Giphy
+  searches run on the server so provider keys stay out of browser assets.
+- Appearance offers 34 persistent palettes (26 dark, 8 light), with shared color
+  variables across rooms, galleries, menus, readers and account/status pages.
+- Upload accepts magnet links and torrent URLs/files, with v1/v2 hashes,
+  structured metadata, file lists and bounded cover discovery. Links Archive
+  recognizes magnets; torrent content is opened in the user's torrent application.
+- A production Docker image, persistent Compose stack and GHCR build workflow
+  provide container deployment, with documented native sandbox limitations.
+- Phone toolbars use separate Sort and View dropdowns; all filter icons fit
+  their row even on narrow screens.
+- Continue Reading cards can be dismissed with × while keeping saved progress.
+  Drawer, cards and archive placeholders match the room’s neutral-grey palette.
+- Large galleries use 100-tile pages, retain global sorting and restore focus.
+- Automation file/archive lists support bounded signed-cursor pagination.
+- Remote imports stream with cancellation/deadlines; Gofile, fair scheduling,
+  provider status and an optional disabled Plowshare bridge expand provider support.
+- Webhooks use a durable bounded Redis outbox with restart recovery.
+- Operators can preview and queue checksum-verified storage moves, drain or
+  rebalance volumes, pause/resume jobs and roll back while source copies remain.
+- Protected rooms support separately revocable cohort and personal credentials.
+- MCP offers OAuth caller isolation, structured results and 49 scoped tools.
+- Express 5, Redis 6, PDF.js 6, ESLint 10 and Jest 30 replace older major versions;
+  PDF covers use Poppler and Sharp. Audit tails and config writes are bounded.
+
+- MCP URL uploads now use the correct request body. Downloads stop at the
+  configured size while streaming and time out; upstream errors reach clients
+  as tool failures, and write tools have conservative retry hints.
+- Remote MCP HTTP bindings require a separate bearer token and explicit host
+  allowlist. Stateless HTTP and existing stdio clients remain supported.
+- Protected-room request claims enforce access policy. Competing workers
+  arbitrate claims in Redis, and clearing distributed maps removes saved values.
+- Custom credentials are dropped across redirect origins. Redirected GETs no
+  longer carry stale POST bodies or body headers.
+- Automation audit-log retrieval works after the server-module extraction.
+- Dependencies include current compatible security patches and a maintained
+  ZIP reader; native preview setup includes the sandbox and RAR tools.
+- Small PDFs retain a gallery cover when the rendered thumbnail is larger than
+  the source document, with a fixed byte limit for each preview.
+- Build installation uses fewer runtime packages. Install development
+  dependencies when building assets before a production-only deployment.
+
 ## [1.4.6] - 2026-09-28 [Safer Uploads and Stateless MCP]
 
 Uploaded archives, remote URLs, and external file tools now have firmer

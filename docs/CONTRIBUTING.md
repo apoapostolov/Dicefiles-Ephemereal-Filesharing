@@ -27,7 +27,7 @@ Contributions are welcome for:
 
 Prerequisites:
 
-- Node.js **≥ 22** (see `package.json` `engines`)
+- Node.js **22.13+ or 24+** (see `package.json` `engines`)
 - **Yarn 1.x only** (`yarn.lock` is the install source of truth; do not commit `package-lock.json`)
 - Redis running locally or remotely
 
@@ -51,7 +51,6 @@ Optional preview tooling (recommended for richer file previews):
 
 - `exiftool`
 - `ffmpeg`
-- `graphicsmagick` (`gm` command)
 - `ghostscript`
 - Poppler (`pdftoppm` command)
 - `file`

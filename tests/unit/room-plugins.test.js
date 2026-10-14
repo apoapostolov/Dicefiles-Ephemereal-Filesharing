@@ -87,14 +87,14 @@ describe("room-plugins (shipped)", () => {
 describe("room-runtime catalog (shipped)", () => {
   test("listCatalog includes mega-folder from disk", () => {
     const rt = createRoomPluginRuntime({
-      loadModule: (id) =>
+      loadModule: id =>
         require("../../lib/plugins/registry").loadPluginModule(id, {
           pluginsRoot: path.join(__dirname, "../../lib/plugins"),
         }),
       log: { info() {}, warn() {}, error() {} },
     });
     const cat = rt.listCatalog();
-    const mega = cat.find((c) => c.id === "mega-folder");
+    const mega = cat.find(c => c.id === "mega-folder");
     expect(mega).toBeTruthy();
     expect(mega.available).toBe(true);
     expect(mega.botName).toBe("Mega.nz Autoshare");
@@ -103,7 +103,7 @@ describe("room-runtime catalog (shipped)", () => {
   test("runRoomPlugin uses room config roomId", async () => {
     const uploads = [];
     const rt = createRoomPluginRuntime({
-      loadModule: (id) =>
+      loadModule: id =>
         require("../../lib/plugins/registry").loadPluginModule(id, {
           pluginsRoot: path.join(__dirname, "../../lib/plugins"),
         }),

@@ -32,6 +32,7 @@ describe("WebhookDispatcher — request_fulfilled routing", () => {
     jest.resetModules();
 
     const { ObservableMap } = require("../../common/omap");
+
     mockRequests = new ObservableMap();
     mockUploads = new ObservableMap();
 
@@ -40,7 +41,7 @@ describe("WebhookDispatcher — request_fulfilled routing", () => {
     // Provide one hook subscribed to all events so dispatch() doesn't
     // short-circuit on "no configured hooks".
     jest.doMock("../../lib/config", () => ({
-      get: (key) => {
+      get: key => {
         if (key === "webhooks") {
           return [
             {
@@ -54,8 +55,12 @@ describe("WebhookDispatcher — request_fulfilled routing", () => {
             },
           ];
         }
-        if (key === "webhookRetry") return {};
-        if (key === "webhookDeadLetterLog") return null;
+        if (key === "webhookRetry") {
+          return {};
+        }
+        if (key === "webhookDeadLetterLog") {
+          return null;
+        }
         return null;
       },
     }));
@@ -71,9 +76,9 @@ describe("WebhookDispatcher — request_fulfilled routing", () => {
 
   test("onRequestUpdate fires request_fulfilled when status is 'fulfilled'", () => {
     const dispatched = [];
-    jest
-      .spyOn(webhooks, "dispatch")
-      .mockImplementation((event, payload) =>
+    jest.
+      spyOn(webhooks, "dispatch").
+      mockImplementation((event, payload) =>
         dispatched.push({ event, payload }),
       );
 
@@ -107,9 +112,9 @@ describe("WebhookDispatcher — request_fulfilled routing", () => {
 
   test("onRequestPredelete fires for open, non-expired request (mod delete)", () => {
     const dispatched = [];
-    jest
-      .spyOn(webhooks, "dispatch")
-      .mockImplementation((event, payload) =>
+    jest.
+      spyOn(webhooks, "dispatch").
+      mockImplementation((event, payload) =>
         dispatched.push({ event, payload }),
       );
 
@@ -165,9 +170,9 @@ describe("WebhookDispatcher — request_fulfilled routing", () => {
 
   test("full lifecycle: setStatus fires once; subsequent delete does not fire again", () => {
     const events = [];
-    jest
-      .spyOn(webhooks, "dispatch")
-      .mockImplementation((event) => events.push(event));
+    jest.
+      spyOn(webhooks, "dispatch").
+      mockImplementation(event => events.push(event));
 
     // 1. Request created
     mockRequests.set("k1", {
@@ -196,10 +201,11 @@ describe("WebhookDispatcher — HMAC signature", () => {
   beforeAll(() => {
     jest.resetModules();
     const { ObservableMap } = require("../../common/omap");
+
     jest.doMock("../../lib/request", () => ({ REQUESTS: new ObservableMap() }));
     jest.doMock("../../lib/upload", () => ({ UPLOADS: new ObservableMap() }));
     jest.doMock("../../lib/config", () => ({
-      get: (key) => (key === "webhooks" ? [] : null),
+      get: key => (key === "webhooks" ? [] : null),
     }));
     webhooks = require("../../lib/webhooks");
   });
@@ -210,7 +216,7 @@ describe("WebhookDispatcher — HMAC signature", () => {
     const sig = webhooks.signature(
       "mysecret",
       "1700000000000",
-      '{"foo":"bar"}',
+      "{\"foo\":\"bar\"}",
     );
     expect(sig).toMatch(/^[0-9a-f]{64}$/);
   });
@@ -251,13 +257,17 @@ describe("WebhookDispatcher — backoff", () => {
   beforeAll(() => {
     jest.resetModules();
     const { ObservableMap } = require("../../common/omap");
+
     jest.doMock("../../lib/request", () => ({ REQUESTS: new ObservableMap() }));
     jest.doMock("../../lib/upload", () => ({ UPLOADS: new ObservableMap() }));
     jest.doMock("../../lib/config", () => ({
-      get: (key) => {
-        if (key === "webhooks") return [];
-        if (key === "webhookRetry")
+      get: key => {
+        if (key === "webhooks") {
+          return [];
+        }
+        if (key === "webhookRetry") {
           return { baseDelayMs: BASE, maxDelayMs: MAX };
+        }
         return null;
       },
     }));
@@ -302,19 +312,28 @@ describe("FloodProtector — per-account lockout", () => {
 
     jest.doMock("../../lib/broker", () => {
       const EventEmitter = require("events");
+
       const broker = new EventEmitter();
       broker.setMaxListeners(0);
       broker.getMethods = (...methods) => {
         const rv = Object.create(null);
         for (const m of methods) {
-          if (m === "get") rv.get = mockGet;
-          else if (m === "del") rv.del = mockDel;
-          else if (m === "ratelimit") rv.ratelimit = mockRatelimit;
-          else rv[m] = jest.fn().mockResolvedValue(null);
+          if (m === "get") {
+            rv.get = mockGet;
+          }
+          else if (m === "del") {
+            rv.del = mockDel;
+          }
+          else if (m === "ratelimit") {
+            rv.ratelimit = mockRatelimit;
+          }
+          else {
+            rv[m] = jest.fn().mockResolvedValue(null);
+          }
         }
         return rv;
       };
-      broker.getMethod = (m) => broker.getMethods(m)[m];
+      broker.getMethod = m => broker.getMethods(m)[m];
       return broker;
     });
 
@@ -322,7 +341,6 @@ describe("FloodProtector — per-account lockout", () => {
     // attempt a real Redis SUBSCRIBE.
     jest.doMock("../../lib/broker/collections", () => ({
       DistributedTracking: class {
-        constructor() {}
         on() {}
       },
     }));
@@ -469,7 +487,7 @@ describe("url-regex-safe — ReDoS resistance", () => {
     const re = urlRegexSafe({ exact: false });
     // Shape that historically caused exponential backtracking in url-regex:
     // many domain-like segments ending abruptly without a valid TLD.
-    const evil = "a".repeat(50) + "@" + "b".repeat(50) + "." + "c".repeat(50);
+    const evil = `${"a".repeat(50)}@${"b".repeat(50)}.${"c".repeat(50)}`;
     const start = Date.now();
     re.test(evil);
     expect(Date.now() - start).toBeLessThan(200);

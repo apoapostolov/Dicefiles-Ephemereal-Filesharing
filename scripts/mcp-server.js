@@ -1,8 +1,10 @@
 "use strict";
+
+require("../lib/environment").loadEnvironment();
 /**
  * scripts/mcp-server.js — Dicefiles MCP server wrapper
  *
- * Wraps the Dicefiles REST API as 36 MCP tools, allowing any MCP-compatible
+ * Wraps the Dicefiles REST API as 49 MCP tools, allowing any MCP-compatible
  * AI client (Claude Desktop, Cursor, Continue, OpenClaw, AutoGen) to interact with
  * a Dicefiles instance directly.
  *
@@ -25,6 +27,9 @@
  *   MCP_PORT             HTTP port when MCP_TRANSPORT=http (default: 3001)
  *   MCP_HOST             HTTP bind address when MCP_TRANSPORT=http (default: 127.0.0.1)
  *   MCP_API_TIMEOUT_MS   Per-request Dicefiles API timeout (default: 30000)
+ *   MCP_AUTH_TOKEN       Separate incoming HTTP bearer token
+ *   MCP_ALLOWED_HOSTS    Comma-separated accepted HTTP hostnames
+ *   MCP_ALLOWED_ORIGINS  Comma-separated accepted Origin hostnames
  *
  * Dependencies:
  *   @modelcontextprotocol/server  ≥2.1.0  (2026-07-28 stateless protocol core)
@@ -41,11 +46,19 @@ const {
 const { StdioServerTransport } = require("@modelcontextprotocol/server/stdio");
 const {
   toNodeHandler,
+  hostHeaderValidation,
+  originValidation,
   localhostHostValidation,
   localhostOriginValidation,
 } = require("@modelcontextprotocol/node");
 const { z } = require("zod/v4");
+const { timingSafeEqual } = require("crypto");
+const { AsyncLocalStorage } = require("async_hooks");
+const { scopeAllowed, loadOAuthConfig, createOAuthAuthorization } = require("./mcp-authorization");
+
+const CALLER = new AsyncLocalStorage();
 const { version: DICEFILES_VERSION } = require("../package.json");
+const { readBoundedJson } = require("../lib/bounded-json");
 
 // ── Configuration ──────────────────────────────────────────────────────────
 
@@ -55,7 +68,18 @@ const BASE = (
 const KEY = process.env.DICEFILES_API_KEY || "";
 
 /** Network timeout for every outbound Dicefiles API call, in ms. */
-const API_TIMEOUT_MS = Number(process.env.MCP_API_TIMEOUT_MS) || 30000;
+function positiveInteger(value, fallback, name, max = 2147483647) {
+  const number = value == null || value === "" ? fallback : Number(value);
+  if (!Number.isSafeInteger(number) || number <= 0 || number > max) {
+    throw new Error(`${name} must be a positive integer no greater than ${max}`);
+  }
+  return number;
+}
+
+const API_TIMEOUT_MS = positiveInteger(
+  process.env.MCP_API_TIMEOUT_MS, 30000, "MCP_API_TIMEOUT_MS",
+);
+const MAX_DOWNLOAD_BYTES = 20 * 1024 * 1024;
 
 if (!KEY) {
   console.error(
@@ -66,10 +90,10 @@ if (!KEY) {
 
 // ── REST helper ────────────────────────────────────────────────────────────
 
-const AUTH_HEADERS = {
-  "Content-Type": "application/json",
-  ...(KEY ? { Authorization: `Bearer ${KEY}` } : {}),
-};
+function authHeaders() {
+  const key = CALLER.getStore()?.key ?? KEY;
+  return { "Content-Type": "application/json", ...(key ? { Authorization: `Bearer ${key}` } : {}) };
+}
 
 /**
  * Call the Dicefiles REST API.
@@ -82,7 +106,7 @@ async function api(method, path, body) {
   const url = `${BASE}/api/v1${path}`;
   const init = {
     method,
-    headers: AUTH_HEADERS,
+    headers: authHeaders(),
     signal: AbortSignal.timeout(API_TIMEOUT_MS),
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   };
@@ -93,12 +117,16 @@ async function api(method, path, body) {
   catch (err) {
     return { ok: false, err: `${BASE} unreachable: ${err.message}` };
   }
-  const data = await res.json().catch(() => null);
+  return readJsonResponse(res);
+}
+
+async function readJsonResponse(res) {
+  const data = await readBoundedJson(res).catch(() => null);
   if (data === null) {
     return { ok: false, err: `HTTP ${res.status} with a non-JSON body` };
   }
-  if (res.status >= 400 && data.ok !== false) {
-    return { ok: false, err: data.err || `HTTP ${res.status}`, status: res.status };
+  if (!res.ok || (data && data.err && data.ok !== true)) {
+    return { ...data, ok: false, err: data.err || `HTTP ${res.status}`, status: res.status };
   }
   return data;
 }
@@ -108,19 +136,91 @@ function wrap(data) {
   const failed = !data || data.ok === false;
   return {
     content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+    ...(data && typeof data === "object" && !Array.isArray(data) ? { structuredContent: data } : {}),
     ...(failed ? { isError: true } : {}),
   };
+}
+
+/** Read at most maxBytes, including chunked responses without Content-Length. */
+async function downloadFile(key, maxBytes) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${BASE}/g/${encodeURIComponent(key)}`, {
+      headers: authHeaders(),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      controller.abort();
+      return wrap({ ok: false, err: `HTTP ${res.status}`, key });
+    }
+    const contentType = res.headers.get("content-type") || "application/octet-stream";
+    const disposition = res.headers.get("content-disposition") || "";
+    const filename = disposition.match(/filename="?([^";]+)"?/)?.[1] || key;
+    const tooLarge = sizeBytes => wrap({
+      ok: false, key, filename, sizeBytes,
+      err: `File exceeds maxBytes=${maxBytes}. Fetch the file URL directly instead.`,
+    });
+    const declared = Number(res.headers.get("content-length"));
+    if (declared > maxBytes) {
+      controller.abort();
+      await res.body?.cancel();
+      return tooLarge(declared);
+    }
+    const chunks = [];
+    let size = 0;
+    if (res.body) {
+      const reader = res.body.getReader();
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+          size += value.byteLength;
+          if (size > maxBytes) {
+            controller.abort();
+            await reader.cancel();
+            return tooLarge(size);
+          }
+          chunks.push(Buffer.from(value));
+        }
+      }
+      finally {
+        reader.releaseLock();
+      }
+    }
+    return wrap({
+      ok: true, key, filename, contentType, sizeBytes: size,
+      content_base64: Buffer.concat(chunks, size).toString("base64"),
+    });
+  }
+  finally {
+    clearTimeout(timer);
+  }
 }
 
 // ── Tool metadata ───────────────────────────────────────────────────────────
 
 /**
  * Per-tool behaviour hints. `readOnlyHint` lets a host auto-approve lookups;
- * `destructiveHint` forces a confirmation before anything that removes or
- * rotates state. Keep this table exhaustive: a tool missing from it gets the
- * conservative default, which asks the user to confirm.
+ * Annotations are hints for hosts, never an authorization mechanism. Reads are
+ * safe to retry; writes must explicitly opt in to idempotence.
  */
 const TOOL_META = {
+  list_storage_migrations: { title: "list storage migrations", readOnly: true },
+  plan_storage_migration: { title: "plan storage migration", destructive: true },
+  control_storage_migration: { title: "control storage migration", destructive: true },
+  set_storage_volume_draining: { title: "set storage volume draining", destructive: true },
+  list_room_access_credentials: { title: "list room access credentials", readOnly: true },
+  create_room_access_credential: { title: "create room access credential", destructive: false },
+  update_room_access_credential: { title: "update room access credential", destructive: true },
+  revoke_room_access_credential: { title: "revoke room access credential", destructive: true },
+  rotate_room_access_credential: { title: "rotate room access credential", destructive: true },
+  reveal_room_access_credential: { title: "reveal room access credential", readOnly: true },
+  get_room_access_audit: { title: "get room access audit", readOnly: true },
+  list_remote_import_providers: { title: "List remote import providers", readOnly: true },
+  validate_remote_import_source: { title: "Validate remote import source", readOnly: true },
   // Reads.
   server_health: { title: "Server health", readOnly: true },
   list_files: { title: "List files and requests", readOnly: true },
@@ -183,7 +283,7 @@ const TOOL_META = {
 };
 
 /**
- * Register one tool on the server. Thin wrapper so the 36 registrations below
+ * Register one tool on the server. Thin wrapper so the 49 registrations below
  * keep the v1 call shape while the annotations live in one reviewable table.
  * @param {McpServer|{registerTool:Function}} srv
  * @param {string} name
@@ -191,22 +291,78 @@ const TOOL_META = {
  * @param {object} [inputSchema] Zod object schema, omitted for no-arg tools
  * @param {Function} handler
  */
+const TOOL_SCOPES = Object.freeze({
+  list_storage_migrations: "admin:read",
+  plan_storage_migration: "admin:storage",
+  control_storage_migration: "admin:storage",
+  set_storage_volume_draining: "admin:storage",
+  list_room_access_credentials: "room-access:read",
+  create_room_access_credential: "room-access:write",
+  update_room_access_credential: "room-access:write",
+  revoke_room_access_credential: "room-access:write",
+  rotate_room_access_credential: "room-access:write",
+  reveal_room_access_credential: "room-access:secrets",
+  get_room_access_audit: "room-access:read",
+  list_remote_import_providers: "room-plugins:read",
+  validate_remote_import_source: "room-plugins:read",
+  server_health: "mcp",
+  list_files: "files:read",
+  get_file: "files:read",
+  get_room_snapshot: "files:read",
+  update_file_metadata: "files:write",
+  upload_file_from_urls: "uploads:write",
+  create_request: "requests:write",
+  claim_request: "requests:write",
+  release_request: "requests:write",
+  post_room_chat: "chat:write",
+  download_file: "files:read",
+  save_subscription: "files:read",
+  list_subscriptions: "files:read",
+  archive_list_contents: "files:read",
+  list_room_links: "room-links:read",
+  create_room_link: "room-links:write",
+  remove_room_link: "room-links:write",
+  list_guest_invites: "guest-invites:read",
+  create_guest_invite: "guest-invites:write",
+  revoke_guest_invite: "guest-invites:write",
+  list_federated_room_links: "federation-links:read",
+  create_federated_room_link: "federation-links:write",
+  remove_federated_room_link: "federation-links:write",
+  set_room_federation_policy: "federation-links:write",
+  list_room_plugins: "room-plugins:read",
+  configure_room_plugin: "room-plugins:write",
+  remove_room_plugin: "room-plugins:write",
+  run_room_plugin: "room-plugins:run",
+  inspect_room_plugin_sync_memory: "room-plugins:read",
+  clear_room_plugin_sync_memory: "room-plugins:write",
+  get_storage_volumes: "admin:read",
+  preview_storage_placement: "admin:read",
+  get_room_password_access: "room-access:read",
+  configure_room_password_access: "room-access:write",
+  rotate_room_password: "room-access:write",
+  reveal_room_passwords: "room-access:secrets"
+});
+
 function defineTool(srv, name, description, inputSchema, handler) {
+  const caller = CALLER.getStore();
+  if (caller && !scopeAllowed(caller.scopes, TOOL_SCOPES[name])) {
+    return undefined;
+  }
   const meta = TOOL_META[name] || {};
   const config = {
     title: meta.title || name,
     description,
     annotations: {
       readOnlyHint: meta.readOnly === true,
-      destructiveHint: meta.destructive === true,
-      idempotentHint: meta.idempotent !== false,
+      destructiveHint: meta.destructive ?? meta.readOnly !== true,
+      idempotentHint: meta.idempotent ?? meta.readOnly === true,
       openWorldHint: true,
     },
-    ...(inputSchema && Object.keys(inputSchema).length
-      ? { inputSchema }
-      : {}),
+    ...(inputSchema && Object.keys(inputSchema).length ?
+      { inputSchema } :
+      {}),
   };
-  return srv.registerTool(name, config, handler);
+  return srv.registerTool(name, config, (...args) => CALLER.run(caller || { key: KEY, scopes: ["*"] }, () => handler(...args)));
 }
 
 // ── Tool registration ──────────────────────────────────────────────────────
@@ -230,6 +386,22 @@ function createServer() {
  * @param {McpServer|{registerTool:Function}} srv
  */
 function registerTools(srv) {
+  defineTool(srv, "list_remote_import_providers", "List installed remote import providers, capabilities, circuit state and availability. Requires room-plugins:read.", {}, async () => wrap(await api("GET", "/remote-import/providers")));
+  defineTool(srv, "validate_remote_import_source", "Validate a source URL against installed and allowed remote providers without importing files. Requires room-plugins:read.", { url: z.string().max(2048), providers: z.array(z.string()).max(4).optional() }, async body => wrap(await api("POST", "/remote-import/validate-source", body)));
+  defineTool(srv, "list_storage_migrations", "List the persistent storage migration journal. Requires admin:read.", { limit: z.number().int().min(1).max(500).optional(), cursor: z.string().optional() }, async args => wrap(await api("GET", `/admin/storage/migrations?${new URLSearchParams(Object.entries(args).filter(([, value]) => value != null))}`)));
+  defineTool(srv, "plan_storage_migration", "Preview a move, volume drain, or controlled rebalance. dryRun defaults true. Set dryRun=false to queue checksum-verified moves with source grace and rollback. Requires admin:storage.", { hashes: z.array(z.string()).max(500).optional(), sourceVolumeId: z.string().optional(), targetVolumeId: z.string().optional(), mode: z.enum(["drain", "rebalance"]).optional(), maxBlobs: z.number().int().min(1).max(500).optional(), dryRun: z.boolean().optional() }, async body => wrap(await api("POST", "/admin/storage/migrations", { ...body, dryRun: body.dryRun !== false })));
+  defineTool(srv, "control_storage_migration", "Pause, resume, or roll back a storage move while source copies remain valid. Requires admin:storage.", { id: z.string().uuid(), action: z.enum(["pause", "resume", "rollback"]) }, async ({id, action}) => wrap(await api("POST", `/admin/storage/migrations/${encodeURIComponent(id)}/${action}`, {})));
+  defineTool(srv, "set_storage_volume_draining", "Set or clear a volume's draining state. Draining rejects new allocations while existing reservations can finish. Requires admin:storage.", { volumeId: z.string(), draining: z.boolean() }, async ({volumeId, draining}) => wrap(await api("PATCH", `/admin/storage/volumes/${encodeURIComponent(volumeId)}/drain`, {draining})));
+  const credentialAddress = (roomid, id = "") => `/rooms/${encodeURIComponent(roomid)}/access-credentials${id ? `/${encodeURIComponent(id)}` : ""}`;
+  const credentialFields = { label: z.string().min(1).max(80).optional(), mode: z.enum(["cohort", "personal"]).optional(), binding: z.enum(["account", "browser"]).optional(), accountId: z.string().max(128).optional(), rotation: z.enum(["monthly", "fixed-days", "manual"]).optional(), days: z.number().int().min(1).max(365).optional(), expiresAt: z.number().int().positive().optional(), maxActivations: z.number().int().min(0).max(1000).optional(), password: z.string().min(12).max(256).optional(), state: z.enum(["active", "suspended", "revoked"]).optional() };
+  defineTool(srv, "list_room_access_credentials", "List cohort/personal credentials without secrets. Requires room-access:read.", { roomid: z.string(), limit: z.number().int().min(1).max(500).optional(), cursor: z.string().optional() }, async ({roomid, ...args}) => wrap(await api("GET", `${credentialAddress(roomid)}?${new URLSearchParams(Object.entries(args).filter(([,value]) => value != null))}`)));
+  defineTool(srv, "create_room_access_credential", "Create a cohort or personal credential in a protected room. Retrieve its password through the separately scoped reveal tool. Requires room-access:write.", { roomid: z.string(), ...credentialFields, label: z.string().min(1).max(80), mode: z.enum(["cohort", "personal"]) }, async ({roomid, ...body}) => wrap(await api("POST", credentialAddress(roomid), body)));
+  defineTool(srv, "update_room_access_credential", "Update a credential label, state, or browser activation limit. Requires room-access:write.", { roomid: z.string(), id: z.string().uuid(), label: z.string().max(80).optional(), state: z.enum(["active", "suspended", "revoked"]).optional(), maxActivations: z.number().int().min(0).max(1000).optional() }, async ({roomid, id, ...body}) => wrap(await api("PATCH", credentialAddress(roomid, id), body)));
+  defineTool(srv, "revoke_room_access_credential", "Revoke and remove a cohort/personal credential and its grants. Other credentials remain valid. Requires room-access:write.", { roomid: z.string(), id: z.string().uuid() }, async ({roomid, id}) => wrap(await api("DELETE", credentialAddress(roomid, id))));
+  defineTool(srv, "rotate_room_access_credential", "Rotate one credential and revoke its existing grants. Requires room-access:write.", { roomid: z.string(), id: z.string().uuid(), password: z.string().min(12).max(256).optional() }, async ({roomid, id, ...body}) => wrap(await api("POST", `${credentialAddress(roomid, id)}/rotations`, body)));
+  defineTool(srv, "reveal_room_access_credential", "Reveal an active credential's current password for private distribution. Requires room-access:secrets.", { roomid: z.string(), id: z.string().uuid() }, async ({roomid, id}) => wrap(await api("POST", `${credentialAddress(roomid, id)}/reveals`, {})));
+  defineTool(srv, "get_room_access_audit", "Read the bounded credential administration and activation audit, without secrets. Requires room-access:read.", { roomid: z.string(), limit: z.number().int().min(1).max(500).optional(), cursor: z.string().optional() }, async ({roomid, ...args}) => wrap(await api("GET", `/rooms/${encodeURIComponent(roomid)}/access-audit?${new URLSearchParams(Object.entries(args).filter(([,value]) => value != null))}`)));
+
   // ── 1. server_health ───────────────────────────────────────────────────
   defineTool(srv,
     "server_health",
@@ -238,15 +410,15 @@ function registerTools(srv) {
       "Use this as a pre-flight check before long automation runs.",
     {},
     async () => {
-      const res = await fetch(`${BASE}/healthz`, {
-        signal: AbortSignal.timeout(API_TIMEOUT_MS),
-      }).catch(err => {
-        throw new Error(`healthz unreachable: ${err.message}`);
-      });
-      const data = await res
-        .json()
-        .catch(() => ({ ok: false, err: "healthz unreachable" }));
-      return wrap(data);
+      try {
+        const res = await fetch(`${BASE}/healthz`, {
+          signal: AbortSignal.timeout(API_TIMEOUT_MS),
+        });
+        return wrap(await readJsonResponse(res));
+      }
+      catch (err) {
+        return wrap({ ok: false, err: `healthz unreachable: ${err.message}` });
+      }
     },
   );
 
@@ -258,31 +430,43 @@ function registerTools(srv) {
       "or combine name_contains and ext for targeted searches.",
     {
       roomid: z.string().describe("Room ID"),
-      type: z
-        .enum(["all", "uploads", "requests", "new"])
-        .optional()
-        .describe('Filter type (default "all")'),
-      since: z
-        .number()
-        .optional()
-        .describe(
+      type: z.
+        enum(["all", "uploads", "requests", "new"]).
+        optional().
+        describe("Filter type (default \"all\")"),
+      since: z.
+        number().
+        optional().
+        describe(
           "Unix milliseconds — return only files uploaded after this time",
         ),
-      name_contains: z
-        .string()
-        .optional()
-        .describe("Case-insensitive substring of filename"),
-      ext: z
-        .string()
-        .optional()
-        .describe('Comma-separated extensions without dot, e.g. "pdf,epub"'),
+      name_contains: z.
+        string().
+        optional().
+        describe("Case-insensitive substring of filename"),
+      ext: z.
+        string().
+        optional().
+        describe("Comma-separated extensions without dot, e.g. \"pdf,epub\""),
+      limit: z.number().int().min(1).max(500).optional().describe("Page size, default 100"),
+      cursor: z.string().optional().describe("Continuation cursor"),
     },
-    async ({ roomid, type, since, name_contains, ext }) => {
+    async ({ roomid, type, since, name_contains, ext, limit = 100, cursor }) => {
       const qs = new URLSearchParams({ roomid });
       qs.set("type", type || "all");
-      if (since != null) qs.set("since", String(since));
-      if (name_contains) qs.set("name_contains", name_contains);
-      if (ext) qs.set("ext", ext);
+      if (since != null) {
+        qs.set("since", String(since));
+      }
+      if (name_contains) {
+        qs.set("name_contains", name_contains);
+      }
+      if (ext) {
+        qs.set("ext", ext);
+      }
+      qs.set("limit", String(limit));
+      if (cursor) {
+        qs.set("cursor", cursor);
+      }
       return wrap(await api("GET", `/files?${qs}`));
     },
   );
@@ -321,22 +505,22 @@ function registerTools(srv) {
       "Requires files:write scope. Unknown fields are silently dropped.",
     {
       key: z.string().describe("File key"),
-      meta: z
-        .object({
+      meta: z.
+        object({
           description: z.string().optional(),
           ai_caption: z.string().optional(),
           ocr_text_preview: z.string().optional(),
-        })
-        .optional(),
-      tags: z
-        .object({
+        }).
+        optional(),
+      tags: z.
+        object({
           title: z.string().optional(),
           author: z.string().optional(),
           genre: z.string().optional(),
           language: z.string().optional(),
           series: z.string().optional(),
-        })
-        .optional(),
+        }).
+        optional(),
     },
     async ({ key, meta, tags }) =>
       wrap(
@@ -353,18 +537,15 @@ function registerTools(srv) {
       "Requires uploads:write scope.",
     {
       roomid: z.string().describe("Destination room ID"),
-      urls: z
-        .array(z.string().url())
-        .min(1)
-        .max(20)
-        .describe("Array of public URLs to fetch and ingest"),
+      urls: z.
+        array(z.string().max(16384).url()).
+        min(1).
+        max(20).
+        describe("Public HTTP/HTTPS URLs or magnet URIs; torrents import metadata only"),
     },
     async ({ roomid, urls }) =>
       wrap(
-        await api("POST", "/batch-upload", {
-          roomid,
-          items: urls.map((url) => ({ url })),
-        }),
+        await api("POST", "/batch-upload", urls.map(url => ({ url, roomid }))),
       ),
   );
 
@@ -376,24 +557,24 @@ function registerTools(srv) {
       "Requires requests:write scope and a session.",
     {
       roomid: z.string().describe("Room ID"),
-      text: z
-        .string()
-        .describe("Human-readable description of what is being requested"),
-      url: z
-        .string()
-        .url()
-        .optional()
-        .describe("Optional reference URL (e.g. a store page)"),
-      hints: z
-        .object({
-          type: z
-            .string()
-            .optional()
-            .describe('e.g. "document", "image", "audio"'),
+      text: z.
+        string().
+        describe("Human-readable description of what is being requested"),
+      url: z.
+        string().
+        url().
+        optional().
+        describe("Optional reference URL (e.g. a store page)"),
+      hints: z.
+        object({
+          type: z.
+            string().
+            optional().
+            describe("e.g. \"document\", \"image\", \"audio\""),
           keywords: z.array(z.string()).optional(),
           max_size_mb: z.number().optional(),
-        })
-        .optional(),
+        }).
+        optional(),
     },
     async ({ roomid, text, url, hints }) =>
       wrap(await api("POST", "/requests", { roomid, text, url, hints })),
@@ -408,12 +589,12 @@ function registerTools(srv) {
       "Requires requests:write scope.",
     {
       key: z.string().describe("Request key (from list_files type=requests)"),
-      ttlMs: z
-        .number()
-        .min(5000)
-        .max(3600000)
-        .optional()
-        .describe(
+      ttlMs: z.
+        number().
+        min(5000).
+        max(3600000).
+        optional().
+        describe(
           "Auto-release timeout in milliseconds (default 300000 = 5 min)",
         ),
     },
@@ -447,10 +628,10 @@ function registerTools(srv) {
     {
       roomid: z.string().describe("Room ID"),
       text: z.string().max(500).describe("Message text (max 500 chars)"),
-      nick: z
-        .string()
-        .optional()
-        .describe(
+      nick: z.
+        string().
+        optional().
+        describe(
           "Display name for the agent (defaults to the account username)",
         ),
     },
@@ -471,43 +652,22 @@ function registerTools(srv) {
       "retrieve the href and fetch it directly. Aborts if the file exceeds maxBytes.",
     {
       key: z.string().describe("File key"),
-      maxBytes: z
-        .number()
-        .optional()
-        .describe("Abort if file exceeds this size in bytes (default 5 MB)"),
+      maxBytes: z.
+        number().
+        int().
+        min(1).
+        max(MAX_DOWNLOAD_BYTES).
+        optional().
+        describe("Abort if file exceeds this size in bytes (default 5 MB)"),
     },
     async ({ key, maxBytes = 5 * 1024 * 1024 }) => {
-      const url = `${BASE}/g/${encodeURIComponent(key)}`;
-      const res = await fetch(url, {
-        headers: KEY ? { Authorization: `Bearer ${KEY}` } : {},
-      });
-      if (!res.ok) {
-        return wrap({ ok: false, err: `HTTP ${res.status}`, key });
+      positiveInteger(maxBytes, 5 * 1024 * 1024, "maxBytes", MAX_DOWNLOAD_BYTES);
+      try {
+        return await downloadFile(key, maxBytes);
       }
-      const contentType =
-        res.headers.get("content-type") || "application/octet-stream";
-      const disposition = res.headers.get("content-disposition") || "";
-      const filename = disposition.match(/filename="?([^";]+)"?/)?.[1] || key;
-      const bytes = await res.arrayBuffer();
-      if (bytes.byteLength > maxBytes) {
-        return wrap({
-          ok: false,
-          key,
-          filename,
-          sizeBytes: bytes.byteLength,
-          err:
-            `File (${bytes.byteLength} bytes) exceeds maxBytes=${maxBytes}. ` +
-            `Fetch ${BASE}/g/${key} directly instead.`,
-        });
+      catch (err) {
+        return wrap({ ok: false, key, err: err.message });
       }
-      return wrap({
-        ok: true,
-        key,
-        filename,
-        contentType,
-        sizeBytes: bytes.byteLength,
-        content_base64: Buffer.from(bytes).toString("base64"),
-      });
     },
   );
 
@@ -520,15 +680,15 @@ function registerTools(srv) {
     {
       name: z.string().describe("Unique name for this subscription"),
       room: z.string().optional().describe("Filter to this room ID"),
-      ext: z
-        .array(z.string())
-        .optional()
-        .describe('Extensions to watch, e.g. [".pdf", ".epub"]'),
+      ext: z.
+        array(z.string()).
+        optional().
+        describe("Extensions to watch, e.g. [\".pdf\", \".epub\"]"),
       name_contains: z.string().optional(),
       max_size_mb: z.number().optional(),
-      type: z.string().optional().describe('File type, e.g. "document"'),
+      type: z.string().optional().describe("File type, e.g. \"document\""),
     },
-    async (body) => wrap(await api("POST", "/agent/subscriptions", body)),
+    async body => wrap(await api("POST", "/agent/subscriptions", body)),
   );
 
   // ── 13. list_subscriptions ────────────────────────────────────────────
@@ -549,12 +709,14 @@ function registerTools(srv) {
       "Use this to inspect what is inside an archive before deciding whether to download it. " +
       "Requires files:read scope.",
     {
-      key: z
-        .string()
-        .describe("File key of the archive (from list_files or get_file)"),
+      key: z.
+        string().
+        describe("File key of the archive (from list_files or get_file)"),
+      limit: z.number().int().min(1).max(500).optional(),
+      cursor: z.string().optional(),
     },
-    async ({ key }) =>
-      wrap(await api("GET", `/archive/${encodeURIComponent(key)}/ls`)),
+    async ({ key, limit = 100, cursor }) =>
+      wrap(await api("GET", `/archive/${encodeURIComponent(key)}/ls?${new URLSearchParams({ limit: String(limit), ...(cursor ? { cursor } : {}) })}`)),
   );
 
   // ── 15. list_room_links ─────────────────────────────────────────────────
@@ -584,33 +746,33 @@ function registerTools(srv) {
       roomid: z.string().describe("Destination room ID"),
       source: z.string().describe("Source room ID or exact room name"),
       name: z.string().optional().describe("Optional display label"),
-      visibility: z
-        .enum(["all", "authenticated", "members", "owners", "mods"])
-        .optional()
-        .describe("Who may see files from this link"),
-      allowPrivateSource: z
-        .boolean()
-        .optional()
-        .describe("Destination consent for an invite-only source"),
-      rules: z
-        .object({
-          nameContains: z
-            .string()
-            .optional()
-            .describe("Filename rule using comma/OR, AND, or /regex/flags"),
-          tagContains: z
-            .string()
-            .optional()
-            .describe("Tag key/value rule using comma/OR, AND, or /regex/flags"),
-          userContains: z
-            .string()
-            .optional()
-            .describe("Uploader username rule using comma/OR, AND, or /regex/flags"),
+      visibility: z.
+        enum(["all", "authenticated", "members", "owners", "mods"]).
+        optional().
+        describe("Who may see files from this link"),
+      allowPrivateSource: z.
+        boolean().
+        optional().
+        describe("Destination consent for an invite-only source"),
+      rules: z.
+        object({
+          nameContains: z.
+            string().
+            optional().
+            describe("Filename rule using comma/OR, AND, or /regex/flags"),
+          tagContains: z.
+            string().
+            optional().
+            describe("Tag key/value rule using comma/OR, AND, or /regex/flags"),
+          userContains: z.
+            string().
+            optional().
+            describe("Uploader username rule using comma/OR, AND, or /regex/flags"),
           types: z.array(z.string()).optional(),
           maxAgeHours: z.number().optional(),
           minAgeHours: z.number().optional(),
-        })
-        .optional(),
+        }).
+        optional(),
     },
     async ({
       roomid,
@@ -736,28 +898,28 @@ function registerTools(srv) {
       peerId: z.string().describe("Configured federation peer ID"),
       remoteRoomId: z.string().describe("Room ID on the remote peer"),
       name: z.string().max(160).optional(),
-      visibility: z
-        .enum(["all", "authenticated", "members", "owners", "mods"])
-        .optional(),
-      rules: z
-        .object({
-          nameContains: z
-            .string()
-            .optional()
-            .describe("Filename rule using comma/OR, AND, or /regex/flags"),
-          tagContains: z
-            .string()
-            .optional()
-            .describe("Source tag rule using comma/OR, AND, or /regex/flags"),
-          userContains: z
-            .string()
-            .optional()
-            .describe("Source uploader rule using comma/OR, AND, or /regex/flags"),
+      visibility: z.
+        enum(["all", "authenticated", "members", "owners", "mods"]).
+        optional(),
+      rules: z.
+        object({
+          nameContains: z.
+            string().
+            optional().
+            describe("Filename rule using comma/OR, AND, or /regex/flags"),
+          tagContains: z.
+            string().
+            optional().
+            describe("Source tag rule using comma/OR, AND, or /regex/flags"),
+          userContains: z.
+            string().
+            optional().
+            describe("Source uploader rule using comma/OR, AND, or /regex/flags"),
           types: z.array(z.string()).optional(),
           maxAgeHours: z.number().optional(),
           minAgeHours: z.number().optional(),
-        })
-        .optional(),
+        }).
+        optional(),
     },
     async ({
       roomid,
@@ -843,17 +1005,17 @@ function registerTools(srv) {
       pluginId: z.string().describe("Installed plugin ID"),
       enabled: z.boolean().optional(),
       label: z.string().max(80).optional(),
-      config: z
-        .record(z.unknown())
-        .optional()
-        .describe("Plugin settings; may contain credentials"),
+      config: z.
+        record(z.unknown()).
+        optional().
+        describe("Plugin settings; may contain credentials"),
     },
     async ({ roomid, pluginId, enabled, label, config }) =>
       wrap(
         await api(
           "PUT",
-          `/rooms/${encodeURIComponent(roomid)}/plugins/` +
-            encodeURIComponent(pluginId),
+          `/rooms/${encodeURIComponent(roomid)}/plugins/${
+            encodeURIComponent(pluginId)}`,
           { enabled, label, config },
         ),
       ),
@@ -871,8 +1033,8 @@ function registerTools(srv) {
       wrap(
         await api(
           "DELETE",
-          `/rooms/${encodeURIComponent(roomid)}/plugins/` +
-            encodeURIComponent(pluginId),
+          `/rooms/${encodeURIComponent(roomid)}/plugins/${
+            encodeURIComponent(pluginId)}`,
         ),
       ),
   );
@@ -911,8 +1073,8 @@ function registerTools(srv) {
         await api(
           "GET",
           `/rooms/${encodeURIComponent(roomid)}/plugins/` +
-            `${encodeURIComponent(pluginId)}/sync-log` +
-            (limit ? `?limit=${encodeURIComponent(limit)}` : ""),
+            `${encodeURIComponent(pluginId)}/sync-log${
+              limit ? `?limit=${encodeURIComponent(limit)}` : ""}`,
         ),
       ),
   );
@@ -926,9 +1088,9 @@ function registerTools(srv) {
     {
       roomid: z.string().describe("Room ID"),
       pluginId: z.string().describe("Invited plugin ID"),
-      confirm: z
-        .boolean()
-        .describe("Must be true to confirm this destructive action"),
+      confirm: z.
+        boolean().
+        describe("Must be true to confirm this destructive action"),
     },
     async ({ roomid, pluginId, confirm }) =>
       wrap(
@@ -1043,33 +1205,95 @@ function registerTools(srv) {
  * stops DNS rebinding, where a hostile page points its own domain at
  * 127.0.0.1 and the browser treats the local server as same-origin.
  */
-async function startHttpTransport() {
+function createHttpServer(options = {}) {
   const http = require("http");
-  const port = Number(process.env.MCP_PORT) || 3001;
-  const host = process.env.MCP_HOST || "127.0.0.1";
+
+  const host = options.host || process.env.MCP_HOST || "127.0.0.1";
+  const authToken = options.authToken ?? process.env.MCP_AUTH_TOKEN ?? "";
+  const oauthConfig = options.oauth ?? loadOAuthConfig(process.env.MCP_OAUTH_CONFIG);
+  const oauth = oauthConfig ? createOAuthAuthorization(oauthConfig, options.oauthOptions) : null;
+  if (oauth && authToken) {
+    throw new Error("Choose OAuth or MCP_AUTH_TOKEN");
+  }
+  const parseList = value => String(value || "").split(",").map(v => v.trim()).filter(Boolean);
+  const allowedHosts = options.allowedHosts ?? parseList(process.env.MCP_ALLOWED_HOSTS);
+  const allowedOrigins = options.allowedOrigins ?? parseList(process.env.MCP_ALLOWED_ORIGINS);
+  const loopback = ["127.0.0.1", "localhost", "::1"].includes(host);
+  if (!loopback && ((!authToken && !oauth) || !allowedHosts.length)) {
+    throw new Error("Remote MCP requires MCP_AUTH_TOKEN and MCP_ALLOWED_HOSTS");
+  }
   const handler = createMcpHandler(() => createServer());
-  const nodeHandler = toNodeHandler(handler);
-  const validateHost = localhostHostValidation();
-  const validateOrigin = localhostOriginValidation();
+  const nodeHandler = toNodeHandler(handler, { maxRequestBodySize: 1024 * 1024 });
+  const validateHost = allowedHosts.length ? hostHeaderValidation(allowedHosts) : localhostHostValidation();
+  const validateOrigin = allowedOrigins.length ? originValidation(allowedOrigins) : localhostOriginValidation();
 
   const httpServer = http.createServer(async (req, res) => {
-    if (!validateHost(req, res) || !validateOrigin(req, res)) {
-      return;
+    try {
+      if (!validateHost(req, res) || !validateOrigin(req, res)) {
+        return;
+      }
+      let pathname;
+      try {
+        ({ pathname } = new URL(req.url, "http://localhost"));
+      }
+      catch (_) {
+        res.writeHead(400);
+        res.end("Bad Request");
+        return;
+      }
+      if (oauth && pathname === "/.well-known/oauth-protected-resource/mcp") {
+        res.writeHead(req.method === "GET" ? 200 : 405, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+        res.end(req.method === "GET" ? JSON.stringify(oauth.metadata) : "");
+        return;
+      }
+      let caller;
+      if (oauth) {
+        const auth = await oauth.gate(new Request(new URL(req.url, oauth.resource), { headers: req.headers }));
+        if (auth instanceof Response) {
+          res.writeHead(auth.status, Object.fromEntries(auth.headers));
+          res.end(await auth.text());
+          return;
+        }
+        caller = { key: auth.extra.apiKey, scopes: auth.scopes };
+        req.auth = auth;
+      }
+      if (authToken) {
+        const provided = Buffer.from(req.headers.authorization || "");
+        const expected = Buffer.from(`Bearer ${authToken}`);
+        if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) {
+          res.writeHead(401, { "WWW-Authenticate": "Bearer", "Content-Type": "text/plain" });
+          res.end("Unauthorized");
+          return;
+        }
+      }
+      if (pathname !== "/mcp") {
+        res.writeHead(req.method === "GET" ? 200 : 404, {
+          "Content-Type": "text/plain",
+        });
+        res.end(
+          req.method === "GET" ?
+            "Dicefiles MCP server running. POST /mcp for JSON-RPC.\n" :
+            "Not Found",
+        );
+        return;
+      }
+      await CALLER.run(caller || { key: KEY, scopes: ["*"] }, () => nodeHandler(req, res));
     }
-    const pathname = new URL(req.url, "http://localhost").pathname;
-    if (pathname !== "/mcp") {
-      res.writeHead(req.method === "GET" ? 200 : 404, {
-        "Content-Type": "text/plain",
-      });
-      res.end(
-        req.method === "GET"
-          ? "Dicefiles MCP server running. POST /mcp for JSON-RPC.\n"
-          : "Not Found",
-      );
-      return;
+    catch (_) {
+      if (res.headersSent) {
+        res.destroy();
+      }
+      else {
+        res.writeHead(500, { "Content-Type": "text/plain" }); res.end("MCP request failed");
+      }
     }
-    await nodeHandler(req, res);
   });
+  return { httpServer, handler, host };
+}
+
+async function startHttpTransport() {
+  const port = positiveInteger(process.env.MCP_PORT, 3001, "MCP_PORT", 65535);
+  const { httpServer, handler, host } = createHttpServer();
 
   await new Promise((resolve, reject) => {
     httpServer.once("error", reject);
@@ -1077,9 +1301,9 @@ async function startHttpTransport() {
   });
 
   const shutdown = async () => {
-    await handler.close();
     httpServer.close();
-    process.exit(0);
+    await handler.close();
+    httpServer.closeAllConnections();
   };
   process.once("SIGINT", shutdown);
   process.once("SIGTERM", shutdown);
@@ -1090,15 +1314,17 @@ async function startHttpTransport() {
   );
   if (!["127.0.0.1", "localhost", "::1"].includes(host)) {
     console.error(
-      "[dicefiles-mcp] WARNING: binding beyond loopback. Host validation then " +
-        "only allows the configured host, and every caller that reaches this " +
-        "port can spend the configured Dicefiles API key.",
+      "[dicefiles-mcp] Remote callers require the MCP bearer token and an allowed Host. " +
+        "Use TLS at the reverse proxy; OAuth callers use their mapped Dicefiles credentials.",
     );
   }
   return handler;
 }
 
 async function main() {
+  if (process.env.MCP_TRANSPORT && !["http", "stdio"].includes(process.env.MCP_TRANSPORT)) {
+    throw new Error("MCP_TRANSPORT must be stdio or http");
+  }
   if (process.env.MCP_TRANSPORT === "http") {
     // createMcpHandler owns the per-request server instances.
     await startHttpTransport();
@@ -1113,10 +1339,10 @@ async function main() {
 
 // Allow require()-ing this module without auto-starting (for tests)
 if (require.main === module) {
-  main().catch((err) => {
+  main().catch(err => {
     console.error("[dicefiles-mcp] Fatal:", err);
     process.exit(1);
   });
 }
 
-module.exports = { registerTools, createServer, api };
+module.exports = { registerTools, createServer, createHttpServer, api };

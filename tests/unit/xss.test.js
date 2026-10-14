@@ -21,7 +21,7 @@ describe("renderMarkdown — XSS safety", () => {
   });
 
   test("inline onerror attribute is not passed through", () => {
-    const html = renderMarkdown('<img src=x onerror="alert(1)">');
+    const html = renderMarkdown("<img src=x onerror=\"alert(1)\">");
     // The raw unencoded <img tag must not appear — entity-encoding makes it safe
     expect(html).not.toContain("<img ");
     expect(html).toContain("&lt;img "); // must be entity-encoded
@@ -30,18 +30,18 @@ describe("renderMarkdown — XSS safety", () => {
   test("javascript: href is not passed through as a live link", () => {
     const html = renderMarkdown("[click me](javascript:alert(1))");
     // Should not emit a raw href with javascript: scheme
-    expect(html).not.toContain('href="javascript:');
+    expect(html).not.toContain("href=\"javascript:");
   });
 
   test("data: href is not passed through as a live link", () => {
     const html = renderMarkdown(
       "[trick](data:text/html,<script>alert(1)</script>)",
     );
-    expect(html).not.toContain('href="data:');
+    expect(html).not.toContain("href=\"data:");
   });
 
   test("HTML entities in plain text are escaped", () => {
-    const html = renderMarkdown('Hello <world> & "friends"');
+    const html = renderMarkdown("Hello <world> & \"friends\"");
     expect(html).not.toContain("<world>");
     // The text should appear in some encoded form
     expect(html).toContain("world");

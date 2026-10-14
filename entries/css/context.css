@@ -7,14 +7,14 @@ ul.context-menu ul {
   padding: 0;
   list-style-type: none;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--hairline);
+  box-shadow: 0 14px 32px var(--shadow-color);
   background: linear-gradient(
     180deg,
-    rgba(240, 240, 240, 0.98),
-    rgba(225, 225, 225, 0.97)
+    var(--panel-bg),
+    var(--panel-bg)
   );
-  color: black;
+  color: var(--text-fg);
   overflow: hidden;
 }
 
@@ -33,18 +33,18 @@ ul.context-menu ul {
 }
 
 .context-menu-item:hover:not(.context-menu-seperator) {
-  background: rgba(176, 176, 176, 0.42);
-  color: #111111;
+  background: var(--surface-3);
+  color: var(--text-fg);
 }
 
 .context-menu-item.disabled,
 .context-menu-item.disabled > * {
-  color: lightgray !important;
+  color: var(--text-fg) !important;
   pointer-events: none;
 }
 
 .context-menu-seperator {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--hairline);
   box-shadow: none;
   margin-left: 1ex;
   margin-right: 1ex;

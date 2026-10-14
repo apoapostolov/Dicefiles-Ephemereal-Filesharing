@@ -26,11 +26,14 @@ function resolveApiKey() {
   try {
     const fs = require("fs");
     const path = require("path");
+
     const cfg = JSON.parse(
       fs.readFileSync(path.join(__dirname, "../../.config.json"), "utf8"),
     );
     const keys = cfg.automationApiKeys || [];
-    if (!keys.length) return null;
+    if (!keys.length) {
+      return null;
+    }
     // Prefer a key that explicitly carries admin or wildcard scopes.
     const adminScopes = new Set([
       "*",
@@ -40,16 +43,19 @@ function resolveApiKey() {
       "mod:*",
     ]);
     for (const entry of keys) {
-      if (typeof entry === "string") return entry; // legacy = full access
+      if (typeof entry === "string") {
+        return entry;
+      } // legacy = full access
       const scopes = entry.scopes || [];
-      if (scopes.some((s) => adminScopes.has(s))) {
+      if (scopes.some(s => adminScopes.has(s))) {
         return entry.key || null;
       }
     }
     // Fall back to the first key.
     const first = keys[0];
     return typeof first === "string" ? first : first.key || null;
-  } catch {
+  }
+  catch {
     return null;
   }
 }
@@ -58,7 +64,9 @@ const API_KEY = resolveApiKey();
 
 async function apiFetch(method, path, body, key = API_KEY) {
   const headers = { "Content-Type": "application/json" };
-  if (key) headers["X-Dicefiles-API-Key"] = key;
+  if (key) {
+    headers["X-Dicefiles-API-Key"] = key;
+  }
   const res = await fetch(BASE + path, {
     method,
     headers,
@@ -78,7 +86,8 @@ beforeAll(async () => {
       signal: AbortSignal.timeout(4000),
     });
     serverUp = res.status === 200 || res.status === 503;
-  } catch {
+  }
+  catch {
     serverUp = false;
   }
   if (!serverUp) {
@@ -97,7 +106,9 @@ beforeAll(async () => {
 
 function ifServer(name, fn) {
   test(name, async () => {
-    if (!serverUp || !API_KEY) return;
+    if (!serverUp || !API_KEY) {
+      return;
+    }
     await fn();
   });
 }
@@ -136,13 +147,17 @@ describe("PATCH /api/v1/admin/config", () => {
   let originalPruningDays;
 
   beforeAll(async () => {
-    if (!serverUp || !API_KEY) return;
+    if (!serverUp || !API_KEY) {
+      return;
+    }
     const { json } = await apiFetch("GET", "/api/v1/admin/config");
     originalPruningDays = json?.config?.roomPruningDays ?? 21;
   });
 
   afterAll(async () => {
-    if (!serverUp || !API_KEY) return;
+    if (!serverUp || !API_KEY) {
+      return;
+    }
     // Restore original value (without persisting)
     await apiFetch("PATCH", "/api/v1/admin/config", {
       roomPruningDays: originalPruningDays,

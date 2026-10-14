@@ -26,10 +26,10 @@ export const READER_OPTS_DEFAULTS = {
 };
 
 export const FONT_FAMILIES = {
-  georgia: 'Georgia,"Times New Roman",serif',
-  bookerly: '"Bookerly","Palatino Linotype","Palatino","Book Antiqua",serif',
+  georgia: "Georgia,\"Times New Roman\",serif",
+  bookerly: "\"Bookerly\",\"Palatino Linotype\",\"Palatino\",\"Book Antiqua\",serif",
   helvetica: "Helvetica,Arial,sans-serif",
-  dyslexic: 'OpenDyslexic,"Comic Sans MS",cursive',
+  dyslexic: "OpenDyslexic,\"Comic Sans MS\",cursive",
 };
 
 /** Load persisted reader options, falling back to defaults. */

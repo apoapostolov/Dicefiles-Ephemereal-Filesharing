@@ -3,14 +3,17 @@
 import { loadProgress, saveProgress } from "./opts";
 import { dom } from "../../util";
 
-import { loadReaderOpts, saveReaderOpts } from "./opts";
 
-function dbg(label, ...args) { console.log(`[Reader] ${label}`, ...args); }
-function dbgErr(label, err) { console.error(`[Reader] ${label}`, err); }
+function dbg(label, ...args) {
+  console.log(`[Reader] ${label}`, ...args);
+}
+
 function dbgShow(container, text, isError = false) {
-  if (!container) return;
+  if (!container) {
+    return;
+  }
   const el = document.createElement("div");
-  el.style.cssText = `font:12px/1.6 monospace;padding:4px 10px;color:${isError ? "#f87171" : "#94a3b8"};white-space:pre-wrap;word-break:break-all;`;
+  el.style.cssText = `font:12px/1.6 monospace;padding:4px 10px;color:${isError ? "var(--danger)" : "var(--dark-fg)"};white-space:pre-wrap;word-break:break-all;`;
   el.textContent = text;
   container.appendChild(el);
 }
@@ -100,17 +103,17 @@ class ComicReader {
 
   /** Advance by one "reading unit" (respects manga RTL mode). */
   nextPage() {
-    const next = this._mangaMode
-      ? this._currentPage - 1
-      : this._currentPage + 1;
+    const next = this._mangaMode ?
+      this._currentPage - 1 :
+      this._currentPage + 1;
     this._showPage(next);
   }
 
   /** Go back by one "reading unit" (respects manga RTL mode). */
   prevPage() {
-    const prev = this._mangaMode
-      ? this._currentPage + 1
-      : this._currentPage - 1;
+    const prev = this._mangaMode ?
+      this._currentPage + 1 :
+      this._currentPage - 1;
     this._showPage(prev);
   }
 
@@ -200,7 +203,7 @@ class WebtoonReader {
     // renders after applying CSS (width:100%; max-width:900px; height:auto).
     // Using naturalHeight for scrollTop calculations overshoots by the scale factor
     // (imageWidth/containerWidth), sending the user to a completely wrong position.
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
       const first = this._imgEls[0];
       first.onload = () => {
         // offsetHeight is the rendered CSS height — the correct unit for scrollTop
@@ -223,7 +226,7 @@ class WebtoonReader {
     // Lazy-load remaining pages via IntersectionObserver.
     // When a page enters the viewport, also eagerly load the next 10 pages so
     // reading feels continuous (streaming effect).
-    const loadPage = (n) => {
+    const loadPage = n => {
       if (n < 0 || n >= this._imgEls.length) {
         return;
       }
@@ -235,7 +238,7 @@ class WebtoonReader {
     };
 
     this._observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         for (const entry of entries) {
           if (!entry.isIntersecting) {
             continue;
@@ -316,7 +319,7 @@ class WebtoonReader {
     // Separate visibility tracker: update page counter + persist progress.
     // Reads _restoring so the initial position restore cannot be overwritten.
     const visTracker = new IntersectionObserver(
-      (entries) => {
+      entries => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             this._visiblePage = parseInt(entry.target.dataset.page, 10);

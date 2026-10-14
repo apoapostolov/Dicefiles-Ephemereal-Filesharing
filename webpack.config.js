@@ -2,55 +2,31 @@
 
 const crypto = require("crypto");
 const path = require("path");
-const fs = require("fs");
+
+require("fs").writeFileSync(path.join(__dirname, "entries/css/themes.css"), require("./common/themes").themeCSS());
 const webpack = require("webpack");
 const { RawSource } = require("webpack-sources");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
-function readJSON(file, fallback = {}) {
-  try {
-    return JSON.parse(fs.readFileSync(file, "utf8"));
-  }
-  catch (ex) {
-    return fallback;
-  }
-}
-
-function mergeProviders(base, local) {
-  const out = Object.assign({}, base || {});
-  for (const [k, v] of Object.entries(local || {})) {
-    out[k] = Object.assign({}, out[k] || {}, v || {});
-  }
-  return out;
-}
-
-const baseGifProviders = readJSON(
-  path.join(__dirname, "core", "gif-providers.json"),
-  {},
-);
-const localGifProviders = readJSON(
-  path.join(__dirname, ".gif-providers.local.json"),
-  {},
-);
-const mergedGifProviders = mergeProviders(baseGifProviders, localGifProviders);
-
 class HashPlugin {
   apply(compiler) {
-    compiler.hooks.emit.tap("HashPlugin", compilation => {
-      const d = crypto.createHmac("sha224", "dicefiles");
-      for (const a of Object.values(compilation.assets)) {
-        try {
-          d.update(a.source());
+    compiler.hooks.thisCompilation.tap("HashPlugin", compilation => {
+      compilation.hooks.processAssets.tap({
+        name: "HashPlugin",
+        stage: webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT,
+      }, () => {
+        const d = crypto.createHmac("sha224", "dicefiles");
+        const assets = compilation.getAssets().sort((a, b) => a.name.localeCompare(b.name));
+        for (const asset of assets) {
+          d.update(asset.name);
+          d.update(asset.source.source());
         }
-        catch (ex) {
-          console.error(ex);
-        }
-      }
-      compilation.assets["../lib/clientversion.js"] = new RawSource(
-        `module.exports = '${d.digest("hex").slice(0, 10)}';`,
-      );
+        compilation.emitAsset("../lib/clientversion.js", new RawSource(
+          `module.exports = '${d.digest("hex").slice(0, 10)}';\n`,
+        ));
+      });
     });
   }
 }
@@ -59,6 +35,7 @@ module.exports = {
   mode: "development",
   context: path.join(__dirname, "entries"),
   entry: {
+    "theme": "./theme.js",
     "client": "./main.js",
     "register": "./register.js",
     "account": "./account.js",
@@ -86,7 +63,7 @@ module.exports = {
             options: {
               // Keep absolute site paths like /loader.png as-is (served from static/)
               url: {
-                filter: (url) => !url.startsWith("/"),
+                filter: url => !url.startsWith("/"),
               },
             },
           },
@@ -104,9 +81,6 @@ module.exports = {
   plugins: [
     new MiniCssExtractPlugin({
       filename: "[name].css",
-    }),
-    new webpack.DefinePlugin({
-      __GIF_PROVIDERS__: JSON.stringify(mergedGifProviders),
     }),
     new HashPlugin(),
   ],

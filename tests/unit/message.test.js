@@ -50,8 +50,8 @@ describe("toMessage", () => {
   test("plain text produces a text token", async () => {
     const parts = await toMessage(URL, noRoom, noFile, "hello world");
     expect(parts.length).toBeGreaterThan(0);
-    const textParts = parts.filter((p) => p.t === "t");
-    const joined = textParts.map((p) => p.v).join("");
+    const textParts = parts.filter(p => p.t === "t");
+    const joined = textParts.map(p => p.v).join("");
     expect(joined).toContain("hello world");
   });
 
@@ -62,22 +62,22 @@ describe("toMessage", () => {
       noFile,
       "check https://example.com out",
     );
-    const urlPart = parts.find((p) => p.t === "u");
+    const urlPart = parts.find(p => p.t === "u");
     expect(urlPart).not.toBeUndefined();
     expect(urlPart.v).toContain("example.com");
   });
 
   test("room reference produces a room token when resolved", async () => {
-    const resolveRoom = async (id) => ({ v: id, n: `Room ${id}` });
+    const resolveRoom = async id => ({ v: id, n: `Room ${id}` });
     const parts = await toMessage(URL, resolveRoom, noFile, "#someroom");
-    const roomPart = parts.find((p) => p.t === "r");
+    const roomPart = parts.find(p => p.t === "r");
     expect(roomPart).not.toBeUndefined();
     expect(roomPart.v).toBe("someroom");
   });
 
   test("unresolvable room reference falls back to text", async () => {
     const parts = await toMessage(URL, noRoom, noFile, "#noroom");
-    const textPart = parts.find((p) => p.t === "t" && p.v.includes("noroom"));
+    const textPart = parts.find(p => p.t === "t" && p.v.includes("noroom"));
     expect(textPart).not.toBeUndefined();
   });
 
@@ -89,7 +89,7 @@ describe("toMessage", () => {
       href: "/g/abc123",
     });
     const parts = await toMessage(URL, noRoom, resolveFile, "@abc123");
-    const filePart = parts.find((p) => p.t === "f");
+    const filePart = parts.find(p => p.t === "f");
     expect(filePart).not.toBeUndefined();
   });
 
@@ -108,7 +108,7 @@ describe("toMessage", () => {
   test("newline token collapses consecutive breaks", async () => {
     // Two newlines → at most 1 break token
     const parts = await toMessage(URL, noRoom, noFile, "line1\n\nline2");
-    const breaks = parts.filter((p) => p.t === "b");
+    const breaks = parts.filter(p => p.t === "b");
     expect(breaks.length).toBeLessThanOrEqual(1);
   });
 });

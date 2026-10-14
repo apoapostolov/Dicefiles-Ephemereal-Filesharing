@@ -38,8 +38,8 @@ describe("ObservableMap — event lifecycle under churn", () => {
   test("delete fires 'predelete' then 'delete'", () => {
     const m = new ObservableMap();
     const events = [];
-    m.on("predelete", (k) => events.push(`predelete:${k}`));
-    m.on("delete", (k) => events.push(`delete:${k}`));
+    m.on("predelete", k => events.push(`predelete:${k}`));
+    m.on("delete", k => events.push(`delete:${k}`));
     m.set("a", 1);
     m.delete("a");
     expect(events).toEqual(["predelete:a", "delete:a"]);
@@ -98,6 +98,7 @@ describe("checkAutomationRateLimit — size cap", () => {
 
   function makeRateLimiter(cap) {
     const state = new Map();
+
     function check(keyId) {
       const bucketKey = String(keyId);
       const now = Date.now();
@@ -113,6 +114,7 @@ describe("checkAutomationRateLimit — size cap", () => {
       state.set(bucketKey, s);
       return { limited: s.count > LIMIT.max, fromCap: false, size: state.size };
     }
+
     return { check, state };
   }
 

@@ -6,6 +6,7 @@ export default class Modal {
   constructor(id, name, ...buttons) {
     this.el = dom("form", {
       classes: ["modal", `modal-${id}`],
+      attrs: { "role": "dialog", "aria-label": name, "aria-modal": "true" },
     });
     this.el.addEventListener("submit", this.onsubmit.bind(this));
 

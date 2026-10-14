@@ -20,6 +20,15 @@ function fakeRedis() {
   const hashes = new Map();
   const schedule = new Map();
   const api = {
+    async lease(key, owner, action) {
+      if (values.get(key) !== owner) {
+        return 0;
+      }
+      if (action === "release") {
+        values.delete(key);
+      }
+      return 1;
+    },
     async del(key) {
       return values.delete(key) ? 1 : 0;
     },
@@ -87,7 +96,9 @@ function fakeRedis() {
 describe("durable federation invalidation outbox", () => {
   test("persists, delivers, and de-duplicates a room invalidation", async () => {
     const redis = fakeRedis();
-    const deliver = jest.fn(async () => 202);
+    const deliver = jest.fn(async () => {
+      expect(redis._schedule.size).toBe(1); return 202;
+    });
     const federation = {
       enabled: true,
       publicBaseUrl: "https://alpha.example",

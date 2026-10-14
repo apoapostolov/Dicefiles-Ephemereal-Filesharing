@@ -1,0 +1,50 @@
+name: dicefiles
+services:
+  app:
+    image: ${DICEFILES_IMAGE:-dicefiles:local}
+    build:
+      context: .
+    restart: unless-stopped
+    init: false # tini is already the image entrypoint
+    env_file: .env.docker
+    environment:
+      NODE_ENV: production
+      HTTP_PORT: "8080"
+      REDIS_URL: redis://redis:6379/0
+      DICEFILES_SECRET: ${DICEFILES_SECRET:?Set a unique random DICEFILES_SECRET in .env.docker}
+    ports:
+      - "127.0.0.1:${DICEFILES_HOST_PORT:-8080}:8080"
+    volumes:
+      - dicefiles-data:/data
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=512m
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
+    mem_limit: 2g
+    depends_on:
+      redis:
+        condition: service_healthy
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 512m
+volumes:
+  dicefiles-data:
+  redis-data:

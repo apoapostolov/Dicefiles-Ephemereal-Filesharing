@@ -14,7 +14,7 @@ elseif op == "delete" then
   redis.call("HDEL", rkey, key)
   redis.call("PUBLISH", rkey, cjson.encode({{pid=pid, t="d", k=cjson.decode(key)}}))
 elseif op == "clear" then
-  redis.call("DEL", key)
+  redis.call("DEL", rkey)
   redis.call("PUBLISH", rkey, cjson.encode({{pid=pid, t="c"}}))
 else
   return redis.error_reply("Invalid dmap operation")

@@ -498,7 +498,7 @@ describe("room-links (shipped)", () => {
       "white",
       now,
     );
-    expect(out.map((f) => f.key)).toEqual(["a"]);
+    expect(out.map(f => f.key)).toEqual(["a"]);
   });
 
   test("denied cross-link yields no files in filter pipeline composition", () => {
@@ -518,9 +518,9 @@ describe("room-links (shipped)", () => {
     expect(allowed).toBe(true);
     expect(denied).toBe(false);
     // When denied, server skips source entirely — no filter results.
-    const fromDenied = denied
-      ? filterLinkedSourceFiles(files, null, "white")
-      : [];
+    const fromDenied = denied ?
+      filterLinkedSourceFiles(files, null, "white") :
+      [];
     expect(fromDenied).toEqual([]);
   });
 

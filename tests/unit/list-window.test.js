@@ -43,6 +43,20 @@ function makeOwner({ total = 500, mounted = 40, scrollTop = 0, filter = null } =
 }
 
 describe("list-window getVisibleWindow (shipped)", () => {
+  test("gallery pages bound a thousand files, preserve global sort, and clamp after deletions", () => {
+    const owner = makeOwner({ total: 1000 });
+    owner.galleryMode = true;
+    owner.galleryPage = 4;
+    const page = getVisibleWindow(owner);
+    expect(page.items).toHaveLength(100);
+    expect(page.pages).toBe(10);
+    expect(page.items[0].key).toBe("f400");
+    owner.sortMode = "largest";
+    expect(getVisibleWindow(owner).items[0].key).toBe("f599");
+    owner.files = owner.files.slice(0, 50);
+    expect(getVisibleWindow(owner).page).toBe(0);
+    expect(getVisibleWindow(owner).items).toHaveLength(50);
+  });
   test("fullFilteredList uses owner.files not owner.visible when files arg omitted", () => {
     const owner = makeOwner({ total: 500, mounted: 30 });
     expect(owner.visible.length).toBe(30);
@@ -97,12 +111,12 @@ describe("list-window getVisibleWindow (shipped)", () => {
     const owner = makeOwner({
       total: 500,
       mounted: 20,
-      filter: (f) => f.i % 2 === 0,
+      filter: f => f.i % 2 === 0,
     });
     const win = getVisibleWindow(owner, owner.files);
     expect(win.virtualized).toBe(true);
     // 250 even items → still virtualized
     expect(win.totalHeight).toBe(250 * 40);
-    win.items.forEach((f) => expect(f.i % 2).toBe(0));
+    win.items.forEach(f => expect(f.i % 2).toBe(0));
   });
 });

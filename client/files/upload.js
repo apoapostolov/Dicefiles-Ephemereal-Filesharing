@@ -2,10 +2,11 @@
 
 import { APOOL } from "../animationpool";
 import registry from "../registry";
+import { userError } from "../../common/user-error";
 import Removable from "../removable";
 import { dom, toPrettyDuration, toPrettyETA, toPrettySize } from "../util";
 
-// eslint-disable-next-line
+
 const PER = new Intl.NumberFormat(undefined, {
   style: "percent",
   minimumFractionDigits: 1,
@@ -280,7 +281,7 @@ export default class Upload extends Removable {
         volatile: true,
         user: "Error",
         role: "system",
-        msg: `Upload of "${this.file.name}" failed: ${ex.message || ex.toString()}`,
+        msg: `Upload of "${this.file.name}" failed. ${userError(ex)}`,
       });
       setTimeout(() => this.remove(), 5000);
     }

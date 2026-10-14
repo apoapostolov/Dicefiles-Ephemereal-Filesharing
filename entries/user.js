@@ -1,13 +1,15 @@
 "use strict";
 
+import { userError } from "../common/user-error";
+
 // Tab switching — toggles .tab-<name> class on #userprofile
 const profileEl = document.querySelector("#userprofile");
 const tabs = document.querySelectorAll(".profile-tab");
 
-tabs.forEach((tab) => {
+tabs.forEach(tab => {
   tab.addEventListener("click", () => {
     const target = tab.dataset.tab;
-    tabs.forEach((t) => {
+    tabs.forEach(t => {
       t.classList.toggle("active", t.dataset.tab === target);
       t.setAttribute(
         "aria-selected",
@@ -35,7 +37,7 @@ if (form) {
     status.classList.toggle("error", !!isError);
   };
 
-  form.addEventListener("submit", async (event) => {
+  form.addEventListener("submit", async event => {
     event.preventDefault();
     setStatus("Saving...");
     try {
@@ -57,8 +59,9 @@ if (form) {
       }
       setStatus("Saved");
       window.location.reload();
-    } catch (ex) {
-      setStatus(ex.message || ex.toString(), true);
+    }
+    catch (ex) {
+      setStatus(userError(ex), true);
     }
   });
 }

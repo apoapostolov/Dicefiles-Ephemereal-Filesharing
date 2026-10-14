@@ -46,7 +46,6 @@ async function post(path, payload, extraHeaders = {}) {
 // ── pre-flight: skip the entire suite if server is down ────────────────────
 
 let serverUp = false;
-let kftCookie = "";
 
 beforeAll(async () => {
   try {
@@ -55,13 +54,8 @@ beforeAll(async () => {
     });
     serverUp = res.status === 200 || res.status === 503;
     // Grab kft cookie for CSRF-protected POST calls
-    const resp = await fetch(`${BASE}/`);
-    const setCookie = resp.headers.get("set-cookie") || "";
-    const match = setCookie.match(/kft=([^;]+)/);
-    if (match) {
-      kftCookie = `kft=${match[1]}`;
-    }
-  } catch {
+  }
+  catch {
     serverUp = false;
   }
   if (!serverUp) {
@@ -237,7 +231,9 @@ describe("POST /api/login", () => {
     const homeRes = await fetch(`${BASE}/`);
     const cookies = homeRes.headers.get("set-cookie") || "";
     const kftMatch = cookies.match(/kft=([^;]+)/);
-    if (!kftMatch) return; // can't test without kft
+    if (!kftMatch) {
+      return;
+    } // can't test without kft
 
     // We'd need to compute an HMAC or hit /api/login via browser — just assert
     // the error shape is what we expect
@@ -285,7 +281,7 @@ describe("Automation API /api/v1/*", () => {
   ifServer(
     "POST /api/v1/auth/login without creds returns 401 or 404",
     async () => {
-      const { status, json } = await post(
+      const { status } = await post(
         "/api/v1/auth/login",
         { username: "", password: "" },
         { Authorization: "Bearer fakewrongkey99xyz" },

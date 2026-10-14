@@ -51,13 +51,13 @@ function makeRoom({ privateSourceConsent = true } = {}) {
       return links;
     },
     async probeLinkedRooms() {
-      return links.map((entry) =>
+      return links.map(entry =>
         Object.assign({}, entry, {
           status:
             entry.roomId === "sourceRoomB2" &&
-            (!entry.allowPrivateSource || !privateSourceConsent)
-              ? "private"
-              : "ok",
+            (!entry.allowPrivateSource || !privateSourceConsent) ?
+              "private" :
+              "ok",
         }),
       );
     },
@@ -79,7 +79,7 @@ function makeRoom({ privateSourceConsent = true } = {}) {
       return { invite: serializeGuestInvite(invite, { fullToken: true }) };
     },
     revokeGuestInviteLink(token, actor) {
-      const invite = invites.find((item) => item.token === token);
+      const invite = invites.find(item => item.token === token);
       invites = removeGuestInvite(invites, token);
       audit = appendGuestInviteAudit(audit, "revoked", {
         token,
@@ -90,7 +90,7 @@ function makeRoom({ privateSourceConsent = true } = {}) {
     },
     getGuestInviteAdminState() {
       return {
-        invites: invites.map((invite) =>
+        invites: invites.map(invite =>
           serializeGuestInvite(invite, { fullToken: true }),
         ),
         audit: audit.slice().reverse(),
@@ -115,7 +115,7 @@ function makeFederatedRoom() {
       return links;
     },
     async probeFederatedRooms() {
-      return links.map((entry) => Object.assign({ status: "active" }, entry));
+      return links.map(entry => Object.assign({ status: "active" }, entry));
     },
   };
 }
@@ -136,18 +136,18 @@ function makePluginRoom() {
       return plugins;
     },
     listRoomPluginsDetailed() {
-      return plugins.map((entry) => Object.assign({
+      return plugins.map(entry => Object.assign({
         name: "Telegram Release Publisher",
       }, entry));
     },
     inviteRoomPlugin(entry) {
-      plugins = plugins
-        .filter((plugin) => plugin.id !== entry.id)
-        .concat(entry);
+      plugins = plugins.
+        filter(plugin => plugin.id !== entry.id).
+        concat(entry);
       return this.listRoomPluginsDetailed();
     },
     revokeRoomPlugin(pluginId) {
-      plugins = plugins.filter((plugin) => plugin.id !== pluginId);
+      plugins = plugins.filter(plugin => plugin.id !== pluginId);
       return this.listRoomPluginsDetailed();
     },
     async runRoomPluginNow(pluginId) {
@@ -324,7 +324,8 @@ describe("room automation helpers", () => {
     let caught;
     try {
       revokeGuestInvite(room, "missing-token", "api:test");
-    } catch (error) {
+    }
+    catch (error) {
       caught = error;
     }
     expect(caught).toMatchObject({ status: 404 });

@@ -229,44 +229,44 @@ test("index.ejs renders without error", async () => {
 
 test("room.ejs renders without error", async () => {
   const html = await render("room.ejs");
-  expect(html).toContain('<body id="room"');
+  expect(html).toContain("<body id=\"room\"");
   expect(html).toContain("TestSite");
   // Key UI elements present
-  expect(html).toContain('id="filter"');
-  expect(html).toContain('id="menu"');
-  expect(html).toContain('id="roomopts-rule-user"');
+  expect(html).toContain("id=\"filter\"");
+  expect(html).toContain("id=\"menu\"");
+  expect(html).toContain("id=\"roomopts-rule-user\"");
   expect(html).toContain("Rule syntax");
   expect(html).toContain("ask an AI to convert your");
   // Continuity/discovery chrome
-  expect(html).toContain('id="continuity"');
-  expect(html).toContain('id="continuity-resume"');
-  expect(html).toContain('id="continuity-digest-control"');
-  expect(html).toContain('id="continuity-digest-toggle"');
+  expect(html).toContain("id=\"continuity\"");
+  expect(html).toContain("id=\"continuity-resume\"");
+  expect(html).toContain("id=\"continuity-digest-control\"");
+  expect(html).toContain("id=\"continuity-digest-toggle\"");
   expect(html).toMatch(
     /id="continuity-download-all"[\s\S]*?class="i-download"/,
   );
-  expect(html).toContain('id="continuity-mark-seen"');
+  expect(html).toContain("id=\"continuity-mark-seen\"");
   expect(html).toMatch(
     /id="continuity-mark-seen"[\s\S]*?class="hidden i-clear"[\s\S]*?title="Mark seen"/,
   );
   // Request board entry
-  expect(html).toContain('id="requestboard"');
+  expect(html).toContain("id=\"requestboard\"");
   // Multi-room ACL and guest-invite operations controls
-  expect(html).toContain('name="linkvisibility"');
-  expect(html).toContain('name="linkprivate"');
-  expect(html).toContain('name="allowprivatecrosslinking"');
-  expect(html).toContain('name="invitecap"');
-  expect(html).toContain('name="inviteaudittbody"');
-  expect(html).toContain('class="roomopts-invite-field"');
+  expect(html).toContain("name=\"linkvisibility\"");
+  expect(html).toContain("name=\"linkprivate\"");
+  expect(html).toContain("name=\"allowprivatecrosslinking\"");
+  expect(html).toContain("name=\"invitecap\"");
+  expect(html).toContain("name=\"inviteaudittbody\"");
+  expect(html).toContain("class=\"roomopts-invite-field\"");
   expect(html).toMatch(
     /name="invitecopy"[\s\S]*?hidden[\s\S]*?disabled[\s\S]*?<\/button>/,
   );
   // Password access uses aligned compact settings and a period table.
-  expect(html).toContain('class="roomopts-access-grid"');
+  expect(html).toContain("class=\"roomopts-access-grid\"");
   expect(html).toContain("Period (days)");
   expect(html).toContain("Prepare (days)");
-  expect(html).toContain('class="roomopts-password-entry"');
-  expect(html).toContain('class="roomopts-password-table"');
+  expect(html).toContain("class=\"roomopts-password-entry\"");
+  expect(html).toContain("class=\"roomopts-password-table\"");
   expect(html).toMatch(
     /name="passwordemptyrow"[\s\S]*?No passwords generated yet\./,
   );
@@ -281,9 +281,9 @@ test("room.ejs renders without error", async () => {
   expect(html).not.toMatch(/<input[^>]+name="passwordcurrent"/);
   expect(html).not.toMatch(/<input[^>]+name="passwordnext"/);
   // Report dialog fields are explicitly labelled and validation-ready.
-  expect(html).toContain('for="report-room"');
+  expect(html).toContain("for=\"report-room\"");
   expect(html).toMatch(/id="report-room"[\s\S]*?readonly/);
-  expect(html).toContain('for="report-message"');
+  expect(html).toContain("for=\"report-message\"");
   expect(html).toMatch(
     /id="report-message"[\s\S]*?maxlength="2000"[\s\S]*?required/,
   );
@@ -302,7 +302,7 @@ test("room-access.ejs renders the protected-room gate", async () => {
     STATUS_HREF: "/status",
   });
   expect(html).toContain("This room is password protected");
-  expect(html).toContain('action="/r/Room123/access"');
+  expect(html).toContain("action=\"/r/Room123/access\"");
   expect(html).not.toContain("room name");
 });
 
@@ -394,12 +394,12 @@ test("account.ejs renders without error", async () => {
     achievements: makeAchievements(),
   });
   expect(html).toContain("TestUser");
-  expect(html).toContain('<form id="account"');
-  expect(html).toContain('class="account-page-legacy"');
+  expect(html).toContain("<form id=\"account\"");
+  expect(html).toContain("class=\"account-page-legacy\"");
   expect(html).toContain("Edit your account settings");
-  expect(html).toContain('id="account-tab-settings"');
-  expect(html).toContain('id="account-tab-achievements"');
-  expect(html).toContain('id="account-panel-achievements"');
+  expect(html).toContain("id=\"account-tab-settings\"");
+  expect(html).toContain("id=\"account-tab-achievements\"");
+  expect(html).toContain("id=\"account-panel-achievements\"");
   expect(html).not.toContain("TestSite PRO");
   expect(html).not.toContain("Of course!");
   expect(html).toMatch(
@@ -536,7 +536,7 @@ test("toplist.ejs (uploaded) renders with empty results", async () => {
     stats: makeToplistStats({ list: "uploaded" }),
   });
   expect(html).toContain("TestSite");
-  expect(html).toContain('<table id="toplist"');
+  expect(html).toContain("<table id=\"toplist\"");
 });
 
 test("toplist.ejs (files) renders with empty results", async () => {
@@ -545,7 +545,7 @@ test("toplist.ejs (files) renders with empty results", async () => {
     list: "files",
     stats: makeToplistStats({ list: "files" }),
   });
-  expect(html).toContain('<table id="toplist"');
+  expect(html).toContain("<table id=\"toplist\"");
 });
 
 test("toplist.ejs renders user rows when results are present", async () => {
@@ -592,7 +592,7 @@ test("status.ejs renders the public infographic and privacy contract", async () 
   expect(html).toContain("Drive storage");
   expect(html).toContain("refreshes every 5 minutes");
   expect(html).not.toContain("Drive horizon");
-  expect(html).toContain('class="service-availability"');
+  expect(html).toContain("class=\"service-availability\"");
   expect(html).toContain("Service history");
   expect(html).toContain("24 hours ago");
   expect((html.match(/data-status="unknown"/g) || []).length).toBe(48);
@@ -638,7 +638,7 @@ test("discover.ejs renders a room row", async () => {
 
 test("head.ejs includes the CSS link", async () => {
   const html = await render("head.ejs", { pagename: "Test Page" });
-  expect(html).toContain('rel="stylesheet"');
+  expect(html).toContain("rel=\"stylesheet\"");
   expect(html).toContain("/style.css");
   expect(html).toContain(`v=${V}`);
 });
@@ -649,10 +649,10 @@ test("footer.ejs renders navigation links", async () => {
   expect(html).toContain("/terms");
   expect(html).toContain("/rules");
   expect(html).toContain("Home");
-  expect(html).toContain('href="/status"');
+  expect(html).toContain("href=\"/status\"");
 });
 
 test("footer.ejs hides the status link when the dashboard is protected", async () => {
   const html = await render("footer.ejs", { STATUS_HREF: "" });
-  expect(html).not.toContain('href="/status"');
+  expect(html).not.toContain("href=\"/status\"");
 });

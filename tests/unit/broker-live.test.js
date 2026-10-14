@@ -28,7 +28,8 @@ describe("broker live redis (shipped)", () => {
         ),
       ]);
       available = pong === "PONG" || pong === "pong" || !!pong;
-    } catch (ex) {
+    }
+    catch (ex) {
       available = false;
       console.warn("[broker-live] Redis unavailable, skipping:", ex.message);
     }
@@ -43,11 +44,36 @@ describe("broker live redis (shipped)", () => {
       await del(KEY);
       await del(`${KEY}:hash`);
       await del(`${KEY}:zset`);
-    } catch (_e) {
+    }
+    catch (_e) {
       // ignore
     }
   });
 
+  test("draining, expiry accounting and renewal are atomic in Redis", async () => {
+    if (!available) {
+      return;
+    }
+    const redis = BROKER.getMethods("storagereserve", "storagerenew", "storagerelease", "hset", "hget", "del");
+    const keys = [`${KEY}:reservations`, `${KEY}:expiry`, `${KEY}:totals`, `${KEY}:draining`];
+    const now = Date.now();
+    try {
+      expect(Number((await redis.storagereserve(...keys, "upload", "volume", 100, 1000, now, now + 1000))[0])).toBe(1);
+      await redis.hset(keys[3], "volume", "1");
+      expect(Number((await redis.storagereserve(...keys, "new", "volume", 100, 1000, now, now + 1000))[0])).toBe(0);
+      expect(Number((await redis.storagereserve(...keys, "upload", "volume", 120, 1000, now, now + 1000))[0])).toBe(1);
+      expect(Number(await redis.storagerenew(keys[0], keys[1], "upload", "volume", now, now + 3000))).toBe(1);
+      expect(Number(await redis.storagerenew(keys[0], keys[1], "upload", "other", now, now + 3000))).toBe(0);
+      await redis.hset(keys[3], "volume", "0");
+      expect(Number((await redis.storagereserve(...keys, "upload", "volume", 50, 1000, now + 4000, now + 5000))[0])).toBe(1);
+      expect(Number(await redis.hget(keys[2], "volume"))).toBe(50);
+      await redis.storagerelease(keys[0], keys[1], keys[2], "upload", "volume");
+      expect(Number(await redis.hget(keys[2], "volume"))).toBe(0);
+    }
+    finally {
+      await redis.del(...keys);
+    }
+  });
   test("ready resolves and ping works", async () => {
     if (!available) {
       return;
@@ -155,4 +181,58 @@ describe("broker live redis (shipped)", () => {
       "10",
     ]);
   }, 10000);
+  test("distributed map clear removes durable values from Redis", async () => {
+    if (!available) {
+      return;
+    }
+    const redis = BROKER.getMethods("dmap", "hgetall", "del");
+    const key = `${KEY}:clear-map`;
+    try {
+      await redis.dmap(key, "test-worker", "set", JSON.stringify("file"), JSON.stringify({ value: 1 }));
+      expect(Object.keys(await redis.hgetall(key))).toHaveLength(1);
+      await redis.dmap(key, "test-worker", "clear");
+      expect(await redis.hgetall(key)).toEqual({});
+    }
+    finally {
+      await redis.del(key);
+    }
+  });
+
+  test("atomic map updates arbitrate competing workers and preserve JSON arrays", async () => {
+    if (!available) {
+      return;
+    }
+    const { DistributedMap } = require("../../lib/broker/collections");
+
+    const name = `${KEY}:atomic-map`;
+    const redisKey = `map:${name}`;
+    const redis = BROKER.getMethods("hset", "hgetall", "del");
+    await redis.hset(redisKey, JSON.stringify({ v: "request" }), JSON.stringify({ claimedBy: "", keywords: [] }));
+    const workers = [new DistributedMap(name), new DistributedMap(name)];
+    try {
+      await Promise.all(workers.map(w => w.loaded));
+      const results = await Promise.allSettled(workers.map((worker, index) =>
+        worker.updateAtomic("request", current => {
+          if (current.claimedBy) {
+            throw Object.assign(new Error("Already claimed"), { status: 409 });
+          }
+          return { ...current, claimedBy: `agent-${index}` };
+        }),
+      ));
+      expect(results.filter(r => r.status === "fulfilled")).toHaveLength(1);
+      expect(results.find(r => r.status === "rejected").reason.status).toBe(409);
+      const stored = Object.values(await redis.hgetall(redisKey)).map(v => JSON.parse(v));
+      expect(stored[0].keywords).toEqual([]);
+      expect(stored[0].claimedBy).toMatch(/^agent-/);
+      await redis.del(redisKey);
+      await expect(workers[0].updateAtomic("request", value => value)).rejects.toMatchObject({ status: 404 });
+    }
+    finally {
+      await redis.del(redisKey);
+      for (const worker of workers) {
+        BROKER.removeListener(redisKey, worker.onsync);
+        worker.kill();
+      }
+    }
+  });
 });

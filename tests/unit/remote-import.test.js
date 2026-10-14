@@ -57,9 +57,9 @@ describe("Pixeldrain downloader", () => {
   });
 
   test("resolves file metadata and returns a streaming body", async () => {
-    const fetchImpl = jest
-      .fn()
-      .mockResolvedValueOnce({
+    const fetchImpl = jest.
+      fn().
+      mockResolvedValueOnce({
         ok: true,
         status: 200,
         async json() {
@@ -71,8 +71,8 @@ describe("Pixeldrain downloader", () => {
             hash_sha256: "deadbeef",
           };
         },
-      })
-      .mockResolvedValueOnce({
+      }).
+      mockResolvedValueOnce({
         ok: true,
         status: 200,
         body: Readable.from([Buffer.from("bytes")]),

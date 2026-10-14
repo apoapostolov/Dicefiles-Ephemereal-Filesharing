@@ -52,10 +52,14 @@ has the security and client details.
 - **Ask the community for missing material.** Post requests, attach reference links or images, and let an upload fulfill the request directly.
 - **Join libraries without copying them.** Link approved rooms locally or across trusted independent hosts while the source keeps control.
 - **Protect private communities.** Use expiring guest invites, optional rotating room passwords, consent boundaries, and role-based moderation.
-- **Connect tools and room bots.** Use scoped REST, webhooks, 36 MCP tools,
+- **Connect tools and room bots.** Use scoped REST, webhooks, 49 MCP tools,
   and bounded automation for imports, releases, requests, and commands.
 - **Grow beyond one drive.** Add several volumes, set free-space floors,
   monitor health, and keep legacy content where it already lives.
+- **Choose your workspace colors.** Pick from 34 persistent themes, including
+  26 dark palettes, using Appearance.
+- **Share torrent metadata.** Import magnet links and `.torrent` files, inspect
+  hashes and file lists, and open them in your torrent application.
 
 <p align="center">
   <img src="images/dicefiles-books-gallery.png" alt="A Dicefiles gallery with generated book and comic covers" width="49%">
@@ -95,37 +99,73 @@ server-generated previews and formats such as RAR/7Z extraction.
 
 ## Quick Start
 
-Requirements: Node.js 22 or newer, Yarn 1.x, Redis, and a Linux, macOS, WSL, or
+Requirements: Node.js 22.13+ or 24+, Yarn 1.x, Redis, and a Linux, macOS, WSL, or
 Windows host. Yarn is the supported package manager; use the committed
 `yarn.lock`.
 
 ```bash
 git clone https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing.git
 cd Dicefiles-Ephemereal-Filesharing
-yarn install
-cp .config.json.example .config.json
-yarn prestart
-yarn start
+yarn install --production=false
+cp .env.example .env
 ```
 
-Edit `.config.json` before the first start. At minimum, replace `secret` with a
-long random value and choose the listening port. The default address is
-`http://127.0.0.1:9090`.
+Edit `.env` before the first start: set a unique random `DICEFILES_SECRET`
+and `HTTP_PORT=8080`. Generate a secret with `openssl rand -hex 32`.
+Then run `yarn start` (which builds assets before starting). Open
+`http://127.0.0.1:8080`. See [environment configuration](docs/ENVIRONMENT.md)
+for ordered flags/keys and precedence. Advanced settings remain in strict JSON
+`.config.json`; the annotated `.config.json.example` requires removing its comments.
 
 On Ubuntu, Debian, or WSL, `yarn setup:ubuntu` installs dependencies, checks the
 native preview stack, and builds the client. On other systems, install ExifTool,
-GraphicsMagick with Ghostscript, Poppler, FFmpeg, and 7-Zip for the broadest
+Ghostscript, Poppler, FFmpeg, and 7-Zip for the broadest
 preview and archive support; then run `yarn check:preview-tools`.
+Linux sandboxing also needs firejail, and RAR extraction needs unrar. Debian
+installations may need to enable non-free repositories for unrar.
+
+Build with development dependencies installed, even when `NODE_ENV=production`.
+The webpack toolchain is in `devDependencies`; a production-only install is
+appropriate after assets have been built.
 
 Verify the live service:
 
 ```bash
-curl -s http://127.0.0.1:9090/healthz
+curl -s http://127.0.0.1:8080/healthz
 ```
 
 Production deployments should place Dicefiles behind an HTTPS reverse proxy.
 Never commit `.config.json`, API keys, room credentials, federation private
 keys, or generated capability URLs.
+
+## Docker: build and run
+
+Use Docker Engine with Compose, or Docker Desktop in Linux-container mode:
+
+```bash
+docker build -t dicefiles:local .
+cp .env.docker.example .env.docker
+```
+
+Set a unique random `DICEFILES_SECRET` in `.env.docker`, then start the stack:
+
+```bash
+docker compose --env-file .env.docker up -d --no-build
+docker compose --env-file .env.docker ps
+curl -fsS http://127.0.0.1:8080/healthz
+```
+
+Docker Desktop shows the **dicefiles** project in Containers. The app listens
+on loopback port 8080; Redis and uploads use separate persistent volumes.
+To use a published GHCR build, set `DICEFILES_IMAGE` to
+`ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing:TAG`, run
+`docker compose --env-file .env.docker pull`, then `up -d --no-build`.
+
+The [Docker guide](docs/DOCKER.md) covers the complete recipe, GHCR publication,
+configuration, backups, upgrades and preview sandbox limitations. The default
+container disables external file tools until a dedicated sandbox policy is
+validated. Browser readers and image previews remain available. Do not use
+privileged containers to bypass this limitation.
 
 ## Automation and Operations
 
@@ -134,10 +174,13 @@ archives, links, guest invites, federation, bots, storage, and protected-room
 access. Permissions are split into scopes, rate limited, and audited.
 
 - [REST API reference](./API.md)
-- [MCP setup and 36-tool reference](./MCP.md)
+- [MCP setup and 49-tool reference](./MCP.md)
 - [Trusted-host federation](./docs/FEDERATION.md)
 - [Plugin development](./core/plugins/DEVELOPING_PLUGINS.md)
 - [Operations skill for AI agents](./skills/dicefiles-ops/SKILL.md)
+- [Environment flags and private provider keys](./docs/ENVIRONMENT.md)
+- [Appearance and theme tokens](./docs/THEMES.md)
+- [Magnet and torrent metadata](./docs/TORRENTS.md)
 - [Security policy](./SECURITY.md)
 
 The protected operator dashboard reports capacity, uptime, traffic, requests,

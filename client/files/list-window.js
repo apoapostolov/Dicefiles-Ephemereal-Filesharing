@@ -5,6 +5,7 @@ const {
   shouldVirtualize,
   sliceWindow,
 } = require("./windowing");
+const { sortFiles } = require("./list-state");
 
 /**
  * Full filtered file list for virtualization.
@@ -17,11 +18,11 @@ const {
  */
 function fullFilteredList(owner, files) {
   const source =
-    files != null
-      ? files
-      : owner.files != null
-        ? owner.files
-        : [];
+    files != null ?
+      files :
+      owner.files != null ?
+        owner.files :
+        [];
   if (typeof owner.filtered === "function") {
     return Array.from(owner.filtered(source));
   }
@@ -34,9 +35,21 @@ function fullFilteredList(owner, files) {
  * @param {Iterable|null} [files] - full source list (defaults to owner.files)
  */
 function getVisibleWindow(owner, files = null) {
-  const list = fullFilteredList(owner, files);
+  let list = sortFiles(fullFilteredList(owner, files), owner.sortMode || "newest");
+  if (owner.galleryMode) {
+    list = list.filter(file => !file.isRequest && !(file.meta && file.meta.request));
+    const pageSize = 100;
+    const pages = Math.max(1, Math.ceil(list.length / pageSize));
+    const page = Math.max(0, Math.min(pages - 1, Number(owner.galleryPage) || 0));
+    return {
+      items: list.slice(page * pageSize, (page + 1) * pageSize),
+      start: page * pageSize, end: Math.min(list.length, (page + 1) * pageSize),
+      offsetY: 0, totalHeight: 0, virtualized: false,
+      galleryPaged: true, page, pages, total: list.length,
+    };
+  }
   const total = list.length;
-  if (!shouldVirtualize(total) || owner.galleryMode || owner.linksMode) {
+  if (!shouldVirtualize(total) || owner.linksMode) {
     return {
       items: list,
       start: 0,

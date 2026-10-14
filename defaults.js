@@ -269,6 +269,9 @@ module.exports = {
   // Use firejail when calling potential dangerous external commands,
   // see jail.profile
   jail: LINUX,
+  // Containers disable external tools until a working sandbox policy is verified.
+  // Sharp image processing and browser-side readers do not use this switch.
+  nativeTools: true,
 
   // For meta data and asset generation, path to ffmpeg exiftool
   exiftool: "exiftool",
@@ -279,7 +282,7 @@ module.exports = {
   // For further checking the file type, if exiftool fails
   filetool: "file",
 
-  // Poppler fallback for PDF cover generation when GraphicsMagick is missing
+  // Poppler first-page renderer for PDF cover generation
   // or cannot render a particular document.
   pdftoppm: "pdftoppm",
 

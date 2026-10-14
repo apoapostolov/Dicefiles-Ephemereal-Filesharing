@@ -21,7 +21,6 @@ const os = require("os");
 const path = require("path");
 const JSZip = require("jszip");
 const sharp = require("sharp");
-
 const meta = require("../../lib/meta");
 
 // ---------------------------------------------------------------------------
@@ -32,9 +31,9 @@ const meta = require("../../lib/meta");
 async function makeTinyPng() {
   return sharp({
     create: { width: 50, height: 50, channels: 3, background: "white" },
-  })
-    .png()
-    .toBuffer();
+  }).
+    png().
+    toBuffer();
 }
 
 /** Build an in-memory CBZ with two pages and an optional ComicInfo.xml. */
@@ -45,11 +44,11 @@ async function buildCbzBuffer({ withComicInfo = true } = {}) {
   zip.file("0002.png", imgBuf);
   if (withComicInfo) {
     const ci =
-      `<?xml version="1.0"?>\n<ComicInfo>\n` +
-      `  <Title>Test Comic</Title>\n` +
-      `  <PageCount>2</PageCount>\n` +
-      `  <Page Image="1" Type="FrontCover" />\n` +
-      `</ComicInfo>`;
+      "<?xml version=\"1.0\"?>\n<ComicInfo>\n" +
+      "  <Title>Test Comic</Title>\n" +
+      "  <PageCount>2</PageCount>\n" +
+      "  <Page Image=\"1\" Type=\"FrontCover\" />\n" +
+      "</ComicInfo>";
     zip.file("ComicInfo.xml", ci);
   }
   return zip.generateAsync({ type: "nodebuffer" });
@@ -110,7 +109,7 @@ describe("parseComicInfoXml", () => {
   });
 
   test("returns null frontCoverImageIdx when no FrontCover page exists", () => {
-    const xml = `<ComicInfo><Title>No Cover</Title></ComicInfo>`;
+    const xml = "<ComicInfo><Title>No Cover</Title></ComicInfo>";
     const r = meta.parseComicInfoXml(xml);
     expect(r.frontCoverImageIdx).toBeNull();
     expect(r.title).toBe("No Cover");
@@ -167,7 +166,7 @@ describe("detectComicContainer", () => {
 describe("zipReadComicInfo", () => {
   test("returns ComicInfo.xml string when present in archive", async () => {
     const zip = new JSZip();
-    const xmlContent = `<ComicInfo><Title>Zip Title</Title></ComicInfo>`;
+    const xmlContent = "<ComicInfo><Title>Zip Title</Title></ComicInfo>";
     zip.file("ComicInfo.xml", xmlContent);
     zip.file("images/001.jpg", "dummy");
     const buf = await zip.generateAsync({ type: "nodebuffer" });
@@ -187,7 +186,7 @@ describe("zipReadComicInfo", () => {
 
   test("handles nested ComicInfo.xml path", async () => {
     const zip = new JSZip();
-    const xmlContent = `<ComicInfo><Title>Nested</Title></ComicInfo>`;
+    const xmlContent = "<ComicInfo><Title>Nested</Title></ComicInfo>";
     zip.file("subdir/ComicInfo.xml", xmlContent);
     const buf = await zip.generateAsync({ type: "nodebuffer" });
     const loadedZip = await JSZip.loadAsync(buf);
@@ -283,13 +282,13 @@ describe("generateAssets — CBR", () => {
 
     const dummyImg = await makeTinyPng();
 
-    jest
-      .spyOn(meta, "rarListImages")
-      .mockResolvedValue(["cover.png", "page2.png"]);
-    jest
-      .spyOn(meta, "rarReadComicInfo")
-      .mockResolvedValue(
-        `<?xml version="1.0"?><ComicInfo><Title>RAR Comic</Title></ComicInfo>`,
+    jest.
+      spyOn(meta, "rarListImages").
+      mockResolvedValue(["cover.png", "page2.png"]);
+    jest.
+      spyOn(meta, "rarReadComicInfo").
+      mockResolvedValue(
+        "<?xml version=\"1.0\"?><ComicInfo><Title>RAR Comic</Title></ComicInfo>",
       );
     jest.spyOn(meta, "rarExtractFile").mockResolvedValue(dummyImg);
 
@@ -347,13 +346,13 @@ describe("generateAssets — CB7", () => {
 
     const dummyImg = await makeTinyPng();
 
-    jest
-      .spyOn(meta, "sevenZListImages")
-      .mockResolvedValue(["cover.png", "page2.png"]);
-    jest
-      .spyOn(meta, "sevenZReadComicInfo")
-      .mockResolvedValue(
-        `<?xml version="1.0"?><ComicInfo><Title>7z Comic</Title></ComicInfo>`,
+    jest.
+      spyOn(meta, "sevenZListImages").
+      mockResolvedValue(["cover.png", "page2.png"]);
+    jest.
+      spyOn(meta, "sevenZReadComicInfo").
+      mockResolvedValue(
+        "<?xml version=\"1.0\"?><ComicInfo><Title>7z Comic</Title></ComicInfo>",
       );
     jest.spyOn(meta, "sevenZExtractFile").mockResolvedValue(dummyImg);
 

@@ -1,14 +1,3 @@
-local reservation = redis.call("HGET", KEYS[1], ARGV[1])
-local oldBytes = 0
-if reservation then
-  local separator = string.find(reservation, "|", 1, true)
-  local oldVolume = string.sub(reservation, 1, separator - 1)
-  oldBytes = tonumber(string.sub(reservation, separator + 1)) or 0
-  if oldVolume ~= ARGV[2] then
-    return {-1, oldBytes}
-  end
-end
-
 local expired = redis.call("ZRANGEBYSCORE", KEYS[2], 0, tonumber(ARGV[5]))
 for _, uploadKey in ipairs(expired) do
   local value = redis.call("HGET", KEYS[1], uploadKey)
@@ -23,6 +12,19 @@ for _, uploadKey in ipairs(expired) do
   end
   redis.call("ZREM", KEYS[2], uploadKey)
 end
+
+local reservation = redis.call("HGET", KEYS[1], ARGV[1])
+local oldBytes = 0
+if reservation then
+  local separator = string.find(reservation, "|", 1, true)
+  local oldVolume = string.sub(reservation, 1, separator - 1)
+  oldBytes = tonumber(string.sub(reservation, separator + 1)) or 0
+  if oldVolume ~= ARGV[2] then
+    return {-1, oldBytes}
+  end
+end
+
+if redis.call("HGET", KEYS[4], ARGV[2]) == "1" and not reservation then return {0, 0} end
 
 local requested = tonumber(ARGV[3]) or 0
 local current = tonumber(redis.call("HGET", KEYS[3], ARGV[2])) or 0

@@ -20,8 +20,8 @@ class MemoryMap extends Map {
 function fakeRoom() {
   return {
     roomid: "protected-room",
-    config: new MemoryMap(),
-    pconfig: new MemoryMap(),
+    config: new MemoryMap([["owners", ["owner"]]]),
+    pconfig: new MemoryMap([["towner", "owner-token"]]),
     owns(account, token) {
       return account === "owner" || token === "owner-token";
     },

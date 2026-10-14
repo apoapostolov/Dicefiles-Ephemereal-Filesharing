@@ -8,7 +8,7 @@ hot reload is intentionally not part of this checkout's workflow.
 
 | Setting | Value |
 | --- | --- |
-| WSL distribution | `Ubuntu-24.04` |
+| WSL distribution | `Ubuntu` |
 | Repository in WSL | `/mnt/c/git-public/Dicefiles-Ephemereal-Filesharing` |
 | Service | user-level `dicefiles.service` |
 | Test URL | `http://localhost:10005` |
@@ -27,19 +27,19 @@ dependencies, runtime configuration, or generated browser assets:
 2. Build all browser assets from source:
 
    ```powershell
-   wsl -d Ubuntu-24.04 -e bash -lc "cd /mnt/c/git-public/Dicefiles-Ephemereal-Filesharing && yarn prestart"
+   wsl -d Ubuntu -e bash -lc "cd /mnt/c/git-public/Dicefiles-Ephemereal-Filesharing && yarn prestart"
    ```
 
 3. Restart the single service:
 
    ```powershell
-   wsl -d Ubuntu-24.04 -e bash -lc "systemctl --user restart dicefiles.service"
+   wsl -d Ubuntu -e bash -lc "systemctl --user restart dicefiles.service"
    ```
 
 4. Wait for startup and Redis room restoration, then verify from WSL:
 
    ```powershell
-   wsl -d Ubuntu-24.04 -e bash -lc "curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:10005/healthz"
+   wsl -d Ubuntu -e bash -lc "curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:10005/healthz"
    ```
 
 5. Verify from Windows:

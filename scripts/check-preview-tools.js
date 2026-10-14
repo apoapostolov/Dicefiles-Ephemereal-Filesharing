@@ -7,11 +7,12 @@ const warnOnly = process.argv.includes("--warn");
 const commands = [
   ["file", ["--version"], "MIME detection"],
   ["exiftool", ["-ver"], "image and document metadata"],
-  ["gm", ["version"], "PDF thumbnail rendering"],
   ["gs", ["--version"], "PDF rendering delegate"],
   ["pdftoppm", ["-v"], "PDF thumbnail fallback"],
   ["ffmpeg", ["-version"], "video and audio previews"],
   ["7z", ["i"], "7z and CB7 archive support"],
+  ["firejail", ["--version"], "external file-tool sandbox"],
+  ["unrar", [], "RAR archive listing and extraction"],
 ];
 
 const missing = [];
@@ -38,7 +39,7 @@ console.error(`Missing preview tooling:\n- ${missing.join("\n- ")}`);
 if (process.platform === "linux") {
   console.error(
     "\nUbuntu/WSL: run `yarn setup:ubuntu` or install " +
-      "`libimage-exiftool-perl graphicsmagick ghostscript poppler-utils " +
+      "`libimage-exiftool-perl ghostscript poppler-utils " +
       "ffmpeg p7zip-full file`.",
   );
 }

@@ -21,7 +21,7 @@
 
 .tooltip.visible {
   visibility: visible;
-  box-shadow: 6px 6px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 6px 6px 10px var(--shadow-color);
 }
 
 /* Firefox does not like this

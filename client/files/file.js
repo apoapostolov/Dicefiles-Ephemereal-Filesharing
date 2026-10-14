@@ -2,6 +2,7 @@
 
 import { APOOL } from "../animationpool";
 import BaseFile from "../file";
+import { TorrentMetadataModal } from "../torrent-metadata";
 import registry from "../registry";
 import { dom, nukeEvent, sort, toPrettyDuration, toPrettySize } from "../util";
 import { REMOVALS, TTL } from "./tracker";
@@ -255,6 +256,10 @@ export default class File extends BaseFile {
       return;
     }
     this.previewEl.classList.remove("loading");
+    if (this.meta?.torrent?.imageDataUrl?.startsWith("data:image/jpeg;base64,")) {
+      this.previewEl.src = this.meta.torrent.imageDataUrl;
+      return;
+    }
     const preview = this.findPreview() || { type: "none" };
     const url = this.href + preview.ext;
     switch (preview.type) {
@@ -595,6 +600,10 @@ export default class File extends BaseFile {
 
   onclick(e) {
     try {
+      if (this.meta?.torrent && !e.altKey && !e.shiftKey && !e.metaKey) {
+        registry.roomie.showModal(new TorrentMetadataModal(this.meta.torrent, this.name, this.url)).catch(() => {});
+        return nukeEvent(e);
+      }
       if (this.isRequest) {
         if (e.altKey || e.shiftKey || e.metaKey || e.optionKey) {
           return true;

@@ -35,7 +35,7 @@ function computeWindow({
 
   const firstVisible = Math.floor(st / rh);
   const visibleCount = Math.ceil(vh / rh) + 1;
-  let start = Math.max(0, firstVisible - over);
+  const start = Math.max(0, firstVisible - over);
   let end = Math.min(t, firstVisible + visibleCount + over);
   if (end < start) {
     end = start;

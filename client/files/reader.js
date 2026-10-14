@@ -1,6 +1,6 @@
 "use strict";
 
-import { dom, nukeEvent } from "../util";
+import { nukeEvent } from "../util";
 import { PDFReader } from "./reader/pdf";
 import { BookReader } from "./reader/book";
 import { ComicReader, WebtoonReader } from "./reader/comic";
@@ -30,7 +30,6 @@ import {
 // Append the client build version so the browser fetches a fresh copy
 // whenever the build changes (pdf.worker.js is served immutable/30-day
 // cached).
-const PDF_WORKER_SRC = `/pdf.worker.js?v=${window.__CV__ || "1"}`;
 
 // ── debug helpers ─────────────────────────────────────────────────────────────
 
@@ -49,7 +48,7 @@ function dbgShow(container, text, isError = false) {
   }
   const el = document.createElement("div");
   el.style.cssText = `font:12px/1.6 monospace;padding:4px 10px;color:${
-    isError ? "#f87171" : "#94a3b8"
+    isError ? "var(--danger)" : "var(--dark-fg)"
   };white-space:pre-wrap;word-break:break-all;`;
   el.textContent = text;
   container.appendChild(el);
@@ -138,6 +137,7 @@ export default class Reader {
     );
 
     this.file = null;
+    this._returnFocus = null;
     this._renderer = null;
     this._readerType = null;
     this._mangaMode = !!(
@@ -176,7 +176,8 @@ export default class Reader {
         try {
           localStorage.setItem("reader_manga", this._mangaMode ? "1" : "0");
           localStorage.setItem("reader_webtoon", "0");
-        } catch (_) {
+        }
+        catch (_) {
           // ignore private-browsing quota errors
         }
         this.mangaEl.classList.toggle("active", this._mangaMode);
@@ -198,7 +199,8 @@ export default class Reader {
         try {
           localStorage.setItem("reader_webtoon", this._webtoonMode ? "1" : "0");
           localStorage.setItem("reader_manga", "0");
-        } catch (_) {
+        }
+        catch (_) {
           // ignore private-browsing quota errors
         }
         this.webtoonEl.classList.toggle("active", this._webtoonMode);
@@ -218,15 +220,15 @@ export default class Reader {
 
     // Reader options modal
     if (this.readerOptsEl && this.readerOptsModalEl) {
-      this.readerOptsEl.addEventListener("click", (e) => {
+      this.readerOptsEl.addEventListener("click", e => {
         e.stopPropagation();
         this._toggleOptsModal();
       });
 
       // Font family buttons
-      this.readerOptsModalEl
-        .querySelectorAll(".rom-font-btn")
-        .forEach((btn) => {
+      this.readerOptsModalEl.
+        querySelectorAll(".rom-font-btn").
+        forEach(btn => {
           btn.addEventListener("click", () => {
             const fontFamily = btn.dataset.font;
             this._applyReaderOpt({ fontFamily });
@@ -241,7 +243,7 @@ export default class Reader {
       if (sizeDecEl) {
         sizeDecEl.addEventListener("click", () => {
           const cur = loadReaderOpts().fontSize;
-          const idx = SIZES.findIndex((s) => Math.abs(s - cur) < 0.01);
+          const idx = SIZES.findIndex(s => Math.abs(s - cur) < 0.01);
           const next = SIZES[Math.max(0, idx < 0 ? SIZES.length - 1 : idx - 1)];
           this._applyReaderOpt({ fontSize: next });
           this._updateOptsUI();
@@ -250,7 +252,7 @@ export default class Reader {
       if (sizeIncEl) {
         sizeIncEl.addEventListener("click", () => {
           const cur = loadReaderOpts().fontSize;
-          const idx = SIZES.findIndex((s) => Math.abs(s - cur) < 0.01);
+          const idx = SIZES.findIndex(s => Math.abs(s - cur) < 0.01);
           const next = SIZES[Math.min(SIZES.length - 1, idx < 0 ? 0 : idx + 1)];
           this._applyReaderOpt({ fontSize: next });
           this._updateOptsUI();
@@ -258,9 +260,9 @@ export default class Reader {
       }
 
       // Line spacing buttons
-      this.readerOptsModalEl
-        .querySelectorAll("#rom-spacing-row .rom-choice-btn")
-        .forEach((btn) => {
+      this.readerOptsModalEl.
+        querySelectorAll("#rom-spacing-row .rom-choice-btn").
+        forEach(btn => {
           btn.addEventListener("click", () => {
             this._applyReaderOpt({
               lineSpacing: parseFloat(btn.dataset.spacing),
@@ -270,9 +272,9 @@ export default class Reader {
         });
 
       // Margin buttons
-      this.readerOptsModalEl
-        .querySelectorAll("#rom-margin-row .rom-choice-btn")
-        .forEach((btn) => {
+      this.readerOptsModalEl.
+        querySelectorAll("#rom-margin-row .rom-choice-btn").
+        forEach(btn => {
           btn.addEventListener("click", () => {
             this._applyReaderOpt({ margin: parseInt(btn.dataset.margin, 10) });
             this._updateOptsUI();
@@ -280,7 +282,7 @@ export default class Reader {
         });
 
       // Close modal when clicking outside
-      document.addEventListener("click", (e) => {
+      document.addEventListener("click", e => {
         if (
           this._optsOpen &&
           !this.readerOptsModalEl.contains(e.target) &&
@@ -360,6 +362,7 @@ export default class Reader {
     }
 
     this.close(); // Destroy any previous reader
+    this._returnFocus = document.activeElement;
     this.file = file;
     this._readerType = rtype;
 
@@ -372,6 +375,7 @@ export default class Reader {
 
     // Show reader, hide filelist
     document.body.classList.add("reading");
+    this.closeEl?.focus({ preventScroll: true });
     document.body.addEventListener("keydown", this._onKey, true);
 
     // Toggle zoom / prev-next / mode controls
@@ -424,13 +428,16 @@ export default class Reader {
       if (isPdf) {
         this._renderer = new PDFReader(this.contentEl, this.infoEl);
         await this._renderer.open(file.url, file.key);
-      } else if (isComic) {
+      }
+      else if (isComic) {
         await this._openComicRenderer();
-      } else {
+      }
+      else {
         this._renderer = new BookReader(this.contentEl, this.infoEl);
         await this._renderer.open(file.url, rtype, file.key);
       }
-    } catch (ex) {
+    }
+    catch (ex) {
       dbgErr("Reader open error", ex);
       if (this.infoEl) {
         this.infoEl.textContent = `Failed to load — ${ex.message || ex}`;
@@ -458,7 +465,8 @@ export default class Reader {
     if (this._webtoonMode) {
       this._renderer = new WebtoonReader(this.contentEl, this.infoEl);
       await this._renderer.open(this.file);
-    } else {
+    }
+    else {
       this._renderer = new ComicReader(this.contentEl, this.infoEl);
       this._renderer.setMangaMode(this._mangaMode);
       await this._renderer.open(this.file);
@@ -468,7 +476,8 @@ export default class Reader {
   _toggleOptsModal() {
     if (this._optsOpen) {
       this._closeOptsModal();
-    } else {
+    }
+    else {
       this._openOptsModal();
     }
   }
@@ -518,7 +527,7 @@ export default class Reader {
     const opts = loadReaderOpts();
 
     // Font family
-    this.readerOptsModalEl.querySelectorAll(".rom-font-btn").forEach((btn) => {
+    this.readerOptsModalEl.querySelectorAll(".rom-font-btn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.font === opts.fontFamily);
     });
 
@@ -529,9 +538,9 @@ export default class Reader {
     }
 
     // Line spacing
-    this.readerOptsModalEl
-      .querySelectorAll("#rom-spacing-row .rom-choice-btn")
-      .forEach((btn) => {
+    this.readerOptsModalEl.
+      querySelectorAll("#rom-spacing-row .rom-choice-btn").
+      forEach(btn => {
         btn.classList.toggle(
           "active",
           Math.abs(parseFloat(btn.dataset.spacing) - opts.lineSpacing) < 0.01,
@@ -539,9 +548,9 @@ export default class Reader {
       });
 
     // Margins
-    this.readerOptsModalEl
-      .querySelectorAll("#rom-margin-row .rom-choice-btn")
-      .forEach((btn) => {
+    this.readerOptsModalEl.
+      querySelectorAll("#rom-margin-row .rom-choice-btn").
+      forEach(btn => {
         btn.classList.toggle(
           "active",
           parseInt(btn.dataset.margin, 10) === opts.margin,
@@ -582,13 +591,16 @@ export default class Reader {
           req.then(done).catch(() => {
             this._focusTransitioning = false;
           });
-        } else {
+        }
+        else {
           done();
         }
-      } catch (_) {
+      }
+      catch (_) {
         this._focusTransitioning = false;
       }
-    } else {
+    }
+    else {
       document.removeEventListener("mousemove", this._onFocusMouseMove);
       document.removeEventListener(
         "fullscreenchange",
@@ -599,7 +611,8 @@ export default class Reader {
       if (document.fullscreenElement) {
         try {
           document.exitFullscreen();
-        } catch (_) {
+        }
+        catch (_) {
           /* no-op */
         }
       }
@@ -625,13 +638,18 @@ export default class Reader {
     this._readerType = null;
     document.body.classList.remove("reading");
     document.body.removeEventListener("keydown", this._onKey, true);
+    if (this._returnFocus?.isConnected) {
+      this._returnFocus.focus({ preventScroll: true });
+    }
+    this._returnFocus = null;
   }
 
   /** Route "prev" or "next" click/key to the appropriate renderer. */
   _paginatePage(dir) {
     if (this._renderer instanceof BookReader) {
       this._bookPage(dir);
-    } else if (
+    }
+    else if (
       this._renderer instanceof ComicReader ||
       this._renderer instanceof WebtoonReader
     ) {
@@ -650,7 +668,8 @@ export default class Reader {
     if (this._renderer instanceof BookReader) {
       if (dir === "prev") {
         this._renderer.prevPage();
-      } else {
+      }
+      else {
         this._renderer.nextPage();
       }
     }
@@ -664,7 +683,8 @@ export default class Reader {
     ) {
       if (dir === "prev") {
         this._renderer.prevPage();
-      } else {
+      }
+      else {
         this._renderer.nextPage();
       }
     }
@@ -675,7 +695,8 @@ export default class Reader {
     if (this._renderer instanceof BookReader) {
       if (dir === "prev") {
         this._renderer.prevChapter();
-      } else {
+      }
+      else {
         this._renderer.nextChapter();
       }
     }
@@ -685,7 +706,8 @@ export default class Reader {
     if (this._renderer instanceof PDFReader) {
       if (dir === "prev") {
         this._renderer.prevPage();
-      } else {
+      }
+      else {
         this._renderer.nextPage();
       }
     }
@@ -700,43 +722,54 @@ export default class Reader {
       }
       this.close();
       nukeEvent(e);
-    } else if (e.key === "ArrowLeft") {
+    }
+    else if (e.key === "ArrowLeft") {
       // Left arrow: previous page (PDF/comic) or previous page within chapter (book)
       if (this._readerType === "pdf") {
         this._pdf("prev");
-      } else if (this._readerType === "comic") {
+      }
+      else if (this._readerType === "comic") {
         this._comicPage("prev");
-      } else {
+      }
+      else {
         this._bookPage("prev");
       }
       nukeEvent(e);
-    } else if (e.key === "ArrowRight") {
+    }
+    else if (e.key === "ArrowRight") {
       // Right arrow: next page (PDF/comic) or next page within chapter (book)
       if (this._readerType === "pdf") {
         this._pdf("next");
-      } else if (this._readerType === "comic") {
+      }
+      else if (this._readerType === "comic") {
         this._comicPage("next");
-      } else {
+      }
+      else {
         this._bookPage("next");
       }
       nukeEvent(e);
-    } else if (e.key === "ArrowUp") {
+    }
+    else if (e.key === "ArrowUp") {
       if (this._readerType === "pdf") {
         this._pdf("prev");
         nukeEvent(e);
-      } else if (this._readerType === "comic" && this._webtoonMode) {
+      }
+      else if (this._readerType === "comic" && this._webtoonMode) {
         this._comicPage("prev");
         nukeEvent(e);
       }
-    } else if (e.key === "ArrowDown") {
+    }
+    else if (e.key === "ArrowDown") {
       if (this._readerType === "pdf") {
         this._pdf("next");
         nukeEvent(e);
-      } else if (this._readerType === "comic" && this._webtoonMode) {
+      }
+      else if (this._readerType === "comic" && this._webtoonMode) {
         this._comicPage("next");
         nukeEvent(e);
       }
-    } else if (e.key === "PageUp") {
+    }
+    else if (e.key === "PageUp") {
       if (this._readerType === "comic" && this._webtoonMode) {
         // PageUp in webtoon = scroll back one full page height
         if (this._renderer instanceof WebtoonReader) {
@@ -746,11 +779,13 @@ export default class Reader {
           });
         }
         nukeEvent(e);
-      } else if (this._readerType !== "pdf") {
+      }
+      else if (this._readerType !== "pdf") {
         this._bookChapter("prev");
         nukeEvent(e);
       }
-    } else if (e.key === "PageDown") {
+    }
+    else if (e.key === "PageDown") {
       if (this._readerType === "comic" && this._webtoonMode) {
         // PageDown in webtoon = scroll forward one full page height
         if (this._renderer instanceof WebtoonReader) {
@@ -760,11 +795,13 @@ export default class Reader {
           });
         }
         nukeEvent(e);
-      } else if (this._readerType !== "pdf") {
+      }
+      else if (this._readerType !== "pdf") {
         this._bookChapter("next");
         nukeEvent(e);
       }
-    } else if (e.key === "f" || e.key === "F") {
+    }
+    else if (e.key === "f" || e.key === "F") {
       this._toggleFocus();
       nukeEvent(e);
     }

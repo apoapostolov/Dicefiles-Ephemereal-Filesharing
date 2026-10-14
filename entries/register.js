@@ -1,5 +1,7 @@
 "use strict;";
 
+import { userError } from "../common/user-error";
+
 import {dom, formToJSON, validateUsername} from "client/util";
 
 
@@ -21,7 +23,7 @@ form.addEventListener("submit", async e => {
     }
   }
   catch (ex) {
-    errors.push(ex.message || ex);
+    errors.push(userError(ex));
   }
   if (pass !== confirm) {
     errors.push(`Passwords did not match,
@@ -58,7 +60,7 @@ form.addEventListener("submit", async e => {
       body: formToJSON(body),
     });
     if (!res.ok) {
-      throw new Error("Server err'ed out, sorry! Please try again later");
+      throw new Error("The service could not complete the request. Please try again later.");
     }
     res = await res.json();
     if (res.err) {
@@ -79,7 +81,7 @@ form.addEventListener("submit", async e => {
     document.location = "/account";
   }
   catch (ex) {
-    ul.appendChild(dom("li", {text: ex.message || ex}));
+    ul.appendChild(dom("li", {text: userError(ex)}));
     console.trace(ex);
   }
   finally {

@@ -53,6 +53,8 @@
         title="Show only files newer than your last visit"
       ></button>
       </div>
+    </div>
+    <div class="tools-row tools-search-row" role="group" aria-label="File search and upload">
       <div class="filter-field">
         <input
           id="filter"
@@ -75,6 +77,12 @@
         class="hidden blink i-arrow-up"
         title="New files at the top"
       ></div>
+      <form style="display: none">
+        <input id="upload-button" name="upload-button" type="file" multiple="multiple" />
+      </form>
+      <button type="button" id="up" class="btn" title="Upload files or torrent links">
+        <span class="i-upload"></span> Upload
+      </button>
     </div>
     <div class="spacer"></div>
     <div class="tools-row tools-modes-row" role="group" aria-label="File modes and actions">
@@ -179,6 +187,7 @@
         </svg>
       </div>
     </div>
+    <button id="sort-mode-mobile" type="button" class="btn mobile-toolbar-dropdown" data-label="Sort files" aria-label="Sort files"></button>
     <div class="btn-pill viewmode-pill">
       <div id="nailoff" class="btn i-list active" title="List view"></div>
       <div id="nailon" class="btn i-grid" title="Gallery view"></div>
@@ -204,17 +213,7 @@
         </svg>
       </div>
     </div>
-    <form style="display: none">
-      <input
-        id="upload-button"
-        name="upload-button"
-        type="file"
-        multiple="multiple"
-      />
-    </form>
-    <label for="upload-button" id="up" class="btn" title="Upload something!">
-      <span class="i-upload"></span> Upload
-    </label>
+    <button id="view-mode-mobile" type="button" class="btn mobile-toolbar-dropdown" data-label="View files" aria-label="View files"></button>
     </div>
   </nav>
 
@@ -257,7 +256,7 @@
       data-placeholder-disabled="You need to log in to chat and upload files!"
       data-placeholder-disconnected="Currently not connected."
       rows="3"
-      maxlength="300"
+      maxlength="16384"
     ></textarea>
   </section>
 
@@ -274,7 +273,7 @@
         height="1e3"
         rx="1e2"
         fill="none"
-        stroke="#434343"
+        stroke="var(--dark-fg)"
         stroke-dasharray="0, 600, 360, 0"
         stroke-dashoffset="-100"
         stroke-width="50px"
@@ -283,7 +282,7 @@
         id="dropper"
         x="510"
         y="284.49219"
-        fill="#434343"
+        fill="var(--dark-fg)"
         font-family="'Rubik'"
         font-size="240px"
         font-weight="bold"
@@ -303,10 +302,13 @@
       aria-label="Continue and discover room activity"
     >
       <div id="continuity-actions">
-        <button id="continuity-resume" class="hidden" type="button">
-          <span class="continuity-kicker">Continue reading</span>
-          <span id="continuity-resume-name"></span>
-        </button>
+        <div id="continuity-resume-card" class="hidden">
+          <button id="continuity-resume" type="button">
+            <span class="continuity-kicker">Continue reading</span>
+            <span id="continuity-resume-name"></span>
+          </button>
+          <button id="continuity-resume-dismiss" type="button" aria-label="Dismiss from Continue reading" title="Dismiss from Continue reading"><span aria-hidden="true">×</span></button>
+        </div>
         <div id="continuity-digest-control" class="hidden">
           <button
             id="continuity-digest-toggle"
@@ -348,7 +350,7 @@
   <section id="gallery" class="layer">
     <img id="gallery_img" alt="" src="/loader.png" />
     <span id="gallery_title" class="gallery_text">title</span>
-    <a id="gallery_close" class="i-clear"></a>
+    <button id="gallery_close" class="i-clear" type="button" aria-label="Close preview"></button>
     <a id="gallery_download" class="i-download" title="Download file"></a>
     <a id="gallery_prev" class="gallery_prevnext i-prev"></a>
     <a id="gallery_next" class="gallery_prevnext i-next"></a>
@@ -365,7 +367,7 @@
 
   <section id="reader" class="layer">
     <div id="reader-bar">
-      <a id="reader-close" class="i-clear" title="Close reader"></a>
+      <button id="reader-close" class="i-clear" type="button" aria-label="Close reader" title="Close reader"></button>
       <span id="reader-title"></span>
       <span id="reader-info"></span>
       <div class="reader-zoom-pill">
@@ -965,6 +967,27 @@
             Passwords are only shown to room owners. Copy them into your
             community’s private announcement channel.
           </p>
+        </div>
+        <div class="roomopts-section">
+          <div class="roomopts-section-title">Cohort and personal passwords</div>
+          <p class="roomopts-hint">Each credential can be rotated or revoked separately. Enable password access above before adding one.</p>
+          <div class="roomopts-actions">
+            <label>Label <input name="credentiallabel" maxlength="80" placeholder="Editors or member name"></label>
+            <label>Kind <select name="credentialmode"><option value="cohort">Cohort</option><option value="personal">Personal</option></select></label>
+            <label>Personal binding <select name="credentialbinding"><option value="account">First signed-in account</option><option value="browser">First browser</option></select></label>
+            <label>Browser limit <input name="credentiallimit" type="number" min="0" max="1000" value="0"></label>
+            <label>Rotation <select name="credentialrotation"><option value="monthly">Monthly</option><option value="manual">Manual</option></select></label>
+            <label>Custom password (optional) <input name="credentialpassword" type="password" autocomplete="new-password" minlength="12" maxlength="256"></label>
+            <button type="button" name="credentialcreate">Add credential</button>
+          </div>
+          <p class="roomopts-hint">A limit of 0 allows more browsers. Personal account credentials require signing in. Credentials expire within a year; API clients can set an earlier expiry.</p>
+          <div class="roomopts-password-table-wrap">
+            <table class="roomopts-password-table">
+              <thead><tr><th scope="col">Credential</th><th scope="col">Access</th><th scope="col">Actions</th></tr></thead>
+              <tbody name="credentialrows"></tbody>
+            </table>
+          </div>
+          <p class="roomopts-hint" name="credentialstatus" role="status"></p>
         </div>
       </div>
 

@@ -30,7 +30,7 @@ describe("list-state (shipped)", () => {
       { size: 20, uploaded: 3, expires: 7 },
     ];
     const sorted = sortFiles(files, "largest");
-    expect(sorted.map((f) => f.size)).toEqual([30, 20, 10]);
+    expect(sorted.map(f => f.size)).toEqual([30, 20, 10]);
   });
 
   test("compareFiles newest", () => {
@@ -82,7 +82,7 @@ describe("list-state (shipped)", () => {
     expect(parseFilterState("")).toBeNull();
     expect(parseFilterState("{")).toBeNull();
     expect(parseFilterState("null")).toBeNull();
-    expect(parseFilterState('"x"')).toBeNull();
+    expect(parseFilterState("\"x\"")).toBeNull();
   });
 
   test("parseFilterState coerces partial objects", () => {
@@ -104,11 +104,11 @@ describe("list-state (shipped)", () => {
     const buttons = [
       {
         id: "filter-image",
-        classList: { contains: (c) => c === "disabled" && false },
+        classList: { contains: c => c === "disabled" && false },
       },
       {
         id: "filter-video",
-        classList: { contains: (c) => c === "disabled" },
+        classList: { contains: c => c === "disabled" },
       },
       { id: "filter-audio", classList: { contains: () => false } },
     ];

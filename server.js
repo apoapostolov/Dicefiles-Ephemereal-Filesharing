@@ -53,11 +53,14 @@ function master() {
   // Validate Firejail sandbox availability at startup.
   // Firejail is enabled by default on Linux (config.jail === true).
   // Log clearly if it is active, missing, or intentionally disabled.
-  if (config.get("jail")) {
+  if (config.get("nativeTools") === false) {
+    console.log("[security] External file tools are disabled (nativeTools=false). Browser readers and image processing remain available.");
+  }
+  else if (config.get("jail")) {
     try {
       execFileSync("firejail", ["--version"], { stdio: "ignore" });
       console.log(
-        "[security] Firejail sandbox: active (jail=true, binary found)",
+        "[security] Firejail configured (jail=true, binary found); tool execution still requires working namespace support",
       );
     }
     catch (_e) {

@@ -1,5 +1,5 @@
 "use strict";
-/* eslint-env jest */
+
 
 const {
   classifyDetectedType,
@@ -8,6 +8,7 @@ const {
 describe("media metadata fallback classification", () => {
   test.each([
     ["photo.png", "image/png", "image", "image/png", "PNG"],
+    ["photo.png", "", "image", "image/png", "PNG"],
     ["book.pdf", "application/pdf", "document", "application/pdf", "PDF"],
     ["bundle.zip", "application/zip", "archive", "application/zip", "ZIP"],
     ["comic.cbz", "application/zip", "document", "application/octet-stream", "CBZ"],

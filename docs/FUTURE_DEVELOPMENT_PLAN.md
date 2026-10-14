@@ -9,29 +9,73 @@ Working backlog of product ideas that fit self-hosted room chat + ephemeral file
 
 Plugin docs: `core/plugins/`. Formerly `feature_creep_proposal.md`.
 
-**Last updated:** 2026-07-29 — v1.4.5 development adds multi-volume storage
-placement with cross-worker reservations and first-class rotating community
-passwords. Manual storage movement plus cohort/personal password variants
-remain intentionally separate follow-up phases.
+**Last updated:** 2026-10-15 — v1.4.6 is released. The maintenance round and
+remaining priorities are recorded in [the October audit](./AUDIT_2026-10-14.md).
+The requested remaining maintenance and expansion work is implemented below;
+deployment-specific acceptance is tracked separately from implementation.
 
 ---
 
-## v1.4.6 proposed release gate
+## Ordered follow-up implementation (unreleased)
+
+These requests extend the October maintenance round. Checkboxes include code,
+relevant checks, documentation and the changelog; unfinished acceptance is explicit.
+
+1. [x] Restore account menus/login state and actionable user-facing errors.
+2. [x] Two-row tablet toolbar, non-wrapping sidebar identity/count, compact phone
+   file rows, and matching cover Download/Close buttons.
+3. [x] Private environment-file configuration, documented flags/keys and Giphy setup.
+4. [x] Shared color variables and at least 30 selectable, persistent themes,
+   with a majority of dark palettes.
+5. [x] Magnet/torrent link and file ingestion, structured metadata and safe image discovery.
+6. [x] Docker image, Compose recipe, README instructions and GHCR publishing workflow.
+   - [ ] Confirm remote Actions build and GHCR publication.
+7. [ ] Reconcile earlier partial work, documentation and changelog; complete
+   regression, browser and stable-service acceptance for the combined changes.
+8. [x] Polish Upload with a prominent drop zone, concise copy, keyboard handling
+   and right-aligned Cancel/Import link actions. Native chooser and synchronous
+   drop collection are checked; operating-system drag acceptance remains manual
+   because the in-app browser does not automate file drag events.
+
+## Maintenance round (unreleased)
+
+- [x] Fix MCP URL-upload bodies, bounded downloads, error reporting, and retry hints
+- [x] Retain stateless HTTP and update MCP SDK v2; add remote token/host controls
+- [x] Enforce protected-room checks on claim/release and arbitrate claims in Redis
+- [x] Fix durable distributed-map clear and the automation audit-log import
+- [x] Refresh compatible dependencies, remove obsolete loaders/UUID, and add CI
+- [x] Complete browser gallery acceptance for image, PDF, and archive samples
+- [x] Replace ESLint/Jest tooling and deprecated GraphicsMagick with maintained alternatives (unreleased)
+- [x] Add bounded pagination, streamed imports, async disk stats, and a durable Redis webhook outbox (unreleased)
+
+## Remaining audit work: implementation and acceptance
+
+- [x] Guard claims against policy changes in the Redis mutation itself
+- [x] Read room password/owner state from authoritative storage; serialize rotations
+- [x] Bound audit tails and atomically merge config patches across workers
+- [x] Add signed REST/MCP cursors and structured MCP results
+- [x] Add OAuth resource-server mode with per-caller credentials and scope filtering
+- [x] Bound gallery DOM to 100 tiles per page and retain focus during updates
+- [x] Add checksum-verified move journals, pause/resume, rollback and source grace
+- [x] Add operator drain/rebalance planning and exclude draining volumes from new allocations
+- [x] Add cohort/personal credentials, individual revocation, binding and activation limits
+- [x] Complete lint, 81 unit/view suites (750 tests), conditional integration suites, dependency audits, production build, service restart and dual health checks
+- [x] Complete in-app browser uploads, 1,003-file gallery, keyboard and phone/tablet acceptance
+- [ ] Live provider and external identity-provider acceptance with operator-owned examples and configuration
+
+## Multi-host remote imports: remaining provider work
 
 Detailed contract, security model, phases, and acceptance tests:
 [Multi-host remote imports](./MULTI_HOST_REMOTE_IMPORTS.md).
 
-- [ ] Versioned provider contract and safe outbound request layer
-- [ ] Mega.nz and Pixeldrain migrated without observable regressions
-- [ ] Native Gofile adapter for public, authenticated, recursive, and
-  password-protected folders
-- [ ] Fair multi-source scheduling, provider backoff, circuit breaking, and
-  structured run summaries
-- [ ] Provider status and source validation across Room Options, REST, and MCP
-- [ ] Disabled-by-default Plowshare bridge with MediaFire/4shared module
-  allowlisting and no shell-command surface
-- [ ] Upgrade, security, real-provider smoke, full-suite, production-build, and
-  stable-service acceptance
+- [x] Versioned provider contract and guarded outbound request layer (unreleased)
+- [x] Mega.nz and Pixeldrain use the versioned registry, bounded metadata and streamed downloads; fixture regressions pass (unreleased)
+- [x] Native Gofile adapter with recursive/paginated and protected-folder support; real-provider acceptance remains below
+- [x] Fair multi-source scheduling, provider backoff, circuit breaking, and structured run summaries (unreleased)
+- [x] Provider status and source validation in REST/MCP; Room Options shows provider capabilities and availability (unreleased)
+- [x] Disabled-by-default Plowshare bridge, MediaFire/4shared allowlisting, fixed argv and guarded egress (unreleased)
+- [x] Upgrade, security audit, fixture regressions, full suite, production build and stable-service acceptance
+- [ ] Live provider smoke with operator-owned examples and configured credentials
 
 ---
 
@@ -82,19 +126,19 @@ not silently expand the scope of v1.4.4.
 - [x] Deep links with intent (`filter` / `sort` / `request` / file open) — room option — **v1.4.2**
 - [x] Resume strip + “what’s new since last visit” productization — **v1.4.3**
 - [x] Multi-volume storage with balanced and threshold-based placement —
-  **v1.4.5 core**; manual drain/rebalance remains future work
+  **v1.4.5 core**; manual drain/rebalance is implemented in the unreleased maintenance round
 - [x] Password-protected rooms with rotating shared community credentials —
-  **v1.4.5 core**; cohort/personal credentials remain future work
+  **v1.4.5 core**; cohort/personal credentials are implemented in the unreleased maintenance round
 - [x] Request board polish — **v1.4.2** first-class board + filters + segmented toolbar pill
 - [x] Guest invite links (single-use / max X / max Y hours) — Room Options → **Invites** — **v1.4.2**
 - [x] Privacy-safe operator dashboard beyond `/healthz`, protected by a generated capability link by default — **v1.4.3**
 - [x] Webhooks + plugin system (Mega.nz Autoshare, BOT pills, Room Options → **Plugins**) — **v1.4.2**
 - [x] Durable plugin sync skip-log (stable provider id with legacy name+size,
   Redis, configurable retention) — **v1.4.3**, strengthened in **v1.4.4**
-- [ ] Multi-host remote import — shared downloader registry plus Mega.nz and
+- [x] Multi-host remote import — shared downloader registry plus Mega.nz and
   Pixeldrain are shipped; Gofile and a hardened, disabled-by-default
-  Plowshare bridge for MediaFire/4shared are proposed for **v1.4.6** —
-  [implementation proposal](./MULTI_HOST_REMOTE_IMPORTS.md)
+  Plowshare bridge for MediaFire/4shared are implemented in the unreleased
+  maintenance round — [implementation contract](./MULTI_HOST_REMOTE_IMPORTS.md)
 - [x] Plugin import safety: per-file/per-run caps and cross-worker run leases
 - [x] Plugin dedupe upgrade: stable provider identity plus existing-room
   content-hash check
@@ -214,15 +258,15 @@ These are not covered by a clear backlog item yet; add them before calling plugi
 | ~~Cross-worker poll timers~~ | **Shipped v1.4.4:** workers may schedule, but one lease-holder runs each bucket | Consider a dedicated runner only if scale requires it |
 | **megajs unavailable** | Yarn installs the optional dependency normally, but an intentionally skipped optional install disables live sync | Add Plugins-tab/health diagnostics using existing catalog availability |
 
-### Multi-host remote import (proposal — not shipped)
+### Multi-host remote import (expanded in the unreleased maintenance round)
 
 Design: **`core/plugins/REMOTE_HOST_IMPORTS.md`**.
 
 - [x] Shared **`RemoteDownloaderRegistry`** (`canHandle` / `listFolder`) —
   Mega.nz and Pixeldrain providers
 - [x] **`remote-import` plugin** — multi-URL list, caps, streamed ingest
-- [ ] Pixeldrain shipped; Gofile remains pending
-- [ ] Long-tail MediaFire / 4shared via plowshare shell bridge
+- [x] Pixeldrain shipped; Gofile implemented in the unreleased maintenance round
+- [x] Disabled-by-default MediaFire / 4shared Plowshare bridge implemented (unreleased)
 - [x] Reuse **durable sync log** for all import plugins (same retention config)
 - [ ] Non-goals: untrusted scraper marketplace; Playwright captcha farms; yt-dlp as file-locker core
 
@@ -436,7 +480,7 @@ Room-level: destination still needs an explicit link row (no automatic mesh of a
 
 - Session kits; spoiler/reveal; room templates + clone
 - Operator dashboard additions for per-plugin cards (federation peer aggregate is shipped)
-- Multi-host import ladder beyond Mega.nz and Pixeldrain
+- Live acceptance for Gofile and the optional Plowshare bridge with operator-owned examples
 ### Config worth remembering
 
 | Key | Default | Role |

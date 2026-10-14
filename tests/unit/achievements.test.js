@@ -62,7 +62,7 @@ describe("computeAchievements", () => {
 
   test("more files unlocks more achievements", () => {
     const r100 = computeAchievements({ files: 100, uploaded: 0, downloaded: 0 });
-    const r10  = computeAchievements({ files: 10,  uploaded: 0, downloaded: 0 });
+    const r10 = computeAchievements({ files: 10, uploaded: 0, downloaded: 0 });
     expect(r100.unlocked).toBeGreaterThan(r10.unlocked);
   });
 
@@ -157,7 +157,7 @@ describe("computeAchievements", () => {
       result.requestsOnly,
       result.requestsCreatedOnly,
     ]) {
-      const keys = group.map((a) => a.key);
+      const keys = group.map(a => a.key);
       expect(new Set(keys).size).toBe(keys.length);
     }
   });

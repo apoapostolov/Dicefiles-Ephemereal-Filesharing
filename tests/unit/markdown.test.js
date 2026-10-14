@@ -56,10 +56,10 @@ describe("renderMarkdown", () => {
 
   test("markdown link renders <a> with correct href", () => {
     const html = renderMarkdown("[Visit](https://example.com)");
-    expect(html).toContain('href="https://example.com'); // normalized URL (may gain trailing /)
+    expect(html).toContain("href=\"https://example.com"); // normalized URL (may gain trailing /)
     expect(html).toContain("Visit");
-    expect(html).toContain('target="_blank"');
-    expect(html).toContain('rel="noopener noreferrer"');
+    expect(html).toContain("target=\"_blank\"");
+    expect(html).toContain("rel=\"noopener noreferrer\"");
   });
 
   // ── XSS escaping ──────────────────────────────────────────────────────────
@@ -74,8 +74,8 @@ describe("renderMarkdown", () => {
     expect(html).toContain("&amp;");
   });
 
-  test('" is escaped', () => {
-    const html = renderMarkdown('say "hello"');
+  test("\" is escaped", () => {
+    const html = renderMarkdown("say \"hello\"");
     expect(html).toContain("&quot;");
   });
 
@@ -88,13 +88,13 @@ describe("renderMarkdown", () => {
   test("javascript: URL in link is not rendered as <a>", () => {
     const html = renderMarkdown("[click](javascript:alert(1))");
     // Either the link is not rendered or the href is safe
-    expect(html).not.toContain('href="javascript:');
+    expect(html).not.toContain("href=\"javascript:");
   });
 
   // ── non-http scheme in link is rejected ───────────────────────────────────
   test("ftp: URL in link is not rendered as <a>", () => {
     const html = renderMarkdown("[files](ftp://example.com)");
-    expect(html).not.toContain('href="ftp:');
+    expect(html).not.toContain("href=\"ftp:");
   });
 
   // ── combined formatting ────────────────────────────────────────────────────

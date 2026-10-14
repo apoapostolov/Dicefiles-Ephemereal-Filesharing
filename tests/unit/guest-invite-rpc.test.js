@@ -42,7 +42,7 @@ function makeInviteRoom(roomid) {
       };
     },
     listGuestInviteLinks() {
-      return this.getGuestInvites().map((i) => {
+      return this.getGuestInvites().map(i => {
         const s = serializeGuestInvite(i, { fullToken: true });
         return Object.assign({}, s, {
           token: s.token,
@@ -52,7 +52,7 @@ function makeInviteRoom(roomid) {
     },
     revokeGuestInviteLink(token) {
       invites = revokeGuestInvite(this.getGuestInvites(), token);
-      return invites.map((i) => serializeGuestInvite(i));
+      return invites.map(i => serializeGuestInvite(i));
     },
   };
 }
@@ -68,27 +68,30 @@ function makeGuestSetConfig(room, opts) {
       throw new Error("You cannot do that!");
     }
     switch (name) {
-      case "createGuestInvite": {
-        const a = arg && typeof arg === "object" ? arg : {};
-        return room.createGuestInviteLink({
-          singleUse: a.singleUse === true,
-          maxUses: a.maxUses,
-          maxAgeHours: a.maxAgeHours,
-          label: a.label,
-          createdBy: o.createdBy || "owner1",
-        });
-      }
-      case "listGuestInvites":
-        return room.listGuestInviteLinks();
-      case "revokeGuestInvite":
-        return room.revokeGuestInviteLink(
-          typeof arg === "string" ? arg : arg && arg.token,
-        );
-      case "allowRequests":
-        // void config — RPC must still emit bare event
-        return undefined;
-      default:
-        throw new Error(`Invalid config name '${name}'`);
+    case "createGuestInvite": {
+      const a = arg && typeof arg === "object" ? arg : {};
+      return room.createGuestInviteLink({
+        singleUse: a.singleUse === true,
+        maxUses: a.maxUses,
+        maxAgeHours: a.maxAgeHours,
+        label: a.label,
+        createdBy: o.createdBy || "owner1",
+      });
+    }
+
+    case "listGuestInvites":
+      return room.listGuestInviteLinks();
+
+    case "revokeGuestInvite":
+      return room.revokeGuestInviteLink(
+        typeof arg === "string" ? arg : arg && arg.token,
+      );
+
+    case "allowRequests":
+      // void config — RPC must still emit bare event
+      return undefined;
+    default:
+      throw new Error(`Invalid config name '${name}'`);
     }
   };
 }
@@ -106,9 +109,9 @@ function makeCallSetconfig(setConfigFn, name, arg) {
         emits.push({ event, payload });
       },
     };
-    runSetConfigRpc(setConfigFn, socket, name, arg)
-      .then(() => {
-        const hit = emits.find((e) => e.event === key);
+    runSetConfigRpc(setConfigFn, socket, name, arg).
+      then(() => {
+        const hit = emits.find(e => e.event === key);
         if (!hit) {
           reject(new Error(`no emit for ${key}`));
           return;
@@ -119,8 +122,8 @@ function makeCallSetconfig(setConfigFn, name, arg) {
           return;
         }
         resolve(rv);
-      })
-      .catch(reject);
+      }).
+      catch(reject);
   });
 }
 

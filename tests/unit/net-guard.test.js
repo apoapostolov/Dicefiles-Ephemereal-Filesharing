@@ -119,10 +119,31 @@ describe("pinnedLookup", () => {
 
 describe("guardedFetch", () => {
   let server;
+  let otherServer;
   let base;
+  let otherBase;
 
   beforeAll(async () => {
     server = http.createServer((req, res) => {
+      if (req.url === "/cross-origin") {
+        res.writeHead(307, { location: otherBase });
+        res.end();
+        return;
+      }
+      if (req.url === "/see-other") {
+        res.writeHead(303, { location: "/echo-request" });
+        res.end();
+        return;
+      }
+      if (req.url === "/echo-request") {
+        const chunks = [];
+        req.on("data", chunk => chunks.push(chunk));
+        req.on("end", () => {
+          res.writeHead(200, { "content-type": "application/json" });
+          res.end(JSON.stringify({ method: req.method, headers: req.headers, body: Buffer.concat(chunks).toString() }));
+        });
+        return;
+      }
       if (req.url === "/redirect") {
         res.writeHead(302, { location: "/final" });
         res.end();
@@ -155,10 +176,17 @@ describe("guardedFetch", () => {
     });
     await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
     base = `http://127.0.0.1:${server.address().port}`;
+    otherServer = http.createServer((req, res) => {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ method: req.method, headers: req.headers }));
+    });
+    await new Promise(resolve => otherServer.listen(0, "127.0.0.1", resolve));
+    otherBase = `http://127.0.0.1:${otherServer.address().port}`;
   });
 
   afterAll(async () => {
     await new Promise(resolve => server.close(resolve));
+    await new Promise(resolve => otherServer.close(resolve));
   });
 
   test("returns a Response for an allowed destination", async () => {
@@ -216,10 +244,35 @@ describe("guardedFetch", () => {
     expect(await res.text()).toBe("Bearer test");
   });
 
+  test("drops custom secrets and POST bodies across origins", async () => {
+    const res = await guardedFetch(`${base}/cross-origin`, {
+      method: "POST", body: "private payload",
+      headers: { "authorization": "Bearer secret", "x-api-key": "private", "x-dicefiles-signature": "signed", "content-type": "text/plain" },
+    }, { allowPrivate: true });
+    const result = await res.json();
+    expect(result.method).toBe("GET");
+    expect(result.headers.authorization).toBeUndefined();
+    expect(result.headers["x-api-key"]).toBeUndefined();
+    expect(result.headers["x-dicefiles-signature"]).toBeUndefined();
+    expect(result.headers["content-type"]).toBeUndefined();
+  });
+
+  test("turns a same-origin 303 into a GET without a stale body length", async () => {
+    const res = await guardedFetch(`${base}/see-other`, {
+      method: "POST", body: "payload",
+      headers: { "content-length": "7", "content-type": "text/plain", "authorization": "Bearer keep" },
+    }, { allowPrivate: true });
+    const result = await res.json();
+    expect(result.method).toBe("GET");
+    expect(result.body).toBe("");
+    expect(result.headers["content-length"]).toBeUndefined();
+    expect(result.headers.authorization).toBe("Bearer keep");
+  });
+
   test("surfaces a refused connection as a guard error", async () => {
     const closed = http.createServer();
     await new Promise(resolve => closed.listen(0, "127.0.0.1", resolve));
-    const port = closed.address().port;
+    const {port} = closed.address();
     await new Promise(resolve => closed.close(resolve));
     await expect(
       guardedFetch(
@@ -228,5 +281,33 @@ describe("guardedFetch", () => {
         { allowPrivate: true, timeoutMs: 2000 },
       ),
     ).rejects.toBeInstanceOf(NetGuardError);
+  });
+});
+
+describe("guarded request deadlines", () => {
+  test("the request deadline includes stalled DNS resolution", async () => {
+    const dns = require("dns").promises;
+
+    const lookup = jest.spyOn(dns, "lookup").mockImplementation(() => new Promise(() => {}));
+    try {
+      await expect(guardedFetch("https://stalled.example/file", {}, { timeoutMs: 50 })).rejects.toMatchObject({ code: "REQUEST_TIMEOUT" });
+    }
+    finally {
+      lookup.mockRestore();
+    }
+  });
+  test("client cancellation interrupts stalled DNS resolution", async () => {
+    const dns = require("dns").promises;
+
+    const lookup = jest.spyOn(dns, "lookup").mockImplementation(() => new Promise(() => {}));
+    const controller = new AbortController();
+    try {
+      const request = guardedFetch("https://stalled.example/file", {}, { signal: controller.signal });
+      controller.abort();
+      await expect(request).rejects.toMatchObject({ code: "REQUEST_ABORTED" });
+    }
+    finally {
+      lookup.mockRestore();
+    }
   });
 });

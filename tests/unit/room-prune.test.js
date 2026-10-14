@@ -90,7 +90,7 @@ jest.mock("../../lib/upload", () => ({
 // ── mock lib/config ───────────────────────────────────────────────────────────
 let configValues = {};
 jest.mock("../../lib/config", () => ({
-  get: (k) => configValues[k],
+  get: k => configValues[k],
 }));
 
 // ── mock other lib/room deps that aren't under test ───────────────────────────
@@ -101,9 +101,9 @@ jest.mock("../../lib/util", () => ({
   CoalescedUpdate: class {
     add() {}
   },
-  debounce: (fn) => fn,
-  sort: (a) => a,
-  toMessage: async (s) => s,
+  debounce: fn => fn,
+  sort: a => a,
+  toMessage: async s => s,
   token: async () => "testid",
 }));
 jest.mock("../../lib/room/filelister", () => ({
@@ -121,7 +121,6 @@ jest.mock(
   "../../lib/room/linklister",
   () =>
     class {
-      constructor() {}
       kill() {}
     },
 );
@@ -157,7 +156,7 @@ describe("Room.prune()", () => {
   test("returns 0 when all rooms are recently active (lastActivity in pconfig)", async () => {
     mockScan.mockResolvedValue(["0", ["rooms:activeroom"]]);
     // lastActivity is NOW — well within the cutoff window
-    mockPconfigGet.mockImplementation((k) =>
+    mockPconfigGet.mockImplementation(k =>
       k === "lastActivity" ? Date.now() : undefined,
     );
 
@@ -171,7 +170,7 @@ describe("Room.prune()", () => {
     mockScan.mockResolvedValue(["0", ["rooms:oldroom"]]);
     // lastActivity was 30 days ago — exceeds default 21-day cutoff
     const staleTime = Date.now() - 30 * DAY;
-    mockPconfigGet.mockImplementation((k) =>
+    mockPconfigGet.mockImplementation(k =>
       k === "lastActivity" ? staleTime : undefined,
     );
 
@@ -192,7 +191,7 @@ describe("Room.prune()", () => {
     mockPconfigGet.mockReturnValue(undefined);
     // creation timestamp stored as Redis key value — 30 days ago
     const staleTime = Date.now() - 30 * DAY;
-    mockGet.mockImplementation((k) =>
+    mockGet.mockImplementation(k =>
       k === "rooms:newishroom" ? String(staleTime) : null,
     );
 
@@ -225,9 +224,11 @@ describe("Room.prune()", () => {
     // First call (broken): throw during pconfig construction → the mock's
     // `get` will throw for the first roomid by checking a call counter.
     let callCount = 0;
-    mockPconfigGet.mockImplementation((k) => {
+    mockPconfigGet.mockImplementation(k => {
       callCount++;
-      if (callCount === 1) throw new Error("Redis timeout");
+      if (callCount === 1) {
+        throw new Error("Redis timeout");
+      }
       return k === "lastActivity" ? staleTime : undefined;
     });
 
@@ -241,7 +242,7 @@ describe("Room.prune()", () => {
     configValues.roomPruningDays = 7;
     mockScan.mockResolvedValue(["0", ["rooms:room10days"]]);
     // 10 days ago — older than 7-day cutoff
-    mockPconfigGet.mockImplementation((k) =>
+    mockPconfigGet.mockImplementation(k =>
       k === "lastActivity" ? Date.now() - 10 * DAY : undefined,
     );
 
@@ -257,7 +258,7 @@ describe("Room.get()", () => {
     mockFor.mockResolvedValue([]);
     let releaseExists;
     mockExists.mockImplementation(
-      () => new Promise((resolve) => {
+      () => new Promise(resolve => {
         releaseExists = resolve;
       }),
     );

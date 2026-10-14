@@ -3,6 +3,8 @@
 @import "symbols.css";
 
 @import "base.css";
+@import "themes.css";
+@import "appearance.css";
 @import "page.css";
 @import "room.css";
 @import "reader.css";

@@ -1,7 +1,7 @@
 "use strict";
 
 const {
-  PROGRESS_PREFIX,
+  PROGRESS_PREFIX, dismissProgressRecord,
   listProgressRecords,
   pruneProgressStorage,
 } = require("../../lib/room/reader-progress");
@@ -37,6 +37,22 @@ function progressKey(fileKey) {
 }
 
 describe("reader progress storage", () => {
+  test("one malformed record cannot hide another document's resume card", () => {
+    const storage = new MemoryStorage({ [progressKey("bad")]: "{", [progressKey("good")]: JSON.stringify({ page: 5, updatedAt: 100 }) });
+    expect(listProgressRecords(storage).map(record => record.fileKey)).toEqual(["good"]);
+  });
+  test("dismissal preserves position and survives reload", () => {
+    const storage = new MemoryStorage({ [progressKey("book")]: JSON.stringify({ page: 7, chapter: 2, updatedAt: 100 }) });
+    expect(dismissProgressRecord(storage, "book")).toBe(true);
+    expect(listProgressRecords(storage)[0]).toMatchObject({ fileKey: "book", page: 7, chapter: 2, updatedAt: 100, resumeDismissed: true });
+    storage.setItem(progressKey("book"), JSON.stringify({ page: 8, updatedAt: 200 }));
+    expect(listProgressRecords(storage)[0].resumeDismissed).toBeUndefined();
+  });
+  test("dismissal handles unavailable browser storage", () => {
+    expect(dismissProgressRecord({ getItem() {
+      throw new Error("denied");
+    } }, "book")).toBe(false);
+  });
   test("lists current-room records without deleting other rooms", () => {
     const storage = new MemoryStorage({
       [progressKey("room-a-file")]: JSON.stringify({
@@ -50,7 +66,7 @@ describe("reader progress storage", () => {
     });
     expect(
       listProgressRecords(storage, new Set(["room-a-file"])).map(
-        (record) => record.fileKey,
+        record => record.fileKey,
       ),
     ).toEqual(["room-a-file"]);
 
@@ -72,7 +88,7 @@ describe("reader progress storage", () => {
     });
     expect(
       listProgressRecords(storage, new Set(["legacy", "current"])).map(
-        (record) => record.fileKey,
+        record => record.fileKey,
       ),
     ).toEqual(["current", "legacy"]);
   });

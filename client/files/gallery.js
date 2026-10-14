@@ -16,6 +16,7 @@ export default class Gallery {
     this.nextEl = document.querySelector("#gallery_next");
     this.readNowEl = document.querySelector("#gallery_read_now");
     this.file = null;
+    this._returnFocus = null;
 
     // Reader is heavy (PDF.js / JSZip / mobi) — load on first use.
     this.reader = null;
@@ -102,9 +103,9 @@ export default class Gallery {
       "aria-busy",
       this._readNowLoading ? "true" : "false",
     );
-    this.readNowEl.textContent = this._readNowLoading
-      ? "Loading…"
-      : "Read Now";
+    this.readNowEl.textContent = this._readNowLoading ?
+      "Loading…" :
+      "Read Now";
   }
 
   async onreadnow(e) {
@@ -119,7 +120,8 @@ export default class Gallery {
     this.setReadNowLoading(true);
     try {
       await this.read(file);
-    } catch (ex) {
+    }
+    catch (ex) {
       console.error(ex);
       this.setReadNowLoading(false);
     }
@@ -208,9 +210,14 @@ export default class Gallery {
     this.setReadNowLoading(false);
 
     // Turn off gallery mode and garbage collect
+    const wasOpen = !!this.file;
     this.el.parentElement.classList.remove("gallery");
     this.imgEl.src = "";
     this.file = null;
+    if (wasOpen && this._returnFocus?.isConnected) {
+      this._returnFocus.focus({ preventScroll: true });
+    }
+    this._returnFocus = null;
 
     // Drop history back to base room link
     if (document.location.hash) {
@@ -310,10 +317,16 @@ export default class Gallery {
       return false;
     }
 
+    if (!this.file) {
+      this._returnFocus = document.activeElement;
+    }
     this.file = file;
 
     // Set up placeholder loader image
     const to = setTimeout(() => {
+      if (this.file !== file) {
+        return;
+      }
       const loader = new Image();
       loader.src = "/loader.png";
       loader.id = this.imgEl.id;
@@ -390,9 +403,9 @@ export default class Gallery {
         this.readNowEl.setAttribute("aria-busy", "false");
         this.readNowEl.classList.remove("loading");
       }
-      this.readNowEl.title = readable
-        ? "Open in-page reader (R)"
-        : "Not a readable document";
+      this.readNowEl.title = readable ?
+        "Open in-page reader (R)" :
+        "Not a readable document";
     }
 
     // Push gallery link (hash) into history
@@ -408,6 +421,7 @@ export default class Gallery {
     // Activate on next anim frame
     APOOL.schedule(null, () => {
       this.el.parentElement.classList.add("gallery");
+      this.closeEl.focus({ preventScroll: true });
       this.titleEl.textContent = file.name;
       this.startHideAux();
     });

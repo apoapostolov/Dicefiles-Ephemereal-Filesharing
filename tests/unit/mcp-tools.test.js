@@ -5,7 +5,7 @@
  * Unit tests for scripts/mcp-server.js
  *
  * Strategy:
- *  - All external deps (@modelcontextprotocol/sdk, zod) are mocked so the
+ *  - All external deps (@modelcontextprotocol/server, zod) are mocked so the
  *    test suite runs without those packages being installed.
  *  - global.fetch is replaced with a jest.fn() before each test.
  *  - registerTools() is called with a lightweight mock McpServer that captures
@@ -21,7 +21,7 @@ jest.mock(
       constructor(meta) {
         this.meta = meta;
       }
-      registerTool(name, config, handler) {
+      registerTool() {
         // captured by mock server in registerTools tests
       }
       connect() {
@@ -61,9 +61,12 @@ jest.mock(
     const chain = () => {
       const o = {
         optional: () => o,
+        int: () => o,
         min: () => o,
         max: () => o,
         url: () => o,
+        uuid: () => o,
+        positive: () => o,
         describe: () => o,
         default: () => o,
       };
@@ -130,9 +133,9 @@ function parseResult(result) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("registerTools", () => {
-  it("registers exactly 36 tools", () => {
+  it("registers exactly 49 tools", () => {
     const tools = buildToolMap();
-    expect(Object.keys(tools)).toHaveLength(36);
+    expect(Object.keys(tools)).toHaveLength(49);
   });
 
   it("registers every expected tool name", () => {
@@ -177,6 +180,17 @@ describe("registerTools", () => {
     ];
     for (const name of expected) {
       expect(tools).toHaveProperty(name);
+    }
+  });
+
+  it("does not advertise mutations as safe to retry", () => {
+    const configs = {};
+    registerTools({ registerTool: (name, config) => {
+      configs[name] = config;
+    } });
+    for (const [name, config] of Object.entries(configs)) {
+      expect(config.annotations.idempotentHint).toBe(config.annotations.readOnlyHint);
+      expect(config.annotations.destructiveHint).toBe(name === "create_room_access_credential" ? false : !config.annotations.readOnlyHint);
     }
   });
 });
@@ -323,9 +337,10 @@ describe("upload_file_from_urls", () => {
     expect(url).toContain("/api/v1/batch-upload");
     expect(init.method).toBe("POST");
     const body = JSON.parse(init.body);
-    expect(body.roomid).toBe("Abc123");
-    expect(body.items).toHaveLength(2);
-    expect(body.items[0].url).toBe("https://example.com/a.pdf");
+    expect(body).toEqual([
+      { roomid: "Abc123", url: "https://example.com/a.pdf" },
+      { roomid: "Abc123", url: "https://example.com/b.epub" },
+    ]);
   });
 });
 
@@ -428,24 +443,12 @@ describe("download_file", () => {
   it("returns base64 content for small files", async () => {
     const tools = buildToolMap();
     const fileContent = Buffer.from("hello world");
-    // Use slice to get a properly-sized standalone ArrayBuffer (not pooled)
-    const ab = fileContent.buffer.slice(
-      fileContent.byteOffset,
-      fileContent.byteOffset + fileContent.byteLength,
-    );
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
+    global.fetch = jest.fn().mockResolvedValue(new Response(fileContent, {
       headers: {
-        get: (name) => {
-          if (name === "content-type") return "text/plain";
-          if (name === "content-disposition")
-            return 'attachment; filename="hello.txt"';
-          return null;
-        },
+        "content-type": "text/plain",
+        "content-disposition": "attachment; filename=\"hello.txt\"",
       },
-      arrayBuffer: () => Promise.resolve(ab),
-    });
+    }));
 
     const result = await tools.download_file({ key: "hello99" });
     const data = parseResult(result);
@@ -460,12 +463,7 @@ describe("download_file", () => {
   it("rejects files exceeding maxBytes", async () => {
     const tools = buildToolMap();
     const bigFile = Buffer.alloc(100);
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      headers: { get: () => null },
-      arrayBuffer: () => Promise.resolve(bigFile.buffer),
-    });
+    global.fetch = jest.fn().mockResolvedValue(new Response(bigFile));
 
     const result = await tools.download_file({ key: "big99", maxBytes: 10 });
     const data = parseResult(result);
@@ -502,6 +500,51 @@ describe("download_file", () => {
     const [url] = global.fetch.mock.calls[0];
     expect(url).toContain("/g/abc");
     expect(url).not.toContain("/api/v1");
+  });
+
+  it("rejects a declared oversized body before reading and cancels it", async () => {
+    const cancelled = jest.fn();
+    const body = new ReadableStream({ cancel: cancelled });
+    global.fetch = jest.fn().mockResolvedValue(new Response(body, {
+      headers: { "content-length": "1000" },
+    }));
+    const result = await buildToolMap().download_file({ key: "oversized", maxBytes: 10 });
+    expect(result.isError).toBe(true);
+    expect(cancelled).toHaveBeenCalled();
+  });
+
+  it("stops chunked downloads as soon as the cap is exceeded", async () => {
+    const cancelled = jest.fn();
+    let reads = 0;
+    const body = new ReadableStream({
+      pull(controller) {
+        reads++; controller.enqueue(Buffer.alloc(8));
+      },
+      cancel: cancelled,
+    }, { highWaterMark: 0 });
+    global.fetch = jest.fn().mockResolvedValue(new Response(body));
+    const result = await buildToolMap().download_file({ key: "chunked", maxBytes: 10 });
+    expect(result.isError).toBe(true);
+    expect(reads).toBe(2);
+    expect(cancelled).toHaveBeenCalled();
+    expect(global.fetch.mock.calls[0][1].signal.aborted).toBe(true);
+  });
+
+  it("surfaces a stalled download as a tool error", async () => {
+    jest.useFakeTimers();
+    try {
+      global.fetch = jest.fn((_url, { signal }) => new Promise((_resolve, reject) => {
+        signal.addEventListener("abort", () => reject(new Error("Download timed out")), { once: true });
+      }));
+      const pending = buildToolMap().download_file({ key: "stalled" });
+      await jest.advanceTimersByTimeAsync(30000);
+      const result = await pending;
+      expect(result.isError).toBe(true);
+      expect(parseResult(result).err).toMatch(/timed out/);
+    }
+    finally {
+      jest.useRealTimers();
+    }
   });
 });
 
@@ -810,6 +853,17 @@ describe("storage and room password tools", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("authentication boundary", () => {
+  it("marks HTTP errors as failures even when the body lacks ok", async () => {
+    global.fetch = mockFetchJson({ err: "Forbidden" }, 403);
+    const result = await buildToolMap().get_file({ key: "test" });
+    expect(result.isError).toBe(true);
+    expect(parseResult(result)).toMatchObject({ ok: false, status: 403, err: "Forbidden" });
+  });
+
+  it("does not accept an ok body on an unhealthy HTTP status", async () => {
+    global.fetch = mockFetchJson({ ok: true }, 503);
+    expect((await buildToolMap().server_health({})).isError).toBe(true);
+  });
   it("sends Authorization header on all api() calls", async () => {
     const tools = buildToolMap();
     // Use get_room_snapshot as a representative api() consumer

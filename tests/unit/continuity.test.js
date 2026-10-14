@@ -58,14 +58,14 @@ describe("room continuity and discovery", () => {
       },
     );
 
-    expect(digest.uploads.map((f) => f.key)).toEqual(["local"]);
-    expect(digest.bots.map((f) => f.key)).toEqual(["bot"]);
-    expect(digest.linked.map((f) => f.key)).toEqual([
+    expect(digest.uploads.map(f => f.key)).toEqual(["local"]);
+    expect(digest.bots.map(f => f.key)).toEqual(["bot"]);
+    expect(digest.linked.map(f => f.key)).toEqual([
       "linked-new-upload",
       "linked-old-new-mirror",
     ]);
-    expect(digest.requests.map((f) => f.key)).toEqual(["request"]);
-    expect(digest.fulfilledRequests.map((f) => f.key)).toEqual([
+    expect(digest.requests.map(f => f.key)).toEqual(["request"]);
+    expect(digest.fulfilledRequests.map(f => f.key)).toEqual([
       "fulfilled",
     ]);
     expect(digest.total).toBe(6);
@@ -111,7 +111,7 @@ describe("room continuity and discovery", () => {
       { account: "alice", nick: "room alice" },
     );
 
-    expect(digest.uploads.map((f) => f.key)).toEqual(["someone-else"]);
+    expect(digest.uploads.map(f => f.key)).toEqual(["someone-else"]);
     expect(digest.linked).toEqual([]);
     expect(digest.total).toBe(1);
   });
@@ -158,7 +158,7 @@ describe("room continuity and discovery", () => {
   });
 
   test("ranks resumable live files by most recent reader use", () => {
-    const readable = (key) =>
+    const readable = key =>
       file(key, 1, { getReadableType: () => "pdf" });
     const result = buildResumeEntries(
       [readable("a"), readable("b"), readable("c")],
@@ -170,11 +170,18 @@ describe("room continuity and discovery", () => {
       ],
       2,
     );
-    expect(result.map((entry) => entry.file.key)).toEqual(["b", "a"]);
+    expect(result.map(entry => entry.file.key)).toEqual(["b", "a"]);
   });
 
+  test("dismissed cards are excluded without erasing reader progress", () => {
+    const result = buildResumeEntries([file("hidden", 1), file("shown", 1)], [
+      { fileKey: "hidden", page: 7, updatedAt: 20, resumeDismissed: true },
+      { fileKey: "shown", page: 2, updatedAt: 10 },
+    ]);
+    expect(result.map(entry => entry.file.key)).toEqual(["shown"]);
+  });
   test("keeps pre-upgrade reader progress resumable", () => {
-    const readable = (key) =>
+    const readable = key =>
       file(key, 1, { getReadableType: () => "pdf" });
     const result = buildResumeEntries(
       [readable("legacy"), readable("current")],
@@ -184,7 +191,7 @@ describe("room continuity and discovery", () => {
       ],
       3,
     );
-    expect(result.map((entry) => entry.file.key)).toEqual([
+    expect(result.map(entry => entry.file.key)).toEqual([
       "current",
       "legacy",
     ]);

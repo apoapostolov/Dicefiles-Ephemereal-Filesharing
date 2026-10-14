@@ -33,18 +33,21 @@ const LIVE_MSG =
 // ── helpers ────────────────────────────────────────────────────────────────
 
 async function req(
-  method,
-  path,
-  { key = "", body, rawBody, headers = {} } = {},
+    method,
+    path,
+    { key = "", body, rawBody, headers = {} } = {},
 ) {
   const url = `${BASE}${path}`;
   const h = { ...headers };
-  if (key) h["X-Dicefiles-API-Key"] = key;
+  if (key) {
+    h["X-Dicefiles-API-Key"] = key;
+  }
 
   let fetchBody;
   if (rawBody !== undefined) {
     fetchBody = rawBody;
-  } else if (body !== undefined) {
+  }
+  else if (body !== undefined) {
     h["Content-Type"] = "application/json";
     fetchBody = JSON.stringify(body);
   }
@@ -53,7 +56,8 @@ async function req(
   let json;
   try {
     json = await res.json();
-  } catch {
+  }
+  catch {
     json = null;
   }
   return { status: res.status, json };
@@ -218,7 +222,9 @@ describe("Metrics endpoint (live)", () => {
   const skip = !LIVE;
 
   test("GET /api/v1/metrics returns ok:true with counter fields", async () => {
-    if (skip) return console.log(LIVE_MSG);
+    if (skip) {
+      return console.log(LIVE_MSG);
+    }
     const { status, json } = await get("/api/v1/metrics", auth(TEST_KEY));
     expect(status).toBe(200);
     expect(json.ok).toBe(true);
@@ -237,7 +243,9 @@ describe("Audit log endpoint (live)", () => {
   const skip = !LIVE;
 
   test("GET /api/v1/audit returns ok:true with count and entries array", async () => {
-    if (skip) return console.log(LIVE_MSG);
+    if (skip) {
+      return console.log(LIVE_MSG);
+    }
     const { status, json } = await get(
       "/api/v1/audit?limit=10",
       auth(TEST_KEY),
@@ -254,7 +262,9 @@ describe("Audit log endpoint (live)", () => {
   });
 
   test("GET /api/v1/audit?limit=1 returns at most 1 entry", async () => {
-    if (skip) return console.log(LIVE_MSG);
+    if (skip) {
+      return console.log(LIVE_MSG);
+    }
     const { status, json } = await get("/api/v1/audit?limit=1", auth(TEST_KEY));
     expect(status).toBe(200);
     expect(json.entries.length).toBeLessThanOrEqual(1);
@@ -265,7 +275,9 @@ describe("Room snapshot endpoint (live)", () => {
   const skip = !LIVE;
 
   test("GET /api/v1/room/:id/snapshot returns room aggregate stats", async () => {
-    if (skip) return console.log(LIVE_MSG);
+    if (skip) {
+      return console.log(LIVE_MSG);
+    }
     const { status, json } = await get(
       `/api/v1/room/${TEST_ROOM}/snapshot`,
       auth(TEST_KEY),
@@ -282,7 +294,9 @@ describe("Room snapshot endpoint (live)", () => {
   });
 
   test("GET /api/v1/room/INVALID/snapshot returns 400 or 404", async () => {
-    if (skip) return console.log(LIVE_MSG);
+    if (skip) {
+      return console.log(LIVE_MSG);
+    }
     const { status } = await get(
       "/api/v1/room/does-not-exist-xyz/snapshot",
       auth(TEST_KEY),
@@ -296,7 +310,9 @@ describe("Single file lookup (live)", () => {
   let fileKey;
 
   beforeAll(async () => {
-    if (skip) return;
+    if (skip) {
+      return;
+    }
     // Get any file from the room to test single-file lookup
     const { json } = await get(
       `/api/v1/files?roomid=${TEST_ROOM}&type=uploads`,
@@ -306,8 +322,9 @@ describe("Single file lookup (live)", () => {
   });
 
   test("GET /api/v1/file/:key returns full file object when key exists", async () => {
-    if (skip || !fileKey)
+    if (skip || !fileKey) {
       return console.log(fileKey ? LIVE_MSG : "no files in room — skipped");
+    }
     const { status, json } = await get(
       `/api/v1/file/${fileKey}`,
       auth(TEST_KEY),
@@ -321,7 +338,9 @@ describe("Single file lookup (live)", () => {
   });
 
   test("GET /api/v1/file/nonexistent returns 400 or 404", async () => {
-    if (skip) return console.log(LIVE_MSG);
+    if (skip) {
+      return console.log(LIVE_MSG);
+    }
     const { status } = await get(
       "/api/v1/file/thiskeycannotexist00000000",
       auth(TEST_KEY),
@@ -349,7 +368,9 @@ describe("Agent subscriptions — full lifecycle (live)", () => {
   });
 
   test("POST /api/v1/agent/subscriptions saves a new subscription", async () => {
-    if (skip) return console.log(LIVE_MSG);
+    if (skip) {
+      return console.log(LIVE_MSG);
+    }
     const { status, json } = await post("/api/v1/agent/subscriptions", {
       ...auth(TEST_KEY),
       body: {
@@ -365,7 +386,9 @@ describe("Agent subscriptions — full lifecycle (live)", () => {
   });
 
   test("GET /api/v1/agent/subscriptions lists the saved subscription", async () => {
-    if (skip) return console.log(LIVE_MSG);
+    if (skip) {
+      return console.log(LIVE_MSG);
+    }
     const { status, json } = await get(
       "/api/v1/agent/subscriptions",
       auth(TEST_KEY),
@@ -373,13 +396,15 @@ describe("Agent subscriptions — full lifecycle (live)", () => {
     expect(status).toBe(200);
     expect(json.ok).toBe(true);
     expect(Array.isArray(json.subscriptions)).toBe(true);
-    const found = json.subscriptions.find((s) => s.name === subName);
+    const found = json.subscriptions.find(s => s.name === subName);
     expect(found).toBeDefined();
     expect(found.room).toBe(TEST_ROOM);
   });
 
   test("DELETE /api/v1/agent/subscriptions/:name removes the subscription", async () => {
-    if (skip) return console.log(LIVE_MSG);
+    if (skip) {
+      return console.log(LIVE_MSG);
+    }
     const { status, json } = await del(
       `/api/v1/agent/subscriptions/${subName}`,
       auth(TEST_KEY),
@@ -389,14 +414,18 @@ describe("Agent subscriptions — full lifecycle (live)", () => {
   });
 
   test("GET after DELETE confirms subscription is gone", async () => {
-    if (skip) return console.log(LIVE_MSG);
+    if (skip) {
+      return console.log(LIVE_MSG);
+    }
     const { json } = await get("/api/v1/agent/subscriptions", auth(TEST_KEY));
-    const found = json.subscriptions?.find((s) => s.name === subName);
+    const found = json.subscriptions?.find(s => s.name === subName);
     expect(found).toBeUndefined();
   });
 
   test("DELETE a non-existent subscription returns 404", async () => {
-    if (skip) return console.log(LIVE_MSG);
+    if (skip) {
+      return console.log(LIVE_MSG);
+    }
     const { status } = await del(
       "/api/v1/agent/subscriptions/ghost-sub-that-never-existed",
       auth(TEST_KEY),
@@ -416,7 +445,9 @@ describe("Agent subscriptions — full lifecycle (live)", () => {
 
 describe("AI workflow — pre-flight health check pattern", () => {
   test("healthz + metrics together give a complete picture of server state", async () => {
-    if (!LIVE) return console.log(LIVE_MSG);
+    if (!LIVE) {
+      return console.log(LIVE_MSG);
+    }
     const [health, metrics] = await Promise.all([
       get("/healthz"),
       get("/api/v1/metrics", auth(TEST_KEY)),
@@ -439,7 +470,9 @@ describe("AI workflow — pre-flight health check pattern", () => {
 
 describe("AI workflow — polling loop simulation", () => {
   test("GET /api/v1/files returns correctly shaped file list for polling", async () => {
-    if (!LIVE) return console.log(LIVE_MSG);
+    if (!LIVE) {
+      return console.log(LIVE_MSG);
+    }
     const { status, json } = await get(
       `/api/v1/files?roomid=${TEST_ROOM}&type=all`,
       auth(TEST_KEY),
@@ -456,7 +489,9 @@ describe("AI workflow — polling loop simulation", () => {
   });
 
   test("Polling with type=new&since=<future> returns empty (no future files)", async () => {
-    if (!LIVE) return console.log(LIVE_MSG);
+    if (!LIVE) {
+      return console.log(LIVE_MSG);
+    }
     const futureMs = Date.now() + 1_000_000_000;
     const { status, json } = await get(
       `/api/v1/files?roomid=${TEST_ROOM}&type=new&since=${futureMs}`,
@@ -470,7 +505,9 @@ describe("AI workflow — polling loop simulation", () => {
 
 describe("AI workflow — room context tool simulation", () => {
   test("snapshot returns all fields needed for a one-sentence room summary", async () => {
-    if (!LIVE) return console.log(LIVE_MSG);
+    if (!LIVE) {
+      return console.log(LIVE_MSG);
+    }
     const { status, json } = await get(
       `/api/v1/room/${TEST_ROOM}/snapshot`,
       auth(TEST_KEY),
@@ -494,7 +531,9 @@ describe("AI workflow — room context tool simulation", () => {
 
 describe("AI workflow — subscription as persistent agent state", () => {
   test("Agent startup: save subscription, retrieve on restart (round-trip)", async () => {
-    if (!LIVE) return console.log(LIVE_MSG);
+    if (!LIVE) {
+      return console.log(LIVE_MSG);
+    }
     const name = `agent-startup-${Date.now()}`;
     const filter = {
       name,
@@ -511,7 +550,7 @@ describe("AI workflow — subscription as persistent agent state", () => {
 
     // Simulate restart: retrieve subscription
     const list = await get("/api/v1/agent/subscriptions", auth(TEST_KEY));
-    const found = list.json.subscriptions?.find((s) => s.name === name);
+    const found = list.json.subscriptions?.find(s => s.name === name);
     expect(found).toBeDefined();
     expect(found.ext).toContain(".epub");
 
@@ -524,7 +563,9 @@ describe("AI workflow — agent chat message (status bus)", () => {
   // Chat requires both API key AND a valid session (logged-in automation user).
   // We skip if a session is not available; just verify the shape of the error.
   test("POST /api/v1/room/:id/chat without session returns 400 or 401", async () => {
-    if (!LIVE) return console.log(LIVE_MSG);
+    if (!LIVE) {
+      return console.log(LIVE_MSG);
+    }
     const { status } = await post(`/api/v1/room/${TEST_ROOM}/chat`, {
       ...auth(TEST_KEY),
       body: { text: "Test agent status message", nick: "TestBot" },
@@ -542,7 +583,9 @@ describe("Batch upload — input validation (live)", () => {
   const skip = !LIVE;
 
   test("POST /api/v1/batch-upload with empty items array returns 400", async () => {
-    if (skip) return console.log(LIVE_MSG);
+    if (skip) {
+      return console.log(LIVE_MSG);
+    }
     const { status } = await post("/api/v1/batch-upload", {
       key: UPLOAD_KEY,
       body: { roomid: TEST_ROOM, items: [] },
@@ -552,7 +595,9 @@ describe("Batch upload — input validation (live)", () => {
   });
 
   test("POST /api/v1/batch-upload with missing roomid returns 400", async () => {
-    if (skip) return console.log(LIVE_MSG);
+    if (skip) {
+      return console.log(LIVE_MSG);
+    }
     const { status } = await post("/api/v1/batch-upload", {
       key: UPLOAD_KEY,
       body: { items: [{ url: "https://example.com/test.pdf" }] },
@@ -561,7 +606,9 @@ describe("Batch upload — input validation (live)", () => {
   });
 
   test("POST /api/v1/batch-upload with more than 20 items returns 400", async () => {
-    if (skip) return console.log(LIVE_MSG);
+    if (skip) {
+      return console.log(LIVE_MSG);
+    }
     const items = Array.from({ length: 21 }, (_, i) => ({
       url: `https://example.com/file${i}.pdf`,
     }));
@@ -579,7 +626,9 @@ describe("Request claiming — claim a non-existent key returns 404 or 400", () 
   const skip = !LIVE;
 
   test("POST /requests/nonexistent/claim → 400 or 404", async () => {
-    if (skip) return console.log(LIVE_MSG);
+    if (skip) {
+      return console.log(LIVE_MSG);
+    }
     const { status } = await post(
       "/api/v1/requests/thiskeycannotexist000/claim",
       {
@@ -591,7 +640,9 @@ describe("Request claiming — claim a non-existent key returns 404 or 400", () 
   });
 
   test("DELETE /requests/nonexistent/claim → 400 or 404", async () => {
-    if (skip) return console.log(LIVE_MSG);
+    if (skip) {
+      return console.log(LIVE_MSG);
+    }
     const { status } = await del(
       "/api/v1/requests/thiskeycannotexist000/claim",
       auth(TEST_KEY),

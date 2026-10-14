@@ -9,6 +9,7 @@ const {
   PluginRegistry,
 } = require("../../lib/plugins/registry");
 const mega = require("../../lib/plugins/mega-folder");
+
 const { runMegaFolderSync, validateConfig } = mega;
 
 describe("plugin registry (shipped)", () => {
@@ -79,6 +80,7 @@ describe("plugin registry (shipped)", () => {
 
     // direct run with inject
     const { createMemorySyncLog } = require("../../lib/plugins/sync-log");
+
     const sync = await runMegaFolderSync(
       {
         config: {
@@ -121,6 +123,7 @@ describe("plugin registry (shipped)", () => {
     const {
       createMemoryEventLease,
     } = require("../../lib/plugins/event-lease");
+
     const events = createMemoryEventLease();
     let runs = 0;
     const plugin = {
@@ -158,6 +161,7 @@ describe("plugin registry (shipped)", () => {
   test("mega-folder dedupes name+size across runs (local + durable log)", async () => {
     mega._test.seenByScope.clear();
     const { createMemorySyncLog } = require("../../lib/plugins/sync-log");
+
     const syncLog = createMemorySyncLog({ retentionDays: 30 });
     const uploads = [];
     const downloader = {
@@ -182,7 +186,7 @@ describe("plugin registry (shipped)", () => {
       syncLog,
       async uploadFile(spec) {
         uploads.push(spec.name);
-        return { key: "k" + uploads.length };
+        return { key: `k${uploads.length}` };
       },
     };
     const r1 = await runMegaFolderSync(ctx, {});
@@ -205,6 +209,7 @@ describe("plugin registry (shipped)", () => {
     const {
       createMemorySyncLog,
     } = require("../../lib/plugins/sync-log");
+
     const syncLog = createMemorySyncLog({ retentionDays: 30 });
     const uploads = [];
     let name = "original.pdf";
@@ -247,6 +252,7 @@ describe("plugin registry (shipped)", () => {
     const {
       createMemorySyncLog,
     } = require("../../lib/plugins/sync-log");
+
     const result = await runMegaFolderSync({
       config: {
         folderUrl: "https://mega.nz/folder/content",
@@ -283,6 +289,7 @@ describe("plugin registry (shipped)", () => {
     const {
       createMemorySyncLog,
     } = require("../../lib/plugins/sync-log");
+
     let streamed = false;
     const result = await runMegaFolderSync({
       config: {
@@ -319,6 +326,7 @@ describe("plugin registry (shipped)", () => {
   test("mega-folder enforces per-run file and byte limits", async () => {
     mega._test.seenByScope.clear();
     const { createMemorySyncLog } = require("../../lib/plugins/sync-log");
+
     const uploads = [];
     const result = await runMegaFolderSync({
       config: {

@@ -59,8 +59,8 @@ describe("naturalCaseSort", () => {
 describe("sort", () => {
   test("sorts array in-place by key", () => {
     const arr = [{ n: 3 }, { n: 1 }, { n: 2 }];
-    sort(arr, (x) => x.n);
-    expect(arr.map((x) => x.n)).toEqual([1, 2, 3]);
+    sort(arr, x => x.n);
+    expect(arr.map(x => x.n)).toEqual([1, 2, 3]);
   });
 
   test("returns the same array reference", () => {
@@ -77,7 +77,7 @@ describe("sort", () => {
       { n: 1, id: "a" },
       { n: 1, id: "b" },
     ];
-    sort(arr, (x) => x.n);
+    sort(arr, x => x.n);
     expect(arr[0].id).toBe("a");
     expect(arr[1].id).toBe("b");
   });

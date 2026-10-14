@@ -30,7 +30,8 @@ beforeAll(async () => {
       signal: AbortSignal.timeout(4000),
     });
     serverUp = res.status === 200 || res.status === 503;
-  } catch {
+  }
+  catch {
     serverUp = false;
   }
   if (!serverUp) {
@@ -39,13 +40,14 @@ beforeAll(async () => {
       BASE,
       "— all integration tests SKIPPED\n",
     );
-  } else {
+  }
+  else {
     // detect whether publicRooms is enabled by looking for room-directory
     try {
-      const r = await fetch(BASE + "/");
+      const r = await fetch(`${BASE}/`);
       const body = await r.text();
       if (
-        !body.includes('id="room-directory"') &&
+        !body.includes("id=\"room-directory\"") &&
         body.includes("Welcome to Dicefiles")
       ) {
         serverUp = false; // treat as skip
@@ -53,7 +55,8 @@ beforeAll(async () => {
           "\n[public-rooms.test.js] publicRooms disabled in server config — tests SKIPPED\n",
         );
       }
-    } catch (e) {
+    }
+    catch (e) {
       /* ignore */
     }
   }
@@ -61,7 +64,9 @@ beforeAll(async () => {
 
 function ifServer(name, fn) {
   test(name, async () => {
-    if (!serverUp) return;
+    if (!serverUp) {
+      return;
+    }
     await fn();
   });
 }
@@ -80,25 +85,25 @@ describe("GET / — public room directory", () => {
     "renders the room-directory article when publicRooms is enabled",
     async () => {
       const { body } = await get("/");
-      expect(body).toContain('id="room-directory"');
+      expect(body).toContain("id=\"room-directory\"");
     },
   );
 
   ifServer("renders the card grid container", async () => {
     const { body } = await get("/");
     if (
-      !body.includes('id="room-directory"') ||
+      !body.includes("id=\"room-directory\"") ||
       body.includes("No rooms yet")
     ) {
       return;
     }
-    expect(body).toContain('class="room-cards"');
+    expect(body).toContain("class=\"room-cards\"");
   });
 
   ifServer("room cards link to /r/<roomid>", async () => {
     const { body } = await get("/");
     if (
-      !body.includes('id="room-directory"') ||
+      !body.includes("id=\"room-directory\"") ||
       body.includes("No rooms yet")
     ) {
       return;
@@ -113,29 +118,29 @@ describe("GET / — public room directory", () => {
   ifServer("each card has a room name and stat pills", async () => {
     const { body } = await get("/");
     if (
-      !body.includes('id="room-directory"') ||
+      !body.includes("id=\"room-directory\"") ||
       body.includes("No rooms yet")
     ) {
       return;
     }
-    expect(body).toContain('class="room-card-name"');
-    expect(body).toContain('class="rc-stat"');
+    expect(body).toContain("class=\"room-card-name\"");
+    expect(body).toContain("class=\"rc-stat\"");
   });
 
   ifServer("MOTD is rendered inside card when set", async () => {
     const { body } = await get("/");
     if (
-      !body.includes('id="room-directory"') ||
+      !body.includes("id=\"room-directory\"") ||
       body.includes("No rooms yet")
     ) {
       return;
     }
     // If any room has a motd the div must appear. If no room has a motd
     // the div is simply absent — both outcomes are valid.
-    if (body.includes('class="room-card-motd"')) {
+    if (body.includes("class=\"room-card-motd\"")) {
       // Must be inside a .room-card
-      const motdIdx = body.indexOf('class="room-card-motd"');
-      const cardIdx = body.lastIndexOf('class="room-card"', motdIdx);
+      const motdIdx = body.indexOf("class=\"room-card-motd\"");
+      const cardIdx = body.lastIndexOf("class=\"room-card\"", motdIdx);
       expect(cardIdx).toBeGreaterThan(-1);
       expect(cardIdx).toBeLessThan(motdIdx);
     }
@@ -143,7 +148,7 @@ describe("GET / — public room directory", () => {
 
   ifServer("shows 'No rooms yet' message when directory is empty", async () => {
     const { body } = await get("/");
-    const hasDirectory = body.includes('id="room-directory"');
+    const hasDirectory = body.includes("id=\"room-directory\"");
     const hasEmpty = body.includes("No rooms yet");
     const hasWelcome = body.includes("Welcome to Dicefiles");
     expect(hasDirectory || hasEmpty || hasWelcome).toBe(true);

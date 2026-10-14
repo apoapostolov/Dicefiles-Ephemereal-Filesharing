@@ -1,5 +1,10 @@
 "use strict";
 
+jest.mock("../../lib/upload", () => ({ UPLOADS: new (require("events").EventEmitter)() }));
+jest.mock("../../lib/request", () => ({ REQUESTS: new (require("events").EventEmitter)() }));
+jest.mock("../../lib/room", () => ({ Room: { get: async () => null } }));
+jest.mock("../../lib/plugins/registry", () => ({ defaultRegistry: { emitEvent: jest.fn() } }));
+
 const {
   VALID_EVENTS,
   isValidWebhookEvent,
@@ -33,7 +38,7 @@ describe("webhook events (shipped)", () => {
     expect(hook.events.has("bogus")).toBe(false);
   });
 
-  test("dispatch ignores unknown events; enqueues known ones", () => {
+  test("dispatch ignores unknown events; enqueues known ones", async () => {
     const d = new WebhookDispatcher();
     d.config = {
       hooks: [
@@ -49,14 +54,14 @@ describe("webhook events (shipped)", () => {
       defaults: { retries: 0, baseDelayMs: 1, maxDelayMs: 1 },
       deadLetterLog: null,
     };
-    d.queue = [];
+    d.outbox = { enqueue: jest.fn().mockResolvedValue(true) };
     // Prevent async pump from draining the queue before assertions
     d.pump = () => {};
     d.dispatch("not_a_real_event", { x: 1 });
-    expect(d.queue.length).toBe(0);
+    expect(d.outbox.enqueue).not.toHaveBeenCalled();
     d.dispatch("linked_file_appeared", { key: "k", roomid: "dest" });
-    expect(d.queue.length).toBe(1);
-    expect(d.queue[0].event).toBe("linked_file_appeared");
-    expect(d.queue[0].payload.key).toBe("k");
+    await new Promise(resolve => setImmediate(resolve));
+    expect(d.outbox.enqueue).toHaveBeenCalledTimes(1);
+    expect(d.outbox.enqueue.mock.calls[0][0]).toMatchObject({ event: "linked_file_appeared", payload: { key: "k" } });
   });
 });

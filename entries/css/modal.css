@@ -25,7 +25,7 @@
   grid-template-columns: auto;
   grid-template-rows: auto 1fr auto;
   overflow: hidden;
-  box-shadow: 4px 4px 20px rgba(200, 200, 200, 0.1);
+  box-shadow: 4px 4px 20px var(--shadow-color);
 }
 
 .modal input[type="text"],
@@ -47,14 +47,14 @@
   width: 1.04em;
   height: 1.04em;
   margin: 0;
-  border: 1px solid rgba(236, 236, 236, 0.34);
+  border: 1px solid var(--hairline);
   border-radius: 4px;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.07),
-    rgba(0, 0, 0, 0.24)
+    var(--surface-1),
+    var(--surface-1)
   );
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 1px 1px var(--shadow-color);
   cursor: pointer;
   display: inline-grid;
   place-content: center;
@@ -71,32 +71,32 @@
   clip-path: polygon(14% 52%, 0 67%, 40% 100%, 100% 24%, 84% 10%, 38% 70%);
   transform: scale(0);
   transform-origin: center;
-  background: rgba(240, 245, 241, 0.96);
+  background: var(--panel-bg);
   transition: transform 0.12s ease;
 }
 
 .modal input[type="checkbox"]:hover {
-  border-color: rgba(245, 245, 245, 0.5);
+  border-color: var(--hairline);
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.11),
-    rgba(0, 0, 0, 0.21)
+    var(--surface-2),
+    var(--surface-1)
   );
 }
 
 .modal input[type="checkbox"]:focus-visible {
   outline: none;
   box-shadow:
-    inset 0 1px 1px rgba(0, 0, 0, 0.45),
-    0 0 0 2px rgba(255, 255, 255, 0.22);
+    inset 0 1px 1px var(--shadow-color),
+    0 0 0 2px var(--shadow-color);
 }
 
 .modal input[type="checkbox"]:checked {
-  border-color: rgba(199, 222, 204, 0.72);
+  border-color: var(--hairline);
   background: linear-gradient(
     180deg,
-    rgba(168, 199, 176, 0.48),
-    rgba(86, 108, 94, 0.56)
+    var(--success-soft),
+    var(--panel-bg)
   );
 }
 
@@ -156,9 +156,9 @@
   margin-left: 0;
   min-width: 5.5em;
   padding: 0.42em 0.9em;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid var(--hairline);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--surface-2);
   color: var(--text-fg);
   font-size: 0.94rem;
   font-weight: 600;
@@ -172,43 +172,43 @@
 
 .modal-button:hover,
 .modal-button:focus {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.36);
+  background: var(--surface-3);
+  border-color: var(--hairline);
   box-shadow: none;
   transform: translateY(-1px);
 }
 
 .modal-button-default {
-  background: rgba(192, 232, 205, 0.2);
-  border-color: rgba(192, 232, 205, 0.45);
-  color: #f2fff5;
+  background: var(--success-soft);
+  border-color: var(--success-soft);
+  color: var(--text-fg);
   opacity: 1;
 }
 
 .modal-button-default:hover,
 .modal-button-default:focus {
-  background: rgba(192, 232, 205, 0.28);
-  border-color: rgba(192, 232, 205, 0.62);
+  background: var(--success-soft);
+  border-color: var(--success-soft);
 }
 
 .modal-button-cancel {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.18);
-  color: rgba(235, 235, 235, 0.92);
+  background: var(--surface-2);
+  border-color: var(--hairline);
+  color: var(--text-fg);
   opacity: 0.9;
 }
 
 .modal-button-danger {
-  background: rgba(160, 60, 60, 0.24);
-  border-color: rgba(220, 90, 90, 0.5);
-  color: rgba(255, 190, 190, 0.98);
+  background: var(--danger-soft);
+  border-color: var(--danger-soft);
+  color: var(--danger);
 }
 
 .modal-button-danger:hover,
 .modal-button-danger:focus {
-  background: rgba(180, 65, 65, 0.38);
-  border-color: rgba(235, 110, 110, 0.72);
-  color: #ffe5e5;
+  background: var(--danger-soft);
+  border-color: var(--danger-soft);
+  color: var(--text-fg);
 }
 
 .modal-messagebox .modal-body {
@@ -269,7 +269,7 @@
   justify-content: center;
   width: 2.75rem;
   margin: 0;
-  color: rgba(230, 190, 120, 0.88);
+  color: var(--warning);
   font-size: 2.35rem;
   line-height: 1;
 }
@@ -278,14 +278,14 @@
   grid-area: rules;
   margin: 0;
   padding: 0.75rem 0.9rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--hairline);
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.18);
+  background: var(--surface-1);
 }
 
 #report-rules h4 {
   margin: 0 0 0.45rem;
-  color: rgba(245, 245, 245, 0.96);
+  color: var(--text-fg);
   font-size: 0.92rem;
 }
 
@@ -298,7 +298,7 @@
 
 #report-rules li {
   padding-left: 0.15rem;
-  color: rgba(225, 225, 225, 0.9);
+  color: var(--text-fg);
   font-size: 0.82rem;
   line-height: 1.4;
 }
@@ -312,7 +312,7 @@
 }
 
 .modal-report .report-fields label {
-  color: rgba(238, 238, 238, 0.94);
+  color: var(--text-fg);
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -327,16 +327,16 @@
   width: 100%;
   min-width: 0;
   margin: 0;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--hairline);
   border-radius: 7px;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--surface-1);
   color: var(--text-fg);
   font: inherit;
 }
 
 .modal-report input[name="room"] {
   min-height: 2.25rem;
-  color: rgba(220, 220, 220, 0.74);
+  color: var(--text-fg);
   cursor: text;
 }
 
@@ -349,19 +349,19 @@
 }
 
 .modal-report textarea[name="msg"]::placeholder {
-  color: rgba(205, 205, 205, 0.5);
+  color: var(--text-fg);
 }
 
 .modal-report input[name="room"]:focus,
 .modal-report textarea[name="msg"]:focus {
   outline: none;
   border-color: var(--focus-ring);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 2px var(--shadow-color);
 }
 
 .modal-report textarea[name="msg"][aria-invalid="true"],
 .modal-report input[type="checkbox"][aria-invalid="true"] {
-  border-color: rgba(239, 137, 125, 0.88);
+  border-color: var(--danger-soft);
 }
 
 #report-agreement {
@@ -371,10 +371,10 @@
   gap: 0.65rem;
   margin: 0;
   padding: 0.7rem 0.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--hairline);
   border-radius: 7px;
-  background: rgba(255, 255, 255, 0.035);
-  color: rgba(230, 230, 230, 0.9);
+  background: var(--surface-1);
+  color: var(--text-fg);
   font-size: 0.8rem;
   line-height: 1.4;
   cursor: pointer;
@@ -389,10 +389,10 @@
   grid-area: error;
   margin: 0;
   padding: 0.55rem 0.7rem;
-  border: 1px solid rgba(239, 137, 125, 0.35);
+  border: 1px solid var(--danger-soft);
   border-radius: 6px;
-  background: rgba(145, 55, 45, 0.16);
-  color: rgba(255, 194, 186, 0.96);
+  background: var(--danger-soft);
+  color: var(--danger);
   font-size: 0.8rem;
   line-height: 1.35;
 }
@@ -552,9 +552,9 @@
   width: 100%;
   height: 12px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--surface-2);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--hairline);
 }
 
 .modal-downloadbatch .download-progress-bar {
@@ -562,8 +562,8 @@
   height: 100%;
   background: linear-gradient(
     90deg,
-    rgba(160, 220, 170, 0.85),
-    rgba(205, 245, 213, 0.85)
+    var(--success-soft),
+    var(--success-soft)
   );
   transition: width 0.2s ease;
 }
@@ -574,7 +574,7 @@
   justify-content: flex-start;
   gap: 0.8em;
   margin: 0.5em 0 0.8em;
-  color: rgba(234, 234, 234, 0.95);
+  color: var(--text-fg);
 }
 
 .modal-downloadbatch .download-option {
@@ -606,10 +606,10 @@
   -moz-appearance: textfield;
   text-align: center;
   padding: 0.15em 0.35em;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--hairline);
   border-radius: 5px;
-  background: rgba(0, 0, 0, 0.22);
-  color: rgba(240, 240, 240, 0.96);
+  background: var(--surface-1);
+  color: var(--text-fg);
 }
 
 .modal-downloadbatch .download-retry-input::-webkit-outer-spin-button,
@@ -620,7 +620,7 @@
 
 .modal-downloadbatch .download-report-summary {
   margin: 0.75em 0 0.45em;
-  color: rgba(230, 230, 230, 0.92);
+  color: var(--text-fg);
   font-size: 0.92em;
 }
 
@@ -631,14 +631,14 @@
   max-height: 11em;
   overflow-x: hidden;
   overflow-y: auto;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--hairline);
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--surface-1);
 }
 
 .modal-downloadbatch .download-report-empty {
   padding: 0.3em 0.1em;
-  color: rgba(190, 190, 190, 0.86);
+  color: var(--dark-fg);
   font-style: italic;
 }
 
@@ -650,7 +650,7 @@
   padding: 0.23em 0;
   max-width: 100%;
   overflow: hidden;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+  border-bottom: 1px dashed var(--hairline);
 }
 
 .modal-downloadbatch .download-report-item:last-child {
@@ -660,7 +660,7 @@
 .modal-downloadbatch .download-report-name {
   flex: 1 1 auto;
   min-width: 0;
-  color: rgba(238, 238, 238, 0.96);
+  color: var(--text-fg);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -669,24 +669,24 @@
 .modal-downloadbatch .download-report-state {
   flex: 0 0 auto;
   font-size: 0.85em;
-  color: rgba(206, 206, 206, 0.92);
+  color: var(--text-fg);
 }
 
 .modal-downloadbatch .download-report-item.is-success .download-report-state {
-  color: rgba(177, 226, 189, 0.95);
+  color: var(--success);
 }
 
 .modal-downloadbatch .download-report-item.is-failed .download-report-state {
-  color: rgba(248, 161, 161, 0.95);
+  color: var(--danger);
 }
 
 .modal-downloadbatch .download-report-item.is-skipped .download-report-state {
-  color: rgba(229, 229, 182, 0.95);
+  color: var(--warning);
 }
 
 .modal-downloadbatch .download-report-item.is-retrying .download-report-state,
 .modal-downloadbatch .download-report-item.is-running .download-report-state {
-  color: rgba(199, 219, 248, 0.95);
+  color: var(--accent);
 }
 
 .modal-requestcreate .modal-body {
@@ -734,11 +734,11 @@
   width: 12.8em;
   height: 12.8em;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--hairline);
   background: linear-gradient(
     180deg,
-    rgba(16, 16, 16, 0.95),
-    rgba(20, 20, 20, 0.9)
+    var(--dark-bg),
+    var(--overlay-bg)
   );
   background-size: cover;
   background-position: center;
@@ -752,16 +752,16 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.22);
+  background: var(--surface-1);
 }
 
 .modal-requestcreate .request-image-drop.has-image::before {
-  background: rgba(0, 0, 0, 0.32);
+  background: var(--surface-1);
 }
 
 .modal-requestcreate .request-image-drop.dragging {
-  border-color: rgba(208, 236, 214, 0.88);
-  box-shadow: 0 0 0 2px rgba(208, 236, 214, 0.25) inset;
+  border-color: var(--hairline);
+  box-shadow: 0 0 0 2px var(--shadow-color) inset;
 }
 
 .modal-requestcreate .request-image-drop-text {
@@ -772,7 +772,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: rgba(223, 223, 223, 0.9);
+  color: var(--text-fg);
   font-size: 1.28rem;
   font-weight: 700;
   padding: 0 0.6em;
@@ -793,11 +793,11 @@
   width: 11em;
   height: 11em;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--hairline);
   background: linear-gradient(
     180deg,
-    rgba(20, 20, 20, 0.95),
-    rgba(26, 26, 26, 0.9)
+    var(--dark-bg),
+    var(--overlay-bg)
   );
   background-size: cover;
   background-position: center;
@@ -814,20 +814,20 @@
 .modal-requestview .requestview-requester {
   margin: 0;
   font-size: 0.82em;
-  color: rgba(180, 180, 220, 0.9);
+  color: var(--accent);
 }
 
 .modal-requestview .requestview-text {
   margin: 0;
   font-size: 1.03em;
-  color: rgba(240, 240, 240, 0.97);
+  color: var(--text-fg);
   word-break: break-word;
   line-height: 1.4;
 }
 
 .modal-requestview .requestview-refurl {
   font-size: 0.78em;
-  color: rgba(140, 190, 255, 0.85);
+  color: var(--accent);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -835,25 +835,25 @@
 }
 
 .modal-requestview .requestview-refurl:hover {
-  color: rgba(170, 210, 255, 1);
+  color: var(--accent);
 }
 
 .modal-requestview .requestview-fulfilled-by {
   margin: 0;
   font-size: 0.8em;
-  color: rgba(150, 220, 150, 0.9);
+  color: var(--success);
 }
 
 .modal-requestview .requestview-upload-zone {
-  border: 2px dashed rgba(160, 160, 160, 0.35);
+  border: 2px dashed var(--hairline);
   border-radius: 10px;
   padding: 1.2em 1em;
   text-align: center;
   cursor: pointer;
   background: linear-gradient(
     180deg,
-    rgba(16, 16, 16, 0.92),
-    rgba(20, 20, 20, 0.86)
+    var(--overlay-bg),
+    var(--overlay-bg)
   );
   display: flex;
   flex-direction: column;
@@ -868,17 +868,17 @@
 }
 
 .modal-requestview .requestview-upload-zone:hover {
-  border-color: rgba(180, 180, 180, 0.55);
+  border-color: var(--hairline);
   background: linear-gradient(
     180deg,
-    rgba(20, 20, 20, 0.95),
-    rgba(26, 26, 26, 0.9)
+    var(--dark-bg),
+    var(--overlay-bg)
   );
 }
 
 .modal-requestview .requestview-upload-zone.dragging {
-  border-color: rgba(208, 236, 214, 0.72);
-  background: rgba(208, 236, 214, 0.04);
+  border-color: var(--hairline);
+  background: var(--surface-1);
 }
 
 /* Drop-here text lines (mimic dropminder big text) */
@@ -887,21 +887,21 @@
   font-size: 1.55em;
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: rgba(100, 100, 100, 0.85);
+  color: var(--dark-fg);
   line-height: 1.15;
   pointer-events: none;
 }
 
 .modal-requestview .requestview-upload-zone:hover .requestview-upload-label,
 .modal-requestview .requestview-upload-zone.dragging .requestview-upload-label {
-  color: rgba(140, 140, 140, 0.95);
+  color: var(--dark-fg);
 }
 
 /* Sub-caption shown below the big text */
 .modal-requestview .requestview-upload-hint {
   display: block;
   font-size: 0.68em;
-  color: rgba(120, 120, 120, 0.7);
+  color: var(--dark-fg);
   font-weight: 400;
   margin-top: 0.15em;
   letter-spacing: 0.01em;
@@ -924,7 +924,7 @@
   align-items: center;
   gap: 0.4em;
   font-size: 0.78em;
-  color: rgba(210, 210, 210, 0.9);
+  color: var(--text-fg);
 }
 
 .modal-requestview .requestview-staged-name {
@@ -938,7 +938,7 @@
   flex: 0 0 auto;
   background: transparent;
   border: none;
-  color: rgba(220, 100, 100, 0.7);
+  color: var(--danger);
   cursor: pointer;
   font-size: 1.1em;
   line-height: 1;
@@ -946,7 +946,7 @@
 }
 
 .modal-requestview .requestview-staged-remove:hover {
-  color: rgba(240, 80, 80, 1);
+  color: var(--danger);
 }
 
 .modal-requestview .requestview-progress-wrap {
@@ -957,7 +957,7 @@
 
 .modal-requestview .requestview-progress-bar {
   height: 4px;
-  background: rgba(100, 200, 130, 0.9);
+  background: var(--success-soft);
   border-radius: 2px;
   width: 0%;
   transition: width 0.2s ease;
@@ -965,36 +965,36 @@
 
 .modal-requestview .requestview-progress-label {
   font-size: 0.78em;
-  color: rgba(180, 220, 180, 0.85);
+  color: var(--success);
 }
 
 .modal-requestview .modal-button-fulfill {
-  background: rgba(80, 160, 100, 0.25);
-  border-color: rgba(100, 200, 130, 0.4);
+  background: var(--success-soft);
+  border-color: var(--success-soft);
 }
 
 .modal-requestview .modal-button-fulfill:hover {
-  background: rgba(80, 160, 100, 0.38);
+  background: var(--success-soft);
 }
 
 .modal-requestview .modal-button-reopen {
-  background: rgba(80, 120, 200, 0.22);
-  border-color: rgba(100, 150, 220, 0.4);
+  background: var(--accent-soft);
+  border-color: var(--accent-soft);
 }
 
 .modal-requestview .modal-button-reopen:hover {
-  background: rgba(80, 120, 200, 0.35);
+  background: var(--accent-soft);
 }
 
 .modal-requestview .modal-button-remove {
-  background: rgba(160, 60, 60, 0.2);
-  border-color: rgba(200, 80, 80, 0.38);
-  color: rgba(240, 160, 160, 0.9);
+  background: var(--danger-soft);
+  border-color: var(--danger-soft);
+  color: var(--danger);
 }
 
 .modal-requestview .modal-button-remove:hover {
-  background: rgba(160, 60, 60, 0.35);
-  color: rgba(255, 180, 180, 1);
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 .modal-notifydlg {
@@ -1025,12 +1025,12 @@
 }
 
 .modal-notifydlg .notify-row:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-1);
 }
 
 .modal-notifydlg .notify-text {
   display: block;
-  color: rgba(240, 240, 240, 0.96);
+  color: var(--text-fg);
   white-space: nowrap;
   user-select: none;
 }
@@ -1043,7 +1043,7 @@
 
 .modal-notifydlg .notify-permission-status {
   margin: 0.25em 0 0;
-  color: rgba(224, 224, 224, 0.88);
+  color: var(--text-fg);
   font-size: 0.92em;
 }
 
@@ -1093,14 +1093,14 @@
 }
 
 .modal-optsdlg .modal-body label {
-  color: rgba(236, 236, 236, 0.95);
+  color: var(--text-fg);
   font-weight: 600;
 }
 
 .modal-optsdlg .modal-body input[type="text"],
 .modal-optsdlg .modal-body input[type="number"],
 .modal-optsdlg .modal-body textarea {
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--hairline);
   border-radius: 6px;
   padding: 0.4em 0.65em;
   width: 100%;
@@ -1148,16 +1148,16 @@
 .modal-optsdlg .usersdesc {
   max-width: 100%;
   line-height: 1.4;
-  color: rgba(220, 220, 220, 0.92);
+  color: var(--text-fg);
   margin-bottom: 0.6em;
 }
 
 .modal-optsdlg .userlist {
   height: 11.5em;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--hairline);
   border-radius: 8px;
   padding: 0.3em 0.45em;
-  background: rgba(0, 0, 0, 0.18);
+  background: var(--surface-1);
   max-width: 100%;
   min-width: 0;
   overflow: auto;
@@ -1173,13 +1173,13 @@
 }
 
 .modal-optsdlg .userlistitem:nth-child(odd) {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-1);
 }
 
 .modal-optsdlg .userlistitem button {
   background: transparent;
-  color: rgba(244, 244, 244, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-fg);
+  border: 1px solid var(--hairline);
   border-radius: 5px;
   padding: 0.14em 0.45em;
   margin: 0;
@@ -1188,7 +1188,7 @@
 
 .modal-optsdlg .userlistitem button:hover,
 .modal-optsdlg .userlistitem button:focus {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--surface-2);
   box-shadow: none;
 }
 
@@ -1207,7 +1207,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 1px solid var(--hairline);
   padding-bottom: 0;
   margin: 0;
   width: 100%;
@@ -1219,7 +1219,7 @@
   background: transparent;
   border: 0;
   border-bottom: 2px solid transparent;
-  color: rgba(220, 220, 220, 0.72);
+  color: var(--text-fg);
   font-weight: 600;
   font-size: 0.92rem;
   padding: 0.5em 0.95em;
@@ -1231,16 +1231,16 @@
 
 .modal-optsdlg .roomopts-tab:hover,
 .modal-optsdlg .roomopts-tab:focus {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-fg);
+  background: var(--surface-1);
   box-shadow: none;
   outline: none;
 }
 
 .modal-optsdlg .roomopts-tab.active {
-  color: #fff;
-  border-bottom-color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-fg);
+  border-bottom-color: var(--hairline);
+  background: var(--surface-2);
 }
 
 .modal-optsdlg .roomopts-help-btn {
@@ -1253,9 +1253,9 @@
   height: 1.7rem;
   padding: 0;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(240, 240, 240, 0.95);
+  border: 1px solid var(--hairline);
+  background: var(--surface-2);
+  color: var(--text-fg);
   font-weight: 700;
   font-size: 0.95rem;
   line-height: 1;
@@ -1268,7 +1268,7 @@
 
 .modal-optsdlg .roomopts-help-btn:hover,
 .modal-optsdlg .roomopts-help-btn:focus {
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--surface-2);
   box-shadow: none;
   outline: none;
 }
@@ -1297,9 +1297,9 @@
   width: 100%;
   min-width: 0;
   padding: 0.75rem 0.85rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--hairline);
   border-radius: 10px;
-  background: rgba(0, 0, 0, 0.16);
+  background: var(--surface-1);
   box-sizing: border-box;
 }
 
@@ -1308,7 +1308,7 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: rgba(200, 200, 200, 0.78);
+  color: var(--dark-fg);
   margin: 0;
 }
 
@@ -1355,7 +1355,7 @@
 .modal-optsdlg .roomopts-password-table-wrap {
   min-width: 0;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--hairline);
   border-radius: 7px;
 }
 
@@ -1371,13 +1371,13 @@
   padding: 0.5rem 0.6rem;
   vertical-align: middle;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--hairline);
   box-sizing: border-box;
 }
 
 .modal-optsdlg .roomopts-password-table thead th {
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(225, 225, 225, 0.82);
+  background: var(--surface-1);
+  color: var(--text-fg);
   font-size: 0.74rem;
   letter-spacing: 0.035em;
   text-transform: uppercase;
@@ -1397,7 +1397,7 @@
 
 .modal-optsdlg .roomopts-password-table tbody th {
   overflow: hidden;
-  color: rgba(242, 242, 242, 0.92);
+  color: var(--text-fg);
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1405,7 +1405,7 @@
 
 .modal-optsdlg .roomopts-password-empty {
   height: 3rem;
-  color: rgba(195, 195, 195, 0.72);
+  color: var(--dark-fg);
   font-style: italic;
   text-align: center !important;
 }
@@ -1419,7 +1419,7 @@
   width: 100%;
   min-width: 0;
   overflow: hidden;
-  color: rgba(245, 245, 245, 0.94);
+  color: var(--text-fg);
   font-family: monospace;
   letter-spacing: 0.02em;
   text-overflow: ellipsis;
@@ -1427,7 +1427,7 @@
 }
 
 .modal-optsdlg .roomopts-password-value.empty {
-  color: rgba(190, 190, 190, 0.7);
+  color: var(--dark-fg);
   font-family: inherit;
   font-style: italic;
   letter-spacing: 0;
@@ -1488,7 +1488,7 @@
 
 .modal-optsdlg .roomopts-section-count {
   margin-left: 0.45rem;
-  color: rgba(150, 205, 225, 0.95);
+  color: var(--success);
   text-transform: none;
   letter-spacing: 0;
 }
@@ -1509,7 +1509,7 @@
 .modal-optsdlg .roomopts-field-hint {
   font-weight: 500;
   font-size: 0.82em;
-  color: rgba(190, 190, 190, 0.85);
+  color: var(--dark-fg);
   margin-left: 0.25em;
 }
 
@@ -1522,7 +1522,7 @@
   font-size: 0.84rem;
   line-height: 1.4;
   font-weight: 500;
-  color: rgba(200, 200, 200, 0.88);
+  color: var(--dark-fg);
 }
 
 .modal-optsdlg .roomopts-actions {
@@ -1539,9 +1539,9 @@
   appearance: none;
   -webkit-appearance: none;
   margin: 0;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-2);
   color: var(--text-fg);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--hairline);
   border-radius: 999px;
   padding: 0.4em 0.9em;
   font-size: 0.84rem;
@@ -1554,7 +1554,7 @@
 .modal-optsdlg .roomopts-link-add > button:hover,
 .modal-optsdlg .roomopts-link-editor-actions > button:hover,
 .modal-optsdlg .roomopts-help-close:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--surface-2);
   box-shadow: none;
 }
 
@@ -1602,9 +1602,9 @@
   margin: 0;
   padding: 0;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(240, 240, 240, 0.95);
+  border: 1px solid var(--hairline);
+  background: var(--surface-2);
+  color: var(--text-fg);
   font-weight: 700;
   font-size: 0.75rem;
   line-height: 1;
@@ -1617,7 +1617,7 @@
 
 .modal-optsdlg .roomopts-inline-help:hover,
 .modal-optsdlg .roomopts-inline-help:focus {
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--surface-2);
   box-shadow: none;
   outline: none;
 }
@@ -1651,10 +1651,10 @@
   flex-wrap: nowrap;
   align-items: stretch;
   gap: 0;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  border: 1px solid var(--hairline);
   border-radius: 7px;
   padding: 0;
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--surface-1);
   box-sizing: border-box;
   width: 100%;
   overflow: hidden;
@@ -1689,8 +1689,8 @@
   padding: 0.45em 0.75em;
   border-radius: 0;
   border: none;
-  border-left: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.1);
+  border-left: 1px solid var(--hairline);
+  background: var(--surface-2);
   color: inherit;
   font: inherit;
   font-weight: 600;
@@ -1700,7 +1700,7 @@
 
 .modal-optsdlg .roomopts-invite-limits-btn:hover,
 .modal-optsdlg .roomopts-invite-limits-btn:focus {
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--surface-2);
 }
 
 /* Override .modal .icon (64px modal chrome icons) — keep copy compact like the row */
@@ -1757,14 +1757,14 @@
 
 .modal-optsdlg .roomopts-invite-copy.copied {
   transition: color 0.2s ease;
-  color: lightgreen !important;
+  color: var(--success) !important;
 }
 
 .modal-optsdlg .roomopts-invite-limits-panel {
   margin-top: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--hairline);
   border-radius: 10px;
-  background: rgba(20, 28, 36, 0.9);
+  background: var(--overlay-bg);
   padding: 0.75rem 0.9rem;
   box-sizing: border-box;
   display: flex;
@@ -1782,9 +1782,9 @@
   max-height: 14rem;
   overflow-x: auto;
   overflow-y: auto;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--hairline);
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.18);
+  background: var(--surface-1);
 }
 
 .modal-optsdlg .roomopts-invite-table,
@@ -1864,7 +1864,7 @@
 
 .modal-optsdlg .roomopts-invite-link-separator {
   flex: 0 0 auto;
-  color: rgba(210, 210, 210, 0.62);
+  color: var(--text-fg);
 }
 
 .modal-optsdlg .roomopts-invite-url-text {
@@ -1902,9 +1902,9 @@
   min-width: 0;
   margin: 0;
   padding: 0.3em 0.52em;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--hairline);
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.09);
+  background: var(--surface-2);
   color: var(--text-fg);
   font-size: 0.75rem;
   line-height: 1.15;
@@ -1925,9 +1925,9 @@
 
 /* Linking help panel */
 .modal-optsdlg .roomopts-link-help {
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--hairline);
   border-radius: 10px;
-  background: rgba(30, 40, 48, 0.85);
+  background: var(--overlay-bg);
   padding: 0.75rem 0.9rem;
   box-sizing: border-box;
 }
@@ -1947,7 +1947,7 @@
 .modal-optsdlg .roomopts-link-help-body {
   font-size: 0.86rem;
   line-height: 1.45;
-  color: rgba(220, 220, 220, 0.94);
+  color: var(--text-fg);
   font-weight: 500;
   max-height: 16rem;
   overflow-y: auto;
@@ -1967,7 +1967,7 @@
   max-width: 100%;
   padding: 0.4em 0.55em;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--hairline);
   background: var(--dark-bg);
   color: var(--text-fg);
   color-scheme: dark;
@@ -1993,9 +1993,9 @@
   width: 100%;
   max-height: 14rem;
   overflow: auto;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--hairline);
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.18);
+  background: var(--surface-1);
 }
 
 .modal-optsdlg .roomopts-bot-pill {
@@ -2005,15 +2005,15 @@
   letter-spacing: 0.05em;
   padding: 0.12em 0.4em;
   border-radius: 999px;
-  background: var(--role-bot-bg, rgba(62, 203, 255, 0.22));
-  border: 1px solid var(--role-bot-border, rgba(62, 203, 255, 0.55));
-  color: var(--role-bot-fg, #3ecbff);
+  background: var(--role-bot-bg, var(--accent-soft));
+  border: 1px solid var(--role-bot-border, var(--accent-soft));
+  color: var(--role-bot-fg, var(--accent));
   vertical-align: middle;
 }
 
 .modal-optsdlg .roomopts-bot-name {
   font-weight: 600;
-  color: var(--role-bot-fg, #3ecbff);
+  color: var(--role-bot-fg, var(--accent));
 }
 
 .modal-optsdlg .roomopts-plugin-editor {
@@ -2024,7 +2024,7 @@
   min-width: 0;
   margin: 0;
   padding: 0.75rem 0.85rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--hairline);
   border-radius: 10px;
   background: var(--surface-1);
   box-sizing: border-box;
@@ -2050,9 +2050,9 @@
   display: grid;
   gap: 0.45rem;
   padding: 0.65rem 0.7rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--hairline);
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.16);
+  background: var(--surface-1);
 }
 
 .modal-optsdlg .roomopts-plugin-operation {
@@ -2062,12 +2062,12 @@
   gap: 0.35rem 0.7rem;
   min-width: 0;
   font-size: 0.82rem;
-  color: rgba(220, 220, 220, 0.9);
+  color: var(--text-fg);
 }
 
 .modal-optsdlg .roomopts-plugin-operation-label {
   font-weight: 700;
-  color: rgba(238, 238, 238, 0.96);
+  color: var(--text-fg);
 }
 
 .modal-optsdlg .roomopts-plugin-operation-actions {
@@ -2081,9 +2081,9 @@
   appearance: none;
   margin: 0;
   padding: 0.28rem 0.62rem;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--hairline);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-2);
   color: var(--text-fg);
   font: inherit;
   font-weight: 650;
@@ -2092,11 +2092,11 @@
 
 .modal-optsdlg .roomopts-plugin-operation-actions > button:hover,
 .modal-optsdlg .roomopts-plugin-operation-actions > button:focus-visible {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--surface-2);
 }
 
 .modal-optsdlg .roomopts-status-error {
-  color: #f1a0a0;
+  color: var(--danger);
 }
 
 .modal-optsdlg .roomopts-plugin-status:empty {
@@ -2104,7 +2104,7 @@
 }
 
 .modal-optsdlg .roomopts-status-ok {
-  color: #7ddea0;
+  color: var(--success);
   font-weight: 600;
 }
 
@@ -2122,7 +2122,7 @@
 .modal-optsdlg .roomopts-link-help-body code {
   font-family: ui-monospace, monospace;
   font-size: 0.92em;
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--surface-1);
   padding: 0.05em 0.3em;
   border-radius: 4px;
 }
@@ -2144,8 +2144,8 @@
   flex: 0 1 42%;
   min-width: 9rem;
   max-width: 16rem;
-  color: var(--text-color, #eee);
-  background: var(--input-background, #262626);
+  color: var(--text-color, var(--text-fg));
+  background: var(--input-background, var(--panel-bg));
 }
 
 .modal-optsdlg .roomopts-link-add > button {
@@ -2156,9 +2156,9 @@
   width: 100%;
   max-height: 14rem;
   overflow: auto;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--hairline);
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--surface-1);
 }
 
 .modal-optsdlg .roomopts-link-table {
@@ -2171,14 +2171,14 @@
 .modal-optsdlg .roomopts-link-table td {
   padding: 0.45em 0.55em;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--hairline);
   vertical-align: top;
 }
 
 .modal-optsdlg .roomopts-link-table th {
   font-weight: 700;
-  color: rgba(236, 236, 236, 0.95);
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-fg);
+  background: var(--surface-1);
   position: sticky;
   top: 0;
   z-index: 1;
@@ -2214,36 +2214,36 @@
 .modal-optsdlg .roomopts-link-table tr.link-status-denied .link-col-status,
 .modal-optsdlg .roomopts-link-table tr.link-status-private .link-col-status,
 .modal-optsdlg .roomopts-link-table tr.link-status-missing .link-col-status {
-  color: #f0b070;
+  color: var(--danger);
   font-weight: 600;
 }
 
 .modal-optsdlg .roomopts-link-table tr.link-status-ok .link-col-status {
-  color: #8fd48f;
+  color: var(--success);
   font-weight: 600;
 }
 
 .modal-optsdlg .link-source-name {
   font-weight: 600;
-  color: rgba(240, 240, 240, 0.96);
+  color: var(--text-fg);
 }
 
 .modal-optsdlg .link-source-id {
   font-size: 0.78em;
-  color: rgba(180, 180, 180, 0.85);
+  color: var(--dark-fg);
   font-family: ui-monospace, monospace;
   margin-top: 0.15em;
 }
 
 .modal-optsdlg .link-col-rules {
-  color: rgba(210, 210, 210, 0.9);
+  color: var(--text-fg);
   max-width: 11rem;
   word-break: break-word;
 }
 
 .modal-optsdlg .link-access-summary {
   margin-top: 0.25rem;
-  color: rgba(170, 205, 225, 0.92);
+  color: var(--success);
   font-size: 0.82em;
 }
 
@@ -2255,8 +2255,8 @@
   appearance: none;
   -webkit-appearance: none;
   margin: 0 0.2em 0 0;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
   border-radius: 5px;
   color: var(--text-fg);
   padding: 0.22em 0.5em;
@@ -2265,12 +2265,12 @@
 }
 
 .modal-optsdlg .link-col-actions button:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--surface-2);
 }
 
 .modal-optsdlg .roomopts-link-empty {
   margin: 0.7em;
-  color: rgba(200, 200, 200, 0.85);
+  color: var(--dark-fg);
   font-size: 0.88em;
 }
 
@@ -2280,9 +2280,9 @@
   flex-direction: column;
   gap: 0.65rem;
   padding: 0.85rem;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--hairline);
   border-radius: 10px;
-  background: rgba(0, 0, 0, 0.22);
+  background: var(--surface-1);
   box-sizing: border-box;
 }
 
@@ -2297,10 +2297,10 @@
 }
 
 .modal-optsdlg .roomopts-rule-syntax-help {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--hairline);
   border-radius: 7px;
-  background: rgba(255, 255, 255, 0.045);
-  color: rgba(220, 220, 220, 0.92);
+  background: var(--surface-1);
+  color: var(--text-fg);
   font-size: 0.82rem;
   line-height: 1.45;
 }
@@ -2314,7 +2314,7 @@
 }
 
 .modal-optsdlg .roomopts-rule-syntax-help summary span {
-  color: rgba(155, 210, 230, 0.95);
+  color: var(--success);
   font-weight: 750;
 }
 
@@ -2327,27 +2327,27 @@
 }
 
 .modal-optsdlg .roomopts-rule-syntax-help code {
-  color: rgba(180, 225, 240, 0.98);
+  color: var(--success);
 }
 
 .modal-optsdlg .roomopts-rule-error {
   margin: 0;
   padding: 0.48rem 0.62rem;
-  border: 1px solid rgba(240, 135, 135, 0.5);
+  border: 1px solid var(--danger-soft);
   border-radius: 6px;
-  background: rgba(125, 30, 30, 0.22);
-  color: rgba(255, 215, 215, 0.98);
+  background: var(--danger-soft);
+  color: var(--accent);
   font-size: 0.82rem;
   line-height: 1.4;
 }
 
 .modal-optsdlg .roomopts-link-editor input[aria-invalid="true"] {
-  border-color: rgba(245, 135, 135, 0.9);
-  box-shadow: 0 0 0 1px rgba(245, 135, 135, 0.3);
+  border-color: var(--danger-soft);
+  box-shadow: 0 0 0 1px var(--shadow-color);
 }
 
 .modal-optsdlg .roomopts-link-types {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--hairline);
   border-radius: 6px;
   padding: 0.55em 0.7em 0.65em;
   margin: 0;
@@ -2393,7 +2393,7 @@
   flex-direction: column;
   gap: 0.55rem;
   padding: 0.65rem 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--hairline);
   border-radius: 6px;
 }
 
@@ -2402,8 +2402,8 @@
   max-width: 22rem;
   padding: 0.4em 0.55em;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--hairline);
+  background: var(--surface-1);
   color: inherit;
   font: inherit;
 }
@@ -2507,7 +2507,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--overlay-bg);
 }
 
 /*
@@ -2521,7 +2521,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--overlay-bg);
 }
 
 .modal-archiveviewer {
@@ -2559,8 +2559,8 @@
   max-width: 22em;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.2);
+  border-right: 1px solid var(--hairline);
+  background: var(--surface-1);
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -2570,7 +2570,7 @@
   align-items: center;
   gap: 0.35em;
   padding: 0.45em 0.55em;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--hairline);
   flex-shrink: 0;
 }
 
@@ -2583,7 +2583,7 @@
 .modal-archiveviewer .av-root-label {
   font-size: 0.82em;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-fg);
   white-space: nowrap;
   cursor: pointer;
   flex-shrink: 0;
@@ -2615,11 +2615,11 @@
 }
 
 .modal-archiveviewer .av-tree-item:hover {
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--surface-1);
 }
 
 .modal-archiveviewer .av-tree-item.is-checked {
-  background: rgba(var(--accent-rgb, 100, 140, 220), 0.18);
+  background: var(--accent-soft);
 }
 
 .modal-archiveviewer .av-tree-cb {
@@ -2631,7 +2631,7 @@
 .modal-archiveviewer .av-tree-expander {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-fg);
   cursor: pointer;
   font-size: 0.7em;
   padding: 0 0.2em;
@@ -2647,7 +2647,7 @@
   border: none;
   box-shadow: none;
   outline: none;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-fg);
 }
 
 .modal-archiveviewer .av-tree-expander-leaf {
@@ -2671,7 +2671,7 @@
 
 .modal-archiveviewer .av-tree-count {
   font-size: 0.72em;
-  color: rgba(255, 255, 255, 0.38);
+  color: var(--text-fg);
   margin-left: auto;
   flex-shrink: 0;
 }
@@ -2689,7 +2689,7 @@
   align-items: center;
   gap: 0.35em;
   padding: 0.45em 0.65em;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--hairline);
   flex-shrink: 0;
 }
 
@@ -2714,36 +2714,36 @@
 /* Folder rows in the file list use 3 columns (no path column) */
 .modal-archiveviewer .av-file-item.av-file-folder {
   grid-template-columns: 1.4em 1fr auto;
-  background: rgba(255, 255, 255, 0.03);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--hairline);
   font-style: normal;
 }
 
 .modal-archiveviewer .av-file-item.av-file-folder .av-file-name {
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-fg);
 }
 
 .modal-archiveviewer .av-file-item.av-file-folder .av-file-name::before {
   content: "▸\20";
   font-style: normal;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-fg);
 }
 
 .modal-archiveviewer .av-file-item.av-file-folder:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-2);
 }
 
 .modal-archiveviewer .av-file-item.av-file-folder.is-checked {
-  background: rgba(var(--accent-rgb, 100, 140, 220), 0.2);
+  background: var(--accent-soft);
 }
 
 .modal-archiveviewer .av-file-item:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-1);
 }
 
 .modal-archiveviewer .av-file-item.is-checked {
-  background: rgba(var(--accent-rgb, 100, 140, 220), 0.14);
+  background: var(--accent-soft);
 }
 
 .modal-archiveviewer .av-file-cb {
@@ -2761,7 +2761,7 @@
 
 .modal-archiveviewer .av-file-path {
   font-size: 0.72em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-fg);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2770,7 +2770,7 @@
 
 .modal-archiveviewer .av-file-size {
   font-size: 0.78em;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-fg);
   white-space: nowrap;
   text-align: right;
 }
@@ -2778,7 +2778,7 @@
 .modal-archiveviewer .av-files-empty {
   padding: 1.5em 1em;
   text-align: center;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-fg);
   font-size: 0.88em;
 }
 
@@ -2786,8 +2786,8 @@
 .modal-archiveviewer .av-status {
   padding: 0.5em 0.85em;
   font-size: 0.85em;
-  color: rgba(255, 255, 255, 0.6);
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--text-fg);
+  border-top: 1px solid var(--hairline);
   flex-shrink: 0;
 }
 
@@ -2796,25 +2796,25 @@
 }
 
 .modal-archiveviewer .av-status.is-error {
-  color: rgba(255, 160, 150, 0.95);
-  border-top-color: rgba(255, 120, 100, 0.28);
+  color: var(--danger);
+  border-top-color: var(--danger-soft);
 }
 
 /* Shared header controls */
 .modal-archiveviewer .av-select-info {
   flex: 1 1 0;
   font-size: 0.8em;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-fg);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .modal-archiveviewer .av-ctrl-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
   border-radius: 3px;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--text-fg);
   cursor: pointer;
   font-size: 0.78em;
   padding: 0.2em 0.5em;
@@ -2824,7 +2824,7 @@
 }
 
 .modal-archiveviewer .av-ctrl-btn:hover {
-  background: rgba(255, 255, 255, 0.13);
+  background: var(--surface-2);
 }
 
 @media (max-width: 640px) {
@@ -2837,22 +2837,22 @@
     max-width: 100%;
     max-height: 12em;
     border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--hairline);
   }
 }
 
 /* Search row */
 .modal-archiveviewer .av-search-row {
   padding: 0.3em 0.65em 0.25em;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--hairline);
   flex-shrink: 0;
 }
 
 .modal-archiveviewer .av-search {
   width: 100%;
   box-sizing: border-box;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
   border-radius: 3px;
   color: var(--text-fg);
   font-size: 0.82em;
@@ -2861,12 +2861,12 @@
 }
 
 .modal-archiveviewer .av-search:focus {
-  border-color: rgba(var(--accent-rgb, 100, 140, 220), 0.55);
-  background: rgba(0, 0, 0, 0.45);
+  border-color: var(--accent-soft);
+  background: var(--surface-1);
 }
 
 .modal-archiveviewer .av-search::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-fg);
 }
 
 /* Image hover preview popup */
@@ -2880,9 +2880,9 @@
   max-height: 220px;
   border-radius: 4px;
   overflow: hidden;
-  background: #111;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  background: var(--dark-bg);
+  border: 1px solid var(--hairline);
+  box-shadow: 0 4px 16px var(--shadow-color);
   z-index: 50;
   pointer-events: none;
 }
@@ -2903,7 +2903,7 @@
 .modal-requestboard .rb-summary {
   margin-bottom: 0.6rem;
   font-size: 0.9em;
-  color: rgba(230, 230, 230, 0.85);
+  color: var(--text-fg);
 }
 .modal-requestboard .rb-filters {
   display: flex;
@@ -2911,17 +2911,17 @@
   margin-bottom: 0.75rem;
 }
 .modal-requestboard .rb-filter-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: rgba(230, 230, 230, 0.9);
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  color: var(--text-fg);
   border-radius: 999px;
   padding: 0.25rem 0.7rem;
   cursor: pointer;
   font-size: 0.85em;
 }
 .modal-requestboard .rb-filter-btn.active {
-  background: rgba(255, 255, 255, 0.45);
-  box-shadow: rgb(0 0 0 / 75%) 0 0 6px 0 inset;
+  background: var(--surface-3);
+  box-shadow: var(--shadow-color) 0 0 6px 0 inset;
 }
 .modal-requestboard .rb-share {
   margin-left: auto;
@@ -2948,9 +2948,9 @@
   gap: 0.5rem;
   align-items: center;
   padding: 0.4rem 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--hairline);
   border-radius: 6px;
-  background: rgba(0, 0, 0, 0.18);
+  background: var(--surface-1);
 }
 .modal-requestboard .rb-status {
   font-size: 0.75rem;
@@ -2959,10 +2959,10 @@
   letter-spacing: 0.04em;
 }
 .modal-requestboard .rb-status-open .rb-status {
-  color: rgba(255, 200, 120, 0.95);
+  color: var(--danger);
 }
 .modal-requestboard .rb-status-fulfilled .rb-status {
-  color: rgba(140, 220, 160, 0.95);
+  color: var(--success);
 }
 .modal-requestboard .rb-name {
   overflow: hidden;
@@ -2982,5 +2982,44 @@
 .modal-requestboard .rb-empty {
   padding: 1.2rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-fg);
 }
+.modal-upload .modal-body { display: grid; gap: 0.8rem; width: min(32rem, 80vw); }
+.modal-upload input { box-sizing: border-box; width: 100%; min-height: 44px; }
+.modal-torrent { width: min(900px, calc(100vw - 1rem)); max-width: calc(100vw - 1rem); }
+.modal-torrent .modal-body { display: block; overflow: auto; max-height: 70dvh; padding: 1rem; }
+.torrent-cover { max-width: 180px; max-height: 220px; border-radius: 6px; }
+.torrent-fields { display: grid; grid-template-columns: minmax(7rem, 1fr) minmax(0, 3fr); gap: 0.6rem 1rem; font-size: 0.85rem; }
+.torrent-fields dt { color: var(--dark-fg); text-transform: capitalize; }
+.torrent-fields dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.torrent-actions { display: flex; flex-wrap: wrap; gap: 1rem; padding-block: 0.5rem; }
+.modal-torrent pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.8rem; }
+.torrent-info { padding: 0; width: 32px; min-width: 32px; height: 32px; border: 1px solid var(--hairline); border-radius: 5px; background: var(--surface-1); color: var(--text-fg); }
+#links > .file > .detail { align-items: center; gap: 0.3rem; width: auto; }
+#links > .file > .name { text-decoration: none; }
+@media (max-width: 480px) { .torrent-fields { grid-template-columns: 1fr; gap: 0.3rem; } .torrent-fields dd { margin-bottom: 0.6rem; } }
+/* Upload uses the same restrained panel, field and footer system as requests. */
+.modal-upload { width: min(38rem, calc(100vw - 1.5rem)); max-width: calc(100vw - 1.5rem); border: 1px solid var(--hairline); border-radius: 10px; }
+.modal-upload .modal-body { box-sizing: border-box; width: 100%; display: grid; gap: 0.65rem; padding: 1.25rem; overflow: auto; }
+.modal-upload .upload-dropzone { display: grid; place-items: center; gap: 0.5rem; min-height: 180px; padding: 1.4rem; background: var(--surface-1); color: var(--text-fg); border: 1px dashed var(--control-border-hover); border-radius: 8px; font: inherit; cursor: pointer; }
+.modal-upload .upload-dropzone:hover { background: var(--surface-2); border-color: var(--accent); }
+.upload-dropzone-icon { font-size: 1.7rem; color: var(--accent); }
+.upload-dropzone strong { font-size: 1rem; font-weight: 600; }
+.upload-dropzone span:not(.upload-dropzone-icon), .upload-dropzone small { font-size: 0.8rem; color: var(--dark-fg); }
+.upload-divider { display: flex; align-items: center; gap: 0.7rem; padding-block: 0.5rem; color: var(--dark-fg); font-size: 0.73rem; }
+.upload-divider::before, .upload-divider::after { content: ''; height: 1px; background: var(--hairline); flex: 1; }
+.modal-upload label { font-size: 0.85rem; font-weight: 500; }
+.modal-upload #torrent-upload-url { box-sizing: border-box; width: 100%; min-height: 44px; padding: 0.65rem; border: 1px solid var(--hairline); border-radius: 6px; font: inherit; font-size: 0.85rem; }
+.modal-upload #torrent-upload-url[aria-invalid='true'] { border-color: var(--danger); }
+.modal-upload .upload-hint { margin: 0; font-size: 0.75rem; line-height: 1.6; color: var(--dark-fg); }
+.modal-upload .upload-feedback { margin: 0; color: var(--danger); font-size: 0.8rem; line-height: 1.5; }
+.modal-upload .upload-feedback:empty { display: none; }
+.modal-upload .modal-buttons { display: flex; flex-direction: row; justify-content: flex-end; gap: 0.5rem; padding: 0.8rem 1.25rem; border-top: 1px solid var(--hairline); }
+.modal-upload .modal-button { margin: 0; padding: 0.5rem 0.8rem; min-height: 40px; border: 1px solid var(--hairline); border-radius: 6px; font-size: 0.8rem; }
+.modal-upload .modal-button-default { background: var(--accent-soft); }
+.modal-upload :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 480px) { .modal-upload .modal-body { padding: 1rem; } .modal-upload .upload-dropzone { min-height: 145px; padding: 1rem; } }
+.modal-upload .upload-dropzone.is-dragging { background: var(--accent-soft); border: 2px solid var(--accent); box-shadow: inset 0 0 0 3px var(--panel-bg); }
+.modal-upload .upload-feedback { color: var(--dark-fg); }
+.modal-upload .upload-feedback.is-error { color: var(--danger); }
+@media (prefers-reduced-motion: reduce) { .modal-upload * { transition: none; } }

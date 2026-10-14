@@ -20,13 +20,14 @@ const SOURCE_BYTES = Buffer.from(
 );
 
 function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function seedRoom(roomId) {
   require.main.require = createRequire(SERVER);
   const { Room } = require("./lib/room");
   const { ingestFromBuffer } = require("./lib/upload");
+
   const room = await Room.get(roomId);
   if (!room) {
     throw new Error(`Seed room not found: ${roomId}`);
@@ -212,8 +213,8 @@ async function api(baseUrl, method, pathname, body) {
   const value = await response.json().catch(() => ({}));
   if (!response.ok || value.err || value.error) {
     throw new Error(
-      `${method} ${pathname} failed (${response.status}): ` +
-        JSON.stringify(value),
+      `${method} ${pathname} failed (${response.status}): ${
+        JSON.stringify(value)}`,
     );
   }
   return value;
@@ -229,7 +230,7 @@ async function waitForRemoteFile(baseUrl, roomId) {
       `/files?roomid=${encodeURIComponent(roomId)}`,
     );
     const match = (latest.files || []).find(
-      (file) => file.name === "pf2-federation-smoke.pdf",
+      file => file.name === "pf2-federation-smoke.pdf",
     );
     if (match) {
       return { match, latest };
@@ -260,7 +261,7 @@ async function main() {
     redisDatabaseSize(sourceRedis),
     redisDatabaseSize(destinationRedis),
   ]);
-  if (sizes.some((size) => size !== 0)) {
+  if (sizes.some(size => size !== 0)) {
     throw new Error(
       "Federation smoke Redis databases must be empty and dedicated to this test",
     );
@@ -368,7 +369,7 @@ async function main() {
       `/files?roomid=${encodeURIComponent(sourceRoom)}`,
     );
     assert.deepStrictEqual(
-      (sourceFiles.files || []).map((file) => file.name).sort(),
+      (sourceFiles.files || []).map(file => file.name).sort(),
       ["pf2-federation-smoke.pdf", "unrelated-release.txt"],
       "Both source fixtures must be visible before federation begins",
     );
@@ -395,7 +396,7 @@ async function main() {
     );
     assert.strictEqual(
       (latest.files || []).some(
-        (file) => file.name === "unrelated-release.txt",
+        file => file.name === "unrelated-release.txt",
       ),
       false,
       "Source-side rules must remove non-matching files",
@@ -422,17 +423,17 @@ async function main() {
     );
   }
   catch (error) {
-    const logs = [sourceProcess, destinationProcess]
-      .filter(Boolean)
-      .map((child) => {
+    const logs = [sourceProcess, destinationProcess].
+      filter(Boolean).
+      map(child => {
         try {
           return fs.readFileSync(child.logPath, "utf8").slice(-6000);
         }
         catch (_) {
           return "";
         }
-      })
-      .filter(Boolean);
+      }).
+      filter(Boolean);
     if (logs.length) {
       error.message += `\nServer log tails:\n${logs.join("\n---\n")}`;
     }
@@ -452,15 +453,15 @@ async function main() {
 }
 
 if (process.argv[2] === "--seed") {
-  seedRoom(process.argv[3])
-    .then(() => process.exit(0))
-    .catch((error) => {
+  seedRoom(process.argv[3]).
+    then(() => process.exit(0)).
+    catch(error => {
       console.error(error);
       process.exit(1);
     });
 }
 else {
-  main().catch((error) => {
+  main().catch(error => {
     console.error(error);
     process.exitCode = 1;
   });

@@ -9,11 +9,16 @@ Plugin system docs live under **`../core/plugins/`** (design + operator guides).
 | [INTRODUCTION.md](./INTRODUCTION.md) | What Dicefiles is, use cases, getting started |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | Dev setup, PR expectations, quality bar |
 | [FUTURE_DEVELOPMENT_PLAN.md](./FUTURE_DEVELOPMENT_PLAN.md) | Product backlog — checked = shipped, open = proposed |
+| [AUDIT_2026-10-14.md](./AUDIT_2026-10-14.md) | Maintenance findings, dependency results, MCP decision, and priorities |
 | [FEDERATION.md](./FEDERATION.md) | Shipped trusted-host federation protocol, setup, and security model |
-| [MULTI_VOLUME_STORAGE.md](./MULTI_VOLUME_STORAGE.md) | Proposal: balanced and fallback multi-volume storage |
-| [PASSWORD_PROTECTED_ROOMS.md](./PASSWORD_PROTECTED_ROOMS.md) | Proposal: rotating shared and personal room access credentials |
-| [MULTI_HOST_REMOTE_IMPORTS.md](./MULTI_HOST_REMOTE_IMPORTS.md) | v1.4.6 proposal: Gofile and safe long-tail remote imports |
+| [MULTI_VOLUME_STORAGE.md](./MULTI_VOLUME_STORAGE.md) | Multi-volume placement, migrations, drain/rebalance and rollback |
+| [PASSWORD_PROTECTED_ROOMS.md](./PASSWORD_PROTECTED_ROOMS.md) | Rotating shared, cohort and personal room access credentials |
+| [MULTI_HOST_REMOTE_IMPORTS.md](./MULTI_HOST_REMOTE_IMPORTS.md) | Gofile, fair scheduling and optional guarded remote import adapters |
 | [UI_STYLE.md](./UI_STYLE.md) | Room UI components and styling rules |
+| [ENVIRONMENT.md](./ENVIRONMENT.md) | Private environment files, flags, provider keys and precedence |
+| [THEMES.md](./THEMES.md) | 34 appearance palettes, token roles and theme development |
+| [TORRENTS.md](./TORRENTS.md) | Magnet/torrent ingestion, metadata, limits and cover discovery |
+| [DOCKER.md](./DOCKER.md) | Build/run recipe, persistent volumes and GHCR publication |
 | [AI_UI_SKILLS.md](./AI_UI_SKILLS.md) | Agent guide for UI audit / polish / themes |
 | [PERF_NOTES.md](./PERF_NOTES.md) | Virtualization and performance notes (1.4.x) |
 | [ACHIEVEMENT_SYSTEM.md](./ACHIEVEMENT_SYSTEM.md) | Profile trophy / achievement design |
