@@ -85,7 +85,7 @@ test("tablet rows and compact phone filename space are explicit", () => {
   expect(files).toContain("flex: 1 1 0; min-width: 0");
   expect(gallery).toContain("#gallery_close,\n#gallery_download");
   expect(gallery).toContain("inset-inline-end: calc(0.75rem + 50px); opacity: 1;");
-  expect(fs.readFileSync(path.join(root, "views/room.ejs"), "utf8")).toContain('id="gallery_download" class="i-download" type="button"');
+  expect(fs.readFileSync(path.join(root, "views/room.ejs"), "utf8")).toContain("id=\"gallery_download\" class=\"i-download\" type=\"button\"");
 });
 
 test("gallery paging does not inherit the global nav full height", () => {
