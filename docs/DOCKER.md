@@ -45,6 +45,15 @@ docker compose --env-file .env.docker pull
 docker compose --env-file .env.docker up -d --no-build
 ```
 
+The unreleased development channel is `:preview`. It includes the October
+maintenance, themes, torrent metadata and upload dialog changes. It is separate
+from the last tagged source release, v1.4.6; pin its digest for reproducible use.
+
+The October 15 validated preview digest is
+`sha256:1588689b47aafe146d675734332758f0fc7090adf4708b6b33fcc3ee6ea6134e`.
+Use `ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing@sha256:1588689b47aafe146d675734332758f0fc7090adf4708b6b33fcc3ee6ea6134e`
+to pin that build instead of following the moving channel.
+
 For a private package, authenticate with a classic GitHub token that has
 `read:packages`, using `docker login ghcr.io -u YOUR_USER --password-stdin`.
 Public packages can be pulled without authentication.

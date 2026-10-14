@@ -29,8 +29,8 @@ relevant checks, documentation and the changelog; unfinished acceptance is expli
    with a majority of dark palettes.
 5. [x] Magnet/torrent link and file ingestion, structured metadata and safe image discovery.
 6. [x] Docker image, Compose recipe, README instructions and GHCR publishing workflow.
-   - [ ] Confirm remote Actions build and GHCR publication.
-7. [ ] Reconcile earlier partial work, documentation and changelog; complete
+   - [x] Confirm remote Actions build and GHCR publication (AMD64/ARM64 dated preview).
+7. [x] Reconcile earlier partial work, documentation and changelog; complete
    regression, browser and stable-service acceptance for the combined changes.
 8. [x] Polish Upload with a prominent drop zone, concise copy, keyboard handling
    and right-aligned Cancel/Import link actions. Native chooser and synchronous
