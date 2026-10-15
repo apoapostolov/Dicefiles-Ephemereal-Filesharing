@@ -546,6 +546,8 @@ Fetch one or more public URLs server-side and store them as uploads in a room.
 Max 100 MB per file, 60 second server-side fetch timeout. Magnet/torrent inputs
 import metadata only; see [TORRENTS.md](docs/TORRENTS.md). The MCP wrapper sends
 the batch body as an array with `roomid` on each item.
+When enabled by the operator, public protocol discovery can add verified contents
+and reported tracker availability. The server never requests torrent payload pieces.
 
 - **Response**: `{ ok, results: [{ url, key?, err? }] }`
 

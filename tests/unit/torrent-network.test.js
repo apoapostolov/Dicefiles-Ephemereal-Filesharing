@@ -124,6 +124,13 @@ test("already cancelled peer lookups never create a socket", async () => {
   expect(connect).not.toHaveBeenCalled();
 });
 
+test.each(["224.0.0.251", "239.255.255.250", "255.255.255.255", "198.18.0.1", "ff02::1", "::7f00:1"])("blocks non-unicast or reserved contact %s before sending UDP", async host => {
+  expect(validPeer({ host, port: 6881 })).toBe(false);
+  const socketFactory = jest.fn();
+  await expect(udpRequest(host, 6881, Buffer.alloc(16), { resolve: async () => ({ address: host, family: host.includes(":") ? 6 : 4 }), socketFactory })).rejects.toThrow();
+  expect(socketFactory).not.toHaveBeenCalled();
+});
+
 test("v2 peer metadata verifies the full SHA-256 identity", async () => {
   const v2 = encode({ "name": "V2 book", "meta version": 2, "piece length": 16384,
     "file tree": { "book.txt": { "": { "length": 4, "pieces root": Buffer.alloc(32, 1) } } } });

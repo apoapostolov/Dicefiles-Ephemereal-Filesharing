@@ -71,7 +71,8 @@ or hash. Artwork is best effort; no paid lookup or image-search key is required.
   cache interval. Identical pending lookups coalesce while retaining each item's
   source name, description, artwork and magnet parameters.
 - Details requests are restricted to the caller's visible room files or live
-  links belonging to that room; hidden/foreign/expired items cannot trigger lookup.
+  links belonging to that room; items hidden from that caller, foreign items and
+  expired links cannot trigger lookup.
 - Parsing: 16 KiB magnet URI, 2 MiB `.torrent`, 2,000 files, 40 bencode levels,
   100,000 values and 512 KiB structured display metadata. Network messages have
   separate smaller bounds. Unsafe paths, duplicate/unsorted torrent dictionary

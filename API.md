@@ -1068,6 +1068,20 @@ summarize any unusual patterns."` Or build a simple rule: if more than 5
   `meta.torrent` (v1/v2 hashes, files, trackers and other fields). No torrent payload
   is downloaded. See [torrent metadata](docs/TORRENTS.md) for limits and discovery.
 
+Optional discovery fields under `meta.torrent`:
+
+| Field | Meaning |
+| --- | --- |
+| `files`, `fileCount`, `totalSize` | Verified paths/sizes and totals when available; an empty list is unresolved metadata. |
+| `availability` | `seeders`, `leechers`, `completed` are reported maxima or `null` when unknown; `responding`/`total` describe checked trackers. |
+| `trackerStatus` | Checked host/protocol, `responding` or `unavailable` state, reported counts and `checkedAt`; paths/passkeys are omitted. |
+| `discovery` | `state`: `complete`, `unavailable`, `disabled` or `busy`; `source` records contents provenance and `checkedAt` is Unix milliseconds or `null`. |
+| `imageDataUrl` | Optional bounded JPEG artwork; no browser fetch to the source is needed. |
+
+These fields are best effort snapshots, not download guarantees. Online protocol
+lookup is controlled by `DICEFILES_TORRENT_DISCOVERY`; original metadata files and
+magnet links remain usable when it is disabled or external services do not respond.
+
 ```json
 {
   "ok": true,

@@ -132,6 +132,10 @@ remain available. Native tools are installed so operators can validate a dedicat
 sandbox policy later. The image includes Debian's non-free `unrar` package;
 its upstream license applies separately from Dicefiles' MIT source license.
 
+Public tracker/DHT/peer metadata discovery uses Node networking and does not
+require native tools. Set `DICEFILES_TORRENT_DISCOVERY=false` in `.env.docker`
+to disable that outbound traffic; see [torrent metadata](./TORRENTS.md).
+
 For untrusted/public uploads needing the full native preview stack, use the
 host deployment with functioning Firejail, or validate a dedicated container
 sandbox policy before enabling `DICEFILES_NATIVE_TOOLS=true`. Do not solve

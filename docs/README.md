@@ -17,7 +17,7 @@ Plugin system docs live under **`../core/plugins/`** (design + operator guides).
 | [UI_STYLE.md](./UI_STYLE.md) | Room UI components and styling rules |
 | [ENVIRONMENT.md](./ENVIRONMENT.md) | Private environment files, flags, provider keys and precedence |
 | [THEMES.md](./THEMES.md) | 34 appearance palettes, token roles and theme development |
-| [TORRENTS.md](./TORRENTS.md) | Magnet/torrent ingestion, metadata, limits and cover discovery |
+| [TORRENTS.md](./TORRENTS.md) | Magnet/torrent ingestion, contents, tracker availability, artwork and discovery limits |
 | [DOCKER.md](./DOCKER.md) | Build/run recipe, persistent volumes and GHCR publication |
 | [AI_UI_SKILLS.md](./AI_UI_SKILLS.md) | Agent guide for UI audit / polish / themes |
 | [PERF_NOTES.md](./PERF_NOTES.md) | Virtualization and performance notes (1.4.x) |
