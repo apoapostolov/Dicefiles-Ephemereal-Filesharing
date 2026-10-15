@@ -49,9 +49,10 @@ The unreleased development channel is `:preview`. It includes the October
 maintenance, themes, torrent metadata and upload dialog changes. It is separate
 from the last tagged source release, v1.4.6; pin its digest for reproducible use.
 
-The October 15 validated preview digest is
-`sha256:1588689b47aafe146d675734332758f0fc7090adf4708b6b33fcc3ee6ea6134e`.
-Use `ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing@sha256:1588689b47aafe146d675734332758f0fc7090adf4708b6b33fcc3ee6ea6134e`
+The October 15 validated preview, including public torrent discovery and the live
+worker metadata fix, has digest
+`sha256:488d19fec7f8bf83d85561112bce673e49aa722822dc8666e468711f4d4e8f4e`.
+Use `ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing@sha256:488d19fec7f8bf83d85561112bce673e49aa722822dc8666e468711f4d4e8f4e`
 to pin that build instead of following the moving channel.
 
 For a private package, authenticate with a classic GitHub token that has

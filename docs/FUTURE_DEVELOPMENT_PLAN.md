@@ -44,8 +44,11 @@ relevant checks, documentation and the changelog; unfinished acceptance is expli
 2. [x] Replace the Appearance gear with a dedicated theme/palette icon.
 3. [x] Use compact mobile poster/page-count pills with complete details on tap,
    protected widths and borderless uploader glyphs in the dense file list.
-4. [ ] Reconcile documentation and changelog, run relevant regressions and browser
+4. [x] Reconcile documentation and changelog, run relevant regressions and browser
    acceptance, rebuild/restart the stable service and refresh the container preview.
+   Final acceptance: 955 tests, Node 22/24 CI, anonymous multi-architecture GHCR
+   pull and non-root Compose startup/health. See the audit and Docker guide for
+   the validated digest and deployment-specific acceptance limits.
 
 ## Maintenance round (unreleased)
 
