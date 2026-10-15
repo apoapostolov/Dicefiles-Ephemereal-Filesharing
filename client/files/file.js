@@ -4,6 +4,7 @@ import { APOOL } from "../animationpool";
 import BaseFile from "../file";
 import { TorrentMetadataModal } from "../torrent-metadata";
 import registry from "../registry";
+import { compactTag } from "../compact-tag";
 import { dom, nukeEvent, sort, toPrettyDuration, toPrettySize } from "../util";
 import { REMOVALS, TTL } from "./tracker";
 
@@ -501,6 +502,9 @@ export default class File extends BaseFile {
           window.open(`/u/${account}`, "_blank");
         });
       }
+      if (["usernick", "user", "pages"].includes(tn)) {
+        compactTag(tag, tn === "pages" ? `${tv} ${Number(tv) === 1 ? "page" : "pages"}` : tag.getAttribute("aria-label"));
+      }
       this.tagsEl.appendChild(tag);
     }
 
@@ -601,7 +605,7 @@ export default class File extends BaseFile {
   onclick(e) {
     try {
       if (this.meta?.torrent && !e.altKey && !e.shiftKey && !e.metaKey) {
-        registry.roomie.showModal(new TorrentMetadataModal(this.meta.torrent, this.name, this.url)).catch(() => {});
+        registry.roomie.showModal(new TorrentMetadataModal(this.meta.torrent, this.name, this.url, { kind: "file", key: this.key })).catch(() => {});
         return nukeEvent(e);
       }
       if (this.isRequest) {

@@ -37,6 +37,16 @@ relevant checks, documentation and the changelog; unfinished acceptance is expli
    drop collection are checked; operating-system drag acceptance remains manual
    because the in-app browser does not automate file drag events.
 
+## User-focused torrent and mobile follow-up (unreleased)
+
+1. [x] Research metadata discovery and implement bounded public peer metadata,
+   tracker availability checks, caching and a useful contents-focused torrent view.
+2. [x] Replace the Appearance gear with a dedicated theme/palette icon.
+3. [x] Use compact mobile poster/page-count pills with complete details on tap,
+   protected widths and borderless uploader glyphs in the dense file list.
+4. [ ] Reconcile documentation and changelog, run relevant regressions and browser
+   acceptance, rebuild/restart the stable service and refresh the container preview.
+
 ## Maintenance round (unreleased)
 
 - [x] Fix MCP URL-upload bodies, bounded downloads, error reporting, and retry hints

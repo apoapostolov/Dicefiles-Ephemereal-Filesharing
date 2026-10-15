@@ -13,11 +13,14 @@
   Common errors provide plain-language recovery instructions.
 - A private `.env` supports ordered, validated flags and credentials. Giphy
   searches run on the server so provider keys stay out of browser assets.
-- Appearance offers 34 persistent palettes (26 dark, 8 light), with shared color
+- Appearance uses a palette icon and offers 34 persistent palettes (26 dark, 8 light), with shared color
   variables across rooms, galleries, menus, readers and account/status pages.
-- Upload accepts magnet links and torrent URLs/files, with v1/v2 hashes,
-  structured metadata, file lists and bounded cover discovery. Links Archive
-  recognizes magnets; torrent content is opened in the user's torrent application.
+- Upload accepts magnets and torrent URLs/files. Torrent details prioritize
+  searchable contents, sizes, artwork and reported tracker availability. Bounded
+  server discovery can retrieve verified file lists from peers without downloading
+  content; operators can disable protocol lookups. Links Archive recognizes magnets.
+- Phone poster pills use a person glyph; tapping reveals the full name. Page-count
+  pills use a document glyph and number, preserving filename space.
 - A production Docker image, persistent Compose stack and GHCR build workflow
   provide container deployment, with documented native sandbox limitations.
 - Phone toolbars use separate Sort and View dropdowns; all filter icons fit

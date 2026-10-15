@@ -30,7 +30,8 @@ addEventListener("storage", event => {
 addEventListener("DOMContentLoaded", () => {
   const trigger = document.createElement("button");
   trigger.type = "button";
-  trigger.className = "theme-launcher i-pref";
+  trigger.className = "theme-launcher";
+  trigger.innerHTML = "<svg class=\"theme-icon\" viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1.5-3.3 1.7 1.7 0 0 1 1.3-2.8h1.4A3.8 3.8 0 0 0 21 11.1 8.7 8.7 0 0 0 12 3Z\"/><circle cx=\"7.5\" cy=\"10\" r=\".9\" fill=\"currentColor\"/><circle cx=\"11\" cy=\"6.8\" r=\".9\" fill=\"currentColor\"/><circle cx=\"15.6\" cy=\"7.7\" r=\".9\" fill=\"currentColor\"/><circle cx=\"6.8\" cy=\"14.4\" r=\".9\" fill=\"currentColor\"/></svg>";
   trigger.title = "Appearance";
   trigger.setAttribute("aria-label", "Appearance");
   const host = document.querySelector("#main-right") || document.body;

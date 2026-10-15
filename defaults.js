@@ -12,6 +12,8 @@ const LINUX = os.platform() === "linux";
 // Overwrite with a .config.json or config.js (module)
 
 module.exports = {
+  // Bounded public tracker/DHT metadata discovery; never downloads file payloads.
+  torrentDiscovery: true,
   // Your site's name
   name: "Dicefiles",
 

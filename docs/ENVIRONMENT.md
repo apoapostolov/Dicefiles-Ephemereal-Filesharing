@@ -27,7 +27,7 @@ secrets. Restart the service after changes; rebuilding assets is unnecessary.
 | Identity | `DICEFILES_NAME`, `DICEFILES_MOTTO`, `DICEFILES_PUBLIC_BASE_URL` | `name`, `motto`, `publicBaseUrl` |
 | Credentials | `DICEFILES_SECRET`, `DICEFILES_STATUS_TOKEN` | `secret`, `statusPageToken` |
 | Storage | `DICEFILES_UPLOADS`, `REDIS_URL` | `uploads`, `redis_url` |
-| Flags | `DICEFILES_JAIL`, `DICEFILES_NATIVE_TOOLS`, `DICEFILES_PUBLIC_ROOMS`, `DICEFILES_LINK_COLLECTION`, `DICEFILES_STATUS_PRIVATE` | `jail`, `nativeTools`, `publicRooms`, `linkCollection`, `statusPagePrivate` |
+| Flags | `DICEFILES_JAIL`, `DICEFILES_NATIVE_TOOLS`, `DICEFILES_PUBLIC_ROOMS`, `DICEFILES_LINK_COLLECTION`, `DICEFILES_STATUS_PRIVATE`, `DICEFILES_TORRENT_DISCOVERY` | `jail`, `nativeTools`, `publicRooms`, `linkCollection`, `statusPagePrivate`, `torrentDiscovery` |
 | Providers | `DICEFILES_GIPHY_API_KEY`, `DICEFILES_OPENGRAPH_API_KEY` | `giphyApiKey`, `opengraphIoKey` |
 | Automation | `DICEFILES_AUTOMATION_KEYS` | `automationApiKeys` (JSON array) |
 
@@ -36,6 +36,16 @@ random secret of at least 32 bytes. Keep it stable across workers and restarts.
 Advanced nested settings (storage volumes, federation peers, plugins, credentials)
 remain in `.config.json`; see `defaults.js` and the relevant operator guides.
 Runtime UI changes to a setting overridden by env will revert on restart.
+
+## Torrent discovery
+
+`DICEFILES_TORRENT_DISCOVERY=true` (default) enables bounded public tracker,
+DHT and peer metadata queries on torrent ingestion and details checks. This
+reveals the server's IP and requested torrent hash to those services. No payload
+is downloaded or seeded. Private `.torrent` files never use DHT. A bare magnet
+cannot reveal its private flag before metadata is available. Disable the flag
+where that outbound traffic is unsuitable. HTTP exact-source and cover discovery
+remain guarded HTTP features. See [torrent metadata](./TORRENTS.md) for limits.
 
 ## Giphy
 

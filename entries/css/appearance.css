@@ -1,4 +1,5 @@
-.theme-launcher { width: 34px; height: 34px; border: 0; border-radius: 6px; background: transparent; color: var(--text-fg); cursor: pointer; }
+.theme-launcher { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--text-fg); cursor: pointer; }
+.theme-icon { display: block; flex: 0 0 auto; pointer-events: none; }
 #room > nav#main > #main-right { flex: 0 0 34px; width: 34px; }
 .theme-launcher:hover { background: var(--surface-2); }
 .theme-launcher-floating { position: fixed; bottom: 1rem; right: 1rem; z-index: 100; background: var(--panel-bg); border: 1px solid var(--hairline); }

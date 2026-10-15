@@ -36,9 +36,10 @@ class FileTooltip extends Tooltip {
     const { meta = {}, resolution } = file;
     if (meta.torrent) {
       a(meta.torrent.name, "torrent");
-      a(meta.torrent.infoHashV1 || meta.torrent.infoHashV2, "info hash");
-      a(meta.torrent.fileCount || "Unknown (magnet link)", "files");
-      a(meta.torrent.metadataStatus, "metadata");
+      a(meta.torrent.fileCount || "File list pending", "contents");
+      if (meta.torrent.availability?.seeders != null) {
+        a(meta.torrent.availability.seeders, "seeders reported");
+      }
     }
     if (meta.torrentError) {
       a(meta.torrentError, "metadata warning");

@@ -2,6 +2,7 @@
 @import "files.css";
 @import "gallery.css";
 @import "modal.css";
+@import "torrent.css";
 @import "tooltip.css";
 
 body#room {

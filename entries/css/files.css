@@ -1063,6 +1063,22 @@ body.links-mode #filelist-scroller {
   color: var(--danger);
 }
 
+.compact-tag-popover { position: fixed; z-index: 6000; box-sizing: border-box; max-width: min(24rem, calc(100vw - 1rem)); padding: 0.65rem 0.8rem; border: 1px solid var(--hairline); border-radius: 7px; background: var(--panel-bg); color: var(--text-fg); box-shadow: var(--soft-shadow); font-size: 0.85rem; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; }
+.compact-tag:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+body:has(.compact-tag-popover) > .tooltip { visibility: hidden; }
+@media (max-width: 760px) {
+  #files .tags > .compact-tag.tag-user,
+  #files .tags > .compact-tag.tag-usernick,
+  #links .tags > .compact-tag.tag-user { flex: 0 0 auto; width: 1.65rem; min-width: 1.65rem; max-width: none; min-height: 1.65rem; padding: 0; font-size: 0; text-overflow: clip; overflow: visible; display: inline-flex; align-items: center; justify-content: center; }
+  #files .tags > .compact-tag.tag-user::before,
+  #files .tags > .compact-tag.tag-usernick::before,
+  #links .tags > .compact-tag.tag-user::before { content: ''; flex: 0 0 14px; width: 14px; height: 14px; background: currentColor; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8v-2a7 7 0 0 1 14 0v2Z'/%3E%3C/svg%3E") center / contain no-repeat; }
+  #files .tags > .compact-tag.tag-pages { display: inline-flex; align-items: center; gap: 0.25rem; flex-shrink: 0; max-width: none; min-height: 1.65rem; padding: 0 0.35rem; font-size: 0; text-overflow: clip; overflow: visible; }
+  #files .tags > .compact-tag.tag-pages::before { content: '\e926'; font-family: symbols; font-size: 0.85rem; }
+  #files .tags > .compact-tag.tag-pages::after { content: attr(data-tag-value); font-size: 0.72rem; }
+  #files .tags > .compact-tag .tag-new-room-member-icon { display: none; }
+}
+
 #files.gallerymode > .file.request-file > .detail > .type-pill {
   background: var(--warning-soft);
   border-color: var(--accent-soft);
@@ -1380,10 +1396,15 @@ body.links-mode #dropminder {
   #files:not(.gallerymode) > .file { box-sizing: border-box; padding: 0.35rem 0.3rem; gap: 0.2rem; }
   #files:not(.gallerymode) > .file > .name { flex: 1 1 0; min-width: 0; }
   #files:not(.gallerymode) > .file > .name > .name-text { min-width: 0; padding-right: 0; }
-  #files:not(.gallerymode) > .file > .tags { flex: 0 1 auto; max-width: 15%; min-width: 0; padding: 0; gap: 2px; }
+  #files:not(.gallerymode) > .file > .tags { flex: 0 0 auto; max-width: none; min-width: 0; padding: 0; gap: 3px; }
   #files:not(.gallerymode) > .file > .tags > .tag { margin: 0; padding: 2px; min-width: 0; max-width: 6ch; }
   #files:not(.gallerymode) > .file > .detail { flex: 0 0 auto; width: auto; max-width: 35%; gap: 2px; }
   #files:not(.gallerymode) > .file > .detail > span { flex: 0 1 auto; padding-inline: 2px; }
   #files:not(.gallerymode) > .file > .detail > .ttl { gap: 2px; }
   #files:not(.gallerymode) > .file > .icon { flex: 0 0 1.25rem; width: 1.25rem; padding: 0; font-size: 1rem; }
+  /* Override the dense row's zero-font ch limits: glyph pills must never collapse. */
+  #files:not(.gallerymode) > .file > .tags > .compact-tag.tag-user,
+  #files:not(.gallerymode) > .file > .tags > .compact-tag.tag-usernick,
+  #links > .file > .tags > .compact-tag.tag-user { box-sizing: border-box; flex: 0 0 26px; width: 26px; min-width: 26px; max-width: 26px; height: 26px; padding: 0; margin: 0; border: 0; }
+  #files:not(.gallerymode) > .file > .tags > .compact-tag.tag-pages { box-sizing: border-box; flex: 0 0 auto; min-width: 32px; max-width: none; padding: 0 5px; border: 0; }
 }

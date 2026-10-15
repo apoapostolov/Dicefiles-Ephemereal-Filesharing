@@ -58,8 +58,8 @@ has the security and client details.
   monitor health, and keep legacy content where it already lives.
 - **Choose your workspace colors.** Pick from 34 persistent themes, including
   26 dark palettes, using Appearance.
-- **Share torrent metadata.** Import magnet links and `.torrent` files, inspect
-  hashes and file lists, and open them in your torrent application.
+- **Explore torrents.** Import magnets and `.torrent` files, browse searchable
+  contents and artwork, check reported availability, and open your torrent app.
 
 <p align="center">
   <img src="images/dicefiles-books-gallery.png" alt="A Dicefiles gallery with generated book and comic covers" width="49%">

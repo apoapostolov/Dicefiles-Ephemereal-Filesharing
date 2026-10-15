@@ -2,6 +2,28 @@
 
 This document outlines the standard UI components and styling rules for Dicefiles. When adding new features, always refer to this guide to ensure consistency across the application.
 
+## Color and compact metadata conventions
+
+All component colors use shared semantic variables from the selected Appearance
+palette. Historical color values below describe the original design only; use
+`--text-fg`, `--dark-fg`, `--panel-bg`, `--surface-1/2/3`, `--hairline`, `--accent`,
+`--success` and the other established tokens rather than introducing literals.
+Appearance uses a currentColor palette SVG, separate from the settings gear.
+
+At phone widths (up to 760px), poster pills use a person glyph and page-count
+pills use a document glyph plus the number. Tap, Enter or Space reveals the
+complete accessible label in a viewport-bounded popover. Escape, outside tap,
+scroll or resize dismisses it. In the dense phone list, reserve a non-shrinking
+26px uploader target with no border and at least 32px for page count. Do not use
+`ch` width limits on glyph controls with zero-size text. Keep names intact inside this popover; desktop
+profile/filter behavior is unchanged.
+
+Torrent details lead with the content name/category, size and availability,
+then searchable contents and tracker status. Unknown values use a dash and a
+recovery message. Never display raw protocol dumps or tracker credentials.
+The modal uses semantic surface/border tokens and changes from four metric
+columns to two on phones. Refresh preserves the file search and its focus.
+
 > **Agreed standard (Feb 2026):** The filter buttons, select/delete pill, view-mode pill, and Upload button are the canonical reference for size and shape. All new buttons must match them.
 
 ## 1. Header Buttons (`#tools .btn`)

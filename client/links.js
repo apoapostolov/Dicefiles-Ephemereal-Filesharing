@@ -2,6 +2,7 @@ import EventEmitter from "events";
 import registry from "./registry";
 import Scroller from "./scroller";
 import { TorrentMetadataModal } from "./torrent-metadata";
+import { compactTag } from "./compact-tag";
 
 export default new (class Links extends EventEmitter {
   constructor() {
@@ -191,6 +192,8 @@ export default new (class Links extends EventEmitter {
     const sharerTag = document.createElement("span");
     sharerTag.className = "tag tag-user";
     sharerTag.textContent = link.sharer || "anon";
+    sharerTag.setAttribute("aria-label", `Shared by ${link.sharer || "anon"}`);
+    compactTag(sharerTag, `Shared by ${link.sharer || "anon"}`);
     tagsEl.appendChild(sharerTag);
 
     el.appendChild(tagsEl);
@@ -204,7 +207,7 @@ export default new (class Links extends EventEmitter {
       button.className = "torrent-info i-info";
       button.title = `Torrent details for ${link.name}`;
       button.setAttribute("aria-label", button.title);
-      button.onclick = () => registry.roomie.showModal(new TorrentMetadataModal(link.meta.torrent, link.name)).catch(() => {});
+      button.onclick = () => registry.roomie.showModal(new TorrentMetadataModal(link.meta.torrent, link.name, null, { kind: "link", key: link.id })).catch(() => {});
       detailEl.appendChild(button);
     }
 
