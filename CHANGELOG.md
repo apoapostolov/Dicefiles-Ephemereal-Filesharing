@@ -46,6 +46,8 @@
   allowlist. Stateless HTTP and existing stdio clients remain supported.
 - Protected-room request claims enforce access policy. Competing workers
   arbitrate claims in Redis, and clearing distributed maps removes saved values.
+- Live worker updates preserve empty metadata lists, so freshly imported magnets
+  can be checked without restarting the server.
 - Custom credentials are dropped across redirect origins. Redirected GETs no
   longer carry stale POST bodies or body headers.
 - Automation audit-log retrieval works after the server-module extraction.

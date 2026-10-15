@@ -82,6 +82,12 @@ test("source URLs reject credentials and non-HTTP schemes", async () => {
   expect(httpUrl("https://user:pass@example.test/a")).toBeNull();
   await expect(fetchTorrent("file:///secret")).rejects.toThrow("HTTP");
 });
+
+test("legacy live-worker metadata with an empty-object source list remains usable", async () => {
+  const torrent = parseMagnet(`magnet:?xt=urn:btih:${"c".repeat(40)}`);
+  torrent.exactSources = {};
+  await expect(enrichTorrent(torrent)).resolves.toMatchObject({ name: torrent.name, metadataStatus: "link-only" });
+});
 test("image discovery reads Open Graph attributes in either order", () => {
   expect(htmlMeta("<meta content=\"/cover.jpg\" property=\"og:image\"><meta property=\"og:title\" content=\"A &amp; B\">", "https://example.test/page")).toMatchObject({ title: "A & B", imageUrl: "https://example.test/cover.jpg" });
 });

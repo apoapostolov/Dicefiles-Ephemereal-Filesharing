@@ -235,4 +235,38 @@ describe("broker live redis (shipped)", () => {
       }
     }
   });
+
+  test.each(["dmap", "dmapcas", "dmapguard", "dset-add", "dset-delete"])("%s pub/sub preserves nested empty arrays and objects", async operation => {
+    if (!available) {
+      return;
+    }
+    const channel = `${KEY}:wire:${operation}`; const guard = `${channel}:guard`;
+    const redis = BROKER.getMethods("dmap", "dmapcas", "dmapguard", "dset", "hset", "del");
+    const sub = BROKER.PUB.duplicate(); await sub.connect();
+    const value = { files: [], exactSources: [], nested: [[], {}, null], text: "Quotes \" and braces } ]", enabled: false };
+    const raw = JSON.stringify(value); const key = JSON.stringify({ v: "torrent" });
+    let accept; let timer;
+    const message = new Promise((resolve, reject) => {
+      accept = resolve; timer = setTimeout(() => reject(new Error("Missing pub/sub update")), 3000);
+    });
+    try {
+      await sub.subscribe(channel, data => accept(JSON.parse(data)[0]));
+      if (operation === "dmap") {
+        await redis.dmap(channel, "other-worker", "set", key, raw);
+      }
+      else if (operation === "dmapcas") {
+        await redis.hset(channel, key, "{}"); await redis.dmapcas(channel, key, "{}", raw);
+      }
+      else if (operation === "dmapguard") {
+        await redis.hset(channel, key, "{}"); await redis.dmapguard(channel, guard, key, "{}", raw, "policy", "");
+      }
+      else {
+        await redis.dset(channel, "other-worker", operation === "dset-add" ? "add" : "delete", raw);
+      }
+      expect((await message).v).toEqual(value);
+    }
+    finally {
+      clearTimeout(timer); await sub.unsubscribe(channel); await sub.quit(); await redis.del(channel, guard);
+    }
+  });
 });

@@ -39,8 +39,10 @@ jobs:
           context: .
           load: true
           tags: dicefiles:ci
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: |
+            type=gha,scope=dicefiles-smoke
+            type=gha
+          cache-to: type=gha,scope=dicefiles-smoke,mode=max
       - name: Check preview dependencies and isolated service
         run: |
           docker run --rm dicefiles:ci node /opt/dicefiles/scripts/check-preview-tools.js
@@ -75,8 +77,10 @@ jobs:
           tags: ${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}
           sbom: true
           provenance: mode=max
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: |
+            type=gha,scope=dicefiles-multiarch
+            type=gha
+          cache-to: type=gha,scope=dicefiles-multiarch,mode=max
       - name: Verify published architectures
         if: github.event_name == 'workflow_dispatch' && inputs.publish
         env:

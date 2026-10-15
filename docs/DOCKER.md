@@ -65,6 +65,7 @@ on pull requests. After this workflow is in the repository, run it manually with
 `publish=true` and a tag. It uses the repository's `GITHUB_TOKEN` with
 `packages:write`, publishes `linux/amd64` and `linux/arm64`, and attaches SBOM and
 provenance. It does not publish automatically from pull requests.
+Smoke and multi-architecture builds retain separate caches between runs.
 
 From an authenticated GitHub CLI checkout:
 
