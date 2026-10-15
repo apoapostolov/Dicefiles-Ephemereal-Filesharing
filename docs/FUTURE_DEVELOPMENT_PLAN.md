@@ -43,8 +43,10 @@ responsive frame/control checks and PNG/PDF/ZIP gallery regression. The stable
 service and rebuilt local container return HTTP 200 from WSL and Windows.
 Live TMDB/TVDB checks pass; Trakt has fixture coverage but no configured credential
 for live acceptance. Playback still depends on reachable peers and browser codecs;
-automatic transcoding remains outside scope. This round is not yet published to
-GHCR. See [movie support](./MOVIES.md) and [the audit](./AUDIT_2026-10-14.md).
+automatic transcoding remains outside scope. Source commit `e8407ea` is published
+to GHCR's `preview` channel for AMD64 and ARM64; the immutable digest is in
+[Docker deployment](./DOCKER.md). See [movie support](./MOVIES.md) and
+[the audit](./AUDIT_2026-10-14.md).
 
 These requests extend the October maintenance round. Checkboxes include code,
 relevant checks, documentation and the changelog; unfinished acceptance is explicit.

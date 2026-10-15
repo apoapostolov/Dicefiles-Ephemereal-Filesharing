@@ -46,14 +46,16 @@ docker compose --env-file .env.docker up -d --no-build
 ```
 
 The unreleased development channel is `:preview`. It includes the October
-maintenance, themes, torrent metadata and upload dialog changes. It is separate
+maintenance, themes, movie playback/matching, torrent metadata and upload dialog changes. It is separate
 from the last tagged source release, v1.4.6; pin its digest for reproducible use.
 
-The October 15 validated preview, including public torrent discovery and the live
-worker metadata fix, has digest
-`sha256:488d19fec7f8bf83d85561112bce673e49aa722822dc8666e468711f4d4e8f4e`.
-Use `ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing@sha256:488d19fec7f8bf83d85561112bce673e49aa722822dc8666e468711f4d4e8f4e`
+The October 16 validated preview, including movie playback, automatic title
+matching and relaxed torrent availability checks, has digest
+`sha256:b583054fb63ed85814661075d7dbf83641babb268c53c70c320a77514f0fd500`.
+Use `ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing@sha256:b583054fb63ed85814661075d7dbf83641babb268c53c70c320a77514f0fd500`
 to pin that build instead of following the moving channel.
+The [publication run](https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/actions/runs/38808749637)
+builds source commit `e8407ea` for AMD64 and ARM64, with SBOM and provenance.
 
 For a private package, authenticate with a classic GitHub token that has
 `read:packages`, using `docker login ghcr.io -u YOUR_USER --password-stdin`.
