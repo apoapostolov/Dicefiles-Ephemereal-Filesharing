@@ -9,7 +9,7 @@ Working backlog of product ideas that fit self-hosted room chat + ephemeral file
 
 Plugin docs: `core/plugins/`. Formerly `feature_creep_proposal.md`.
 
-**Last updated:** 2026-10-15 — v1.4.6 is released. The maintenance round and
+**Last updated:** 2026-10-16 — v1.4.6 is released. The maintenance round and
 remaining priorities are recorded in [the October audit](./AUDIT_2026-10-14.md).
 The requested remaining maintenance and expansion work is implemented below;
 deployment-specific acceptance is tracked separately from implementation.
@@ -17,6 +17,34 @@ deployment-specific acceptance is tracked separately from implementation.
 ---
 
 ## Ordered follow-up implementation (unreleased)
+
+### Movie and television support (implemented, unreleased)
+
+1. [x] Remove the unused filename reserve in narrow file lists.
+2. [x] Research and implement a streaming player and bounded torrent playback.
+3. [x] Save progress every five seconds for videos longer than ten minutes and
+   provide dismissible Continue watching actions.
+4. [x] Add confirmed movie/episode matching, provider links, rich artwork and cast.
+5. [x] Add language-labelled subtitle uploads and playback.
+6. [x] Add seeders/peers pills and a coordinated, relaxed tracker monitor with
+   failure backoff, stale reports and an independent operator flag.
+7. [x] Compact the torrent contents header and inline video actions; promote
+   confirmed movie/episode artwork into the main torrent dialog.
+8. [x] Add automatic background matching for torrent video entries, with
+   high-confidence application, review states, retries and manual precedence.
+9. [x] Rename Video Information, integrate its accented Watch action, and fit
+   player controls to the intrinsic video frame at constrained widths.
+10. [x] Complete regression and browser acceptance, operator documentation and
+   changelog, then rebuild and restart the stable service.
+
+Acceptance: 105 suites / 1,023 tests, lint, dependency audits with zero advisories,
+native-tool checks, public torrent playback, uploaded-video/subtitle/resume flows,
+responsive frame/control checks and PNG/PDF/ZIP gallery regression. The stable
+service and rebuilt local container return HTTP 200 from WSL and Windows.
+Live TMDB/TVDB checks pass; Trakt has fixture coverage but no configured credential
+for live acceptance. Playback still depends on reachable peers and browser codecs;
+automatic transcoding remains outside scope. This round is not yet published to
+GHCR. See [movie support](./MOVIES.md) and [the audit](./AUDIT_2026-10-14.md).
 
 These requests extend the October maintenance round. Checkboxes include code,
 relevant checks, documentation and the changelog; unfinished acceptance is explicit.

@@ -138,6 +138,13 @@ Public tracker/DHT/peer metadata discovery uses Node networking and does not
 require native tools. Set `DICEFILES_TORRENT_DISCOVERY=false` in `.env.docker`
 to disable that outbound traffic; see [torrent metadata](./TORRENTS.md).
 
+The example environment disables torrent payload playback because Compose uses
+a 512 MiB memory-backed `/tmp`. For payload streaming, provide a disk-backed
+temporary cache with space for up to two 4 GiB sessions before setting
+`DICEFILES_TORRENT_PLAYBACK=true`. Keep uploaded-video playback enabled; it does
+not use this torrent cache. TMDB/TVDB/Trakt credentials may be placed in the
+private `.env.docker`; see [movies and subtitles](./MOVIES.md).
+
 For untrusted/public uploads needing the full native preview stack, use the
 host deployment with functioning Firejail, or validate a dedicated container
 sandbox policy before enabling `DICEFILES_NATIVE_TOOLS=true`. Do not solve

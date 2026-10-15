@@ -1,0 +1,19 @@
+/*
+ @license
+ Copyright 2024 Streaming Video Technology Alliance
+ SPDX-License-Identifier: Apache-2.0
+*/
+
+/*
+ @license
+ Shaka Player
+ Copyright 2016 Google LLC
+ SPDX-License-Identifier: Apache-2.0
+*/
+
+/*
+ @license
+ tXml
+ Copyright 2015 Tobias Nickel
+ SPDX-License-Identifier: MIT
+*/

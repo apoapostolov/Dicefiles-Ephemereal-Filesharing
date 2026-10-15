@@ -29,4 +29,25 @@ function presentTorrent(torrent, fallback = "Torrent") {
     known: files.length > 0, size: Number.isSafeInteger(torrent.totalSize) && torrent.totalSize >= 0 ? torrent.totalSize : null };
 }
 
-module.exports = { fileKind, presentTorrent };
+function availabilityView(torrent, now = Date.now()) {
+  const stats = torrent.availability || {};
+  const count = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
+  const seeders = count(stats.seeders); const peers = count(stats.leechers);
+  const reportedAt = stats.reportedAt || (stats.responding ? stats.checkedAt : null);
+  const known = seeders !== null || peers !== null;
+  const stale = known && (stats.state === "stale" || !reportedAt || now - reportedAt > 45 * 60000);
+  const format = value => value === null ? "—" : new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(value);
+  const full = value => value === null ? "Unknown" : value.toLocaleString();
+  const state = stale ? "stale" : known ? "current" : "unknown";
+  const explanation = known ? `${stale ? "Last known report. " : ""}${reportedAt ? `Reported ${new Date(reportedAt).toLocaleString()}. ` : ""}Tracker counts are estimates; downloading peers exclude seeders.` : "Tracker counts are unavailable. A dash means unknown, not zero.";
+  return { seeders: format(seeders), peers: format(peers), state,
+    label: `${full(seeders)} seeders · ${full(peers)} downloading peers${stale ? " · Stale report" : ""}`,
+    explanation };
+}
+
+function featuredMovie(torrent, cinema = {}) {
+  const matched = (Array.isArray(torrent.files) ? torrent.files : []).map((file, index) => ({ movie: cinema[index]?.movie, index, file })).filter(row => row.movie?.title && fileKind(row.file.path || "").icon === "video").sort((a, b) => (b.file.size || 0) - (a.file.size || 0));
+  return matched.length ? { ...matched[0], count: matched.length } : null;
+}
+
+module.exports = { fileKind, presentTorrent, availabilityView, featuredMovie };

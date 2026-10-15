@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+- Videos use an in-page streaming player with seeking, playback speed,
+  fullscreen, picture in picture and language-labelled subtitles. Long videos
+  save progress every five seconds and appear in dismissible Continue watching
+  cards. The frame and controls follow the video's proportions, with equal-width
+  control rows on small screens.
+- Video Information supports confirmed catalogue searches and IMDb,
+  TVDB and Trakt page matching, with available posters, backdrops, logos,
+  cast, trailers and scenes. Its accented Watch action sits beside provider links.
+  Original download filenames are retained.
+- Newly added torrents match their video filenames in the background and apply
+  high-confidence movie/episode results. Ambiguous titles remain available for
+  review; manual choices and subtitles are preserved.
+- Public torrent video entries can play selected content through bounded server
+  sessions. Operators can disable payload playback separately from metadata discovery.
+- Torrent entries show seeders and downloading peers in a compact pill. A relaxed
+  background service refreshes tracker reports, preserves last known counts on
+  failures and distinguishes stale or unknown availability from zero.
+- Torrent dialogs keep contents/search and video actions compact. Confirmed
+  movie or episode matches bring posters, backdrops and logos into the main header.
+  Torrent metadata uses its own phone row to preserve filename space.
+- File names use all available space in narrow lists, without reserving a blank
+  area for a hidden New badge.
+
 - Upload has a prominent file drop zone, concise link controls, keyboard focus
   handling and right-aligned actions.
 - Tablet widths keep chat and files side by side with two grouped toolbar rows.

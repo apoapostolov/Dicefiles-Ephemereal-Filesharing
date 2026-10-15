@@ -12,6 +12,8 @@
 !client/**
 !common/
 !common/**
+!vendor/
+!vendor/**
 !core/
 !core/**
 !lib/

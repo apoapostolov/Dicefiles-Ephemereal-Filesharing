@@ -18,13 +18,46 @@ The details view shows:
 - Tracker hosts, protocols, reported availability and the time of the check.
 - Source-supplied publisher/date information, when present.
 
+Contents use one compact header with the category summary and a right-aligned
+file search. Video filenames, Play and Info controls stay in one row. Matching
+a video in Info adds its poster, backdrop and available clear logo to the main
+torrent header too. For multiple confirmed videos, the largest matched video is
+featured and identified by filename. Unmatched torrents retain the ordinary
+content header; removing the match removes its artwork. Matches also work for
+magnet entries in Links Archive.
+
 **Open magnet** launches your torrent application; **Copy link** copies the
-magnet. Download retains the original metadata file. Dicefiles does not download
-or seed the referenced content. Hashes, piece roots and protocol extension dumps
+magnet. Download retains the original metadata file. Details checks do not download
+or seed payloads. A video's separate Play action can fetch selected pieces for
+in-page playback; see [movie playback and limits](./MOVIES.md). Hashes, piece roots and protocol extension dumps
 are retained in structured metadata/original files rather than filling the UI.
 A dash means unknown, not zero. Tracker counts may overlap; the summary uses
 reported maxima rather than adding duplicate peer counts. Counts are snapshots,
 not a promise that a download will complete.
+
+### Availability pills and background checks
+
+Torrent uploads and Links Archive entries show a compact **↑ seeders / ↓ peers**
+pill. Peers here means downloading peers, excluding seeders. Select the pill for
+full details. Unknown counts show a dash; zero means a tracker actually reported
+zero. A clock marks an older report. Failed checks retain the last known counts
+with their original reporting time rather than replacing them with zero.
+
+The maintenance worker checks due torrents once per minute in batches of up to
+four distinct swarms, scraping at most six supported trackers per swarm with an
+eight-second budget. Successful checks are scheduled 12–18 minutes later;
+failures back off to 27–33 minutes. Busy installations take longer to complete
+the queue. Reports older than 45 minutes are marked stale. Duplicate entries
+with the same hash, private flag and tracker addresses share a check; tracker
+credentials remain scoped to their source. A Redis lease coordinates workers.
+Expired/deleted entries are skipped and current movie metadata is preserved.
+
+These checks use HTTP(S)/UDP scrape only, including supplied private trackers
+that support scraping. They do not announce participation, contact peers, query
+DHT, or fetch torrent payloads. Trackers may still observe the server IP and
+requested hash. Unsupported WebSocket/announce-only trackers show unknown.
+Disable background checks with `DICEFILES_TORRENT_MONITOR=false`, or disable
+all protocol discovery with `DICEFILES_TORRENT_DISCOVERY=false`.
 
 ## Server discovery
 
@@ -35,8 +68,9 @@ no inbound listening port is opened.
 1. Public HTTP `xs` exact sources are tried. Info hashes must match the magnet.
 2. Up to eight supplied trackers are queried through HTTP(S) scrape or UDP
    scrape. Trackers that require announce/authentication, do not implement scrape,
-   or cannot be reached show **No report**. Dicefiles does not announce itself
-   as a downloader or seeder.
+   or cannot be reached show **No report**. Metadata discovery does not announce
+   participation. A separate, explicit Play action can announce to obtain peers;
+   see [movie playback](./MOVIES.md).
 3. A public magnet without a file list queries DHT and requests the info dictionary
    from peers through BEP 9/10. SHA-1 and/or SHA-256 must match before accepting
    contents. The client never requests payload pieces. V1 and v2 metadata parsing

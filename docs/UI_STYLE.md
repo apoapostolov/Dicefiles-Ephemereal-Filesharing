@@ -23,6 +23,16 @@ then searchable contents and tracker status. Unknown values use a dash and a
 recovery message. Never display raw protocol dumps or tracker credentials.
 The modal uses semantic surface/border tokens and changes from four metric
 columns to two on phones. Refresh preserves the file search and its focus.
+The Contents title, category summary and right-aligned search share one header;
+on narrow screens the summary can scroll horizontally. Each file keeps its
+name, video actions and size in one grid row. Confirmed movie/episode artwork
+belongs in the main torrent header as well as the per-video details. Use the
+largest matched video as the featured entry and identify it when a torrent has
+several matches. Availability pills use ↑ seeders and ↓ downloading peers with
+stable widths, accessible full counts and an explicit stale/unknown state.
+Compact video players use a full-width timeline, equal-width transport buttons,
+two full-width preference selectors, then evenly filled view actions. Controls
+have 44px minimum height; missing picture-in-picture support leaves no empty cell.
 
 > **Agreed standard (Feb 2026):** The filter buttons, select/delete pill, view-mode pill, and Upload button are the canonical reference for size and shape. All new buttons must match them.
 

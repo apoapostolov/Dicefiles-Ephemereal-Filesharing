@@ -3,6 +3,8 @@
 import registry from "./registry";
 import Removable from "./removable";
 import Tooltip from "./tooltip";
+import { movieHero } from "./movie";
+import { mediaTitle } from "../common/video";
 import {
   dom,
   Rect,
@@ -26,9 +28,15 @@ const NUM_FORMAT = new Intl.NumberFormat();
 
 class FileTooltip extends Tooltip {
   constructor(file) {
-    super(file.name);
+    super(mediaTitle(file.meta?.cinema?.[-1]?.movie, file.name));
     this.file = file;
     this.el.classList.add("tooltip-file");
+    if (file.meta?.cinema?.[-1]?.movie) {
+      this.el.classList.add("tooltip-movie");
+      this.interactive = true;
+      this.el.replaceChildren(movieHero(file.meta.cinema[-1].movie, file.name, true));
+      return;
+    }
 
     this.addPreview(file);
 
@@ -227,6 +235,7 @@ class FileTooltip extends Tooltip {
   }
 
   destroy() {
+    clearTimeout(this.hideTimer);
     if (this.video) {
       this.video.removeAttribute("loop");
       this.video.pause();
@@ -278,6 +287,9 @@ export default class File extends Removable {
 
   update(other) {
     Object.assign(this, other);
+    if (this.nameTextEl) {
+      this.nameTextEl.textContent = mediaTitle(this.meta?.cinema?.[-1]?.movie, this.name);
+    }
     this.isLinked = !!(
       this.linked ||
       (this.meta && this.meta.linkedFrom) ||

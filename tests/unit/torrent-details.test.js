@@ -6,7 +6,7 @@ const vm = require("vm");
 
 function fixture({ files = [], link = null, count = 1 } = {}) {
   const source = fs.readFileSync(path.join(__dirname, "../../lib/client.js"), "utf8");
-  const method = source.split("  async ontorrentdetails(")[1].split("\n  async onfileinfo")[0];
+  const method = source.split("  async ontorrentdetails(")[1].split("\n  async onmedia")[0];
   const enrichTorrent = jest.fn(async torrent => ({ ...torrent, checked: true }));
   const get = jest.fn(async () => link);
   const ratelimit = jest.fn(async () => [count]);

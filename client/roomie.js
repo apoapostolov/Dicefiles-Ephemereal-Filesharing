@@ -301,11 +301,30 @@ export default new (class Roomie extends EventEmitter {
     const x = (this.mousepos.x = e.pageX);
     const y = (this.mousepos.y = e.pageY);
     if (this.tooltip) {
+      if (this.tooltip.interactive) {
+        if (this.tooltip.el.contains(e.target) || this.tooltip.anchor?.contains(e.target)) {
+          clearTimeout(this.tooltip.hideTimer);
+        }
+        return;
+      }
       this.tooltip.position(x, y);
     }
   }
 
-  onmouseout() {
+  onmouseout(e) {
+    if (this.tooltip?.interactive) {
+      const tip = this.tooltip;
+      if (e.relatedTarget && (tip.el.contains(e.relatedTarget) || tip.anchor?.contains(e.relatedTarget))) {
+        return;
+      }
+      clearTimeout(tip.hideTimer);
+      tip.hideTimer = setTimeout(() => {
+        if (this.tooltip === tip) {
+          this.hideTooltip();
+        }
+      }, 180);
+      return;
+    }
     this.hideTooltip();
   }
 
@@ -321,7 +340,7 @@ export default new (class Roomie extends EventEmitter {
     if (!this._mouseMoveInstalled) {
       return;
     }
-    addEventListener("mousemove", this.onmousemove, { passive: true });
+    removeEventListener("mousemove", this.onmousemove);
     this._mouseMoveInstalled = false;
   }
 
@@ -329,6 +348,7 @@ export default new (class Roomie extends EventEmitter {
     this._installMouseMove();
     this._ttinfo = tip;
     if (e) {
+      tip.anchor = e.currentTarget;
       this.onmousemove(e);
     }
     this._installTooltip();
@@ -380,7 +400,7 @@ export default new (class Roomie extends EventEmitter {
     } = e;
     if (
       key === "Enter" &&
-      ["input", "textarea", "button", "a", "summary"].includes(localName)
+      ["input", "textarea", "select", "button", "a", "summary"].includes(localName)
     ) {
       return;
     }

@@ -149,7 +149,7 @@ export default async function createSocket() {
         const rresolve = rv => {
           clearTimeout(timeout);
           if (rv && rv.err) {
-            reject(new Error(userError(rv.err)));
+            reject(new Error(target === "media" && rv.actionable === true && typeof rv.err === "string" && rv.err.length < 400 ? rv.err : userError(rv.err)));
             return;
           }
           resolve(rv);

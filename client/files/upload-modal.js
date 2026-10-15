@@ -25,7 +25,7 @@ export default class UploadModal extends Modal {
     const label = dom("label", { text: "Magnet or torrent URL", attrs: { for: "torrent-upload-url" } });
     this.input = dom("input", { attrs: { id: "torrent-upload-url", type: "text", placeholder: "magnet:?xt=… or https://…/file.torrent", maxlength: "16384", autocomplete: "off" } });
     this.status = dom("p", { classes: ["upload-feedback"], attrs: { role: "status", id: "torrent-upload-status" } });
-    const hint = dom("p", { classes: ["upload-hint"], attrs: { id: "torrent-upload-hint" }, text: "Metadata only. Download content in your torrent app." });
+    const hint = dom("p", { classes: ["upload-hint"], attrs: { id: "torrent-upload-hint" }, text: "Import a torrent, then browse its files or play a supported video." });
     this.input.setAttribute("aria-describedby", "torrent-upload-hint torrent-upload-status");
     this.input.addEventListener("input", () => {
       this.default.btn.disabled = !this.input.value.trim(); this.input.removeAttribute("aria-invalid"); this.status.textContent = "";

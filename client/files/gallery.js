@@ -2,6 +2,7 @@
 
 import { APOOL } from "../animationpool";
 import { nukeEvent } from "../util";
+import { openMoviePlayer } from "../movie";
 
 export default class Gallery {
   constructor(owner) {
@@ -312,6 +313,11 @@ export default class Gallery {
   }
 
   open(file) {
+    if (file.type === "video") {
+      this.close();
+      openMoviePlayer(file).catch(() => {});
+      return true;
+    }
     const info = file.getGalleryInfo();
     if (!info) {
       return false;

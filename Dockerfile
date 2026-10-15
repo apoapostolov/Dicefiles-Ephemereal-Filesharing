@@ -3,6 +3,7 @@ ARG NODE_IMAGE=node:24-bookworm-slim
 FROM ${NODE_IMAGE} AS build
 WORKDIR /src
 COPY package.json yarn.lock ./
+COPY vendor ./vendor
 COPY scripts/check-preview-tools.js ./scripts/check-preview-tools.js
 RUN yarn install --frozen-lockfile --non-interactive --production=false
 COPY . .
@@ -11,6 +12,7 @@ RUN yarn prestart
 FROM ${NODE_IMAGE} AS dependencies
 WORKDIR /src
 COPY package.json yarn.lock ./
+COPY vendor ./vendor
 COPY scripts/check-preview-tools.js ./scripts/check-preview-tools.js
 RUN yarn install --frozen-lockfile --non-interactive --production=true && yarn cache clean
 

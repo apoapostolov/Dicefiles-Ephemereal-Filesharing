@@ -3,7 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
-const { fileKind, presentTorrent } = require("../../common/torrent-presentation");
+const { fileKind, presentTorrent, availabilityView, featuredMovie } = require("../../common/torrent-presentation");
 
 function fixture(mobile = true) {
   const document = { listeners: {}, activeElement: null, addEventListener(name, fn) {
@@ -89,7 +89,7 @@ test("torrent refresh preserves the contents search and keyboard focus", async (
 
   const registry = { socket: { makeCall: jest.fn(async () => ({ torrent: { availability: { seeders: 2 } } })) } };
   const source = fs.readFileSync(path.join(__dirname, "../../client/torrent-metadata.js"), "utf8").replace(/^import .*;$/gm, "").replace("export class", "class");
-  const TorrentModal = vm.compileFunction(`${source}\nreturn TorrentMetadataModal;`, ["Modal", "registry", "dom", "toPrettySize", "fileKind", "presentTorrent", "document", "userError"])(Modal, registry, dom, n => `${n} B`, fileKind, presentTorrent, document, require("../../common/user-error").userError);
+  const TorrentModal = vm.compileFunction(`${source}\nreturn TorrentMetadataModal;`, ["Modal", "registry", "dom", "toPrettySize", "fileKind", "presentTorrent", "document", "userError", "mediaTitle", "availabilityView", "featuredMovie"])(Modal, registry, dom, n => `${n} B`, fileKind, presentTorrent, document, require("../../common/user-error").userError, require("../../common/video").mediaTitle, availabilityView, featuredMovie);
   const modal = new TorrentModal({ name: "Books", files: [{ path: "a.pdf", size: 4 }, { path: "b.epub", size: 8 }], trackers: [] }, "books.torrent", "/download", { kind: "file", key: "synthetic" });
   modal.search.value = "epub"; modal.search.oninput(); modal.search.focus();
   await modal.refresh(true);
@@ -99,6 +99,67 @@ test("torrent refresh preserves the contents search and keyboard focus", async (
   const treeText = el => [el.textContent, ...el.children.map(treeText)].join(" ");
   expect(treeText(modal.body)).toContain("b.epub"); expect(treeText(modal.body)).not.toContain("a.pdf");
   expect(treeText(modal.body)).not.toContain("Info hash");
+});
+
+test("matched torrent artwork appears in the main dialog and video actions share their file row", async () => {
+  const { document, dom } = fixture();
+
+  class Modal {
+    constructor() {
+      this.body = dom("div");
+    }
+  }
+
+  const movie = { title: "Confirmed film", kind: "movie", year: "2020", backdrop: "https://image.tmdb.org/backdrop.jpg", poster: "https://image.tmdb.org/poster.jpg", logo: "https://image.tmdb.org/logo.png", attribution: "TMDB" };
+  const cinema = { 1: { movie } };
+  const registry = { links: { linkmap: new Map([["synthetic", { meta: { cinema } }]]) } };
+  const source = fs.readFileSync(path.join(__dirname, "../../client/torrent-metadata.js"), "utf8").replace(/^import .*;$/gm, "").replace("export class", "class");
+  const showMovieInfo = jest.fn(async file => {
+    file.meta.cinema = { 1: { movie: null } };
+  });
+  const TorrentModal = vm.compileFunction(`${source}\nreturn TorrentMetadataModal;`, ["Modal", "registry", "dom", "toPrettySize", "fileKind", "presentTorrent", "document", "userError", "mediaTitle", "availabilityView", "featuredMovie", "showMovieInfo"])(Modal, registry, dom, n => `${n} B`, fileKind, presentTorrent, document, String, require("../../common/video").mediaTitle, availabilityView, featuredMovie, showMovieInfo);
+  const modal = new TorrentModal({ files: [{ path: "readme.txt", size: 1 }, { path: "movie.mp4", size: 100 }], trackers: [] }, "Original torrent", null, { kind: "link", key: "synthetic" });
+  const find = (el, cls) => el.classes.includes(cls) ? el : el.children.map(child => find(child, cls)).find(Boolean);
+  const hero = find(modal.body, "torrent-cinema-hero");
+  expect(hero).toBeDefined(); expect(find(hero, "torrent-backdrop").attributes.src).toBe(movie.backdrop);
+  expect(find(hero, "torrent-movie-logo").attributes.src).toBe(movie.logo);
+  const header = find(modal.body, "torrent-contents-header");
+  expect(header.children).toHaveLength(3); expect(header.children[2]).toBe(modal.search);
+  const list = find(modal.body, "torrent-file-list"); const row = list.children[1];
+  expect(row.children).toHaveLength(4);
+  const controls = find(row, "torrent-file-controls"); expect(controls.children).toHaveLength(2);
+  expect(controls.children[0].attributes["aria-label"]).toBe("Watch movie.mp4");
+  await controls.children[1].onclick();
+  expect(showMovieInfo).toHaveBeenCalledTimes(1);
+  expect(find(modal.body, "torrent-cinema-hero")).toBeUndefined();
+});
+
+test("torrent hero uses the largest confirmed video and preserves episode identity", () => {
+  const torrent = { files: [{ path: "sample.mp4", size: 1 }, { path: "episode.mkv", size: 10 }, { path: "notes.txt", size: 1000 }] };
+  const cinema = { 0: { movie: { title: "Sample" } }, 1: { movie: { title: "Episode", kind: "episode", season: 0, episode: 1 } }, 2: { movie: { title: "Not a video" } } };
+  expect(featuredMovie(torrent, cinema)).toMatchObject({ index: 1, count: 2, movie: { kind: "episode", season: 0 } });
+  expect(featuredMovie(torrent, {})).toBeNull();
+});
+
+test("phone torrent metadata occupies its own row to preserve filename width", () => {
+  const css = fs.readFileSync(path.join(__dirname, "../../entries/css/files.css"), "utf8");
+  expect(css).toContain(".file.torrent-entry > .tags { grid-row: 2; grid-column: 2 / -1;");
+  expect(css).toContain(".file.torrent-entry > .name { grid-row: 1; grid-column: 2; min-width: 0;");
+});
+
+test("Video Information keeps its accented Watch action after IMDb in one action bar", () => {
+  const { dom } = fixture();
+  const source = fs.readFileSync(path.join(__dirname, "../../client/movie.js"), "utf8");
+  const heroSource = source.slice(source.indexOf("function button("), source.indexOf("export class MovieModal")).replace("export function", "function");
+  const { movieHero, button } = vm.compileFunction(`${heroSource}\nreturn { movieHero, button };`, ["dom", "mediaTitle"])(dom, require("../../common/video").mediaTitle);
+  const watch = button("▶ Watch", () => {}, "movie-primary movie-watch-action");
+  const hero = movieHero({ title: "Example", url: "https://www.themoviedb.org/movie/1", imdb: "https://www.imdb.com/title/tt1234567/" }, "file.mp4", false, watch);
+  const actions = hero.children[0].children.find(child => child.classes.includes("movie-actions"));
+  expect(actions.children.at(-1)).toBe(watch);
+  expect(actions.children.at(-2).textContent).toBe("IMDb ↗");
+  expect(watch.classes).toContain("movie-primary"); expect(watch.classes).toContain("movie-watch-action");
+  expect(watch.classes.some(value => value.includes(" "))).toBe(false);
+  expect(source).toContain("super(\"movie\", \"Video Information\"");
 });
 
 test("Appearance uses a palette SVG and mobile page count uses a document glyph", () => {

@@ -3,7 +3,7 @@ import stylistic from "@stylistic/eslint-plugin";
 import globals from "globals";
 
 export default [
-  { ignores: ["static/**", "uploads/**", "views/**", "contrib/**", "core/**", "images/**", "node_modules/**", "coverage/**", "output/**", ".config", ".config.json", "lib/clientversion.js"] },
+  { ignores: ["static/**", "uploads/**", "views/**", "contrib/**", "core/**", "images/**", "node_modules/**", "vendor/bittorrent-tracker/**", "coverage/**", "output/**", ".config", ".config.json", "lib/clientversion.js"] },
   {
     files: ["**/*.js", "**/*.mjs"],
     languageOptions: { ecmaVersion: "latest", sourceType: "module", globals: { ...globals.node, ...globals.browser } },

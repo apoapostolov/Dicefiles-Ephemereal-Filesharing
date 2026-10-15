@@ -28,6 +28,7 @@ import {
   wasFulfilledSince,
 } from "../lib/room/continuity";
 import { dismissProgressRecord, listProgressRecords } from "../lib/room/reader-progress";
+import { renderWatchContinuity } from "./watch-continuity";
 import ScrollState from "./files/scrollstate";
 import { REMOVALS } from "./files/tracker";
 import Upload from "./files/upload";
@@ -136,6 +137,14 @@ export default new (class Files extends EventEmitter {
     this.resumeEntries = [];
     this._continuityRefreshVersion = 0;
     this.continuityEl = document.querySelector("#continuity");
+    this.watchContinuityEl = dom("div", { attrs: { id: "watch-continuity" } });
+    this.continuityEl?.querySelector("#continuity-actions")?.appendChild(this.watchContinuityEl);
+    const continuityActions = this.continuityEl?.querySelector("#continuity-actions");
+    if (continuityActions && typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(() => {
+        this.continuityEl.parentElement.style.setProperty("--continuity-height", `${Math.ceil(continuityActions.getBoundingClientRect().height)}px`);
+      }).observe(continuityActions);
+    }
     this.dismissedResumeKeys = new Set();
     this.continuityResumeCardEl = document.querySelector("#continuity-resume-card");
     this.continuityDismissEl = document.querySelector("#continuity-resume-dismiss");
@@ -442,6 +451,9 @@ export default new (class Files extends EventEmitter {
     addEventListener("pagehide", this.onleave, { passive: true });
     addEventListener("beforeunload", this.onleave, { passive: true });
     const refreshProgress = debounce(() => this.refreshContinuity(), 500);
+    addEventListener("dicefiles:watch-progress", refreshProgress);
+    addEventListener("dicefiles:watch-dismissed", refreshProgress);
+    addEventListener("storage", refreshProgress);
     addEventListener("dicefiles:reader-progress", event => {
       if (event.detail?.fileKey) {
         this.dismissedResumeKeys.delete(event.detail.fileKey);
@@ -736,7 +748,8 @@ export default new (class Files extends EventEmitter {
     }
 
     this.renderContinuityDigest();
-    const visible = !!resume || newCount > 0;
+    const watching = renderWatchContinuity(this.watchContinuityEl, this.files, registry.links?.links || []);
+    const visible = !!resume || newCount > 0 || watching;
     this.continuityEl.classList.toggle("hidden", !visible);
     const filelist = this.continuityEl.closest("#filelist");
     if (filelist) {

@@ -3,19 +3,31 @@
 import Modal from "./modal";
 import registry from "./registry";
 import { dom, toPrettySize } from "./util";
-import { fileKind, presentTorrent } from "../common/torrent-presentation";
+import { fileKind, presentTorrent, availabilityView, featuredMovie } from "../common/torrent-presentation";
 import { userError } from "../common/user-error";
+import { openMoviePlayer, showMovieInfo } from "./movie";
+import { mediaTitle } from "../common/video";
 
 export class TorrentMetadataModal extends Modal {
   constructor(torrent, name, downloadUrl, reference) {
     super("torrent", "Torrent", { text: "Close", cancel: true });
     this.torrent = torrent; this.name = name; this.downloadUrl = downloadUrl; this.reference = reference;
     this.closed = false; this.loading = false;
+    this.cinema = null;
+    this.cinemaSignature = JSON.stringify(this.cinemaRecords());
+    this.onData = () => {
+      this.cinema = null;
+      const signature = JSON.stringify(this.cinemaRecords());
+      if (!this.closed && signature !== this.cinemaSignature) {
+        this.cinemaSignature = signature; this.render();
+      }
+    };
     this.render();
   }
 
   onshown() {
     super.onshown();
+    registry.files?.on?.("files-changed", this.onData); registry.links?.on?.("links-changed", this.onData);
     if (this.reference) {
       this.refresh(false);
     }
@@ -23,6 +35,12 @@ export class TorrentMetadataModal extends Modal {
 
   onhidden() {
     this.closed = true;
+    registry.files?.removeListener?.("files-changed", this.onData); registry.links?.removeListener?.("links-changed", this.onData);
+  }
+
+  cinemaRecords() {
+    const item = this.reference?.kind === "file" ? registry.files?.filemap?.get(this.reference.key) : registry.links?.linkmap?.get(this.reference?.key);
+    return this.cinema || item?.meta?.cinema || {};
   }
 
   async refresh(force) {
@@ -57,18 +75,41 @@ export class TorrentMetadataModal extends Modal {
     const focusRefresh = focused === this.refreshButton;
     this.body.replaceChildren();
     const {torrent} = this; const view = presentTorrent(torrent, this.name);
-    const hero = dom("section", { classes: ["torrent-hero"] });
+    const featured = featuredMovie(torrent, this.cinemaRecords());
+    const movie = featured?.movie;
+    const hero = dom("section", { classes: ["torrent-hero", ...(movie ? ["torrent-cinema-hero"] : [])] });
+    if (movie?.backdrop) {
+      hero.appendChild(dom("img", { classes: ["torrent-backdrop"], attrs: { src: movie.backdrop, alt: "", referrerpolicy: "no-referrer" } }));
+    }
     const artwork = dom("div", { classes: ["torrent-artwork"], attrs: { "aria-hidden": "true" } });
-    if (torrent.imageDataUrl?.startsWith("data:image/jpeg;base64,")) {
+    if (movie?.poster) {
+      artwork.appendChild(dom("img", { attrs: { src: movie.poster, alt: "", referrerpolicy: "no-referrer" } }));
+    }
+    else if (torrent.imageDataUrl?.startsWith("data:image/jpeg;base64,")) {
       artwork.appendChild(dom("img", { attrs: { src: torrent.imageDataUrl, alt: "" } }));
     }
     else {
       artwork.appendChild(dom("span", { classes: [`i-${view.categories[0]?.icon || "link"}`] }));
     }
     const intro = dom("div", { classes: ["torrent-intro"] });
-    intro.appendChild(dom("p", { classes: ["torrent-eyebrow"], text: `${view.category}${torrent.private ? " · Private torrent" : ""}` }));
-    intro.appendChild(dom("h2", { text: view.name }));
-    intro.appendChild(dom("p", { classes: ["torrent-subtitle"], text: view.known ? "Browse the contents, then open in your torrent app." : "A file list is not available yet. Check again or open the link in your torrent app." }));
+    if (movie?.logo) {
+      intro.appendChild(dom("img", { classes: ["torrent-movie-logo"], attrs: { src: movie.logo, alt: "", referrerpolicy: "no-referrer" } }));
+    }
+    intro.appendChild(dom("p", { classes: ["torrent-eyebrow"], text: `${movie ? movie.kind === "episode" ? "TV episode" : movie.kind === "tv" ? "TV series" : "Movie" : view.category}${torrent.private ? " · Private torrent" : ""}` }));
+    intro.appendChild(dom("h2", { text: mediaTitle(movie, view.name) }));
+    if (movie) {
+      const facts = [movie.runtime ? `${movie.runtime} min` : "", ...(movie.genres || []).slice(0, 3)].filter(Boolean);
+      if (facts.length) {
+        intro.appendChild(dom("p", { classes: ["torrent-subtitle"], text: facts.join(" · ") }));
+      }
+      if (movie.overview) {
+        intro.appendChild(dom("p", { classes: ["torrent-movie-overview"], text: movie.overview }));
+      }
+      intro.appendChild(dom("p", { classes: ["torrent-match-source"], text: featured.count > 1 ? `${featured.count} matched videos · Featured: ${featured.file.path.split("/").pop()}` : `Matched video · ${featured.file.path.split("/").pop()}` }));
+    }
+    else {
+      intro.appendChild(dom("p", { classes: ["torrent-subtitle"], text: view.known ? "Browse the contents. Play a video here, or open the torrent in your app." : "A file list is not available yet. Check again or open the link in your torrent app." }));
+    }
     const actions = dom("div", { classes: ["torrent-actions"] });
     if (torrent.magnet?.startsWith("magnet:?")) {
       actions.appendChild(dom("a", { classes: ["torrent-action", "torrent-action-primary"], text: "Open magnet", attrs: { href: torrent.magnet, rel: "noreferrer" } }));
@@ -87,6 +128,9 @@ export class TorrentMetadataModal extends Modal {
       actions.appendChild(dom("a", { classes: ["torrent-action"], text: /\.torrent$/i.test(this.name) ? "Download .torrent" : "Save link", attrs: { href: this.downloadUrl, download: this.name } }));
     }
     intro.appendChild(actions); hero.append(artwork, intro); this.body.appendChild(hero);
+    if (movie?.attribution) {
+      this.body.appendChild(dom("p", { classes: ["movie-attribution"], text: movie.attribution }));
+    }
     const metrics = dom("dl", { classes: ["torrent-metrics"] });
     const stats = torrent.availability || {};
     for (const [label, value] of [["Total size", view.size === null ? "—" : toPrettySize(view.size)], ["Files", view.known ? view.files.length.toLocaleString() : "—"], ["Seeders", stats.seeders == null ? "—" : stats.seeders.toLocaleString()], ["Downloading", stats.leechers == null ? "—" : stats.leechers.toLocaleString()]]) {
@@ -94,9 +138,9 @@ export class TorrentMetadataModal extends Modal {
     }
     this.body.appendChild(metrics);
     const update = dom("div", { classes: ["torrent-update"] });
-    const checked = torrent.discovery?.checkedAt;
-    const availabilityText = stats.responding ? `Reported by ${stats.responding} ${stats.responding === 1 ? "tracker" : "trackers"}; counts may overlap.` : "Availability has not been confirmed. A dash means unknown.";
-    update.appendChild(dom("p", { text: `${availabilityText}${checked ? ` Checked ${new Date(checked).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.` : ""}` }));
+    const checked = stats.checkedAt;
+    const availabilityText = availabilityView(torrent).explanation;
+    update.appendChild(dom("p", { text: `${availabilityText}${checked ? ` Last check ${new Date(checked).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.` : ""}` }));
     this.refreshButton = dom("button", { classes: ["torrent-action"], attrs: { type: "button" }, text: "Check again" });
     this.refreshButton.hidden = !this.reference;
     this.refreshButton.onclick = () => this.refresh(true); update.appendChild(this.refreshButton); this.body.appendChild(update);
@@ -111,6 +155,7 @@ export class TorrentMetadataModal extends Modal {
       this.feedback.textContent = "No peer shared a file list during this check. Try again later, or upload the matching .torrent file.";
     }
     this.body.appendChild(this.feedback);
+    this.contents(view);
     if (torrent.comment) {
       this.section("About this torrent").appendChild(dom("p", { classes: ["torrent-description"], text: torrent.comment }));
     }
@@ -124,7 +169,7 @@ export class TorrentMetadataModal extends Modal {
       }
       this.section("Source information").appendChild(dom("p", { classes: ["torrent-description"], text: facts.join(" · ") }));
     }
-    this.contents(view); this.trackers(torrent);
+    this.trackers(torrent);
     if (focusSearch && this.search) {
       this.search.focus({ preventScroll: true });
     }
@@ -139,15 +184,18 @@ export class TorrentMetadataModal extends Modal {
   }
 
   contents(view) {
-    const section = this.section(view.known ? `Contents · ${view.files.length.toLocaleString()} ${view.files.length === 1 ? "file" : "files"}` : "Contents");
+    const section = dom("section", { classes: ["torrent-section", "torrent-contents"] }); this.body.appendChild(section);
+    const header = dom("div", { classes: ["torrent-contents-header"] });
+    header.appendChild(dom("h3", { text: view.known ? `Contents · ${view.files.length.toLocaleString()} ${view.files.length === 1 ? "file" : "files"}` : "Contents" })); section.appendChild(header);
     if (!view.known) {
       section.appendChild(dom("p", { classes: ["torrent-empty"], text: "Waiting for a file list. The server requests torrent metadata only; files are downloaded by your torrent app." })); return;
     }
-    section.appendChild(dom("p", { classes: ["torrent-content-types"], text: view.categories.map(row => `${row.label} · ${row.count} ${row.count === 1 ? "file" : "files"} · ${toPrettySize(row.size)}`).join("  /  ") }));
+    const summary = view.categories.map(row => `${row.label} · ${row.count} ${row.count === 1 ? "file" : "files"} · ${toPrettySize(row.size)}`).join("  /  ");
+    header.appendChild(dom("span", { classes: ["torrent-content-types"], text: summary, attrs: { title: summary } }));
     const search = dom("input", { classes: ["torrent-file-search"], attrs: { "type": "search", "placeholder": "Find a file…", "aria-label": "Find a file in this torrent" } });
     this.search = search;
     search.value = this.query || "";
-    section.appendChild(search);
+    header.appendChild(search);
     const list = dom("ul", { classes: ["torrent-file-list"], attrs: { "aria-label": "Torrent contents" } });
     const status = dom("p", { classes: ["torrent-file-count"], attrs: { role: "status" } });
     const more = dom("button", { classes: ["torrent-action"], text: "Show more files", attrs: { type: "button" } });
@@ -161,11 +209,28 @@ export class TorrentMetadataModal extends Modal {
         row.appendChild(dom("span", { classes: [`i-${fileKind(file.path).icon}`], attrs: { "aria-hidden": "true" } }));
         const description = dom("span", { classes: ["torrent-file-path"] });
         const parts = file.path.split("/"); const filename = parts.pop();
-        description.appendChild(dom("strong", { text: filename }));
+        const index = view.files.indexOf(file);
+        const cinema = this.cinemaRecords()[index];
+        description.appendChild(dom("strong", { text: mediaTitle(cinema?.movie, filename) }));
         if (parts.length) {
           description.appendChild(dom("small", { text: parts.join(" / ") }));
         }
-        row.append(description, dom("span", { classes: ["torrent-file-size"], text: toPrettySize(file.size) })); list.appendChild(row);
+        const controls = dom("span", { classes: ["torrent-file-controls"] });
+        row.append(description, controls, dom("span", { classes: ["torrent-file-size"], text: toPrettySize(file.size) }));
+        if (this.reference && fileKind(file.path).icon === "video") {
+          const reference = { ...this.reference, index };
+          const mediaFile = { name: filename, meta: { torrent: this.torrent, cinema: this.cinemaRecords() }, key: reference.key };
+          const watch = dom("button", { classes: ["movie-action"], text: "▶", attrs: { "type": "button", "aria-label": `Watch ${filename}`, "title": "Watch video" } });
+          watch.onclick = () => openMoviePlayer(mediaFile, reference).catch(() => {});
+          const info = dom("button", { classes: ["movie-action"], text: "ⓘ", attrs: { "type": "button", "aria-label": `Video information for ${filename}`, "title": "Video information and subtitles" } });
+          info.onclick = async () => {
+            await showMovieInfo(mediaFile, reference);
+            if (!this.closed) {
+              this.cinema = mediaFile.meta.cinema; this.render();
+            }
+          }; controls.append(watch, info);
+        }
+        list.appendChild(row);
       }
       status.textContent = matches.length ? matches.length === 1 ? "1 file shown" : `${Math.min(limit, matches.length)} of ${matches.length} files shown` : "No files match your search.";
       more.hidden = matches.length <= limit;

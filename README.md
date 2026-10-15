@@ -59,7 +59,9 @@ has the security and client details.
 - **Choose your workspace colors.** Pick from 34 persistent themes, including
   26 dark palettes, using Appearance.
 - **Explore torrents.** Import magnets and `.torrent` files, browse searchable
-  contents and artwork, check reported availability, and open your torrent app.
+  contents and artwork, check reported availability, and stream supported videos.
+- **Watch movies and episodes.** Resume long videos, match clear torrent titles automatically or choose a catalogue result,
+  browse artwork and cast, and add subtitles in your language.
 
 <p align="center">
   <img src="images/dicefiles-books-gallery.png" alt="A Dicefiles gallery with generated book and comic covers" width="49%">
@@ -181,6 +183,7 @@ access. Permissions are split into scopes, rate limited, and audited.
 - [Environment flags and private provider keys](./docs/ENVIRONMENT.md)
 - [Appearance and theme tokens](./docs/THEMES.md)
 - [Magnet and torrent metadata](./docs/TORRENTS.md)
+- [Movies, streaming and subtitles](./docs/MOVIES.md)
 - [Security policy](./SECURITY.md)
 
 The protected operator dashboard reports capacity, uptime, traffic, requests,

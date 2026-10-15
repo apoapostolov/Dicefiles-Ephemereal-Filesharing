@@ -74,6 +74,14 @@ test("reader-progress listeners keep the debounce callback argument-free", () =>
   expect(source).toContain("const refreshProgress = debounce(() => this.refreshContinuity(), 500)");
   expect(source).not.toContain("debounce(event =>");
 });
+
+test("growing Continue watching cards reserve their actual height above the file rows", () => {
+  const source = fs.readFileSync(path.join(root, "client/files.js"), "utf8");
+  const css = fs.readFileSync(path.join(root, "entries/css/files.css"), "utf8");
+  expect(source).toContain("new ResizeObserver(");
+  expect(source).toContain("continuityActions.getBoundingClientRect().height");
+  expect(css).toContain("padding-top: var(--continuity-height, 52px)");
+});
 test("tablet rows and compact phone filename space are explicit", () => {
   const room = fs.readFileSync(path.join(root, "entries/css/room.css"), "utf8");
   const files = fs.readFileSync(path.join(root, "entries/css/files.css"), "utf8");

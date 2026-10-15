@@ -2,6 +2,7 @@ import EventEmitter from "events";
 import registry from "./registry";
 import Scroller from "./scroller";
 import { TorrentMetadataModal } from "./torrent-metadata";
+import { torrentAvailability } from "./torrent-availability";
 import { compactTag } from "./compact-tag";
 
 export default new (class Links extends EventEmitter {
@@ -188,6 +189,10 @@ export default new (class Links extends EventEmitter {
     // Tags (sharer pill)
     const tagsEl = document.createElement("span");
     tagsEl.className = "tags";
+    el.classList.toggle("torrent-entry", !!link.meta?.torrent);
+    if (link.meta?.torrent) {
+      tagsEl.appendChild(torrentAvailability(link.meta.torrent, () => registry.roomie.showModal(new TorrentMetadataModal(link.meta.torrent, link.name, null, { kind: "link", key: link.id })).catch(() => {})));
+    }
 
     const sharerTag = document.createElement("span");
     sharerTag.className = "tag tag-user";
@@ -245,6 +250,7 @@ export default new (class Links extends EventEmitter {
 
     this.links.sort((a, b) => b.date - a.date);
     this.render();
+    registry.files?.refreshContinuity();
   }
 
   onlinksdeleted(ids) {
@@ -265,6 +271,7 @@ export default new (class Links extends EventEmitter {
         el.parentNode.removeChild(el);
       }
     }
+    registry.files?.refreshContinuity();
   }
 
   onlinksupdated(links) {
@@ -282,6 +289,8 @@ export default new (class Links extends EventEmitter {
         this.elmap.set(existing, newEl);
       }
     }
+    registry.files?.refreshContinuity();
+    this.emit("links-changed");
   }
 
   render() {

@@ -2,6 +2,17 @@
 
 This spec is written for automation clients (agentic tools, skill builders, MCP wrappers).
 
+Interactive video playback and subtitles use room-session authorization rather
+than automation credentials. `GET /api/v1/media/:kind/:key/:index/stream` serves
+validated torrent video byte ranges (`kind` is `file` or `link`, `index` is the
+original torrent file index). `GET .../subtitle/:id` returns an authorized WebVTT
+track. Both check source-room membership, passwords, expiry and hidden-file policy
+on each request and use private/no-store caching. Movie catalogue mutations are
+room socket actions, restricted to the uploader, owner or moderator. Background
+matching can add high-confidence torrent results when enabled; manual choices
+take precedence. Room file metadata includes its per-video matching state. See
+[movie support](./docs/MOVIES.md) for provider setup and resource limits.
+
 ## 1. Base URLs and Compatibility
 
 - Primary automation prefix: `/api/v1`

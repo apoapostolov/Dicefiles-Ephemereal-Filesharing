@@ -3,8 +3,11 @@
 import { APOOL } from "../animationpool";
 import BaseFile from "../file";
 import { TorrentMetadataModal } from "../torrent-metadata";
+import { torrentAvailability } from "../torrent-availability";
 import registry from "../registry";
 import { compactTag } from "../compact-tag";
+import { movieRecord, showMovieInfo } from "../movie";
+import { durationSeconds, mediaTitle } from "../../common/video";
 import { dom, nukeEvent, sort, toPrettyDuration, toPrettySize } from "../util";
 import { REMOVALS, TTL } from "./tracker";
 
@@ -63,7 +66,7 @@ export default class File extends BaseFile {
     });
     this.nameTextEl = dom("span", {
       classes: ["name-text"],
-      text: this.name,
+      text: mediaTitle(movieRecord(this)?.movie, this.name),
     });
     this.nameEl.appendChild(this.nameTextEl);
     this.nameEl.appendChild(
@@ -417,6 +420,17 @@ export default class File extends BaseFile {
     });
     this.el.classList.remove("hidden-file");
     this.tagsEl.textContent = "";
+    this.el.classList.toggle("torrent-entry", !!this.meta?.torrent);
+    if (this.meta?.torrent) {
+      this.tagsEl.appendChild(torrentAvailability(this.meta.torrent, () => registry.roomie.showModal(new TorrentMetadataModal(this.meta.torrent, this.name, this.url, { kind: "file", key: this.key })).catch(() => {})));
+    }
+    if (this.type === "video" && (!durationSeconds(this.meta.durationSeconds || this.meta.duration) || durationSeconds(this.meta.durationSeconds || this.meta.duration) > 600)) {
+      const info = dom("button", { classes: ["movie-info-button"], attrs: { "type": "button", "aria-label": `Video information for ${this.name}`, "title": "Video information and subtitles" }, text: "ⓘ" });
+      info.onclick = e => {
+        nukeEvent(e); showMovieInfo(this);
+      };
+      this.tagsEl.appendChild(info);
+    }
     const bookLike = this.isBookLike();
     for (const [tn, tv] of tags) {
       if (tn === "request") {
@@ -749,6 +763,9 @@ export default class File extends BaseFile {
     }
     if (this.type === "audio") {
       return null;
+    }
+    if (this.type === "video") {
+      return { video: this.url, infos: [this.duration].filter(Boolean) };
     }
 
     // Allow readable documents (PDF/EPUB/MOBI) into the gallery even when no

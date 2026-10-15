@@ -240,7 +240,7 @@
 
 #filelist.continuity-visible #files,
 #filelist.continuity-visible #links {
-  padding-top: 52px;
+  padding-top: var(--continuity-height, 52px);
 }
 
 .file.continuity-focus {
@@ -437,7 +437,7 @@ body.links-mode #filelist-scroller {
 #files > .file > .name > .name-text {
   flex: 0 1 auto;
   min-width: 0;
-  max-width: calc(100% - 3.8em);
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1407,4 +1407,15 @@ body.links-mode #dropminder {
   #files:not(.gallerymode) > .file > .tags > .compact-tag.tag-usernick,
   #links > .file > .tags > .compact-tag.tag-user { box-sizing: border-box; flex: 0 0 26px; width: 26px; min-width: 26px; max-width: 26px; height: 26px; padding: 0; margin: 0; border: 0; }
   #files:not(.gallerymode) > .file > .tags > .compact-tag.tag-pages { box-sizing: border-box; flex: 0 0 auto; min-width: 32px; max-width: none; padding: 0 5px; border: 0; }
+  /* Swarm counts must not take the filename's space on a narrow phone. */
+  #files:not(.gallerymode) > .file.torrent-entry,
+  #links > .file.torrent-entry { display: grid; grid-template-columns: 1.25rem minmax(0, 1fr) auto; gap: 3px; }
+  #files:not(.gallerymode) > .file.torrent-entry > .icon,
+  #links > .file.torrent-entry > .icon { grid-row: 1; grid-column: 1; }
+  #files:not(.gallerymode) > .file.torrent-entry > .name,
+  #links > .file.torrent-entry > .name { grid-row: 1; grid-column: 2; min-width: 0; }
+  #files:not(.gallerymode) > .file.torrent-entry > .detail,
+  #links > .file.torrent-entry > .detail { grid-row: 1; grid-column: 3; max-width: none; width: auto; }
+  #files:not(.gallerymode) > .file.torrent-entry > .tags,
+  #links > .file.torrent-entry > .tags { grid-row: 2; grid-column: 2 / -1; min-width: 0; max-width: 100%; padding: 0; gap: 4px; }
 }

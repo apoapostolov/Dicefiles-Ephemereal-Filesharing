@@ -14,6 +14,14 @@ const LINUX = os.platform() === "linux";
 module.exports = {
   // Bounded public tracker/DHT metadata discovery; never downloads file payloads.
   torrentDiscovery: true,
+  torrentMonitor: true,
+  movieAutoMatch: true,
+  torrentPlayback: true,
+  tmdbToken: "",
+  tmdbApiKey: "",
+  tvdbApiKey: "",
+  tvdbPin: "",
+  traktClientId: "",
   // Your site's name
   name: "Dicefiles",
 
