@@ -5,7 +5,7 @@ const path = require("node:path");
 const vm = require("node:vm");
 const videoHelpers = require("../../common/video");
 
-function fixture() {
+function fixture(width = 1280, height = 720) {
   class Element extends EventTarget {
     constructor(tag) {
       super(); this.tagName = tag.toUpperCase(); this.children = []; this.attrs = {}; this.paused = true; this.currentTime = 0; this.duration = 660;
@@ -22,6 +22,10 @@ function fixture() {
     removeAttribute(key) {
       delete this.attrs[key];
     }
+    replaceChildren(...children) {
+      this.children = children;
+    }
+    remove() {}
     focus() {}
     load() {}
     async play() {
@@ -39,6 +43,8 @@ function fixture() {
   class Modal {
     constructor() {
       this.el = dom("form"); this.body = dom("div");
+      this.head = dom("div"); this.buttonsEl = dom("div"); this.buttons = [dom("button")];
+      this.buttons[0].classList = { add: jest.fn() };
     } onshown() {}
   }
 
@@ -47,12 +53,14 @@ function fixture() {
       return true;
     }
     constructor() {
-      this.configure = jest.fn(); this.selectTextTrack = jest.fn(); this.destroy = jest.fn(async () => {});
+      this.configure = jest.fn(); this.selectTextTrack = jest.fn(); this.destroy = jest.fn(async () => {}); this.listeners = {};
     }
     async attach(video, initialize) {
       this.video = video; this.initialize = initialize;
     }
-    addEventListener() {}
+    addEventListener(name, handler) {
+      this.listeners[name] = handler;
+    }
     async load(source, start) {
       this.source = source; this.video.currentTime = start || 0;
     }
@@ -61,13 +69,13 @@ function fixture() {
     }
   }
 
-  const shaka = { Player, polyfill: { installAll() {} } };
+  const shaka = { Player, polyfill: { installAll() {} }, util: { Error: { Severity: { CRITICAL: 2 } } } };
   const document = new Element("document"); document.pictureInPictureEnabled = false; document.hidden = false;
   const storage = new Map(); const localStorage = { get length() {
     return storage.size;
   }, key: i => [...storage.keys()][i], getItem: key => storage.get(key), setItem: jest.fn((key, value) => storage.set(key, value)), removeItem: key => storage.delete(key) };
   const source = fs.readFileSync(path.join(__dirname, "../../client/movie-player.js"), "utf8").replace(/^import .*;$/gm, "").replace("export class", "class").replace(/^export \{.*\};$/gm, "");
-  const context = { ...videoHelpers, shaka, Modal, dom, document, localStorage, addEventListener: jest.fn(), removeEventListener: jest.fn(), dispatchEvent: jest.fn(), CustomEvent, setInterval, clearInterval, movieCall: jest.fn(), moviePath: () => "/media/file/synthetic/-1", movieReference: () => ({ kind: "file", key: "synthetic", index: -1 }), showMovieInfo: jest.fn() };
+  const context = { ...videoHelpers, shaka, Modal, dom, document, localStorage, innerWidth: width, innerHeight: height, getComputedStyle: () => ({ paddingLeft: "12", paddingRight: "12", paddingTop: "12", paddingBottom: "12", marginTop: "0", marginBottom: "0" }), requestAnimationFrame: jest.fn(() => 1), cancelAnimationFrame: jest.fn(), addEventListener: jest.fn(), removeEventListener: jest.fn(), dispatchEvent: jest.fn(), CustomEvent, setInterval, clearInterval, movieCall: jest.fn(), moviePath: () => "/media/file/synthetic/-1", movieReference: () => ({ kind: "file", key: "synthetic", index: -1 }), showMovieInfo: jest.fn() };
   const MoviePlayer = vm.compileFunction(`${source}\nreturn MoviePlayer;`, Object.keys(context))(...Object.values(context));
   return { MoviePlayer, localStorage, document, context };
 }
@@ -79,6 +87,7 @@ test("Shaka 5 subtitle selection uses selectTextTrack and five-second saves stop
   const { MoviePlayer, localStorage } = fixture();
   const player = new MoviePlayer({ name: "Synthetic.mp4", url: "/video.mp4" }, undefined, { name: "Synthetic.mp4", subtitles: [{ id: "track", language: "en", label: "English" }] });
   await player.onshown();
+  await player.toggle();
   expect(player.player.initialize).toBe(false); expect(player.player.source).toBe("/video.mp4");
   player.captions.value = "1"; player.captions.onchange(); expect(player.player.selectTextTrack).toHaveBeenLastCalledWith({ id: 1 });
   player.captions.value = ""; player.captions.onchange(); expect(player.player.selectTextTrack).toHaveBeenLastCalledWith(null);
@@ -109,4 +118,59 @@ test("compact player groups fill transport, preference and view rows consistentl
   expect(css).toContain("grid-auto-columns: minmax(0, 1fr)");
   expect(css).toContain("max-width: none; min-height: 44px");
   expect(css).toContain(".movie-controls[hidden] { display: none; }");
+});
+
+test("opening buffers immediately without autoplay and places the close button in the header", async () => {
+  const { MoviePlayer } = fixture();
+  const player = new MoviePlayer({ name: "Synthetic.mp4", url: "/video.mp4" }, undefined, { name: "Synthetic.mp4" });
+  expect(player.head.children).toContain(player.closeButton);
+  expect(player.closeButton.attrs["aria-label"]).toBe("Close video player");
+  expect(player.video.attrs.preload).toBe("auto");
+  await player.onshown();
+  expect(player.player.source).toBe("/video.mp4");
+  expect(player.video.paused).toBe(true);
+  expect(player.playbackAttempted).toBe(false);
+  expect(player.feedback.textContent).toBe("Ready. Press Play to start.");
+  player.onhidden();
+});
+
+test("empty native errors and recoverable Shaka retries do not report playback failure", async () => {
+  const { MoviePlayer } = fixture();
+  const player = new MoviePlayer({ name: "Synthetic.mp4", url: "/video.mp4" }, undefined, { name: "Synthetic.mp4" });
+  await player.onshown();
+  player.video.dispatchEvent(new Event("error"));
+  player.player.listeners.error({ detail: { severity: 1, code: 1002 } });
+  expect(player.loadFailed).toBe(false);
+  expect(player.feedback.textContent).toBe("Ready. Press Play to start.");
+  player.onhidden();
+});
+
+test("preparation failures offer a real retry before any playback failure message", async () => {
+  const { MoviePlayer, context } = fixture();
+  const originalLoad = context.shaka.Player.prototype.load;
+  const load = jest.spyOn(context.shaka.Player.prototype, "load").mockRejectedValueOnce(new Error("synthetic load failure")).mockImplementation(originalLoad);
+  const player = new MoviePlayer({ name: "Synthetic.mp4", url: "/video.mp4" }, undefined, { name: "Synthetic.mp4" });
+  await player.onshown();
+  expect(player.feedback.textContent).toContain("Video preparation did not finish");
+  expect(player.feedback.textContent).not.toContain("could not play");
+  await player.toggle();
+  expect(load).toHaveBeenCalledTimes(2);
+  expect(player.video.paused).toBe(false);
+  expect(player.loadFailed).toBe(false);
+  player.onhidden();
+});
+
+test.each([[1280, 720, 1920, 1080], [390, 844, 1080, 1920], [740, 360, 1920, 1080]])("player fits its frame and controls inside %i × %i", (width, height, videoWidth, videoHeight) => {
+  const { MoviePlayer, context } = fixture(width, height);
+  const player = new MoviePlayer({ name: "Synthetic.mp4" });
+  player.el.style = { setProperty: jest.fn() };
+  player.el.getBoundingClientRect = () => ({ width: 1000 });
+  player.head.offsetHeight = 44; player.title.offsetHeight = 28;
+  player.feedback.offsetHeight = 24; player.controls.offsetHeight = 182;
+  player.video.videoWidth = videoWidth; player.video.videoHeight = videoHeight;
+  player.fit(); context.requestAnimationFrame.mock.calls[0][0]();
+  expect(parseFloat(player.el.style.height)).toBeLessThanOrEqual(height - 24);
+  expect(parseFloat(player.el.style.width)).toBeLessThanOrEqual(width - 24);
+  const css = fs.readFileSync(path.join(__dirname, "../../entries/css/movie.css"), "utf8");
+  expect(css).toContain("grid-template-rows: minmax(0, 1fr) auto auto");
 });

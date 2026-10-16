@@ -199,8 +199,9 @@ to its scope and endpoint.
 ## Room bots
 
 Bots are per-room plugins. Design and operator guides live in `core/plugins/`;
-the shipped examples are `mega-folder`, `remote-import`, `discord-release`, and
-`telegram-release`.
+the registry includes 27 built-in modules. Start with
+[collection setup](../../core/plugins/COLLECTION_BOTS.md) or
+[community and maintenance setup](../../core/plugins/WORKFLOW_BOTS.md).
 
 - Secrets such as a Mega password or a bot token belong in the room settings, which
   are stored in Redis, never in git and never in room chat.
@@ -209,6 +210,12 @@ the shipped examples are `mega-folder`, `remote-import`, `discord-release`, and
 - The MCP equivalents are `list_room_plugins`, `configure_room_plugin`,
   `run_room_plugin`, `remove_room_plugin`, `inspect_room_plugin_sync_memory`, and
   `clear_room_plugin_sync_memory`.
+- New collectors reference operator-approved pluginConnections; keep credentials
+  in private environment/config, never job payloads, room chat or public reports.
+- Activity includes durable jobs (cancel/replay), current reports and declared
+  review actions. Review uses room-plugins:write; queue/replay uses room-plugins:run.
+- Sessions are room-local, with member RSVPs and aggregate API reads. Enable
+  Session Organizer before planning; no external calendars are changed.
 - Enable the optional `megajs` dependency before relying on live Mega folder sync.
   In tests, fakes are injected through `buildPluginRuntimeCtx`.
 

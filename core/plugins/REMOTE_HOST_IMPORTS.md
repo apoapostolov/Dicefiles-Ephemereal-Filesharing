@@ -1,11 +1,20 @@
-# Remote host imports (design sketch)
+# Remote host imports: implemented adapters and expansion
 
 How Dicefiles should grow beyond **Mega.nz** toward the hosts hobby communities actually use: MediaFire, 4shared, Pixeldrain, Gofile, Catbox, Workupload, Dropbox public links, etc.
 
-The first implementation slice is now shipped: a shared downloader registry,
-the existing Mega.nz adapter, the `remote-import` bot, and an official-API
-Pixeldrain provider. Gofile, MediaFire, 4shared, and the shell bridge remain
-planned.
+Implemented: the shared downloader registry, `remote-import`, Mega.nz,
+official-API Pixeldrain and Gofile adapters, and the optional operator-allowlisted
+Plowshare bridge. MediaFire and 4shared remain proposed provider work unless an
+operator explicitly configures a supported bridge module. Provider availability,
+account requirements and capabilities are reported separately.
+
+The importer supports `includeExtensions`, `excludeNameContains` and `dryRun`,
+with the same filter limits as [Mega.nz](./MEGA_FOLDER.md). Select **Preview**
+in Room Options or send `{ "mode": "preview" }` to the run endpoint. A preview
+makes bounded metadata requests but never downloads file bodies, uploads or
+marks sources as synced; results include `planned` and `plannedBytes`.
+Explicitly disabled providers cannot be resolved. Scans share a five-minute
+deadline and bounded provider/file/byte budgets.
 
 The implementation-ready 1.4.6 scope, provider contract, Gofile design,
 Plowshare security boundary, migration rules, and acceptance tests are defined

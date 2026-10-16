@@ -64,6 +64,7 @@ jest.mock(
         int: () => o,
         min: () => o,
         max: () => o,
+        regex: () => o,
         url: () => o,
         uuid: () => o,
         positive: () => o,
@@ -133,9 +134,9 @@ function parseResult(result) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("registerTools", () => {
-  it("registers exactly 49 tools", () => {
+  it("registers exactly 57 tools", () => {
     const tools = buildToolMap();
-    expect(Object.keys(tools)).toHaveLength(49);
+    expect(Object.keys(tools)).toHaveLength(57);
   });
 
   it("registers every expected tool name", () => {

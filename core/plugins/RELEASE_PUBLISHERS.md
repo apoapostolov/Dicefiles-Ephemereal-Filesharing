@@ -13,6 +13,12 @@ Both may also accept narrowly scoped community commands. Inbound operation is
 off by default, provider-authenticated, restricted to explicit Discord or
 Telegram caller IDs, and limited to commands selected by the room owner.
 
+The run-mode selector offers **Connection test** and **Publish digest**. The
+digest publishes up to eight recent files with room links and counts. Neither
+mode is enabled automatically by an upgrade; running it sends to the configured
+destination. `notifyRequests` additionally announces new/fulfilled requests;
+its default is false. Normal release announcements retain their existing behavior.
+
 ## Before you start
 
 Set the public Dicefiles origin in `.config.json`:
@@ -49,7 +55,7 @@ environment and leave the room field blank.
 1. In the Discord Developer Portal, create/select the application that owns
    the slash command and copy its 64-character **Public Key**.
 2. Configure the `/dicefiles` command with subcommands `help`, `status`,
-   `requests`, `request`, and/or `say`. `request` and `say` use a string option
+   `requests`, `files`, `find`, `expiring`, `request`, and/or `say`. `find`, `request` and `say` use a string option
    named `text`.
 3. In the room plugin settings set:
    - `inboundEnabled`: true
@@ -67,6 +73,9 @@ Dicefiles verifies Discord's Ed25519 signature over the exact raw body and
 timestamp, rejects stale requests, checks the caller allowlist, and deduplicates
 interaction IDs. Responses are visible only to the caller unless
 `discordEphemeralResponses` is explicitly false.
+Slow authenticated commands receive a deferred response and update it when the
+work finishes, avoiding the initial Discord response deadline. That update is
+in process; a worker restart can interrupt it.
 
 ## Telegram
 
@@ -105,6 +114,10 @@ Dicefiles requires Telegram's `X-Telegram-Bot-Api-Secret-Token`, the configured
 chat ID, the configured forum topic when present, and an allowed user ID.
 Updates are deduplicated by `update_id`. Supported forms include `/status`,
 `/requests`, `/request text`, `/say text`, and `/dicefiles command text`.
+`/files`, `/find text` and `/expiring` are also available when allowlisted.
+Set `botUsername` to recognize `/command@YourBot`; commands addressed to another
+bot, ordinary chat and bot-authored messages are ignored. Replies use Telegram's
+current reply and link-preview options.
 
 ## What gets published
 
@@ -127,6 +140,9 @@ one worker publishes each `<plugin, room, event, file>` combination. Remote
 delivery is attempted up to three times; a final failure releases the lease so
 a later event replay can try again. Successful deliveries are remembered for
 the configured `pluginSyncLogRetentionDays`.
+Provider Retry-After is respected. Waits beyond the bounded in-process retry
+budget fail for later recovery rather than retrying early. This is not a durable
+outbox, and a crash after remote acceptance can leave an uncertain result.
 
 Scheduled and manual bot runs also expose a bounded last-run record (success,
 time, duration, delivered/uploaded/skipped counts, or a sanitized error)
@@ -140,6 +156,9 @@ redacted.
 | `help` | Show this room's enabled commands |
 | `status` | Aggregate file and open-request counts |
 | `requests` | Up to eight open request titles |
+| `files` | Up to six recent file names and links |
+| `find <text>` | Up to six matching file names and links |
+| `expiring` | Up to six files expiring within the next 24 hours |
 | `request <text>` | Create a request as the publisher bot |
 | `say <text>` | Post a bot-attributed room message naming the remote caller |
 

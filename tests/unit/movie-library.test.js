@@ -75,8 +75,9 @@ test("viewers can search, but cannot change another uploader's match or subtitle
 test("confirmed matches preserve the uploaded filename and survive later subtitle edits", async () => {
   const f = fixture(); const movie = await f.call("match", { provider: "tmdb", id: "1", kind: "movie" });
   expect(movie.movie.title).toBe("Example"); expect(f.uploads.get("video").name).toBe("Example.2020.mp4");
-  const added = await f.call("subtitle", { text: "1\n00:00:01,000 --> 00:00:02,000\nHello", language: "en" });
+  const added = await f.call("subtitle", { text: "1\n00:00:01,000 --> 00:00:02,000\nHello", language: "en", filename: "Example.English.srt" });
   expect(added.movie.title).toBe("Example"); expect(added.subtitles).toHaveLength(1); expect(added.subtitles[0].text).toBeUndefined();
+  expect(added.subtitles[0].filename).toBe("Example.English.srt");
   expect(JSON.stringify(f.uploads.get("video").meta.cinema)).not.toContain("WEBVTT");
   expect(JSON.stringify(await f.call("get"))).not.toContain("WEBVTT");
   const removed = await f.call("remove-subtitle", added.subtitles[0].id); expect(removed.subtitles).toEqual([]);

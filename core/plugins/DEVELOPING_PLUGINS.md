@@ -9,7 +9,7 @@ Audience: operators and developers who already run a self-hosted Dicefiles insta
 
 ---
 
-## 1.4.4 runtime contract
+## Current runtime contract
 
 Release 1.4.4 makes event-driven plugins a supported first-party integration path:
 plugins can subscribe to room lifecycle events, call bounded Dicefiles adapters,
@@ -18,6 +18,12 @@ leases before publishing to an external service. Scheduled runs are leased
 across workers, bounded last-run status is retained, and room bots have scoped
 REST/MCP administration. Discord and Telegram release publishers are the
 reference outbound and authenticated-inbound implementations.
+
+The unreleased maintenance round adds the additive
+[Plugin API v2](./PLUGIN_API.md): private durable checkpoints, room inventory,
+individual file reads, paginated search, text/binary HTTP and cooperative
+cancellation. The [audit and ordered bot plan](../../docs/BOTS_AND_PLUGINS.md) describes
+implemented fixes and ordered expansion. Existing v1 modules remain supported.
 
 ---
 
@@ -86,6 +92,7 @@ module.exports = {
   description: "…",
   capabilities: ["events:read", "rooms:read", "network:write"],
   eventSubscriptions: ["file_uploaded"],
+  runModes: ["run", "preview"], // optional explicit modes, advertised in catalog
   configSchema: { /* JSON-Schema-like object for docs */ },
 
   /** @returns {{ ok: boolean, errors?: string[] }} */
@@ -120,7 +127,9 @@ Plugins **act like bots**, not like silent system noise:
 | File list UI | Cyan **BOT** pill + name (`tag-bot`) |
 | Chat (if used) | `.u.bot` color + BOT glyph |
 
-`makePluginCtx` wraps `ctx.uploadFile` so every upload gets `botName`, `role: "bot"`, and `meta.plugin` unless you override.
+`makePluginCtx` wraps `ctx.uploadFile` so every upload retains the active bot's
+`botName`, `role: "bot"`, and `meta.plugin`; a supplied spec cannot impersonate
+a human or another plugin through this adapter.
 
 ### Context (`ctx`)
 
@@ -129,6 +138,9 @@ Provided by the registry:
 | Field | Meaning |
 |-------|---------|
 | `pluginId` | Same as `plugin.id` |
+| `apiVersion` | `2`, additive context contract; independent of REST/MCP versions |
+| `state.get/set/delete/list` | Private room/plugin checkpoints, expiry, version checks and quotas; see API guide |
+| `signal` | During run: aborts cooperative adapters if execution lease ownership is lost |
 | `pluginName` / `botName` | Display identity for the bot |
 | `config` | Per-instance config from `.config.json` → `plugins[].config` |
 | `enabled` | boolean |
@@ -139,9 +151,14 @@ Provided by the registry:
 | `remoteDownloaders` | Allowlisted provider registry used by multi-host importers (`resolve` / `listFolder`). |
 | `publicBaseUrl` | Operator-configured public Dicefiles origin for external links |
 | `http.requestJson(url, options)` | Timeout-bounded JSON HTTP client whose errors do not echo secret-bearing URLs |
+| `http.requestText/requestBuffer` | Bounded UTF-8 feed or small binary responses, with the same timeout/error contract |
 | `events.begin/complete/fail` | Redis-backed one-time event lease for multi-worker idempotency |
+| `events.renew` | Ownership-checked lease renewal; the runtime renews run leases every minute |
 | `dicefiles.getRoomSummary(roomId)` | Stable room identity/read surface |
 | `dicefiles.listFiles({roomId, since?, limit?})` | Stable, bounded file read surface |
+| `dicefiles.listFilesPage({roomId, query?, since?, expiresBefore?, cursor?, limit?})` | Stable timestamp/key pagination; returns files and nextCursor |
+| `dicefiles.getFile({roomId, key})` | One visible room file with sanitized metadata |
+| `dicefiles.getRoomInventory({roomId})` | Counts, logical bytes, type totals, duplicate hashes and 24-hour expiry counts |
 | `dicefiles.listRequests({roomId, status?, limit?})` | Stable, bounded request read surface |
 | `dicefiles.createRequest({roomId, text, remoteUser?})` | Create a bot-attributed request |
 | `dicefiles.postMessage({roomId, text})` | Post bot-attributed room chat without importing Broker internals |
@@ -179,6 +196,10 @@ The equivalent automation endpoints use dedicated least-privilege scopes:
 
 Read responses redact secret-like configuration fields and include bounded
 last-run state. PUT merges supplied config so omitted credentials survive.
+The run endpoint accepts optional `{ "mode": "preview" }` (importers) or
+`test`/`digest` (publishers). Disabled invitations cannot run. Room Options has
+the same mode selector. Runs share a renewable active lease across manual,
+scheduled, global and room entry points for the same bot/room.
 
 ### Configuration
 
@@ -351,3 +372,13 @@ UI: Room Options → **Invites** tab.
 - Treat `plugin.id` + `version` as a contract for operators.  
 - Adding events is non-breaking if hooks ignore unknown names.  
 - Removing events or changing payload fields is breaking — document in CHANGELOG.
+
+
+## Built-in collection and workflow examples
+
+The registry contains 27 built-in bots, including the 23 retained additions.
+Use [Plugin API v2](./PLUGIN_API.md) for scoped jobs, connection references,
+versioned state, report actions, typed mutations and maintenance readers.
+[Collectors](./COLLECTION_BOTS.md) and [community/maintenance workflows](./WORKFLOW_BOTS.md)
+show operator setup, quiet defaults, review semantics and live acceptance limits.
+Room invitations are capped at 32 within the shared configuration-size bound.

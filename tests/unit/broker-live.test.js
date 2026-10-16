@@ -83,6 +83,57 @@ describe("broker live redis (shipped)", () => {
     await expect(ping()).resolves.toBeTruthy();
   }, 10000);
 
+  test("plugin checkpoint versions are atomic across workers in real Redis", async () => {
+    if (!available) {
+      return;
+    }
+    const redis = BROKER.getMethods("pluginstate", "del", "pttl");
+    const keys = new Set();
+    const { createPluginStateFactory } = require("../../lib/plugins/state");
+
+    const create = createPluginStateFactory({ memory: false, redis: { pluginstate(...args) {
+      keys.add(args[0]); return redis.pluginstate(...args);
+    } } });
+    const one = create({ pluginId: "test-checkpoint", roomId: KEY });
+    const two = create({ pluginId: "test-checkpoint", roomId: KEY });
+    try {
+      const first = await one.set("cursor", [null, "page1"], { ifVersion: null, ttlSeconds: 60 });
+      expect((await two.get("cursor")).value).toEqual([null, "page1"]);
+      const results = await Promise.allSettled([one.set("cursor", "worker1", { ifVersion: first.version }), two.set("cursor", "worker2", { ifVersion: first.version })]);
+      expect(results.filter(result => result.status === "fulfilled")).toHaveLength(1);
+      expect(results.find(result => result.status === "rejected").reason.code).toBe("PLUGIN_STATE_CONFLICT");
+      await expect(one.delete("cursor", { ifVersion: first.version })).rejects.toMatchObject({ status: 409 });
+      expect((await one.list()).entries).toHaveLength(1);
+      expect(Number(await redis.pttl([...keys][0]))).toBeGreaterThan(0);
+      expect(await one.delete("cursor")).toBe(true);
+      expect(await two.get("cursor")).toBeNull();
+    }
+    finally {
+      for (const key of keys) {
+        await redis.del(key);
+      }
+    }
+  });
+
+  test("stale event owners cannot complete or unlock another worker's lease", async () => {
+    if (!available) {
+      return;
+    }
+    const redis = BROKER.getMethods("set", "get", "del", "eventcomplete", "lease");
+    const lock = `${KEY}:plugin-lock`; const done = `${KEY}:plugin-done`;
+    try {
+      await redis.set(lock, "current-owner", "EX", 60);
+      expect(Number(await redis.eventcomplete(lock, done, "old-owner", 60))).toBe(0);
+      expect(Number(await redis.lease(lock, "old-owner", "release"))).toBe(0);
+      expect(await redis.get(lock)).toBe("current-owner"); expect(await redis.get(done)).toBeNull();
+      expect(Number(await redis.eventcomplete(lock, done, "current-owner", 60))).toBe(1);
+      expect(await redis.get(lock)).toBeNull(); expect(await redis.get(done)).toBe("1");
+    }
+    finally {
+      await redis.del(lock, done);
+    }
+  });
+
   test("set/get/del complete without hang (promise-only path)", async () => {
     if (!available) {
       return;

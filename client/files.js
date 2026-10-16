@@ -2415,7 +2415,7 @@ export default new (class Files extends EventEmitter {
     }
     const [head] = visible;
     if (this.sortMode === "largest") {
-      sort(visible, e => e.size || 0).reverse();
+      sort(visible, e => e.meta?.torrent || /\.(torrent|magnet)$/i.test(e.name || "") ? e.displaySize || 0 : e.size || 0).reverse();
     }
     else if (this.sortMode === "expiring") {
       sort(visible, e => Number(e.expires) || Infinity);

@@ -4,6 +4,8 @@ import Scroller from "./scroller";
 import { TorrentMetadataModal } from "./torrent-metadata";
 import { torrentAvailability } from "./torrent-availability";
 import { compactTag } from "./compact-tag";
+import { torrentMedia, torrentContentsSize } from "../common/torrent-media";
+import { toPrettySize } from "./util";
 
 export default new (class Links extends EventEmitter {
   constructor() {
@@ -168,7 +170,7 @@ export default new (class Links extends EventEmitter {
 
     const nameTextEl = document.createElement("span");
     nameTextEl.className = "name-text";
-    nameTextEl.textContent = link.name || link.url;
+    nameTextEl.textContent = link.meta?.torrent ? torrentMedia(link.meta.torrent, link.meta.cinema, link.name)?.title || link.name || link.url : link.name || link.url;
     namePrimaryEl.appendChild(nameTextEl);
 
     const newPill = document.createElement("span");
@@ -207,6 +209,8 @@ export default new (class Links extends EventEmitter {
     const detailEl = document.createElement("span");
     detailEl.className = "detail";
     if (link.meta?.torrent) {
+      const size = document.createElement("span"); size.className = "size";
+      const contentsSize = torrentContentsSize(link.meta.torrent); size.textContent = contentsSize === null ? "—" : toPrettySize(contentsSize); size.title = "Torrent contents size"; detailEl.appendChild(size);
       const button = document.createElement("button");
       button.type = "button";
       button.className = "torrent-info i-info";

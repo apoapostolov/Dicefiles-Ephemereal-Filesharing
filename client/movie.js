@@ -4,6 +4,7 @@ import Modal from "./modal";
 import registry from "./registry";
 import { dom } from "./util";
 import { filenameQuery, mediaTitle, watchKey } from "../common/video";
+import { subtitleLanguages } from "../common/subtitle-languages";
 
 export const movieReference = (file, index = -1, kind = "file") => ({ kind, key: file.key || file.id, index });
 export const movieCall = (reference, operation, input) => registry.socket.makeCall("media", `mv${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`, reference, operation, input);
@@ -14,7 +15,7 @@ function button(label, action, cls = "") {
   el.onclick = action; return el;
 }
 
-export function movieHero(movie, fallback, compact = false, watchButton) {
+export function movieHero(movie, fallback, compact = false, watchButton, displayTitle) {
   const hero = dom("section", { classes: ["movie-hero", ...(compact ? ["movie-compact"] : []), ...(watchButton ? ["has-watch-action"] : []), ...(!movie?.poster ? ["movie-no-poster"] : [])] });
   if (movie?.backdrop) {
     hero.appendChild(dom("img", { classes: ["movie-backdrop"], attrs: { src: movie.backdrop, alt: "", loading: "lazy", referrerpolicy: "no-referrer" } }));
@@ -28,7 +29,7 @@ export function movieHero(movie, fallback, compact = false, watchButton) {
     intro.appendChild(dom("img", { classes: ["movie-logo"], attrs: { src: movie.logo, alt: "", loading: "lazy", referrerpolicy: "no-referrer" } }));
   }
   intro.appendChild(dom("p", { classes: ["movie-eyebrow"], text: movie ? movie.kind === "episode" ? "Episode" : movie.kind === "tv" ? "Series" : "Movie" : "Your video" }));
-  intro.appendChild(dom("h2", { text: mediaTitle(movie, fallback) }));
+  intro.appendChild(dom("h2", { text: displayTitle || mediaTitle(movie, fallback) }));
   const facts = [movie?.runtime ? `${movie.runtime} min` : null, movie?.rating ? `★ ${Number(movie.rating).toFixed(1)}` : null, ...(movie?.genres || []).slice(0, 3)].filter(Boolean);
   if (facts.length) {
     intro.appendChild(dom("p", { classes: ["movie-facts"], text: facts.join(" · ") }));
@@ -39,7 +40,7 @@ export function movieHero(movie, fallback, compact = false, watchButton) {
   let links;
   if (movie || watchButton) {
     links = dom("div", { classes: ["movie-actions"] });
-    for (const [label, href] of [[watchButton ? "Trailer ↗" : "Watch trailer ↗", movie?.trailer], [watchButton ? "Title ↗" : "Title page ↗", movie?.url], ["IMDb ↗", movie?.imdb]]) {
+    for (const [label, href] of [["Watch trailer ↗", !watchButton && movie?.trailer], [watchButton ? "Title ↗" : "Title page ↗", movie?.url], ["IMDb ↗", movie?.imdb]]) {
       if (href) {
         links.appendChild(dom("a", { classes: ["movie-action"], text: label, attrs: { href, target: "_blank", rel: "noopener noreferrer" } }));
       }
@@ -66,6 +67,30 @@ export function movieHero(movie, fallback, compact = false, watchButton) {
     content.appendChild(links);
   }
   hero.appendChild(content); return hero;
+}
+
+function movieMedia(movie) {
+  if (!movie?.trailer && !movie?.screenshots?.length) {
+    return null;
+  }
+  const section = dom("section", { classes: ["movie-media"] });
+  section.appendChild(dom("h3", { text: movie.trailer ? movie.screenshots?.length ? "Trailer & scenes" : "Trailer" : "Scenes" }));
+  const row = dom("div", { classes: ["movie-scenes"], attrs: { "aria-label": "Trailers and scenes" } });
+  if (movie.trailer) {
+    const trailer = dom("a", { classes: ["movie-trailer"], attrs: { "href": movie.trailer, "target": "_blank", "rel": "noopener noreferrer", "aria-label": "Watch trailer" } });
+    const image = movie.backdrop || movie.screenshots?.[0];
+    if (image) {
+      trailer.appendChild(dom("img", { attrs: { src: image, alt: "", loading: "lazy", referrerpolicy: "no-referrer" } }));
+    }
+    trailer.append(dom("span", { classes: ["movie-trailer-play"], text: "▶", attrs: { "aria-hidden": "true" } }), dom("span", { classes: ["movie-trailer-label"], text: "Trailer ↗" }));
+    row.appendChild(trailer);
+  }
+  for (const image of movie.screenshots || []) {
+    const scene = dom("a", { attrs: { "href": image, "target": "_blank", "rel": "noopener noreferrer", "aria-label": "Open scene image" } });
+    scene.appendChild(dom("img", { attrs: { src: image, alt: "Scene", loading: "lazy", referrerpolicy: "no-referrer" } }));
+    row.appendChild(scene);
+  }
+  section.appendChild(row); return section;
 }
 
 export class MovieModal extends Modal {
@@ -127,6 +152,10 @@ export class MovieModal extends Modal {
       const message = reason === "library-full" ? "The video library is full. Ask the site operator to remove expired entries." : this.data.autoMatch?.state === "retry" ? "Automatic lookup will retry later. You can search or paste a provider URL now." : this.data.autoMatch ? "No confident automatic match was found. Search below or paste a provider URL to choose the correct title." : "Automatic matching is queued. You can also search or paste a provider URL below.";
       this.body.appendChild(dom("p", { classes: ["movie-hint"], text: message }));
     }
+    const media = movieMedia(movie);
+    if (media) {
+      this.body.appendChild(media);
+    }
     if (movie?.cast?.length) {
       this.body.appendChild(dom("h3", { text: "Cast" }));
       const cast = dom("div", { classes: ["movie-cast"] });
@@ -138,15 +167,6 @@ export class MovieModal extends Modal {
         card.append(dom("strong", { text: person.name }), dom("span", { text: person.role })); cast.appendChild(card);
       }
       this.body.appendChild(cast);
-    }
-    if (movie?.screenshots?.length) {
-      this.body.appendChild(dom("h3", { text: "Scenes" }));
-      const scenes = dom("div", { classes: ["movie-scenes"] });
-      for (const image of movie.screenshots) {
-        scenes.appendChild(dom("a", { attrs: { "href": image, "target": "_blank", "rel": "noopener noreferrer", "aria-label": "Open scene image" } }));
-        scenes.lastChild.appendChild(dom("img", { attrs: { src: image, alt: "Scene", loading: "lazy", referrerpolicy: "no-referrer" } }));
-      }
-      this.body.appendChild(scenes);
     }
     if (movie?.attribution) {
       this.body.appendChild(dom("p", { classes: ["movie-attribution"], text: movie.attribution }));
@@ -221,34 +241,54 @@ export class MovieModal extends Modal {
 
   renderSubtitles() {
     const section = dom("section", { classes: ["movie-subtitles"] }); section.appendChild(dom("h3", { text: "Subtitles" }));
-    for (const track of this.data.subtitles || []) {
-      const row = dom("div", { classes: ["movie-subtitle-row"] }); row.appendChild(dom("span", { text: track.label }));
-      if (this.data.editable) {
-        row.appendChild(button(`Remove ${track.label}`, () => this.run(async () => {
-          Object.assign(this.data, await movieCall(this.reference, "remove-subtitle", track.id)); this.render();
-        })));
-      }
-      section.appendChild(row);
-    }
-    if (!(this.data.subtitles || []).length) {
-      section.appendChild(dom("p", { classes: ["movie-hint"], text: "No subtitles added." }));
-    }
     if (this.data.editable) {
+      const form = dom("div", { classes: ["movie-subtitle-form"] });
       const languageLabel = dom("label", { text: "Language" });
-      const language = dom("input", { attrs: { "type": "text", "placeholder": "en, uk, pt-BR…", "maxlength": 35, "aria-label": "Subtitle language", "autocapitalize": "none", "spellcheck": "false" } }); language.value = navigator.language || "en";
+      const language = dom("select", { attrs: { "aria-label": "Subtitle language" } });
+      for (const option of subtitleLanguages) {
+        language.appendChild(dom("option", { text: option.label, attrs: { value: option.language } }));
+      }
+      language.value = "en";
       languageLabel.appendChild(language);
-      const fileLabel = dom("label", { text: "Subtitle file" });
-      const input = dom("input", { attrs: { "type": "file", "accept": ".srt,.vtt", "aria-label": "Subtitle file" } }); fileLabel.appendChild(input);
-      const upload = button("Add subtitles", () => this.run(async () => {
-        const file = input.files?.[0];
-        if (!file || file.size > 256 * 1024) {
-          this.feedback.textContent = "Choose a UTF-8 SRT or VTT file smaller than 256 KiB."; return;
+      const fileLabel = dom("label", { classes: ["movie-subtitle-picker"], text: "SRT or VTT · up to 256 KiB" });
+      const picker = dom("span", { classes: ["movie-action"], text: "Add file…" });
+      const input = dom("input", { attrs: { "type": "file", "accept": ".srt,.vtt", "aria-label": "Subtitle file" } });
+      fileLabel.append(picker, input);
+      input.onchange = async () => {
+        if (this.busy) {
+          input.value = ""; return;
         }
-        this.feedback.textContent = "Adding subtitles…";
-        const text = await file.text(); const result = await movieCall(this.reference, "subtitle", { text, language: language.value.trim() });
-        Object.assign(this.data, result); this.render(); this.feedback.textContent = "Subtitles added. Choose the language in the player's subtitles menu.";
-      }));
-      section.append(languageLabel, fileLabel, upload);
+        await this.run(async () => {
+          const file = input.files?.[0];
+          if (!file || file.size > 256 * 1024) {
+            this.feedback.textContent = "Choose a UTF-8 SRT or VTT file smaller than 256 KiB."; return;
+          }
+          this.feedback.textContent = "Adding subtitles…";
+          const text = await file.text(); const result = await movieCall(this.reference, "subtitle", { text, language: language.value, filename: file.name });
+          Object.assign(this.data, result); this.render(); this.feedback.textContent = "Subtitles added. Choose the language in the player's subtitles menu.";
+        });
+        input.value = "";
+      };
+      form.append(languageLabel, fileLabel); section.appendChild(form);
+    }
+    const list = dom("ul", { classes: ["movie-subtitle-list"], attrs: { "aria-label": "Uploaded subtitles" } });
+    for (const track of this.data.subtitles || []) {
+      const row = dom("li", { classes: ["movie-subtitle-row"] });
+      const pair = dom("span", { classes: ["movie-subtitle-pair"] });
+      pair.append(dom("strong", { text: track.label }), dom("span", { text: track.filename || "Converted subtitles (VTT)" }));
+      row.appendChild(pair);
+      if (this.data.editable) {
+        const remove = button("×", () => this.run(async () => {
+          Object.assign(this.data, await movieCall(this.reference, "remove-subtitle", track.id)); this.render();
+        }));
+        remove.setAttribute("aria-label", `Remove ${track.label}${track.filename ? ` · ${track.filename}` : ""}`);
+        row.appendChild(remove);
+      }
+      list.appendChild(row);
+    }
+    section.appendChild(list);
+    if (!list.children.length) {
+      section.appendChild(dom("p", { classes: ["movie-hint"], text: "No subtitles added." }));
     }
     this.body.appendChild(section);
   }

@@ -28,11 +28,24 @@ function mediaTitle(movie, fallback) {
   return `${movie.title}${movie.year ? ` (${movie.year})` : ""}`;
 }
 
-function filenameQuery(name) {
-  const base = String(name || "").split(/[/\\]/).pop().replace(/\.[a-z0-9]{2,5}$/i, "");
-  const episode = base.match(/\bS(\d{1,2})[ ._-]*E(\d{1,3})\b/i) || base.match(/\b(\d{1,2})x(\d{2,3})\b/i);
+function filenameQuery(name, context = "") {
+  const parts = String(name || "").split(/[/\\]/);
+  const base = parts.pop().replace(/\.[a-z0-9]{2,5}$/i, "").replace(/[._]+/g, " ");
+  const episode = base.match(/\bS(\d{1,2})[ -]*E(\d{1,3})(?!\d)/i) || base.match(/\b(\d{1,2})x(\d{2,3})\b/i);
+  const seasonContext = [base, ...parts.slice().reverse(), String(context)].map(value => value.replace(/[._]+/g, " ")).find(value => {
+    const seasons = [...value.matchAll(/\b(?:S|Season[ -]*)(\d{1,2})(?![\dE])/gi)].map(match => Number(match[1]));
+    return seasons.length && new Set(seasons).size === 1;
+  });
+  const season = seasonContext?.match(/\b(?:S|Season[ -]*)(\d{1,2})(?![\dE])/i);
+  const standaloneEpisode = !episode && (base.match(/\b(?:E|Episode[ -]*)(\d{1,3})(?!\d)/i) || season && base.match(/^(\d{1,3})(?:[ -]|$)/));
   const year = base.match(/\b((?:19|20)\d{2})\b/);
-  return { query: base.split(/\b(?:S\d{1,2}[ ._-]*E\d{1,3}|\d{1,2}x\d{2,3}|(?:19|20)\d{2}|2160p|1080p|720p|480p|WEB[ ._-]*DL|BluRay|HDTV)\b/i)[0].replace(/[._]+/g, " ").trim().slice(0, 150), year: year ? Number(year[1]) : null, season: episode ? Number(episode[1]) : null, episode: episode ? Number(episode[2]) : null };
+  const prefix = base.split(/\bS\d{1,2}[ -]*E\d{1,3}(?!\d)/i)[0];
+  let query = prefix.split(/\b(?:S\d{1,2}|Season[ -]*\d{1,2}|E\d{1,3}|Episode[ -]*\d{1,3}|\d{1,2}x\d{2,3}|(?:19|20)\d{2}|2160p|1080p|720p|480p|576p|WEB[ -]*(?:DL|Rip)|BluRay|HDTV|COMPLETE|PACK)\b/i)[0].replace(/[()[\] -]+$/g, "").trim().slice(0, 150);
+  if (standaloneEpisode && season) {
+    const parent = parts.slice().reverse().find(value => filenameQuery(`${value}.mkv`).query.length > 1) || context;
+    query = parent ? filenameQuery(`${parent}.mkv`).query : query;
+  }
+  return { query, year: year ? Number(year[1]) : null, season: episode ? Number(episode[1]) : standaloneEpisode && season ? Number(season[1]) : null, episode: episode ? Number(episode[2]) : standaloneEpisode && season ? Number(standaloneEpisode[1]) : null };
 }
 
 function watchKey(reference, index = -1) {

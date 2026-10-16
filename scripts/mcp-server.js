@@ -4,7 +4,7 @@ require("../lib/environment").loadEnvironment();
 /**
  * scripts/mcp-server.js — Dicefiles MCP server wrapper
  *
- * Wraps the Dicefiles REST API as 49 MCP tools, allowing any MCP-compatible
+ * Wraps the Dicefiles REST API as 57 MCP tools, allowing any MCP-compatible
  * AI client (Claude Desktop, Cursor, Continue, OpenClaw, AutoGen) to interact with
  * a Dicefiles instance directly.
  *
@@ -235,6 +235,14 @@ const TOOL_META = {
     readOnly: true,
   },
   list_room_plugins: { title: "List room plugins", readOnly: true },
+  inspect_room_plugin_operations: { title: "Inspect bot jobs and report", readOnly: true },
+  list_room_plugin_connections: { title: "List approved bot connections", readOnly: true },
+  queue_room_plugin_job: { title: "Queue a bot job", idempotent: false },
+  update_room_plugin_job: { title: "Cancel or replay a bot job" },
+  review_room_plugin_item: { title: "Apply a reviewed bot proposal" },
+  list_room_sessions: { title: "List room sessions", readOnly: true },
+  create_room_session: { title: "Plan a room session", idempotent: false },
+  update_room_session: { title: "Cancel or restore a room session" },
   inspect_room_plugin_sync_memory: {
     title: "Inspect plugin sync memory",
     readOnly: true,
@@ -283,7 +291,7 @@ const TOOL_META = {
 };
 
 /**
- * Register one tool on the server. Thin wrapper so the 49 registrations below
+ * Register one tool on the server. Thin wrapper so the 57 registrations below
  * keep the v1 call shape while the annotations live in one reviewable table.
  * @param {McpServer|{registerTool:Function}} srv
  * @param {string} name
@@ -330,6 +338,14 @@ const TOOL_SCOPES = Object.freeze({
   remove_federated_room_link: "federation-links:write",
   set_room_federation_policy: "federation-links:write",
   list_room_plugins: "room-plugins:read",
+  inspect_room_plugin_operations: "room-plugins:read",
+  list_room_plugin_connections: "room-plugins:read",
+  queue_room_plugin_job: "room-plugins:run",
+  update_room_plugin_job: "room-plugins:run",
+  review_room_plugin_item: "room-plugins:write",
+  list_room_sessions: "files:read",
+  create_room_session: "rooms:write",
+  update_room_session: "rooms:write",
   configure_room_plugin: "room-plugins:write",
   remove_room_plugin: "room-plugins:write",
   run_room_plugin: "room-plugins:run",
@@ -386,6 +402,16 @@ function createServer() {
  * @param {McpServer|{registerTool:Function}} srv
  */
 function registerTools(srv) {
+  const botSelection = { roomid: z.string(), pluginId: z.string() };
+  const botPath = args => `/rooms/${encodeURIComponent(args.roomid)}/plugins/${encodeURIComponent(args.pluginId)}`;
+  defineTool(srv, "review_room_plugin_item", "Apply a declared action from the latest bot report. Stale or changed items are rejected. Requires room-plugins:write.", { ...botSelection, reportId: z.string().max(64), itemId: z.string().max(80), action: z.string().max(32) }, async args => wrap(await api("POST", `${botPath(args)}/review`, { reportId: args.reportId, itemId: args.itemId, action: args.action })));
+  defineTool(srv, "list_room_sessions", "List room-local sessions, preparation links and aggregate RSVPs without member identities. Requires files:read.", { roomid: z.string() }, async args => wrap(await api("GET", `/rooms/${encodeURIComponent(args.roomid)}/sessions`)));
+  defineTool(srv, "create_room_session", "Plan a session within 60 days in a room with Session Organizer enabled. Times are Unix milliseconds; no external calendars are changed. Requires rooms:write.", { roomid: z.string(), title: z.string().max(120), startsAt: z.number(), endsAt: z.number().optional(), timezone: z.string(), description: z.string().max(1000).optional(), links: z.array(z.string()).max(20).optional() }, async ({ roomid, ...body }) => wrap(await api("POST", `/rooms/${encodeURIComponent(roomid)}/sessions`, body)));
+  defineTool(srv, "update_room_session", "Cancel or restore a room session using its current revision. Requires rooms:write.", { roomid: z.string(), sessionId: z.string(), revision: z.string(), cancelled: z.boolean() }, async ({ roomid, sessionId, ...body }) => wrap(await api("PATCH", `/rooms/${encodeURIComponent(roomid)}/sessions/${encodeURIComponent(sessionId)}`, body)));
+  defineTool(srv, "inspect_room_plugin_operations", "Read one invited bot's bounded job history and latest preview/report. Requires room-plugins:read.", { ...botSelection, cursor: z.string().optional() }, async args => wrap(await api("GET", `${botPath(args)}/operations${args.cursor ? `?cursor=${encodeURIComponent(args.cursor)}` : ""}`)));
+  defineTool(srv, "list_room_plugin_connections", "List operator-approved connection labels for this bot and room. Credentials are never returned. Requires room-plugins:read.", botSelection, async args => wrap(await api("GET", `${botPath(args)}/connections`)));
+  defineTool(srv, "queue_room_plugin_job", "Queue durable bot work; retries survive restarts. Choose an advertised run mode. Requires room-plugins:run.", { ...botSelection, mode: z.enum(["run", "preview", "test", "digest"]).optional(), idempotencyKey: z.string().max(256).optional() }, async args => wrap(await api("POST", `${botPath(args)}/jobs`, { mode: args.mode, idempotencyKey: args.idempotencyKey })));
+  defineTool(srv, "update_room_plugin_job", "Cancel active work or replay a failed/cancelled bot job using current settings. Requires room-plugins:run.", { ...botSelection, jobId: z.string().regex(/^[a-f0-9]{64}$/), action: z.enum(["cancel", "replay"]) }, async args => wrap(await api("POST", `${botPath(args)}/jobs/${args.jobId}/${args.action}`)));
   defineTool(srv, "list_remote_import_providers", "List installed remote import providers, capabilities, circuit state and availability. Requires room-plugins:read.", {}, async () => wrap(await api("GET", "/remote-import/providers")));
   defineTool(srv, "validate_remote_import_source", "Validate a source URL against installed and allowed remote providers without importing files. Requires room-plugins:read.", { url: z.string().max(2048), providers: z.array(z.string()).max(4).optional() }, async body => wrap(await api("POST", "/remote-import/validate-source", body)));
   defineTool(srv, "list_storage_migrations", "List the persistent storage migration journal. Requires admin:read.", { limit: z.number().int().min(1).max(500).optional(), cursor: z.string().optional() }, async args => wrap(await api("GET", `/admin/storage/migrations?${new URLSearchParams(Object.entries(args).filter(([, value]) => value != null))}`)));
@@ -1047,13 +1073,15 @@ function registerTools(srv) {
     {
       roomid: z.string().describe("Room ID"),
       pluginId: z.string().describe("Invited plugin ID"),
+      mode: z.enum(["run", "preview", "test", "digest"]).optional().describe("Optional mode from this bot's runModes; preview imports without downloading"),
     },
-    async ({ roomid, pluginId }) =>
+    async ({ roomid, pluginId, mode }) =>
       wrap(
         await api(
           "POST",
           `/rooms/${encodeURIComponent(roomid)}/plugins/` +
             `${encodeURIComponent(pluginId)}/run`,
+          mode ? { mode } : undefined,
         ),
       ),
   );

@@ -20,6 +20,18 @@ deployment-specific acceptance is tracked separately from implementation.
 
 ### Movie and television support (implemented, unreleased)
 
+Follow-up fixes: unresolved magnets also obtain tracker peers, with bounded
+metadata-only exchanges and clearer failure states; availability pills use
+centered arrow/count cells and themed accent hover. See the audit and torrent
+guide for the changed tracker-announcement privacy behavior.
+
+Selection follow-up: Ctrl/Cmd-click and Shift-click select files without opening
+or downloading them; owner/moderator file icons select without downloading.
+Shared checkbox follow-up: dark unchecked fills and lighter checked fills with
+white ticks, visible keyboard focus and native forced-color fallback.
+Player follow-up: header title/Close action, no footer or vertical scrollbar,
+immediate paused buffering, loading retries and controls fitted to short windows.
+
 1. [x] Remove the unused filename reserve in narrow file lists.
 2. [x] Research and implement a streaming player and bounded torrent playback.
 3. [x] Save progress every five seconds for videos longer than ten minutes and
@@ -286,7 +298,31 @@ not silently expand the scope of v1.4.4.
 
 ### Plugin / bot follow-ups
 
-These are not covered by a clear backlog item yet; add them before calling plugins “production-hard.”
+The [bots audit and 23-bot development checklist](./BOTS_AND_PLUGINS.md#ordered-development-todo) defines the
+ordered service, community and maintenance roadmap. The
+[Plugin API v2 contract and expansion design](../core/plugins/PLUGIN_API.md)
+separates implemented adapters from proposed grants and actions.
+
+- [x] Import filters/previews, publisher digests/file queries/request notices,
+  scoped file inventory and lookups, bounded HTTP text/binary responses,
+  private Redis checkpoints with versions, expiry and quotas (unreleased).
+- [x] Scheduling/invitation fixes, active lease renewal, atomic lease completion,
+  secret redaction, HTTP body timeouts and buffered import caps (unreleased).
+- [x] Remove original proposals 2, 3, 9, 10 and 12–16; retain 17 onward.
+- [x] Finish follow-up plugin regression checks, lint, build, stable health and
+  disabled-bot settings acceptance (unreleased).
+- [x] Implement shared jobs, credential references and safe link/revision ingest.
+- [x] Develop retained collectors in order: #1, #4, #5, #6, #7, #8, #11.
+- [x] Implement retained community #17–24 and maintenance #25–32 useful minimums,
+  reviewed actions, room sessions/RSVP, typed adapters and setup documentation.
+- [ ] Complete credential-bound provider acceptance in operator-owned test sources.
+- [ ] Develop community workflows #17–24, then maintenance #25–32, introducing
+  typed adapters, grants and audit events with each useful workflow.
+
+Use the linked detailed checklist as the per-bot completion record. The registry
+contains all 23 new modules; live provider acceptance remains separately tracked.
+Setup: [collectors](../core/plugins/COLLECTION_BOTS.md),
+[community and maintenance](../core/plugins/WORKFLOW_BOTS.md).
 
 | Gap | Why it matters | Suggested direction |
 | --- | -------------- | ------------------- |

@@ -48,10 +48,10 @@ describe("stateless MCP HTTP", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("mcp-session-id")).toBeNull();
     const data = await res.json();
-    expect(data.result.tools).toHaveLength(49);
+    expect(data.result.tools).toHaveLength(57);
     expect(data.result.tools.find(t => t.name === "post_room_chat").annotations.idempotentHint).toBe(false);
     const repeated = await post("tools/list");
-    expect((await repeated.json()).result.tools).toHaveLength(49);
+    expect((await repeated.json()).result.tools).toHaveLength(57);
   });
 
   test("rejects malformed tool inputs through the real Zod schemas", async () => {

@@ -16,6 +16,7 @@ import {
 } from "./roomie/notifdlg";
 import { OptionsModal } from "./roomie/optsdlg";
 import { ReportModal } from "./roomie/reportdlg";
+import { SessionsModal } from "./roomie/sessionsdlg";
 import { debounce, dom, nukeEvent, openInNew } from "./util";
 import { userError } from "../common/user-error";
 import { applyAuthentication } from "../common/auth-state";
@@ -75,6 +76,7 @@ export default new (class Roomie extends EventEmitter {
       "roomlist",
       "report",
       "options",
+      "sessions",
       "notifications",
       "ban",
       "unban",
@@ -116,6 +118,13 @@ export default new (class Roomie extends EventEmitter {
 
   async onctxnotifications() {
     await this.showNotificationsModal();
+  }
+
+  async onctxsessions() {
+    try {
+      await this.showModal(new SessionsModal());
+    }
+    catch (_) { /* Dismissed. */ }
   }
 
   async onctxban() {

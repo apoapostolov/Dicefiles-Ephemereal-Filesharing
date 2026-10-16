@@ -145,11 +145,11 @@ export default async function createSocket() {
         const timeout = setTimeout(() => {
           socket.removeListener(callbackKey);
           reject(new Error(userError("Call timeout")));
-        }, 20000);
+        }, ["torrentdetails", "fetchtorrent"].includes(target) ? 45000 : 20000);
         const rresolve = rv => {
           clearTimeout(timeout);
           if (rv && rv.err) {
-            reject(new Error(target === "media" && rv.actionable === true && typeof rv.err === "string" && rv.err.length < 400 ? rv.err : userError(rv.err)));
+            reject(new Error(["media", "roomsessions"].includes(target) && rv.actionable === true && typeof rv.err === "string" && rv.err.length < 400 ? rv.err : userError(rv.err)));
             return;
           }
           resolve(rv);

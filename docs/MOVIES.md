@@ -8,6 +8,10 @@ the browser supports it, and a subtitle selector. Shaka supports progressive
 video as well as HLS/DASH; uploaded MP4 and WebM files use normal HTTP range
 playback. It loads only when a video is opened. All interface colors use the
 selected Dicefiles theme.
+Opening the player starts buffering immediately and leaves playback paused until
+Play is pressed. Loading failures offer a retry without reporting a playback
+failure before Play. Close uses the × button in the header or Escape; there is
+no footer action row. The video and controls fit the available window height.
 On small screens, controls fill equal-width rows. The player follows the video's
 intrinsic proportions and available height, narrowing its controls with the
 frame instead of adding empty side panels. The frame is not cropped; black
@@ -65,15 +69,22 @@ trailer and scenes. Missing assets are omitted. Catalogue coverage varies;
 the interface does not invent artwork or ratings. Provider attribution is
 shown in details. TMDB attribution does not imply endorsement.
 
+Video Information groups the trailer first and scene images after it in one
+horizontal media row, above Cast. Trailer cards open the provider's video page.
+
 The uploader, room owner or moderator can change the match and subtitles.
 Other room members can search and preview candidates. Matches persist with
 the room item; they do not change another upload of the same underlying bytes.
 
 ## Subtitles
 
-In video details, choose a UTF-8 `.srt` or `.vtt` file and assign its BCP 47
-language code, such as `en`, `uk`, or `pt-BR`. Up to four tracks of 256 KiB each
-are accepted. SRT is converted to WebVTT; cue times are checked and markup,
+In **Video Information → Subtitles**, select a language in the left dropdown,
+then choose **Add file…** on the right. English is first; major world languages
+and European national/regional languages, including Bulgarian, are available.
+Choosing a UTF-8 `.srt` or `.vtt` file uploads it immediately in that language.
+The list below pairs each language with its original filename and a Remove
+button. Older tracks without stored filenames show “Converted subtitles (VTT)”.
+Up to four tracks of 256 KiB each are accepted. SRT is converted to WebVTT; cue times are checked and markup,
 styles and regions are removed. Choose the language in the player's Subtitles
 menu. Reopen the player after adding or removing tracks.
 
@@ -84,12 +95,15 @@ Redis persistence enabled to retain movie matches and subtitles across restarts.
 
 ## Torrent playback and resource limits
 
-In torrent details, select Play beside a video. Ordinary details checks remain
-metadata-only. Play starts a separate, bounded payload session on the server.
+In torrent details, select Watch beside a video. Ordinary details checks remain
+metadata-only. Opening the player starts buffering through a separate, bounded
+payload session on the server, even before pressing Play.
 This reveals the server IP and torrent hash to public peers and up to four
 supplied HTTP(S)/UDP trackers. Explicit playback makes a bounded started announce
 to obtain reachable peers and sends a best-effort stopped event on cleanup.
-Routine availability and metadata checks never announce participation. The
+Routine availability checks never announce participation. Unresolved public
+magnets can also announce briefly to obtain metadata peers, without requesting
+video pieces; see [torrent discovery](./TORRENTS.md). The
 server does not seed payloads, use web seeds, accept incoming peers,
 or connect to local/private peers. Only the selected file's requested ranges
 are downloaded, with small protocol read-ahead. Piece hashes are verified.
@@ -134,3 +148,18 @@ Shaka is used with Dicefiles' own theme-aware controls, without remote player
 fonts, SDKs, analytics or CDN scripts. WebTorrent's tracker dependency is pinned
 as a local MIT snapshot to remove its unpatched `ip` package; the small patch is
 documented in `vendor/bittorrent-tracker/DICEFILES.md`.
+
+
+### Season and complete-series packs
+
+Torrent file rows, collected links, hover details and the main torrent dialog
+share recognized movie/show titles. Television content rows use Season X
+Episode Y; pack headings summarize all included seasons. Episode-only filenames
+inherit an unambiguous season from their folder or torrent name. Bare episodes
+in a multi-season root without a season folder stay unmatched for review.
+
+TMDB series details supply season episode counts and ended/cancelled status.
+Only verified coverage earns Complete series; other packs show their season
+range and an unverified/incomplete coverage message. Series requests are cached
+across episode lookups to avoid repeating artwork and cast requests per file.
+See [torrent presentation](./TORRENTS.md#movie-and-television-torrent-presentation).

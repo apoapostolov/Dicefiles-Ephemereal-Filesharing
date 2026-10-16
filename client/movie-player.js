@@ -10,13 +10,21 @@ export class MoviePlayer extends Modal {
   constructor(file, reference = movieReference(file), data) {
     super("watch", "Video player", { text: "Close", cancel: true });
     this.file = file; this.reference = reference; this.data = data; this.closed = false; this.player = null; this.interval = null;
+    this.playbackAttempted = false; this.loadFailed = false; this.loading = null;
+    this.closeButton = this.buttons[0];
+    this.closeButton.textContent = "×";
+    this.closeButton.classList.add("movie-player-close");
+    this.closeButton.setAttribute("aria-label", "Close video player");
+    this.closeButton.setAttribute("title", "Close video player");
+    this.head.appendChild(this.closeButton); this.buttonsEl.remove();
     this.key = watchKey(reference, reference.index); this.tracks = [];
-    this.video = dom("video", { classes: ["movie-video"], attrs: { "playsinline": "", "preload": "metadata", "aria-label": file.name } });
+    this.video = dom("video", { classes: ["movie-video"], attrs: { "playsinline": "", "preload": "auto", "aria-label": file.name } });
     this.video.controls = false;
     this.title = dom("h2", { classes: ["movie-player-title"], text: file.name });
+    this.head.replaceChildren(this.title, this.closeButton);
     this.feedback = dom("p", { classes: ["movie-feedback"], attrs: { "role": "status", "aria-live": "polite" }, text: reference.index >= 0 ? "Connecting to video peers…" : "Loading video…" });
     this.stage = dom("div", { classes: ["movie-stage"] }); this.stage.appendChild(this.video);
-    this.body.append(this.title, this.stage, this.feedback);
+    this.body.append(this.stage, this.feedback);
     this.controls = dom("div", { classes: ["movie-controls"], attrs: { "aria-label": "Playback controls" } });
     const timeline = dom("div", { classes: ["movie-control-group", "movie-timeline"] });
     const transport = dom("div", { classes: ["movie-control-group", "movie-transport"] });
@@ -89,7 +97,7 @@ export class MoviePlayer extends Modal {
     this.fitFrame = null;
     this.onResize = () => this.fit();
     this.fitObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(this.onResize);
-    this.fitObserver?.observe(this.controls); this.fitObserver?.observe(this.feedback);
+    this.fitObserver?.observe(this.controls); this.fitObserver?.observe(this.feedback); this.fitObserver?.observe(this.title); this.fitObserver?.observe(this.head);
     this.onVisibility = () => {
       if (document.hidden) {
         this.flush();
@@ -98,7 +106,9 @@ export class MoviePlayer extends Modal {
     this.video.addEventListener("timeupdate", () => this.update());
     this.video.addEventListener("loadedmetadata", this.onResize);
     this.video.addEventListener("resize", this.onResize);
-    this.video.addEventListener("play", () => this.update());
+    this.video.addEventListener("play", () => {
+      this.playbackAttempted = true; this.update();
+    });
     this.video.addEventListener("pause", () => {
       this.update(); this.flush();
     });
@@ -111,7 +121,16 @@ export class MoviePlayer extends Modal {
     this.video.addEventListener("playing", () => {
       this.feedback.textContent = "";
     });
-    this.video.addEventListener("error", () => this.playbackError());
+    this.video.addEventListener("canplay", () => {
+      if (!this.playbackAttempted && !this.loadFailed) {
+        this.feedback.textContent = "Ready. Press Play to start.";
+      }
+    });
+    this.video.addEventListener("error", () => {
+      if (this.video.error) {
+        this.playbackError(this.video.error);
+      }
+    });
     this.stage.addEventListener("click", event => {
       if (event.target === this.video) {
         this.toggle();
@@ -134,12 +153,21 @@ export class MoviePlayer extends Modal {
     super.onshown();
     addEventListener("pagehide", this.onPageHide); document.addEventListener("visibilitychange", this.onVisibility);
     addEventListener("resize", this.onResize); document.addEventListener("fullscreenchange", this.onResize);
+    this.fit();
+    this.loading = this.prepare();
+    await this.loading;
+  }
+
+  async prepare() {
+    this.loadFailed = false; this.playButton.disabled = true;
+    this.feedback.textContent = this.reference.index >= 0 ? "Connecting and buffering video…" : "Buffering video…";
     try {
       this.data ||= await movieCall(this.reference, "get");
       if (this.closed) {
         return;
       }
       this.title.textContent = mediaTitle(this.data.movie, this.data.name || this.file.name);
+      this.title.setAttribute("title", this.title.textContent);
       this.video.setAttribute("aria-label", this.title.textContent);
       if (this.data.movie?.backdrop) {
         this.video.poster = this.data.movie.backdrop;
@@ -148,16 +176,23 @@ export class MoviePlayer extends Modal {
       if (!shaka.Player.isBrowserSupported()) {
         this.video.controls = true; this.controls.hidden = true;
       }
-      this.player = new shaka.Player();
-      this.player.configure({ mediaSource: { useSourceElements: false } });
-      // Progressive videos do not need an empty MediaSource. Deferring that
-      // initialization also avoids sourceopen stalls in embedded browsers.
-      await this.player.attach(this.video, false);
+      if (!this.player) {
+        this.player = new shaka.Player();
+        this.player.configure({ mediaSource: { useSourceElements: false } });
+        // Progressive videos do not need an empty MediaSource. Deferring that
+        // initialization also avoids sourceopen stalls in embedded browsers.
+        await this.player.attach(this.video, false);
+        this.player.addEventListener("error", event => {
+          // Recoverable network retries are handled by Shaka while buffering.
+          if (event.detail?.severity === shaka.util.Error.Severity.CRITICAL) {
+            this.playbackError(event.detail);
+          }
+        });
+      }
       if (this.closed) {
         return;
       }
       this.player.configure({ streaming: { bufferingGoal: 30, rebufferingGoal: 2, bufferBehind: 20 }, manifest: { retryParameters: { maxAttempts: 2 } } });
-      this.player.addEventListener("error", event => this.playbackError(event.detail));
       const saved = watchRecords(localStorage).find(record => record.key === this.key);
       const start = saved && !saved.completed ? saved.position : 0;
       const source = this.reference.index >= 0 ? `${moviePath(this.reference)}/stream` : this.file.url;
@@ -167,6 +202,8 @@ export class MoviePlayer extends Modal {
       if (this.closed) {
         return;
       }
+      this.tracks = [];
+      this.captions.replaceChildren(dom("option", { text: "Subtitles off", attrs: { value: "" } }));
       for (const subtitle of this.data.subtitles || []) {
         try {
           const track = await this.player.addTextTrackAsync(`${moviePath(this.reference)}/subtitle/${subtitle.id}`, subtitle.language, "subtitles", "text/vtt", undefined, subtitle.label);
@@ -179,22 +216,24 @@ export class MoviePlayer extends Modal {
           this.feedback.textContent = "A subtitle could not be loaded. Reopen video details and upload it again.";
         }
       }
+      clearInterval(this.interval);
       this.interval = setInterval(() => {
         if (!this.video.paused) {
           this.flush();
         }
       }, 5000);
-      this.feedback.textContent = start ? `Resumed at ${timeLabel(start)}.` : "Ready to watch.";
+      this.loadFailed = false;
+      this.feedback.textContent = start ? `Ready at ${timeLabel(start)}. Press Play to continue.` : "Ready. Press Play to start.";
       this.playButton.focus(); this.update();
       this.fit();
-      await this.video.play().catch(() => {
-        this.feedback.textContent = "Ready. Press Play to start.";
-      });
     }
     catch (error) {
       if (!this.closed) {
         this.playbackError(error);
       }
+    }
+    finally {
+      this.playButton.disabled = false; this.fit();
     }
   }
 
@@ -202,16 +241,34 @@ export class MoviePlayer extends Modal {
     if (this.closed) {
       return;
     }
+    this.loadFailed = true;
     if (Number.isFinite(error?.code)) {
       // Codes only: provider URLs, room IDs and response bodies stay private.
       console.warn(`Video playback unavailable (code ${error.code}, category ${error.category || 0})`);
     }
-    this.feedback.textContent = this.reference.index >= 0 ? "This video could not play. Peers may be unavailable, the stream may exceed server limits, or its codec may be unsupported. Retry later, or download it and use a compatible player." : "This video could not play. Its format or codec may be unsupported by your browser. Download it and use a compatible player, or upload an H.264 MP4 or WebM version.";
+    this.feedback.textContent = !this.playbackAttempted ? "Video preparation did not finish. Press Play to retry, or download the video to watch locally." : this.reference.index >= 0 ? "Playback stopped. Peers may be unavailable or the format may be unsupported. Press Play to retry, or download the video to watch locally." : "Playback stopped. Press Play to retry, or download the video and open it in a compatible player.";
   }
 
-  toggle() {
-    if (this.video.paused) {
-      this.video.play().catch(() => this.playbackError());
+  async toggle() {
+    if (this.closed || this.playButton.disabled) {
+      return;
+    }
+    if (this.video.paused || this.loadFailed) {
+      this.playbackAttempted = true;
+      if (this.loadFailed) {
+        this.loading = this.prepare(); await this.loading;
+      }
+      if (this.closed || this.loadFailed) {
+        return;
+      }
+      await this.video.play().catch(error => {
+        if (error?.name === "NotAllowedError") {
+          this.feedback.textContent = "Your browser paused playback. Press Play again to start.";
+        }
+        else if (error?.name !== "AbortError") {
+          this.playbackError(error);
+        }
+      });
     }
     else {
       this.video.pause();
@@ -227,7 +284,7 @@ export class MoviePlayer extends Modal {
   }
 
   fit() {
-    if (this.closed || !this.video.videoWidth || !this.video.videoHeight || this.fitFrame !== null) {
+    if (this.closed || this.fitFrame !== null) {
       return;
     }
     this.fitFrame = requestAnimationFrame(() => {
@@ -235,17 +292,23 @@ export class MoviePlayer extends Modal {
       if (this.closed) {
         return;
       }
-      this.el.style.setProperty("--movie-aspect", `${this.video.videoWidth} / ${this.video.videoHeight}`);
+      const videoWidth = this.video.videoWidth || 16; const videoHeight = this.video.videoHeight || 9;
+      this.el.style.setProperty("--movie-aspect", `${videoWidth} / ${videoHeight}`);
       if (document.fullscreenElement === this.el) {
-        this.el.style.width = ""; return;
+        this.el.style.width = ""; this.el.style.height = ""; return;
       }
       const padding = getComputedStyle(this.body);
       const inset = parseFloat(padding.paddingLeft) + parseFloat(padding.paddingRight) + 2;
-      const interfaceHeight = this.head.offsetHeight + this.buttonsEl.offsetHeight + Math.max(0, this.body.scrollHeight - this.stage.offsetHeight) + 2;
-      const width = fittedPlayerWidth(this.video.videoWidth, this.video.videoHeight, innerWidth, innerHeight, interfaceHeight, inset);
+      const outerHeight = el => {
+        const style = getComputedStyle(el);
+        return el.offsetHeight + parseFloat(style.marginTop || 0) + parseFloat(style.marginBottom || 0);
+      };
+      const interfaceHeight = this.head.offsetHeight + outerHeight(this.feedback) + this.controls.offsetHeight + parseFloat(padding.paddingTop) + parseFloat(padding.paddingBottom) + 2;
+      const width = fittedPlayerWidth(videoWidth, videoHeight, innerWidth, innerHeight, interfaceHeight, inset);
       if (width !== null && Math.abs(this.el.getBoundingClientRect().width - width) > 1) {
         this.el.style.width = `${width}px`;
       }
+      this.el.style.height = `${Math.min(innerHeight - 24, Math.ceil((width - inset) * videoHeight / videoWidth + interfaceHeight))}px`;
     });
   }
 

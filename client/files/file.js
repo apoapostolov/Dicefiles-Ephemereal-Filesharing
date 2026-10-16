@@ -6,8 +6,8 @@ import { TorrentMetadataModal } from "../torrent-metadata";
 import { torrentAvailability } from "../torrent-availability";
 import registry from "../registry";
 import { compactTag } from "../compact-tag";
-import { movieRecord, showMovieInfo } from "../movie";
-import { durationSeconds, mediaTitle } from "../../common/video";
+import { showMovieInfo } from "../movie";
+import { durationSeconds } from "../../common/video";
 import { dom, nukeEvent, sort, toPrettyDuration, toPrettySize } from "../util";
 import { REMOVALS, TTL } from "./tracker";
 
@@ -20,6 +20,7 @@ export default class File extends BaseFile {
     this.isRequest = !!(this.meta && this.meta.request);
 
     this.el = dom("div", { classes: ["file"] });
+    this.el.addEventListener("click", this.onselectionclick.bind(this), true);
     this.isLinked = !!(
       file.linked ||
       (file.meta && file.meta.linkedFrom) ||
@@ -66,7 +67,7 @@ export default class File extends BaseFile {
     });
     this.nameTextEl = dom("span", {
       classes: ["name-text"],
-      text: mediaTitle(movieRecord(this)?.movie, this.name),
+      text: this.displayName,
     });
     this.nameEl.appendChild(this.nameTextEl);
     this.nameEl.appendChild(
@@ -213,7 +214,7 @@ export default class File extends BaseFile {
 
       this.sizeEl = dom("span", {
         classes: ["size"],
-        text: toPrettySize(file.size),
+        text: this.displaySize === null ? "—" : toPrettySize(this.displaySize),
       });
       this.detailEl.appendChild(this.sizeEl);
 
@@ -433,6 +434,9 @@ export default class File extends BaseFile {
     }
     const bookLike = this.isBookLike();
     for (const [tn, tv] of tags) {
+      if (this.meta?.torrent && tn === "title") {
+        continue;
+      }
       if (tn === "request") {
         continue;
       }
@@ -616,9 +620,21 @@ export default class File extends BaseFile {
     this.showTooltip(e);
   }
 
+  onselectionclick(e) {
+    if (e.button !== 0 || !(e.ctrlKey || e.metaKey || e.shiftKey)) {
+      return;
+    }
+    const { classList } = document.body;
+    if (classList.contains("mod") || classList.contains("owner")) {
+      // Capture selection before links and preview/download controls activate.
+      nukeEvent(e);
+      this.owner.select(this, e);
+    }
+  }
+
   onclick(e) {
     try {
-      if (this.meta?.torrent && !e.altKey && !e.shiftKey && !e.metaKey) {
+      if (this.meta?.torrent && !e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey) {
         registry.roomie.showModal(new TorrentMetadataModal(this.meta.torrent, this.name, this.url, { kind: "file", key: this.key })).catch(() => {});
         return nukeEvent(e);
       }
@@ -667,6 +683,7 @@ export default class File extends BaseFile {
     const { classList } = document.body;
     if (classList.contains("mod") || classList.contains("owner")) {
       this.owner.select(this, e);
+      return;
     }
     if (!this.isRequest) {
       this.download();
@@ -777,7 +794,7 @@ export default class File extends BaseFile {
         return null;
       }
       const infos = [
-        toPrettySize(this.size),
+        this.displaySize === null ? "Contents size pending" : toPrettySize(this.displaySize),
         this.tags.user || this.tags.usernick,
       ].filter(Boolean);
       if (this.meta && this.meta.pages) {
@@ -787,7 +804,7 @@ export default class File extends BaseFile {
     }
 
     const infos = [
-      toPrettySize(this.size),
+      this.displaySize === null ? "Contents size pending" : toPrettySize(this.displaySize),
       this.tags.user || this.tags.usernick,
     ];
     const { resolution, duration } = this;

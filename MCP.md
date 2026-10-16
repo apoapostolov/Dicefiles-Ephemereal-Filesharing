@@ -2,7 +2,7 @@
 
 This reference is written for developers who want to connect AI clients (Claude Desktop,
 Cursor, Continue, OpenClaw, AutoGen) to a Dicefiles instance via the
-[Model Context Protocol](https://modelcontextprotocol.io). It covers setup, all 49
+[Model Context Protocol](https://modelcontextprotocol.io). It covers setup, all 57
 exposed tools, security configuration, and worked multi-step workflows.
 
 ---
@@ -89,7 +89,7 @@ Add a `dicefiles` entry under `mcpServers`:
 }
 ```
 
-Restart Claude Desktop. All 49 tools appear in the tool picker. Try: _"Use the
+Restart Claude Desktop. All 57 tools appear in the tool picker. Try: _"Use the
 `server_health` tool to check my Dicefiles instance."_
 
 ---
@@ -167,7 +167,7 @@ tools will be listed.
 }
 ```
 
-Save and reload. Antigravity's agent can call all 49 tools.
+Save and reload. Antigravity's agent can call all 57 tools.
 
 ---
 
@@ -293,7 +293,7 @@ cp /path/to/Dicefiles/scripts/openclaw-dicefiles-skill/SKILL.md \
    ~/.claude/skills/dicefiles/
 ```
 
-The skill teaches the agent the full 49-tool inventory, recommended call sequences,
+The skill teaches the agent the full 57-tool inventory, recommended call sequences,
 error handling, and fulfillment loop patterns. See
 `scripts/openclaw-dicefiles-skill/SKILL.md` for the full skill definition.
 
@@ -356,20 +356,20 @@ beyond localhost.
 
 | #   | Tool name               | Scope required   | Session |
 | --- | ----------------------- | ---------------- | ------- |
-| 1   | `server_health`         | None             | No      |
-| 2   | `list_files`            | `files:read`     | No      |
-| 3   | `get_file`              | `files:read`     | No      |
-| 4   | `get_room_snapshot`     | `files:read`     | No      |
-| 5   | `update_file_metadata`  | `files:write`    | No      |
-| 6   | `upload_file_from_urls` | `uploads:write`  | No      |
+| 1   | `server_health`         | `mcp` | No      |
+| 2   | `list_files`            | `files:read` | No      |
+| 3   | `get_file`              | `files:read` | No      |
+| 4   | `get_room_snapshot`     | `files:read` | No      |
+| 5   | `update_file_metadata`  | `files:write` | No      |
+| 6   | `upload_file_from_urls` | `uploads:write` | No      |
 | 7   | `create_request`        | `requests:write` | Yes     |
 | 8   | `claim_request`         | `requests:write` | No      |
 | 9   | `release_request`       | `requests:write` | No      |
-| 10  | `post_room_chat`        | `rooms:write`    | Yes     |
-| 11  | `download_file`         | None             | No      |
-| 12  | `save_subscription`     | `files:read`     | No      |
-| 13  | `list_subscriptions`    | `files:read`     | No      |
-| 14  | `archive_list_contents` | `files:read`     | No      |
+| 10  | `post_room_chat`        | `chat:write` | Yes     |
+| 11  | `download_file`         | `files:read` | No      |
+| 12  | `save_subscription`     | `files:read` | No      |
+| 13  | `list_subscriptions`    | `files:read` | No      |
+| 14  | `archive_list_contents` | `files:read` | No      |
 | 15  | `list_room_links`       | `room-links:read` | No     |
 | 16  | `create_room_link`      | `room-links:write` | No    |
 | 17  | `remove_room_link`      | `room-links:write` | No    |
@@ -386,12 +386,33 @@ beyond localhost.
 | 28  | `run_room_plugin`        | `room-plugins:run` | No |
 | 29  | `inspect_room_plugin_sync_memory` | `room-plugins:read` | No |
 | 30  | `clear_room_plugin_sync_memory` | `room-plugins:write` | No |
-| 31  | `get_storage_volumes` | `storage:read` | No |
-| 32  | `preview_storage_placement` | `storage:read` | No |
+| 31  | `get_storage_volumes` | `admin:read` | No |
+| 32  | `preview_storage_placement` | `admin:read` | No |
 | 33  | `get_room_password_access` | `room-access:read` | No |
 | 34  | `configure_room_password_access` | `room-access:write` | No |
 | 35  | `rotate_room_password` | `room-access:write` | No |
 | 36  | `reveal_room_passwords` | `room-access:secrets` | No |
+| 37 | `list_remote_import_providers` | `room-plugins:read` | No |
+| 38 | `validate_remote_import_source` | `room-plugins:read` | No |
+| 39 | `list_storage_migrations` | `admin:read` | No |
+| 40 | `plan_storage_migration` | `admin:storage` | No |
+| 41 | `control_storage_migration` | `admin:storage` | No |
+| 42 | `set_storage_volume_draining` | `admin:storage` | No |
+| 43 | `list_room_access_credentials` | `room-access:read` | No |
+| 44 | `create_room_access_credential` | `room-access:write` | No |
+| 45 | `update_room_access_credential` | `room-access:write` | No |
+| 46 | `revoke_room_access_credential` | `room-access:write` | No |
+| 47 | `rotate_room_access_credential` | `room-access:write` | No |
+| 48 | `reveal_room_access_credential` | `room-access:secrets` | No |
+| 49 | `get_room_access_audit` | `room-access:read` | No |
+| 50 | `inspect_room_plugin_operations` | `room-plugins:read` | No |
+| 51 | `list_room_plugin_connections` | `room-plugins:read` | No |
+| 52 | `queue_room_plugin_job` | `room-plugins:run` | No |
+| 53 | `update_room_plugin_job` | `room-plugins:run` | No |
+| 54 | `review_room_plugin_item` | `room-plugins:write` | No |
+| 55 | `list_room_sessions` | `files:read` | No |
+| 56 | `create_room_session` | `rooms:write` | No |
+| 57 | `update_room_session` | `rooms:write` | No |
 
 ---
 
@@ -848,7 +869,9 @@ new trusted host or read a private federation key. See
   secrets remain stored; returned settings never contain them.
 - `remove_room_plugin` removes one invited bot from the room.
 - `run_room_plugin` runs an invited bot immediately and returns its bounded
-  result.
+  result. Optional `mode` selects `run`/`preview` for importers or `test`/`digest`
+  for publishers; supported `runModes` are included in the catalog. Omit it for
+  the bot's default. Disabled invitations cannot be forced to run.
 - `inspect_room_plugin_sync_memory` returns a bounded list and count of remote
   entries already remembered by an importer, plus its latest run state.
 - `clear_room_plugin_sync_memory` requires `confirm: true` and forgets those
@@ -863,6 +886,9 @@ Discord and Telegram inbound commands are configured through the ordinary bot
 settings, but provider webhooks call Dicefiles directly; they are not separate
 MCP tools. See `API.md` §24 and
 [`core/plugins/RELEASE_PUBLISHERS.md`](core/plugins/RELEASE_PUBLISHERS.md).
+Plugin context API v2 is a separate in-process developer contract; it does not
+change MCP transport or tool names. See
+[Plugin API v2](core/plugins/PLUGIN_API.md).
 
 ---
 
@@ -935,15 +961,15 @@ For a read-only agent (monitoring, indexing, snapshots only):
 
 ### 5.2 What the MCP Server Cannot Do
 
-The MCP server exposes a curated subset of the API. It cannot:
+The MCP server exposes typed operations with separately enforced scopes. It
+cannot install plugin code, run uninvited/disabled bots, impersonate a session
+attendee or bypass a protected room's access checks. Storage migration and access
+administration require their explicit scopes; secret-read scopes are separate
+from inspection. Review actions require room-plugins:write and a current declared
+report action. The server cannot perform arbitrary moderation or shell commands.
 
-- Delete files or requests (`files:delete`)
-- Access moderation endpoints (`mod:*`)
-- Issue sessions for other users
-- Call any admin-only endpoint
-
-Scopes are enforced server-side on every request; the MCP layer adds no extra gates
-and removes no existing ones.
+Scopes are enforced server-side on every request. Use a dedicated key/principal
+with only the scopes needed for the workflow.
 
 ### 5.3 Tool Behaviour Hints
 
@@ -952,7 +978,7 @@ to decide what to put in front of a user:
 
 | Annotation        | Meaning on a Dicefiles tool                                     |
 | ----------------- | --------------------------------------------------------------- |
-| `readOnlyHint`    | `true` for the 15 inspection tools, `false` for anything writing |
+| `readOnlyHint`    | `true` for inspection tools, `false` for anything writing |
 | `destructiveHint` | `true` for removals and password rotation                       |
 | `idempotentHint`  | `true` unless the tool changes state on every call               |
 | `openWorldHint`   | `true`, because every tool reaches the configured Dicefiles host |
@@ -1143,3 +1169,34 @@ is served at /.well-known/oauth-protected-resource/mcp.
 | rotate_room_access_credential | room-access:write | Rotate one credential |
 | reveal_room_access_credential | room-access:secrets | Reveal current password for private distribution |
 | get_room_access_audit | room-access:read | Bounded administration/activation history |
+
+### Bot jobs and connection references
+
+- `inspect_room_plugin_operations`: read scoped job history and latest report;
+  optional cursor; `room-plugins:read`.
+- `list_room_plugin_connections`: approved connection labels and credential
+  presence, never raw values; `room-plugins:read`.
+- `queue_room_plugin_job`: roomid, pluginId, optional mode/idempotencyKey;
+  `room-plugins:run`.
+- `update_room_plugin_job`: roomid, pluginId, jobId and cancel/replay action;
+  `room-plugins:run`.
+
+Use an advertised run mode. Preview and connection-test modes perform no import.
+Failed/cancelled jobs replay with current settings. Protected rooms also require
+room-access:bypass. Provider authorization remains operator-owned; see the
+[collection setup guide](core/plugins/COLLECTION_BOTS.md).
+
+
+### Reviewed bot actions and room sessions
+
+| Tool | Required scope | Inputs and behavior |
+| --- | --- | --- |
+| review_room_plugin_item | room-plugins:write | roomid, pluginId, reportId, itemId, action; current declared report action; conflicts/busy return failure |
+| list_room_sessions | files:read | roomid; sessions, local preparation links and aggregate RSVP counts |
+| create_room_session | rooms:write | roomid, title, startsAt, timezone; optional endsAt, description, links; requires Session Organizer enabled |
+| update_room_session | rooms:write | roomid, sessionId, revision, cancelled; cancel or restore with current revision |
+
+Session times use Unix milliseconds. These tools never write external calendars
+or RSVP as another member. Protected-room access also requires room-access:bypass.
+The inspection tool includes recent bot action history; report private receipts,
+connection credentials and attendee identities remain excluded.

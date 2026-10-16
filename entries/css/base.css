@@ -9,6 +9,10 @@
   --theme-danger: #ff9b9b;
   --theme-success: #a1dbac;
   --theme-warning: #efd08c;
+  --theme-checkbox-off: #242424;
+  --theme-checkbox-on: #707070;
+  --theme-checkbox-mark: #ffffff;
+  --theme-checkbox-border: #999999;
   --shadow-color: rgb(0 0 0 / 30%);
   --main-bg: var(--theme-chrome);
   --text-fg: var(--theme-text);

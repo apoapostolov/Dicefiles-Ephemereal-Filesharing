@@ -68,18 +68,21 @@ no inbound listening port is opened.
 1. Public HTTP `xs` exact sources are tried. Info hashes must match the magnet.
 2. Up to eight supplied trackers are queried through HTTP(S) scrape or UDP
    scrape. Trackers that require announce/authentication, do not implement scrape,
-   or cannot be reached show **No report**. Metadata discovery does not announce
-   participation. A separate, explicit Play action can announce to obtain peers;
-   see [movie playback](./MOVIES.md).
-3. A public magnet without a file list queries DHT and requests the info dictionary
-   from peers through BEP 9/10. SHA-1 and/or SHA-256 must match before accepting
-   contents. The client never requests payload pieces. V1 and v2 metadata parsing
-   is supported; discovery depends on compatible peers and reachable services.
+   or cannot be reached show **No report**.
+3. An unresolved public magnet queries DHT and announces briefly to up to eight
+   supplied HTTP(S)/UDP trackers to obtain peer addresses. Tracker and DHT contacts
+   are interleaved, deduplicated and checked against public-address rules. The
+   server requests only the info dictionary through BEP 9/10, verifies SHA-1 and/or
+   SHA-256, and sends a best-effort stopped event to responding trackers afterwards.
+   This temporarily registers the server as a peer; ingestion, manual checks and
+   unresolved-magnet background retries can perform this lookup. The metadata
+   client never requests payload pieces. V1 and v2 metadata parsing is supported;
+   discovery depends on compatible peers and reachable services.
 4. Cover fields or publisher/source pages may supply artwork. Guarded HTTP
    discovery pins DNS and rechecks redirects. Images are decoded and resized
    to bounded JPEG data before reaching the browser.
 
-A private `.torrent` never queries DHT. A bare magnet cannot disclose its private
+A known private torrent never queries DHT or announces for metadata. A bare magnet cannot disclose its private
 flag before metadata is available. Lookups expose the server's public IP and
 requested info hash to trackers/DHT/peers; tracker URLs can contain operator or
 uploader credentials. The UI displays hosts, never tracker paths or passkeys.
@@ -94,11 +97,13 @@ or hash. Artwork is best effort; no paid lookup or image-search key is required.
 
 ## Resource and access limits
 
-- Protocol discovery: 12-second overall deadline, at most two concurrent lookups
+- Protocol discovery: 30-second lookup deadline plus up to 1.5 seconds for tracker
+  cleanup, at most two concurrent lookups
   across workers, six details checks per minute per client IP.
 - DHT: at most 36 queries, four concurrent requests, bounded node/peer lists.
-  Peer metadata: at most eight connections tried, three concurrent, 3.5 seconds
-  each, maximum 2 MiB of metadata. Private/loopback/link-local destinations are
+  Peer metadata: at most 48 contacts tried, four concurrent, two seconds to connect,
+  3.5 seconds without verified metadata progress and 15 seconds total per peer,
+  maximum 2 MiB of metadata. Private/loopback/link-local destinations are
   refused; HTTP requests and UDP hostname connections use validated pinned DNS.
 - Per-worker cache: 32 entries / 8 MiB; successful contents for ten minutes,
   incomplete results for two. **Check again** respects a minimum one-minute
@@ -126,3 +131,25 @@ update the open details view and discovery cache; the original file is unchanged
 [BEP 15: UDP tracker](https://www.bittorrent.org/beps/bep_0015.html),
 [BEP 48: tracker scrape](https://www.bittorrent.org/beps/bep_0048.html),
 [BEP 52: v2](https://www.bittorrent.org/beps/bep_0052.html).
+
+
+## Movie and television torrent presentation
+
+Recognized movie torrents show **Title (Year)** in the main file list and link
+archive. Episodes show **Show · Season X Episode Y**. Season packs show the
+series and season; multi-season packs show the included season range. Original
+release filenames remain available in the contents list and downloads. Size
+columns and Largest first sorting use the sum of torrent contents, with an
+unknown dash until contents or an advertised magnet length is available. The
+small descriptor/magnet file size is never shown as the content size.
+
+Pack recognition reads SXXEXX, season folders with EXX or numbered episodes,
+and multiple season folders. Samples/trailers/extras are excluded from episode
+coverage. Duplicate encodes do not increase episode counts. Gaps are shown; a
+Complete series label requires an ended/cancelled catalogue series and every
+regular season matching its expected episode count. Unknown catalogue coverage
+is explicitly unverified. Mixed shows retain their original torrent title.
+
+Earlier ambiguous episode matches receive one retry with the improved parser.
+Manual matches/removals remain authoritative. Combined-episode files contribute
+coverage when identifiable but still require manual metadata confirmation.

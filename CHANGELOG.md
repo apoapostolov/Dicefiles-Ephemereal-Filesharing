@@ -2,86 +2,84 @@
 
 ## Unreleased
 
-- Videos use an in-page streaming player with seeking, playback speed,
-  fullscreen, picture in picture and language-labelled subtitles. Long videos
-  save progress every five seconds and appear in dismissible Continue watching
-  cards. The frame and controls follow the video's proportions, with equal-width
-  control rows on small screens.
-- Video Information supports confirmed catalogue searches and IMDb,
-  TVDB and Trakt page matching, with available posters, backdrops, logos,
-  cast, trailers and scenes. Its accented Watch action sits beside provider links.
-  Original download filenames are retained.
-- Newly added torrents match their video filenames in the background and apply
-  high-confidence movie/episode results. Ambiguous titles remain available for
-  review; manual choices and subtitles are preserved.
-- Public torrent video entries can play selected content through bounded server
-  sessions. Operators can disable payload playback separately from metadata discovery.
-- Torrent entries show seeders and downloading peers in a compact pill. A relaxed
-  background service refreshes tracker reports, preserves last known counts on
-  failures and distinguishes stale or unknown availability from zero.
-- Torrent dialogs keep contents/search and video actions compact. Confirmed
-  movie or episode matches bring posters, backdrops and logos into the main header.
-  Torrent metadata uses its own phone row to preserve filename space.
-- File names use all available space in narrow lists, without reserving a blank
-  area for a hidden New badge.
+## [1.4.7] - 2026-10-16 [Collections, Communities and TV Packs]
 
-- Upload has a prominent file drop zone, concise link controls, keyboard focus
-  handling and right-aligned actions.
-- Tablet widths keep chat and files side by side with two grouped toolbar rows.
-  Phones use three compact rows for file types, controls, then search/count/Upload. Saved pane
-  widths respect the responsive grid.
-- Tight sidebars keep presence and identity on one line; compact phone file
-  rows leave more space for filenames. Cover Download and Close share matching controls.
-- Account menus accept debounced event handlers and preserve early sign-in state.
-  Common errors provide plain-language recovery instructions.
-- A private `.env` supports ordered, validated flags and credentials. Giphy
-  searches run on the server so provider keys stay out of browser assets.
-- Appearance uses a palette icon and offers 34 persistent palettes (26 dark, 8 light), with shared color
-  variables across rooms, galleries, menus, readers and account/status pages.
-- Upload accepts magnets and torrent URLs/files. Torrent details prioritize
-  searchable contents, sizes, artwork and reported tracker availability. Bounded
-  server discovery can retrieve verified file lists from peers without downloading
-  content; operators can disable protocol lookups. Links Archive recognizes magnets.
-- Phone poster pills use a person glyph; tapping reveals the full name. Page-count
-  pills use a document glyph and number, preserving filename space.
-- A production Docker image, persistent Compose stack and GHCR build workflow
-  provide container deployment, with documented native sandbox limitations.
-- Phone toolbars use separate Sort and View dropdowns; all filter icons fit
-  their row even on narrow screens.
-- Continue Reading cards can be dismissed with × while keeping saved progress.
-  Drawer, cards and archive placeholders match the room’s neutral-grey palette.
-- Large galleries use 100-tile pages, retain global sorting and restore focus.
-- Automation file/archive lists support bounded signed-cursor pagination.
-- Remote imports stream with cancellation/deadlines; Gofile, fair scheduling,
-  provider status and an optional disabled Plowshare bridge expand provider support.
-- Webhooks use a durable bounded Redis outbox with restart recovery.
-- Operators can preview and queue checksum-verified storage moves, drain or
-  rebalance volumes, pause/resume jobs and roll back while source copies remain.
-- Protected rooms support separately revocable cohort and personal credentials.
-- MCP offers OAuth caller isolation, structured results and 49 scoped tools.
-- Express 5, Redis 6, PDF.js 6, ESLint 10 and Jest 30 replace older major versions;
-  PDF covers use Poppler and Sharp. Audit tails and config writes are bounded.
+Rooms gain approved file collectors, reviewed community workflows and movie/TV
+playback. Owners can inspect bot activity and recover queued work; members can
+resume videos, browse episode packs and plan room-local sessions.
 
-- MCP URL uploads now use the correct request body. Downloads stop at the
-  configured size while streaming and time out; upstream errors reach clients
-  as tool failures, and write tools have conservative retry hints.
-- Remote MCP HTTP bindings require a separate bearer token and explicit host
-  allowlist. Stateless HTTP and existing stdio clients remain supported.
-- Protected-room request claims enforce access policy. Competing workers
-  arbitrate claims in Redis, and clearing distributed maps removes saved values.
-- Live worker updates preserve empty metadata lists, so freshly imported magnets
-  can be checked without restarting the server.
-- Custom credentials are dropped across redirect origins. Redirected GETs no
-  longer carry stale POST bodies or body headers.
-- Automation audit-log retrieval works after the server-module extraction.
-- Dependencies include current compatible security patches and a maintained
-  ZIP reader; native preview setup includes the sandbox and RAR tools.
-- Small PDFs retain a gallery cover when the rendered thumbnail is larger than
-  the source document, with a fixed byte limit for each preview.
-- Sandboxed previews and archive tools resolve files correctly when uploads
-  are stored inside the operator's home directory.
-- Build installation uses fewer runtime packages. Install development
-  dependencies when building assets before a production-only deployment.
+### Added
+
+- **27 built-in bots**, including seven new collectors for RSS/Atom, S3,
+  Nextcloud, Google Drive, Dropbox, OneDrive and pinned Hugging Face files.
+  Provider connections use explicit operator grants and read-only source access.
+- Community bots for welcome guidance, request triage/stewardship, digests,
+  collection curation, duplicate/upload reviews and sessions with private RSVPs.
+  Maintenance bots cover expiry, previews, integrity, capacity, backup samples,
+  link health, access grants and missing metadata. Reviewed mutations retain
+  activity history and preserve manual choices.
+- Streaming video controls, language-labelled subtitles and Continue watching
+  cards. Long videos save progress every five seconds. Video Information supports
+  catalogue matching, artwork, cast, trailers and scenes.
+- Magnet/torrent uploads, verified peer metadata discovery, searchable contents,
+  relaxed seeder/peer checks and bounded server playback. Recognized movies and
+  episodes use readable names; season and multi-season packs report coverage,
+  with complete-series labels requiring verified catalogue counts. Torrent size
+  columns show content size rather than descriptor bytes.
+- **34 persistent themes**, compact phone/tablet toolbars, a file drop zone and
+  dismissible Continue Reading cards. Large galleries use bounded pages.
+- Production Docker/Compose deployment and GitHub Actions publication of GHCR
+  images for Linux amd64 and arm64, including native preview dependency checks.
+- **57 scoped MCP tools**, OAuth caller isolation, structured results and bounded
+  file/archive pagination. Storage moves support checksum verification,
+  pause/resume and rollback; protected rooms support revocable cohort credentials.
+
+### Changed
+
+- Plugin API v2 supplies scoped file/request/link operations, versioned private
+  checkpoints, connection references, host-rendered reports and reviewed actions.
+  Durable jobs support cancellation, retry times and explicit replay; publisher
+  deliveries survive service restarts. External delivery is not exactly-once.
+- Importers enforce file/scan budgets and source revision checkpoints. Existing
+  bots gain filters, previews, optional file search, expiry commands and digests.
+  Activity remains readable when a provider connection needs repair.
+- Video dialogs fit the video and controls without a vertical scrollbar, buffer
+  on opening and use a header Close button. Subtitle language/file controls and
+  trailer/scene/cast ordering are consistent across screen sizes.
+- Express, Redis, PDF.js, ESLint and Jest use updated major versions. Operators
+  build with development dependencies before deploying production-only packages.
+
+### Fixed
+
+- Modified clicks select files for moderation without opening or downloading
+  them. Compact pills, checkboxes, narrow filenames and tablet/phone layouts use
+  consistent sizing, focus states and theme colors.
+- Bot scheduling uses current invitations and renewable leases, preserves disabled
+  settings and omitted credentials, and bounds HTTP bodies, imports and retries.
+  Public metadata excludes legacy Mega source decryption URLs.
+- Magnet discovery combines tracker peers and DHT with bounded contact attempts;
+  failures distinguish unavailable peers from missing metadata.
+- MCP URL uploads use the correct request body. Downloads obey byte/time limits,
+  upstream failures remain failures, and redirected requests drop credentials
+  across origins. Protected request claims and map updates arbitrate in Redis.
+- PDF covers, sandboxed previews and archive tools handle small thumbnails and
+  home-directory storage correctly. Live updates preserve empty metadata lists.
+
+### Operator notes
+
+- Existing rooms and original download filenames are retained. New bots are
+  opt-in; routine chat summaries remain off by default. Configure provider grants
+  before enabling collectors. Account-authenticated provider acceptance requires
+  operator-owned test sources; passing fixtures does not establish live access.
+- Store flags and keys in the documented private .env/config. Giphy requests run
+  server-side. Review [collection setup](core/plugins/COLLECTION_BOTS.md),
+  [workflow setup](core/plugins/WORKFLOW_BOTS.md), [environment settings](docs/ENVIRONMENT.md)
+  and [container deployment](docs/DOCKER.md) before rollout.
+- Storage/backup readers require explicit operator grants. Sampled backup checks
+  do not replace a full restore exercise. Container native sandbox limitations
+  are documented; do not grant privileged mode to bypass them.
+- MCP HTTP remains stateless. Remote bindings require bearer authentication and
+  an explicit host allowlist; OAuth principals receive separate scoped keys.
 
 ## [1.4.6] - 2026-09-28 [Safer Uploads and Stateless MCP]
 

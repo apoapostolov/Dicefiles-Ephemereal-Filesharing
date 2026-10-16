@@ -29,7 +29,8 @@ test("real stdio server initializes and lists tools for existing clients", async
     expect(init.result.serverInfo.name).toBe("dicefiles");
     child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })}\n`);
     const listing = await call(2, "tools/list", {});
-    expect(listing.result.tools).toHaveLength(49);
+    expect(listing.result.tools).toHaveLength(57);
+    expect(listing.result.tools).toEqual(expect.arrayContaining([expect.objectContaining({ name: "queue_room_plugin_job" }), expect.objectContaining({ name: "inspect_room_plugin_operations" })]));
   }
   finally {
     lines.close();

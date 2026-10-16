@@ -2,6 +2,8 @@
 
 import Modal from "../modal";
 import registry from "../registry";
+import { dom } from "../util";
+import { defaultPluginConfig } from "../../common/plugin-config";
 import { UsersModal } from "./usersdlg";
 import {
   normalizeLinkedRoomEntries,
@@ -195,6 +197,9 @@ export class OptionsModal extends Modal {
       "pluginenabled",
       "pluginapply",
       "pluginrun",
+      "pluginqueue",
+      "pluginjobs",
+      "pluginreport",
       "pluginoperations",
       "pluginrunstate",
       "pluginsyncrow",
@@ -345,6 +350,7 @@ export class OptionsModal extends Modal {
     if (this.pluginrun) {
       this.pluginrun.addEventListener("click", () => this.onRunPlugin());
     }
+    this.pluginqueue?.addEventListener("click", () => this.onPluginJobAction("enqueue"));
     if (this.pluginsyncrefresh) {
       this.pluginsyncrefresh.addEventListener("click", () =>
         this.refreshPluginOperationalState(),
@@ -585,7 +591,12 @@ export class OptionsModal extends Modal {
       "Select a bot…" :
       "No plugins installed on server";
     sel.appendChild(ph);
+    const groups = new Map();
     for (const c of available) {
+      const category = c.category || "Imports & publishing";
+      if (!groups.has(category)) {
+        const group = document.createElement("optgroup"); group.label = category; groups.set(category, group); sel.appendChild(group);
+      }
       const opt = document.createElement("option");
       const catalogName = c.name || c.botName || c.id;
       opt.value = c.id;
@@ -593,7 +604,7 @@ export class OptionsModal extends Modal {
         `${catalogName} (already invited)` :
         catalogName;
       opt.disabled = invited.has(c.id);
-      sel.appendChild(opt);
+      groups.get(category).appendChild(opt);
     }
     this.onPluginPickChange();
   }
@@ -724,29 +735,7 @@ export class OptionsModal extends Modal {
   }
 
   defaultConfigForSchema(schema) {
-    const cfg = {};
-    const props = (schema && schema.properties) || {};
-    for (const [k, def] of Object.entries(props)) {
-      if (k === "roomId") {
-        continue;
-      }
-      if (def && def.type === "number") {
-        cfg[k] = k === "pollIntervalMinutes" ? 15 : 0;
-      }
-      else if (def && def.type === "boolean") {
-        cfg[k] = false;
-      }
-      else if (def && def.type === "array") {
-        cfg[k] = [];
-      }
-      else if (k === "botName") {
-        cfg[k] = "";
-      }
-      else {
-        cfg[k] = "";
-      }
-    }
-    return cfg;
+    return defaultPluginConfig(schema);
   }
 
   openPluginEditor(pluginId, forced) {
@@ -766,8 +755,23 @@ export class OptionsModal extends Modal {
       this.pluginenabled.checked = p.enabled !== false;
     }
     if (this.pluginrun) {
-      this.pluginrun.disabled = p._new === true;
-      this.pluginrun.title = p._new ? "Save this bot before running it" : "";
+      this.pluginrun.disabled = p._new === true || p.enabled === false;
+      this.pluginrun.title = p._new ? "Save this bot before running it" : p.enabled === false ? "Enable this bot before running it" : "";
+      if (!this.pluginrunmode) {
+        this.pluginrunmode = dom("select", { classes: ["plugin-run-mode"], attrs: { "aria-label": "Bot run mode" } });
+        this.pluginrun.after(this.pluginrunmode);
+      }
+      this.pluginrunmode.replaceChildren();
+      const modes = (this.pluginCatalog || []).find(entry => entry.id === p.id)?.runModes || [];
+      for (const mode of modes) {
+        const importer = ["mega-folder", "remote-import"].includes(p.id) || (this.pluginCatalog || []).find(entry => entry.id === p.id)?.category === "File collection";
+        this.pluginrunmode.appendChild(dom("option", { text: ({ run: importer ? "Import" : "Run", preview: "Preview", test: "Connection test", digest: "Publish digest" })[mode] || mode, attrs: { value: mode } }));
+      }
+      this.pluginrunmode.hidden = modes.length < 2;
+      this.pluginrunmode.disabled = p._new === true;
+    }
+    if (this.pluginqueue) {
+      this.pluginqueue.disabled = p._new === true || p.enabled === false;
     }
     if (this.pluginoperations) {
       this.pluginoperations.classList.toggle("hidden", p._new === true);
@@ -786,6 +790,9 @@ export class OptionsModal extends Modal {
       this.pluginstatus.textContent = this.remoteProviders.map(provider => `${provider.name}: ${!provider.enabled ? "disabled" : provider.availability?.available === false ? "unavailable" : "available"} (${provider.capabilities.join(", ")})${provider.circuitOpenUntil > Date.now() ? " (temporarily paused)" : ""}`).join(" · ");
     }
     this.renderPluginOperationalState(p);
+    if (!p._new) {
+      this.refreshPluginOperationalState();
+    }
   }
 
   renderPluginOperationalState(plugin) {
@@ -799,6 +806,15 @@ export class OptionsModal extends Modal {
         const when = new Date(lastRun.finishedAt || lastRun.startedAt);
         const summary = lastRun.result || {};
         const details = [];
+        if (summary.dryRun) {
+          details.push("preview only");
+        }
+        if (summary.planned != null) {
+          details.push(`${summary.planned} eligible`);
+        }
+        if (summary.delivered != null) {
+          details.push(`${summary.delivered} delivered`);
+        }
         if (summary.uploaded != null) {
           details.push(`${summary.uploaded} uploaded`);
         }
@@ -807,6 +823,9 @@ export class OptionsModal extends Modal {
         }
         if (summary.skipped != null) {
           details.push(`${summary.skipped} skipped`);
+        }
+        if (summary.flagged != null) {
+          details.push(`${summary.flagged} need review`);
         }
         this.pluginrunstate.textContent =
           `${lastRun.ok ? "Succeeded" : "Failed"} · ` +
@@ -842,11 +861,27 @@ export class OptionsModal extends Modal {
       this.pluginsyncstate.textContent = "Refreshing…";
     }
     try {
-      const state = await registry.socket.makeCall(
-        "setconfig",
-        "inspectRoomPluginSyncMemory",
-        { id, limit: 1 },
-      );
+      const [memory, activity] = await Promise.allSettled([
+        registry.socket.makeCall("setconfig", "inspectRoomPluginSyncMemory", { id, limit: 1 }),
+        registry.socket.makeCall("setconfig", "pluginOperations", { id }),
+      ]);
+      if (this.editingPluginId !== id) {
+        return;
+      }
+      if (activity.status === "fulfilled") {
+        this.renderPluginJobs(activity.value);
+      }
+      else {
+        this.pluginjobs?.replaceChildren(dom("p", { text: "Activity is unavailable. Refresh activity to try again." }));
+      }
+      if (memory.status !== "fulfilled") {
+        this.pluginsyncrow?.classList.remove("hidden");
+        if (this.pluginsyncstate) {
+          this.pluginsyncstate.textContent = "Import memory is unavailable. Check the connection grant, then refresh activity.";
+        }
+        return;
+      }
+      const state = memory.value;
       const plugin = (this.roomPlugins || []).find(entry => entry.id === id);
       if (plugin) {
         plugin.lastRun = state.lastRun;
@@ -864,6 +899,76 @@ export class OptionsModal extends Modal {
       if (this.pluginsyncstate) {
         this.pluginsyncstate.textContent = "Could not load import memory.";
       }
+    }
+  }
+
+  renderPluginJobs(operations) {
+    const enabled = (this.roomPlugins || []).find(entry => entry.id === this.editingPluginId)?.enabled !== false;
+    this.pluginjobs?.replaceChildren(dom("strong", { text: "Jobs" }));
+    if (!operations.jobs?.length) {
+      this.pluginjobs?.appendChild(dom("p", { text: "No queued jobs. Use Queue job for work that should survive a restart." }));
+    }
+    for (const job of operations.jobs || []) {
+      const row = dom("div", { classes: ["roomopts-plugin-result"] });
+      const due = ["queued", "retrying"].includes(job.status) && job.dueAt > Date.now() ? ` · ${job.status === "retrying" ? "retry" : "scheduled"} ${new Date(job.dueAt).toLocaleString()}` : "";
+      row.appendChild(dom("span", { text: `${job.mode || job.type} · ${job.status} · attempt ${job.attempt + 1}${due}${job.error ? ` · ${job.error}` : ""}` }));
+      const action = ["queued", "retrying", "running"].includes(job.status) ? "cancel" : ["failed", "cancelled"].includes(job.status) ? "replay" : "";
+      if (action) {
+        const button = dom("button", { text: action === "cancel" ? "Cancel" : "Replay", attrs: { type: "button" } });
+        button.disabled = action === "replay" && !enabled;
+        button.addEventListener("click", () => this.onPluginJobAction(action, job.id)); row.appendChild(button);
+      }
+      this.pluginjobs?.appendChild(row);
+    }
+    this.pluginreport?.replaceChildren();
+    const {report} = operations;
+    if (report) {
+      this.pluginreport?.append(dom("strong", { text: report.title }), dom("p", { text: report.summary }));
+      for (const item of report.items || []) {
+        const row = dom("div", { classes: ["roomopts-plugin-result"] });
+        const text = `${item.title}${item.detail ? ` — ${item.detail}` : ""}`;
+        row.appendChild(item.href ? dom("a", { text, attrs: { href: item.href, target: "_blank", rel: "noopener" } }) : dom("span", { text }));
+        for (const action of item.actions || []) {
+          const button = dom("button", { text: action.label, attrs: { type: "button" } });
+          button.disabled = !enabled;
+          button.addEventListener("click", () => this.onPluginReportAction(report.id, item.id, action.id)); row.appendChild(button);
+        }
+        this.pluginreport?.appendChild(row);
+      }
+      if (report.truncated) {
+        this.pluginreport?.appendChild(dom("p", { text: "More results are available. Narrow the scan to review the remaining items." }));
+      }
+    }
+    if (operations.audit?.length) {
+      this.pluginreport?.appendChild(dom("strong", { text: "Recent changes" }));
+      for (const change of operations.audit) {
+        const operation = String(change.operation).replace(/[.:-]/g, " ");
+        this.pluginreport?.appendChild(dom("p", { text: `${operation} · ${new Date(change.at).toLocaleString()}` }));
+      }
+    }
+  }
+
+  async onPluginJobAction(action, id) {
+    const pluginId = this.editingPluginId;
+    try {
+      await registry.socket.makeCall("setconfig", "pluginJobAction", { pluginId, action, id, mode: this.pluginrunmode?.value || undefined });
+      if (this.pluginstatus) {
+        this.pluginstatus.textContent = action === "enqueue" ? "Queued. Refresh activity to check progress." : action === "cancel" ? "Cancellation requested." : "Queued for replay.";
+      }
+      await this.refreshPluginOperationalState();
+    }
+    catch (error) {
+      await this.owner.showMessage(error.message || "Could not update the job. Refresh activity and try again.", "Bot job", "i-error");
+    }
+  }
+
+  async onPluginReportAction(reportId, itemId, action) {
+    try {
+      await registry.socket.makeCall("setconfig", "pluginReportAction", { pluginId: this.editingPluginId, reportId, itemId, action });
+      await this.refreshPluginOperationalState();
+    }
+    catch (error) {
+      await this.owner.showMessage(error.message || "Could not apply this review. Refresh the report and try again.", "Review action", "i-error");
     }
   }
 
@@ -915,7 +1020,7 @@ export class OptionsModal extends Modal {
     const props = (schema && schema.properties) || {};
     const requiredFields = new Set((schema && schema.required) || []);
     const keys = Object.keys(props).filter(k => k !== "roomId");
-    const config = Object.assign({}, p.config || {});
+    const config = Object.assign(defaultPluginConfig(schema), p.config || {});
 
     // Always show common free-form if schema empty
     const fieldKeys =
@@ -930,14 +1035,49 @@ export class OptionsModal extends Modal {
       const lab = document.createElement("label");
       lab.htmlFor = `roomopts-plugin-${key}`;
       lab.textContent =
-        def.description ||
+        def.title || def.description ||
         key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
-      const input = document.createElement("input");
+      const input = document.createElement(def.connectionProvider || def.enum ? "select" : def.multiline ? "textarea" : "input");
       input.id = `roomopts-plugin-${key}`;
       input.name = `plugin_cfg_${key}`;
       input.autocomplete = "off";
       input.required = requiredFields.has(key);
-      if (def.type === "boolean") {
+      const connectionHint = def.connectionProvider ? dom("p", { text: "Loading approved connections…", classes: ["roomopts-hint"], attrs: { id: `${input.id}-hint`, role: "status" } }) : null;
+      if (connectionHint) {
+        input.setAttribute("aria-describedby", connectionHint.id);
+      }
+      if (def.connectionProvider || def.enum) {
+        input.appendChild(dom("option", { text: "Select…", attrs: { value: "" } }));
+        for (const value of def.enum || []) {
+          input.appendChild(dom("option", { text: value, attrs: { value } }));
+        }
+        if (def.connectionProvider) {
+          if (config[key]) {
+            input.appendChild(dom("option", { text: config[key], attrs: { value: config[key] } }));
+          }
+          registry.socket.makeCall("setconfig", "listPluginConnections", { id: p.id }).then(connections => {
+            if (!input.isConnected) {
+              return;
+            }
+            const approved = connections.filter(item => item.provider === def.connectionProvider);
+            connectionHint.textContent = approved.length ? "Choose an approved connection. Ask the operator to repair any missing credentials." : "No connection is approved for this bot and room. Ask the operator to add a provider connection and room grant.";
+            for (const connection of approved) {
+              const existing = [...input.options].find(option => option.value === connection.id);
+              const label = `${connection.label}${connection.configured ? "" : " (credential missing)"}`;
+              if (existing) {
+                existing.textContent = label;
+              }
+              else {
+                input.appendChild(dom("option", { text: label, attrs: { value: connection.id } }));
+              }
+            }
+          }).catch(() => {
+            connectionHint.textContent = "Connections could not load. Reopen these settings or ask the operator to check the connection service.";
+          });
+        }
+        input.value = config[key] || "";
+      }
+      else if (def.type === "boolean") {
         input.type = "checkbox";
         input.checked = config[key] === true;
       }
@@ -951,12 +1091,14 @@ export class OptionsModal extends Modal {
         input.value =
           config[key] != null && config[key] !== "" ?
             String(config[key]) :
-            key === "pollIntervalMinutes" ?
-              "15" :
+            def.default != null ?
+              String(def.default) :
               "";
       }
       else {
-        input.type = "text";
+        if (input.tagName === "INPUT") {
+          input.type = "text";
+        }
         if (def.type === "array") {
           input.dataset.configType = "array";
           input.value = Array.isArray(config[key]) ?
@@ -1001,6 +1143,12 @@ export class OptionsModal extends Modal {
         wrap.appendChild(input);
       }
       host.appendChild(wrap);
+      if (connectionHint) {
+        wrap.appendChild(connectionHint);
+      }
+      if (def.title && def.description) {
+        wrap.appendChild(dom("p", { text: def.description, classes: ["roomopts-hint"] }));
+      }
     }
   }
 
@@ -1010,7 +1158,7 @@ export class OptionsModal extends Modal {
     if (!host) {
       return config;
     }
-    host.querySelectorAll("input[name^='plugin_cfg_']").forEach(input => {
+    host.querySelectorAll("[name^='plugin_cfg_']").forEach(input => {
       const key = input.name.replace(/^plugin_cfg_/, "");
       if (input.type === "checkbox") {
         config[key] = input.checked;
@@ -1020,14 +1168,17 @@ export class OptionsModal extends Modal {
         if (input.value !== "" && Number.isFinite(n)) {
           config[key] = n;
         }
+        else if (input.value === "") {
+          config[key] = null;
+        }
       }
       else if (input.dataset.configType === "array") {
         config[key] = input.value.
-          split(",").
+          split(/[,\n]/).
           map(value => value.trim()).
           filter(Boolean);
       }
-      else if (input.value.trim()) {
+      else if (input.value.trim() || input.type !== "password") {
         config[key] = input.value.trim();
       }
     });
@@ -1040,7 +1191,7 @@ export class OptionsModal extends Modal {
       return true;
     }
     const invalid = [];
-    host.querySelectorAll("input[name^='plugin_cfg_']").forEach(input => {
+    host.querySelectorAll("[name^='plugin_cfg_']").forEach(input => {
       const label = input.previousElementSibling ?
         input.previousElementSibling.textContent :
         "This field";
@@ -1141,6 +1292,7 @@ export class OptionsModal extends Modal {
       }
       const rv = await registry.socket.makeCall("setconfig", "runRoomPlugin", {
         id,
+        ...(this.pluginrunmode?.value ? { mode: this.pluginrunmode.value } : {}),
       });
       const uploaded = rv && rv.uploaded;
       const skipped = rv && rv.skipped;
@@ -1148,7 +1300,7 @@ export class OptionsModal extends Modal {
       this.openPluginEditor(id);
       if (this.pluginstatus) {
         this.pluginstatus.textContent =
-          uploaded != null ?
+          rv?.queued ? "Queued. Refresh activity to check progress." : rv?.dryRun ? `Preview — ${rv.planned || 0} eligible, ${skipped || 0} skipped. No files imported.` : rv?.delivered != null ? `${rv.delivered} delivered.` : uploaded != null ?
             `Done — uploaded ${uploaded}, skipped ${skipped || 0}.` :
             "Run finished.";
       }

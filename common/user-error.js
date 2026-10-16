@@ -1,6 +1,9 @@
 "use strict";
 
 const RECOVERY_MESSAGES = new Set([
+  "This item changed after the report was prepared. Refresh the report before applying this action.",
+  "This review action is no longer available. Refresh the bot report and choose a current item.",
+  "This bot is already running. Wait for it to finish, refresh activity and retry this review action.",
   "Sign-in failed. Check your username and password, then try again.",
   "The verification code was not accepted. Enter a new code from your authenticator and check that your device clock is correct.",
   "Too many attempts. Wait a few minutes before trying again.",

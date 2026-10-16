@@ -381,7 +381,7 @@ describe("bot runtime extensions", () => {
         method: "POST",
         body: { hello: "world" },
       }),
-    ).rejects.toThrow("HTTP 401: unauthorized");
+    ).rejects.toThrow("HTTP 401. Check the bot credentials.");
     try {
       await client.requestJson("https://example.test/secret-token", {
         method: "POST",

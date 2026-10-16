@@ -512,6 +512,7 @@
     <li>-</li>
     <li id="ctx-report" data-icon="i-report">Report this Room!</li>
     <li id="ctx-options" data-icon="i-edit">Room Options</li>
+    <li id="ctx-sessions" data-icon="i-pref">Sessions</li>
     <li id="ctx-notifications" data-icon="i-pref">Notifications</li>
     <li id="ctx-ban" data-class="modctrl" data-icon="i-ban">Ban</li>
     <li id="ctx-unban" data-class="modctrl" data-icon="i-unban">Unban</li>
@@ -1292,20 +1293,6 @@
               including for moderators.
             </p>
           </div>
-          <div class="roomopts-plugin-operations" name="pluginoperations">
-            <div class="roomopts-plugin-operation">
-              <span class="roomopts-plugin-operation-label">Last run</span>
-              <span name="pluginrunstate">Never run</span>
-            </div>
-            <div class="roomopts-plugin-operation" name="pluginsyncrow">
-              <span class="roomopts-plugin-operation-label">Import memory</span>
-              <span name="pluginsyncstate">Loading…</span>
-              <div class="roomopts-plugin-operation-actions">
-                <button type="button" name="pluginsyncrefresh">Refresh</button>
-                <button type="button" name="pluginsyncclear">Forget imports</button>
-              </div>
-            </div>
-          </div>
           <div class="roomopts-link-editor-actions">
             <button type="button" name="linkeditorapply">Apply rules</button>
             <button type="button" name="linkeditorclear">Clear rules</button>
@@ -1506,6 +1493,20 @@
             <span name="plugineditorlabel"></span>
           </div>
           <div class="roomopts-plugin-editor-fields" name="plugineditorfields"></div>
+          <section class="roomopts-plugin-operations" name="pluginoperations" aria-label="Bot activity">
+            <div class="roomopts-plugin-operation">
+              <span class="roomopts-plugin-operation-label">Last run</span>
+              <span name="pluginrunstate">Never run</span>
+              <button type="button" name="pluginsyncrefresh">Refresh activity</button>
+            </div>
+            <div class="roomopts-plugin-operation" name="pluginsyncrow">
+              <span class="roomopts-plugin-operation-label">Import memory</span>
+              <span name="pluginsyncstate">Loading…</span>
+              <button type="button" name="pluginsyncclear">Forget imports</button>
+            </div>
+            <div name="pluginjobs" class="roomopts-plugin-results" aria-live="polite"></div>
+            <div name="pluginreport" class="roomopts-plugin-results" aria-live="polite"></div>
+          </section>
           <p
             class="roomopts-rule-error hidden"
             name="pluginvalidation"
@@ -1520,6 +1521,7 @@
           <div class="roomopts-link-editor-actions">
             <button type="button" name="pluginapply">Save settings</button>
             <button type="button" name="pluginrun">Run now</button>
+            <button type="button" name="pluginqueue">Queue job</button>
             <button type="button" name="pluginrevoke">Remove</button>
             <button type="button" name="pluginclose">Close</button>
           </div>

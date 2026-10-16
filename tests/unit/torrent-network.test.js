@@ -124,6 +124,46 @@ test("already cancelled peer lookups never create a socket", async () => {
   expect(connect).not.toHaveBeenCalled();
 });
 
+test("unreachable peers release their connection slot after two seconds", async () => {
+  jest.useFakeTimers();
+  try {
+    const socket = new (require("node:events").EventEmitter)(); socket.destroy = jest.fn(); socket.write = jest.fn();
+    const result = peerMetadata({ host: "8.8.8.8", port: 6881 }, { infoHashV1: hash }, { connect: () => socket });
+    const rejected = expect(result).rejects.toThrow("connection timed out");
+    await jest.advanceTimersByTimeAsync(2001); await rejected;
+    expect(socket.destroy).toHaveBeenCalled(); expect(jest.getTimerCount()).toBe(0);
+  }
+  finally {
+    jest.useRealTimers();
+  }
+});
+
+test("verified metadata progress refreshes the idle budget without requesting payload pieces", async () => {
+  jest.useFakeTimers();
+  try {
+    const metadata = encode({ "name": "Synthetic.txt", "length": 4, "piece length": 16384, "pieces": Buffer.alloc(20, 1), "extra": Buffer.alloc(40000, 65) });
+    const expectedHash = createHash("sha1").update(metadata).digest("hex");
+    const socket = new (require("node:events").EventEmitter)(); socket.destroy = jest.fn(); socket.write = jest.fn();
+    const result = peerMetadata({ host: "8.8.8.8", port: 6881 }, { infoHashV1: expectedHash }, { connect: () => socket });
+    socket.emit("connect");
+    const hello = Buffer.alloc(68); hello[0] = 19; hello.write("BitTorrent protocol", 1); hello[25] = 0x10; Buffer.from(expectedHash, "hex").copy(hello, 28);
+    const send = (extension, value, tail = Buffer.alloc(0)) => {
+      const body = Buffer.concat([Buffer.from([20, extension]), encode(value), tail]); const size = Buffer.alloc(4); size.writeUInt32BE(body.length); socket.emit("data", Buffer.concat([size, body]));
+    };
+    socket.emit("data", hello); send(0, { m: { ut_metadata: 2 }, metadata_size: metadata.length });
+    for (let piece = 0; piece < Math.ceil(metadata.length / 16384); piece++) {
+      await jest.advanceTimersByTimeAsync(2000);
+      send(1, { msg_type: 1, piece, total_size: metadata.length }, metadata.subarray(piece * 16384, (piece + 1) * 16384));
+    }
+    expect((await result).files).toEqual([{ path: "Synthetic.txt", size: 4 }]);
+    expect(socket.write.mock.calls.slice(1).every(([packet]) => packet[4] === 20)).toBe(true);
+    expect(jest.getTimerCount()).toBe(0);
+  }
+  finally {
+    jest.useRealTimers();
+  }
+});
+
 test.each(["224.0.0.251", "239.255.255.250", "255.255.255.255", "198.18.0.1", "ff02::1", "::7f00:1"])("blocks non-unicast or reserved contact %s before sending UDP", async host => {
   expect(validPeer({ host, port: 6881 })).toBe(false);
   const socketFactory = jest.fn();

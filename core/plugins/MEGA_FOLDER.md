@@ -23,6 +23,10 @@ yarn add megajs
    - Set **folder URL**, **poll interval** (minutes), optional prefix / bot name
    - **Save settings** (and **Run now** to sync immediately)
 
+New invitations default to manual-only polling (`0`) and valid file/byte caps.
+Set a positive interval to enable startup and periodic scans. Existing invited
+bots retain their saved interval.
+
 The bot is invited **into this room only**. Settings live in room config (`roomPlugins`); uploads appear under the cyan **BOT · Mega.nz Autoshare** pill.
 
 ### Legacy: process-wide `.config.json` plugins
@@ -51,10 +55,14 @@ Still supported for headless/global wiring (requires explicit `roomId`):
 }
 ```
 
-Optional account credentials (private folders):
+Optional account authentication for shared folder/file links:
 
 - `config.email` / `config.password`, or  
 - environment: `MEGA_EMAIL`, `MEGA_PASSWORD` (preferred)
+
+The link must still include its decryption key. This adapter does not enumerate
+arbitrary private account folders. Account sessions disable keepalive and close
+after a scan; metadata and file fetches share a five-minute scan deadline.
 
 ---
 
@@ -101,6 +109,15 @@ performs that scan. Manual **Run now** remains an explicit new run.
 | `maxFilesPerRun` | no | Positive whole-number cap; default `50` |
 | `maxBytesPerFile` | no | Skip known/actual oversized files; default 256 MiB (`268435456`) |
 | `maxBytesPerRun` | no | Combined import cap; default 1 GiB (`1073741824`) |
+| `includeExtensions` | no | Case-insensitive allowlist, e.g. `["pdf", "epub"]`; empty accepts all |
+| `excludeNameContains` | no | Case-insensitive literal filename/path exclusions; no regular expressions |
+| `dryRun` | no | Preview eligible files without downloading/uploading or updating sync memory |
+
+In Room Options select **Preview** beside Run now, or call the run endpoint
+with `{ "mode": "preview" }`. Results include `planned`, `plannedBytes` and
+`dryRun`. Listing still contacts Mega. A preview is also subject to import caps.
+Filters allow up to 50 entries, each at most 100 characters; extensions use
+letters/digits. Polling is disabled at zero, otherwise 1–10,080 minutes.
 
 `validateConfig()` rejects missing URL/room, non-Mega.nz URLs, and non-positive
 or fractional limits. Known oversized entries are skipped before download.
@@ -154,6 +171,9 @@ Plugins always upload as bots so room members can tell automation from people. S
 ## Security notes
 
 - Treat Mega.nz passwords as secrets (env, not git).
+- Source folder URLs contain decryption keys. New imports retain only a source
+  fingerprint; public serialization removes legacy raw folder fields. Existing
+  private stored records are retained for compatibility.
 - Only enable for rooms you control.  
 - Keep the import caps conservative for remaining disk and transfer allowance.
   Mega.nz streams through a bounded temporary file, so large imports do not

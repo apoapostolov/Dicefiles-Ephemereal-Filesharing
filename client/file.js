@@ -4,7 +4,7 @@ import registry from "./registry";
 import Removable from "./removable";
 import Tooltip from "./tooltip";
 import { movieHero } from "./movie";
-import { mediaTitle } from "../common/video";
+import { torrentMedia, torrentContentsSize, mediaFileTitle } from "../common/torrent-media";
 import {
   dom,
   Rect,
@@ -28,13 +28,14 @@ const NUM_FORMAT = new Intl.NumberFormat();
 
 class FileTooltip extends Tooltip {
   constructor(file) {
-    super(mediaTitle(file.meta?.cinema?.[-1]?.movie, file.name));
+    super(file.displayName);
     this.file = file;
     this.el.classList.add("tooltip-file");
-    if (file.meta?.cinema?.[-1]?.movie) {
+    if (file.displayMovie) {
       this.el.classList.add("tooltip-movie");
       this.interactive = true;
-      this.el.replaceChildren(movieHero(file.meta.cinema[-1].movie, file.name, true));
+      const pack = file.meta?.torrent && torrentMedia(file.meta.torrent, file.meta.cinema);
+      this.el.replaceChildren(movieHero(pack && ["season-pack", "series-pack"].includes(pack.type) ? { ...file.displayMovie, kind: "tv" } : file.displayMovie, file.displayName, true, undefined, file.displayName));
       return;
     }
 
@@ -70,8 +71,10 @@ class FileTooltip extends Tooltip {
     }
 
     const diff = Math.max(0, file.ttl);
-    a(toPrettySize(file.size), "size");
-    a(`(${toPrettyInt(file.size)} Bytes)`, "");
+    a(file.displaySize === null ? "Contents size pending" : toPrettySize(file.displaySize), "size");
+    if (file.displaySize !== null) {
+      a(`(${toPrettyInt(file.displaySize)} Bytes)`, "");
+    }
     a(new Date(Date.now() + diff).toLocaleString(), "expires");
     a(toPrettyDuration(diff), "");
     if (file.uploaded) {
@@ -285,10 +288,25 @@ export default class File extends Removable {
     return meta.duration || "";
   }
 
+  get displayName() {
+    return this.meta?.torrent ? torrentMedia(this.meta.torrent, this.meta.cinema, this.name)?.title || this.name : mediaFileTitle(this.meta?.cinema?.[-1]?.movie, this.name);
+  }
+
+  get displayMovie() {
+    return this.meta?.torrent ? torrentMedia(this.meta.torrent, this.meta.cinema, this.name)?.movie : this.meta?.cinema?.[-1]?.movie;
+  }
+
+  get displaySize() {
+    return this.meta?.torrent || /\.(torrent|magnet)$/i.test(this.name || "") ? torrentContentsSize(this.meta?.torrent) : this.size;
+  }
+
   update(other) {
     Object.assign(this, other);
     if (this.nameTextEl) {
-      this.nameTextEl.textContent = mediaTitle(this.meta?.cinema?.[-1]?.movie, this.name);
+      this.nameTextEl.textContent = this.displayName;
+    }
+    if (this.sizeEl && !this.meta?.request) {
+      this.sizeEl.textContent = this.displaySize === null ? "—" : toPrettySize(this.displaySize); this.sizeEl.title = this.meta?.torrent ? "Torrent contents size" : "File size";
     }
     this.isLinked = !!(
       this.linked ||

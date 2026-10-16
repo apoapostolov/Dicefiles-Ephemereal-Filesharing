@@ -89,7 +89,7 @@ test("torrent refresh preserves the contents search and keyboard focus", async (
 
   const registry = { socket: { makeCall: jest.fn(async () => ({ torrent: { availability: { seeders: 2 } } })) } };
   const source = fs.readFileSync(path.join(__dirname, "../../client/torrent-metadata.js"), "utf8").replace(/^import .*;$/gm, "").replace("export class", "class");
-  const TorrentModal = vm.compileFunction(`${source}\nreturn TorrentMetadataModal;`, ["Modal", "registry", "dom", "toPrettySize", "fileKind", "presentTorrent", "document", "userError", "mediaTitle", "availabilityView", "featuredMovie"])(Modal, registry, dom, n => `${n} B`, fileKind, presentTorrent, document, require("../../common/user-error").userError, require("../../common/video").mediaTitle, availabilityView, featuredMovie);
+  const TorrentModal = vm.compileFunction(`${source}\nreturn TorrentMetadataModal;`, ["Modal", "registry", "dom", "toPrettySize", "fileKind", "presentTorrent", "document", "userError", "mediaFileTitle", "availabilityView", "featuredMovie"])(Modal, registry, dom, n => `${n} B`, fileKind, presentTorrent, document, require("../../common/user-error").userError, require("../../common/torrent-media").mediaFileTitle, availabilityView, featuredMovie);
   const modal = new TorrentModal({ name: "Books", files: [{ path: "a.pdf", size: 4 }, { path: "b.epub", size: 8 }], trackers: [] }, "books.torrent", "/download", { kind: "file", key: "synthetic" });
   modal.search.value = "epub"; modal.search.oninput(); modal.search.focus();
   await modal.refresh(true);
@@ -117,7 +117,7 @@ test("matched torrent artwork appears in the main dialog and video actions share
   const showMovieInfo = jest.fn(async file => {
     file.meta.cinema = { 1: { movie: null } };
   });
-  const TorrentModal = vm.compileFunction(`${source}\nreturn TorrentMetadataModal;`, ["Modal", "registry", "dom", "toPrettySize", "fileKind", "presentTorrent", "document", "userError", "mediaTitle", "availabilityView", "featuredMovie", "showMovieInfo"])(Modal, registry, dom, n => `${n} B`, fileKind, presentTorrent, document, String, require("../../common/video").mediaTitle, availabilityView, featuredMovie, showMovieInfo);
+  const TorrentModal = vm.compileFunction(`${source}\nreturn TorrentMetadataModal;`, ["Modal", "registry", "dom", "toPrettySize", "fileKind", "presentTorrent", "document", "userError", "mediaFileTitle", "availabilityView", "featuredMovie", "showMovieInfo"])(Modal, registry, dom, n => `${n} B`, fileKind, presentTorrent, document, String, require("../../common/torrent-media").mediaFileTitle, availabilityView, featuredMovie, showMovieInfo);
   const modal = new TorrentModal({ files: [{ path: "readme.txt", size: 1 }, { path: "movie.mp4", size: 100 }], trackers: [] }, "Original torrent", null, { kind: "link", key: "synthetic" });
   const find = (el, cls) => el.classes.includes(cls) ? el : el.children.map(child => find(child, cls)).find(Boolean);
   const hero = find(modal.body, "torrent-cinema-hero");
@@ -147,11 +147,49 @@ test("phone torrent metadata occupies its own row to preserve filename width", (
   expect(css).toContain(".file.torrent-entry > .name { grid-row: 1; grid-column: 2; min-width: 0;");
 });
 
+test("torrent availability metrics have centered icon/value cells and accent hover without a shadow border", () => {
+  const { dom } = fixture(); const onopen = jest.fn();
+  const source = fs.readFileSync(path.join(__dirname, "../../client/torrent-availability.js"), "utf8").replace(/^import .*;$/gm, "").replace("export function", "function");
+  const render = vm.compileFunction(`${source}\nreturn torrentAvailability;`, ["dom", "availabilityView"])(dom, availabilityView);
+  const pill = render({ availability: { seeders: 12, leechers: 345, responding: 1, state: "current", reportedAt: Date.now() } }, onopen);
+  expect(pill.children).toHaveLength(2);
+  expect(pill.children[0].children[0].classes).toEqual(["torrent-metric-icon", "is-seeders"]);
+  expect(pill.children[1].children[0].classes).toEqual(["torrent-metric-icon", "is-peers"]);
+  expect(pill.children.map(group => group.children[1].textContent)).toEqual(["12", "345"]);
+  expect(pill.attributes["aria-label"]).toContain("12 seeders");
+  pill.onclick({ preventDefault: jest.fn(), stopPropagation: jest.fn() }); expect(onopen).toHaveBeenCalledTimes(1);
+  const css = fs.readFileSync(path.join(__dirname, "../../entries/css/torrent.css"), "utf8");
+  expect(css).toContain("grid-template-columns: 10px auto");
+  expect(css).toContain(".torrent-availability span { display: block; padding: 0; margin: 0; color: inherit;");
+  expect(css).toContain(".tag.torrent-availability:is(:hover, :focus) { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-soft); box-shadow: none;");
+  expect(css).toContain("transform: translateY(0.5px) rotate(180deg)");
+  expect(css).toContain("font-size: 10px; line-height: normal;");
+  expect(css).not.toContain("height: 24px");
+  expect(css).toContain(".tag.torrent-availability:focus-visible { outline: 2px solid var(--accent)");
+});
+
+test("torrent and magnet rows omit redundant title pills while other files retain titles", () => {
+  const { dom } = fixture();
+  const source = fs.readFileSync(path.join(__dirname, "../../client/files/file.js"), "utf8");
+  const method = source.split("  setupTags() {")[1].split("\n  getTypeLabel() {")[0];
+  const tagDom = (...args) => {
+    const el = dom(...args); el.dataset = {}; return el;
+  };
+  const setup = vm.compileFunction(`return function() {${method}`, ["dom", "sort", "torrentAvailability", "registry"])(tagDom, rows => rows, () => dom("button", { classes: ["torrent-availability"] }), {});
+  const render = meta => {
+    const file = { meta, type: "file", tagsMap: new Map([["title", "Duplicate name"]]), tagsEl: dom("span"), el: { classList: { remove: jest.fn(), toggle: jest.fn() } }, isBookLike: () => false, isArchiveFile: () => false, getTagLabel: tag => tag };
+    setup.call(file); return file.tagsEl.children;
+  };
+  expect(render({ torrent: { kind: "magnet" } }).some(tag => tag.classes.includes("tag-title"))).toBe(false);
+  expect(render({ torrent: { kind: "torrent" } }).some(tag => tag.classes.includes("tag-title"))).toBe(false);
+  expect(render({}).some(tag => tag.classes.includes("tag-title"))).toBe(true);
+});
+
 test("Video Information keeps its accented Watch action after IMDb in one action bar", () => {
   const { dom } = fixture();
   const source = fs.readFileSync(path.join(__dirname, "../../client/movie.js"), "utf8");
   const heroSource = source.slice(source.indexOf("function button("), source.indexOf("export class MovieModal")).replace("export function", "function");
-  const { movieHero, button } = vm.compileFunction(`${heroSource}\nreturn { movieHero, button };`, ["dom", "mediaTitle"])(dom, require("../../common/video").mediaTitle);
+  const { movieHero, button } = vm.compileFunction(`${heroSource}\nreturn { movieHero, button };`, ["dom", "mediaTitle"])(dom, require("../../common/torrent-media").mediaFileTitle);
   const watch = button("▶ Watch", () => {}, "movie-primary movie-watch-action");
   const hero = movieHero({ title: "Example", url: "https://www.themoviedb.org/movie/1", imdb: "https://www.imdb.com/title/tt1234567/" }, "file.mp4", false, watch);
   const actions = hero.children[0].children.find(child => child.classes.includes("movie-actions"));

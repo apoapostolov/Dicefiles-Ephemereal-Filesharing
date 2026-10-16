@@ -31,17 +31,18 @@ dashboard. You host it; there is no public Dicefiles service.
   <img src="images/dicefiles-room-gallery.png" alt="A Dicefiles room with live chat, filters, and a gallery of shared files" width="100%">
 </p>
 
-## What's New in 1.4.6
+## What's New in 1.4.7
 
-This release closes the remaining gap in upload parsing: archives now go
-through the same sandbox as other file metadata tools. It also keeps server
-fetches from reaching private addresses and puts time and output limits on
-external parsers. For people running Dicefiles with automation, MCP HTTP is now
-stateless and binds to loopback unless explicitly configured otherwise.
+Rooms can collect from approved feeds and cloud folders, review uploads and
+requests, and plan sessions with private RSVPs. The catalog now includes 27
+built-in bots with durable jobs and activity reports. Movie and TV torrents
+gain streaming playback, subtitles, remembered progress, readable episode names
+and verified season-pack coverage.
 
-Room data needs no migration. Operators using MCP HTTP should read the
-[upgrade notes](CHANGELOG.md#upgrade-notes); the full [changelog](CHANGELOG.md)
-has the security and client details.
+This release also adds 34 themes, compact phone and tablet controls, 57 scoped
+MCP tools, and container deployment through GHCR. Operators should review the
+[upgrade notes](CHANGELOG.md#operator-notes) and configure provider connections
+before enabling collectors. See the full [changelog](CHANGELOG.md).
 
 ## What You Can Do
 
@@ -52,7 +53,7 @@ has the security and client details.
 - **Ask the community for missing material.** Post requests, attach reference links or images, and let an upload fulfill the request directly.
 - **Join libraries without copying them.** Link approved rooms locally or across trusted independent hosts while the source keeps control.
 - **Protect private communities.** Use expiring guest invites, optional rotating room passwords, consent boundaries, and role-based moderation.
-- **Connect tools and room bots.** Use scoped REST, webhooks, 49 MCP tools,
+- **Connect tools and room bots.** Use scoped REST, webhooks, 57 MCP tools,
   and bounded automation for imports, releases, requests, and commands.
 - **Grow beyond one drive.** Add several volumes, set free-space floors,
   monitor health, and keep legacy content where it already lives.
@@ -176,9 +177,13 @@ archives, links, guest invites, federation, bots, storage, and protected-room
 access. Permissions are split into scopes, rate limited, and audited.
 
 - [REST API reference](./API.md)
-- [MCP setup and 49-tool reference](./MCP.md)
+- [MCP setup and 57-tool reference](./MCP.md)
 - [Trusted-host federation](./docs/FEDERATION.md)
 - [Plugin development](./core/plugins/DEVELOPING_PLUGINS.md)
+- [Plugin API v2](./core/plugins/PLUGIN_API.md) — scoped reads, imports, checkpoints and integration patterns
+- [Collection bots: provider setup and recovery](./core/plugins/COLLECTION_BOTS.md)
+- [Community and maintenance bots: reviews, sessions and operator grants](./core/plugins/WORKFLOW_BOTS.md)
+- [Bots audit and ordered development checklist](./docs/BOTS_AND_PLUGINS.md)
 - [Operations skill for AI agents](./skills/dicefiles-ops/SKILL.md)
 - [Environment flags and private provider keys](./docs/ENVIRONMENT.md)
 - [Appearance and theme tokens](./docs/THEMES.md)

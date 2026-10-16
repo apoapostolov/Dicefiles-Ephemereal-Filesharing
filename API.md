@@ -326,13 +326,30 @@ Configure or invite with:
 ```
 
 Configuration is a partial merge: omitting an existing secret preserves it.
+Use an empty string to clear an optional text setting and `null` to clear an
+optional numeric setting, subject to the bot's validation. The shared room
+upsert enforces the size limit on the merged configuration. Full-list replacement
+remains a separate operation.
+Omitting `enabled` also preserves the current state. Schema write-only fields,
+source folder URLs and nested credential fields are redacted from read responses.
 Sending a new value replaces it. The path `pluginId` is authoritative and a
 client cannot redirect configuration to another installed module.
 
-`run` returns the plugin's bounded result. Scheduled runs additionally use a
-Redis lease so multiple HTTP workers do not execute the same room/bot interval.
+`run` accepts an optional JSON body `{ "mode": "preview" }`; catalog and invited
+bot entries advertise `runModes`. Importers support `run`/`preview`, publishers
+support `test`/`digest`. Omit the mode for existing default behavior. Unsupported
+modes return 400; disabled bots return 409. Execution requires an enabled room
+invitation and cannot override the saved configuration or target room.
+
+`run` returns the plugin's result. Manual and scheduled runs share a renewable
+Redis active lease so multiple HTTP workers do not overlap the same room/bot.
+Scheduled runs also deduplicate their event/time bucket.
 Mega.nz Autoshare returns upload/skip counts and enforces configurable
 `maxFilesPerRun`, `maxBytesPerFile`, and `maxBytesPerRun` limits.
+Preview results include `dryRun`, `planned` and `plannedBytes`; the scan still
+contacts the provider for metadata, but does not download bodies or mark files
+as synced. Developer adapters and private checkpoints are documented in
+[Plugin API v2](core/plugins/PLUGIN_API.md); this does not change REST `/api/v1`.
 
 Sync-log inspection is bounded to 200 newest records and returns the remembered
 entry key and timestamp, retention, total count, and most recent run status.
@@ -1960,3 +1977,50 @@ room-access:read. Ordinary reads and writes return no password. Revocation and
 rotation invalidate grants for that credential; other credentials remain usable.
 Claim/release mutations check the authorized password policy in the same Redis
 operation, returning 403 if the policy changed and 409 for competing mutations.
+
+## Durable bot operations
+
+All routes require the corresponding room automation scope. Password-protected
+rooms also require `room-access:bypass`.
+
+| Method | Route under `/api/v1/rooms/:id/plugins/:pluginId` | Scope | Result |
+| --- | --- | --- | --- |
+| GET | `/operations?cursor=…&limit=20` | `room-plugins:read` | Scoped jobs, nextCursor, latest report, connection labels |
+| GET | `/connections` | `room-plugins:read` | Operator-approved connection references; never credentials |
+| POST | `/jobs` | `room-plugins:run` | Queue `{mode?,idempotencyKey?}`; return `{ok,job}` |
+| POST | `/jobs/:jobId/cancel` | `room-plugins:run` | Cancel queued/running/retrying work |
+| POST | `/jobs/:jobId/replay` | `room-plugins:run` | Replay failed/cancelled work with current saved settings |
+
+Job IDs are opaque SHA-256 identifiers. States are queued, running, retrying,
+completed, failed and cancelled. History is bounded; completed jobs cannot be
+replayed. Queueing is separate from synchronous `/run`; publisher event delivery
+uses the queue internally. Retrying respects provider Retry-After, current
+invitation/settings, attempts and age limits. Cancellation is cooperative and
+cannot undo completed remote side effects. See
+[collection bots](core/plugins/COLLECTION_BOTS.md) for connection setup and
+[Plugin API](core/plugins/PLUGIN_API.md) for in-process contracts.
+
+
+### Reviewed bot actions and room sessions (unreleased)
+
+POST /api/v1/rooms/:id/plugins/:pluginId/review requires room-plugins:write.
+Supply {reportId,itemId,action} from the latest operations report. The enabled
+bot validates its declared action, room membership and current item revision.
+Stale reports, busy bots and conflicting edits return 409; refresh and retry.
+Operations reads include the latest 20 redacted action-audit entries. Disabled
+bots retain readable history but cannot apply actions or replay work.
+
+| Method | Path | Scope | Body/result |
+| --- | --- | --- | --- |
+| GET | /api/v1/rooms/:id/sessions | files:read | {ok,sessions}; aggregate RSVP counts, no attendees |
+| POST | /api/v1/rooms/:id/sessions | rooms:write | {title,startsAt,endsAt?,timezone,description?,links?}; returns {ok,session} |
+| PATCH | /api/v1/rooms/:id/sessions/:sessionId | rooms:write | {revision,cancelled}; boolean cancellation/restore, current revision required |
+
+Creation requires Session Organizer enabled. Times are Unix milliseconds;
+starts must be within 60 days, duration at most 24 hours, description at most
+1,000 characters and up to 20 local /g/, /q/ or /r/ preparation links. Session
+lists include id, revision, title, description, start/end times, display timezone,
+links, cancelled state and aggregate counts. RSVP is available to authenticated
+room visitors through the room Sessions interface; automation cannot impersonate
+an attendee. Protected rooms additionally require room-access:bypass for these
+REST operations. See [workflow setup](core/plugins/WORKFLOW_BOTS.md).

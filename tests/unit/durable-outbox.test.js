@@ -37,4 +37,28 @@ describe("durable outbox", () => {
   test("rejects oversized jobs", async () => {
     await expect(outbox.enqueue({ id: "oversized", value: "x".repeat(262144) })).rejects.toThrow("capacity");
   });
+  test("scheduled jobs, scoped history, cancellation, replay and fencing", async () => {
+    const job = { id: "scheduled", roomId: "synthetic-room", pluginId: "feed-collector", global: false, attempt: 0, dueAt: Date.now() + 10000 };
+    expect(await outbox.enqueue(job)).toBe(true);
+    expect(await outbox.claim()).toBeNull();
+    expect((await outbox.list({ roomId: job.roomId, pluginId: job.pluginId, global: false })).records).toHaveLength(1);
+    expect(Object.values((await outbox.list({ roomId: "other-room" })).records)).toHaveLength(0);
+    expect(Number(await outbox.cancel(job.id))).toBe(1);
+    expect((await outbox.get(job.id)).status).toBe("cancelled");
+    expect(Number(await outbox.replay({ ...job, dueAt: Date.now() }))).toBe(1);
+    const active = await outbox.claim();
+    expect(active.id).toBe(job.id);
+    expect(Number(await outbox.cancel(job.id))).toBe(1);
+    expect(Number(await outbox.complete(active, { imported: 1 }))).toBe(0);
+    expect(Number(await outbox.replay({ ...job, dueAt: Date.now() }))).toBe(1);
+    const next = await outbox.claim();
+    await outbox.retry(next, 0, { increment: false });
+    const resumed = await outbox.claim();
+    expect(resumed.attempt).toBe(0);
+    await outbox.complete(resumed, { imported: 1 });
+    expect(await outbox.get(job.id)).toMatchObject({ status: "completed", result: { imported: 1 } });
+    expect(Number(await outbox.replay(job))).toBe(0);
+    expect((await outbox.list({ roomId: job.roomId })).records[0].status).toBe("completed");
+    expect(await BROKER.getMethod("get")(outbox.keys[5])).toBe("0");
+  });
 });

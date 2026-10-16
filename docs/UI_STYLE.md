@@ -10,6 +10,11 @@ palette. Historical color values below describe the original design only; use
 `--success` and the other established tokens rather than introducing literals.
 Appearance uses a currentColor palette SVG, separate from the settings gear.
 
+Checkboxes use shared `--theme-checkbox-off/on/mark/border` tokens: dark unchecked
+fill, lighter checked fill and a white mark, independent of the page palette.
+Keep visible keyboard focus, disabled feedback and an indeterminate dash; forced
+color mode uses the native control.
+
 At phone widths (up to 760px), poster pills use a person glyph and page-count
 pills use a document glyph plus the number. Tap, Enter or Space reveals the
 complete accessible label in a viewport-bounded popover. Escape, outside tap,
@@ -33,6 +38,18 @@ stable widths, accessible full counts and an explicit stale/unknown state.
 Compact video players use a full-width timeline, equal-width transport buttons,
 two full-width preference selectors, then evenly filled view actions. Controls
 have 44px minimum height; missing picture-in-picture support leaves no empty cell.
+The player Close action is a header × button, with no footer row. Size the frame
+using the measured title header, status and controls so everything fits within
+the viewport; buffer on opening and leave playback paused until Play.
+Tracker rows keep the hostname, protocol and report on one line. Truncate long
+hostnames and reports visually with full text available in their tooltips.
+
+Video Information subtitles use a two-column grid at every supported width:
+language dropdown on the left and Add file on the right, both with 44px targets.
+List uploaded language/filename pairs below, with wrapping filenames and a
+fixed-width remove glyph. Keep colors on existing surface/text/accent tokens.
+Plugin forms honor schema defaults; run-mode controls use the same themed form
+surfaces and never hide the selected mode behind a generic settings action.
 
 > **Agreed standard (Feb 2026):** The filter buttons, select/delete pill, view-mode pill, and Upload button are the canonical reference for size and shape. All new buttons must match them.
 
@@ -145,6 +162,12 @@ Key: `-webkit-appearance: none; appearance: none;` must be set to strip browser-
 ### Selection / Action Pill (`#selectall`, `#clearselection`, `#trash`)
 
 These buttons are wrapped in `<div class="btn-pill selection-pill">` and render as a single connected pill, identical in style to the view-mode pill. The `.selection-pill` class hides the group for regular users and shows it for mod/owner via CSS (`body.mod .selection-pill`, `body.owner .selection-pill`).
+
+For room owners and moderators, Ctrl/Cmd-click toggles a file selection and
+Shift-click selects a range. Capture these clicks on the file row before links
+or preview controls activate, preventing downloads and navigation. Clicking the
+file icon also selects without downloading; ordinary filename and preview clicks
+retain their open/download behavior.
 
 ### Icons
 

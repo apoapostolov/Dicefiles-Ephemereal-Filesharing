@@ -1,7 +1,7 @@
 "use strict";
 
 const { createHash } = require("node:crypto");
-const { discoverTorrent, lookup } = require("../../lib/torrent-discovery");
+const { discoverTorrent, lookup, peerCandidates } = require("../../lib/torrent-discovery");
 const { presentTorrent } = require("../../common/torrent-presentation");
 
 const magnet = name => ({ kind: "magnet", name, infoHashV1: createHash("sha1").update(name).digest("hex"), magnet: "magnet:?xt=synthetic", trackers: ["https://a.example/announce", "udp://b.example:6969"], files: [] });
@@ -73,4 +73,66 @@ test("refreshing stored peer contents preserves their provenance", async () => {
   const network = { discoverPeers: jest.fn(), scrapeTracker: async () => ({ seeders: 1, leechers: 0 }) };
   expect((await lookup(input, { network })).discovery.source).toBe("peer");
   expect(network.discoverPeers).not.toHaveBeenCalled();
+});
+
+test("tracker contacts resolve metadata when DHT has no peers and leave the tracker afterwards", async () => {
+  const input = magnet("tracker-contents"); const contact = { host: "8.8.8.8", port: 6881 };
+  const network = {
+    discoverPeers: jest.fn(async () => []),
+    scrapeTracker: jest.fn(async () => ({ seeders: 120, leechers: 2 })),
+    announceTracker: jest.fn(async () => ({ peers: [contact] })),
+    peerMetadata: jest.fn(async () => ({ files: [{ path: "film.mkv", size: 100 }], fileCount: 1, totalSize: 100 })),
+  };
+  const result = await lookup(input, { network });
+  expect(result).toMatchObject({ discovery: { state: "complete", peersFound: 1, peersTried: 1 }, files: [{ path: "film.mkv" }] });
+  const starts = network.announceTracker.mock.calls.filter(call => !call[3].event);
+  const stops = network.announceTracker.mock.calls.filter(call => call[3].event === "stopped");
+  expect(starts).toHaveLength(2); expect(stops).toHaveLength(2);
+  expect(starts[0][2]).toHaveLength(20); expect(stops[0][2]).toEqual(starts[0][2]);
+  expect(network.peerMetadata.mock.calls[0][2].peerId).toEqual(starts[0][2]);
+  expect(network.peerMetadata.mock.calls[0][2].signal.aborted).toBe(true);
+});
+
+test("peer candidates interleave sources, deduplicate and reject private destinations", () => {
+  const a = Array.from({ length: 24 }, (_, i) => ({ host: `8.8.8.${i + 1}`, port: 6881 }));
+  const b = Array.from({ length: 24 }, (_, i) => ({ host: `9.9.9.${i + 1}`, port: 6881 }));
+  const result = peerCandidates([a, b, [a[0], { host: "127.0.0.1", port: 6881 }]]);
+  expect(result).toHaveLength(48); expect(result.slice(0, 4)).toEqual([a[0], b[0], a[1], b[1]]);
+});
+
+test("a free metadata slot tries later contacts without waiting for a stalled batch", async () => {
+  const input = magnet("refill-metadata"); const contacts = Array.from({ length: 8 }, (_, i) => ({ host: `8.8.8.${i + 1}`, port: 6881 }));
+  const network = {
+    discoverPeers: async () => contacts, announceTracker: async () => ({ peers: [] }), scrapeTracker: async () => ({ seeders: 1 }),
+    peerMetadata: jest.fn(async (peer, _torrent, { signal }) => {
+      if (peer.host.endsWith(".1")) {
+        await new Promise(resolve => signal.addEventListener("abort", resolve, { once: true })); throw new Error("Cancelled");
+      }
+      if (peer.host.endsWith(".8")) {
+        return { files: [{ path: "verified.txt", size: 1 }] };
+      }
+      throw new Error("Unreachable");
+    }),
+  };
+  expect((await lookup(input, { network })).files).toEqual([{ path: "verified.txt", size: 1 }]);
+  expect(network.peerMetadata).toHaveBeenCalledTimes(8);
+});
+
+test("private torrents and known contents never announce for metadata", async () => {
+  const network = { discoverPeers: jest.fn(), announceTracker: jest.fn(), peerMetadata: jest.fn(), scrapeTracker: async () => ({ seeders: 1 }) };
+  await lookup({ ...magnet("private-empty"), private: true }, { network });
+  await lookup({ ...magnet("known-contents"), files: [{ path: "a.txt", size: 1 }] }, { network });
+  expect(network.announceTracker).not.toHaveBeenCalled(); expect(network.peerMetadata).not.toHaveBeenCalled();
+});
+
+test("unresolved lookup distinguishes no contacts from peers declining metadata without exposing addresses", async () => {
+  const network = { discoverPeers: async () => [], announceTracker: async () => ({ peers: [] }), scrapeTracker: async () => ({ seeders: 100 }) };
+  expect((await lookup(magnet("no-contacts"), { network })).discovery.reason).toBe("no-peers");
+  network.announceTracker = async () => ({ peers: [{ host: "8.8.8.8", port: 6881 }] });
+  network.peerMetadata = async () => {
+    throw new Error("Declined");
+  };
+  const result = await lookup(magnet("declined"), { network });
+  expect(result.discovery).toMatchObject({ state: "unavailable", reason: "metadata-unavailable", peersFound: 1, peersTried: 1 });
+  expect(JSON.stringify(result.discovery)).not.toContain("8.8.8.8");
 });

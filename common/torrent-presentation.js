@@ -1,5 +1,7 @@
 "use strict";
 
+const { torrentContentsSize, torrentMedia } = require("./torrent-media");
+
 const GROUPS = [
   ["Video", "video", /\.(mp4|mkv|avi|mov|webm|m4v|mpeg|mpg|ts)$/i],
   ["Audio", "audio", /\.(mp3|flac|wav|m4a|aac|ogg|opus|aiff)$/i],
@@ -26,7 +28,7 @@ function presentTorrent(torrent, fallback = "Torrent") {
   const suppliedName = torrent.name || fallback;
   const name = suppliedName === torrent.infoHashV1 || suppliedName === torrent.infoHashV2 ? "Torrent" : suppliedName.replace(/\.(magnet|torrent)$/i, "");
   return { name, files, categories, category: categories.length === 1 ? categories[0].label : categories.length ? "Mixed files" : "Torrent",
-    known: files.length > 0, size: Number.isSafeInteger(torrent.totalSize) && torrent.totalSize >= 0 ? torrent.totalSize : null };
+    known: files.length > 0, size: torrentContentsSize(torrent) };
 }
 
 function availabilityView(torrent, now = Date.now()) {
@@ -47,7 +49,7 @@ function availabilityView(torrent, now = Date.now()) {
 
 function featuredMovie(torrent, cinema = {}) {
   const matched = (Array.isArray(torrent.files) ? torrent.files : []).map((file, index) => ({ movie: cinema[index]?.movie, index, file })).filter(row => row.movie?.title && fileKind(row.file.path || "").icon === "video").sort((a, b) => (b.file.size || 0) - (a.file.size || 0));
-  return matched.length ? { ...matched[0], count: matched.length } : null;
+  return matched.length ? { ...matched[0], count: matched.length, presentation: torrentMedia(torrent, cinema) } : null;
 }
 
 module.exports = { fileKind, presentTorrent, availabilityView, featuredMovie };

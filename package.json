@@ -1,6 +1,6 @@
 {
   "name": "dicefiles",
-  "version": "1.4.6",
+  "version": "1.4.7",
   "description": "Ephemereal Filesharing for Hobby Communities",
   "main": "server.js",
   "author": "RealDolos <dolos@cock.li>",
@@ -30,6 +30,7 @@
     "audit:production": "node scripts/audit-dependencies.js --production"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1152.0",
     "@fedify/fedify": "^2.3.4",
     "@lingo-reader/mobi-parser": "^0.4.6",
     "@modelcontextprotocol/node": "^2.1.1",
@@ -41,6 +42,7 @@
     "cookie-parser": "^1.4.7",
     "ejs": "^6.0.1",
     "express": "^5.3.0",
+    "fast-xml-parser": "^5.11.2",
     "helmet": "^8.3.0",
     "jose": "^6.2.12",
     "jszip": "^3.10.1",
