@@ -16,6 +16,7 @@ import Modal from "../modal";
 import registry from "../registry";
 import { dom, nukeEvent, toPrettySize } from "../util";
 import DownloadBatchModal from "./downloadmodal";
+import { isSupportedModelName } from "./model-formats";
 
 // Extensions that can be inline-previewed on hover
 const IMAGE_EXTS = new Set([
@@ -689,6 +690,28 @@ export default class ArchiveModal extends Modal {
       row.appendChild(name);
       row.appendChild(pathEl);
       row.appendChild(size);
+      if (isSupportedModelName(entry.path)) {
+        const modelButton = dom("button", {
+          classes: ["av-view-model"],
+          attrs: {
+            "type": "button",
+            "title": "View 3D model",
+            "aria-label": `View 3D model: ${entry.path}`,
+          },
+          text: "3D",
+        });
+        modelButton.addEventListener("click", e => {
+          nukeEvent(e);
+          import("./modelviewer").
+            then(({ openModelViewer }) => openModelViewer({
+              name: entry.path,
+              archiveKey: this.archiveKey,
+              archivePath: entry.path,
+            })).
+            catch(error => console.error("Could not open 3D model viewer:", error));
+        });
+        row.appendChild(modelButton);
+      }
 
       // Image preview on hover
       if (isImageEntry(entry.path) && this._imgPopupEl) {

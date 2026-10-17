@@ -96,6 +96,16 @@ module.exports = {
     },
   },
   optimization: {
+    splitChunks: {
+      cacheGroups: {
+        babylonViewer: {
+          test: /[\\/]node_modules[\\/](@babylonjs|babylonjs-gltf2interface)[\\/]/,
+          chunks: "async",
+          enforce: true,
+          name: "babylon-viewer",
+        },
+      },
+    },
     minimizer: [
       new TerserPlugin({
         parallel: true,

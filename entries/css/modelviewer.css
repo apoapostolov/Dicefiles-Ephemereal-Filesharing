@@ -1,0 +1,130 @@
+.modal-modelviewer {
+  box-sizing: border-box;
+  width: min(1120px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  height: min(820px, calc(100dvh - 24px));
+  max-height: calc(100dvh - 24px);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  color: var(--text-fg);
+  background: var(--panel-bg);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.modal-modelviewer .modal-head {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: var(--surface-1);
+}
+
+.modal-modelviewer .modal-body {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.modal-modelviewer .model-viewer-status {
+  min-height: 1.5rem;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.45rem 0.75rem;
+  color: var(--dark-fg);
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--hairline);
+  font-size: 0.78rem;
+}
+
+.modal-modelviewer .model-viewer-status.is-error {
+  color: var(--danger);
+}
+
+.modal-modelviewer .model-viewer-host {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--dark-bg);
+}
+
+.modal-modelviewer babylon-viewer {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  background: var(--dark-bg);
+  --viewer-background-color: var(--dark-bg);
+  --viewer-control-background-color: var(--surface-1);
+  --viewer-control-foreground-color: var(--text-fg);
+}
+
+.modal-modelviewer .modal-buttons {
+  border-top: 1px solid var(--hairline);
+}
+
+.model-view-button,
+.modal-archiveviewer .av-view-model {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 2.25rem;
+  min-height: 1.65rem;
+  padding: 0.12rem 0.42rem;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: var(--surface-1);
+  color: var(--text-fg);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.model-view-button:hover,
+.modal-archiveviewer .av-view-model:hover {
+  border-color: var(--control-border-hover);
+  background: var(--surface-2);
+}
+
+.model-view-button:focus-visible,
+.modal-archiveviewer .av-view-model:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.modal-archiveviewer .av-file-item {
+  grid-template-columns: 1.4em minmax(4em, 1fr) minmax(0, auto) auto auto;
+}
+
+.modal-archiveviewer .av-view-model {
+  min-width: 2rem;
+  min-height: 1.5rem;
+  padding-inline: 0.32rem;
+}
+
+@media (max-width: 640px) {
+  .modal-modelviewer {
+    width: calc(100vw - 12px);
+    max-width: calc(100vw - 12px);
+    height: calc(100dvh - 12px);
+    max-height: calc(100dvh - 12px);
+  }
+
+  .modal-modelviewer babylon-viewer {
+    min-height: 240px;
+  }
+
+  .modal-archiveviewer .av-file-item {
+    grid-template-columns: 1.25em minmax(0, 1fr) auto auto;
+  }
+
+  .modal-archiveviewer .av-file-path {
+    display: none;
+  }
+}

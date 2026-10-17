@@ -10,6 +10,7 @@ import { showMovieInfo } from "../movie";
 import { durationSeconds } from "../../common/video";
 import { torrentArtwork } from "../../common/torrent-presentation";
 import { dom, nukeEvent, sort, toPrettyDuration, toPrettySize } from "../util";
+import { isSupportedModelName } from "./model-formats";
 import { REMOVALS, TTL } from "./tracker";
 
 const META = Object.freeze(["duration", "codec", "bitrate", "type"]);
@@ -465,6 +466,24 @@ export default class File extends BaseFile {
     if (this.meta?.torrent) {
       this.tagsEl.appendChild(torrentAvailability(this.meta.torrent, () => registry.roomie.showModal(new TorrentMetadataModal(this.meta.torrent, this.name, this.url, { kind: "file", key: this.key })).catch(() => {})));
     }
+    if (!this.isRequest && isSupportedModelName(this.name)) {
+      const modelButton = dom("button", {
+        classes: ["model-view-button"],
+        attrs: {
+          "type": "button",
+          "title": "View 3D model",
+          "aria-label": `View 3D model: ${this.name}`,
+        },
+        text: "3D",
+      });
+      modelButton.addEventListener("click", e => {
+        nukeEvent(e);
+        import("./modelviewer").
+          then(({ openModelViewer }) => openModelViewer({ name: this.name, url: this.url })).
+          catch(error => console.error("Could not open 3D model viewer:", error));
+      });
+      this.tagsEl.appendChild(modelButton);
+    }
     if (this.type === "video" && (!durationSeconds(this.meta.durationSeconds || this.meta.duration) || durationSeconds(this.meta.durationSeconds || this.meta.duration) > 600)) {
       const info = dom("button", { classes: ["movie-info-button"], attrs: { "type": "button", "aria-label": `Video information for ${this.name}`, "title": "Video information and subtitles" }, text: "ⓘ" });
       info.onclick = e => {
@@ -688,12 +707,12 @@ export default class File extends BaseFile {
       if (e.altKey || e.shiftKey || e.metaKey || e.optionKey) {
         return true;
       }
-      if (this.owner.galleryMode && e.currentTarget === this.nameEl) {
-        this.download();
-        return nukeEvent(e);
-      }
       if (this.isArchiveFile()) {
         this.openArchiveViewer();
+        return nukeEvent(e);
+      }
+      if (this.owner.galleryMode && e.currentTarget === this.nameEl) {
+        this.download();
         return nukeEvent(e);
       }
       if (this.getGalleryInfo()) {

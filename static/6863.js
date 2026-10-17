@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunk=self.webpackChunk||[]).push([[6863],{96863(a,e,r){r.r(e),r.d(e,{RegisterStandardMaterial:()=>t.RegisterStandardMaterial,StandardMaterial:()=>t.StandardMaterial,StandardMaterialDefines:()=>t.StandardMaterialDefines});var t=r(71176);(0,t.RegisterStandardMaterial)()}}]);
+//# sourceMappingURL=6863.js.map?v=44fa1366f3d3253ce6e1

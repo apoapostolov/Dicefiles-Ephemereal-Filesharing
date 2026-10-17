@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Add an in-browser Babylon.js model viewer for STL, 3MF geometry, colors and
+  textures, OBJ, glTF/GLB, PLY splats, FBX, and USD files. ZIP-contained model
+  buffers, materials, and textures load from a temporary browser cache. Model
+  entries can be extracted up to 256 MB; ordinary archive extraction remains
+  capped at 50 MB.
+- Fix archive filename clicks in gallery mode so they open the archive browser
+  instead of downloading the archive.
+
 - The project is now named **Hobbyfiles**. Existing `DICEFILES_*` environment
   variables, plugin API properties, API headers, federation identifiers, and
   browser preference keys remain accepted so existing installations keep

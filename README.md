@@ -59,6 +59,9 @@ before enabling collectors. See the full [changelog](CHANGELOG.md).
   contents and artwork, check reported availability, and stream supported videos.
 - **Watch movies and episodes.** Resume long videos, match clear torrent titles automatically or choose a catalogue result,
   browse artwork and cast, and add subtitles in your language.
+- **Preview 3D print and mesh files.** Open STL, 3MF, OBJ, glTF/GLB, PLY,
+  FBX, and USD models in the browser. ZIP-contained glTF/GLB, OBJ, and 3MF
+  previews load linked buffers, materials, and textures from their archives.
 
 ![Campaign chat and a shared map beside the gallery filtered to the illustrated STRIGA rulebook](images/hobbyfiles-room-gallery.png)
 
