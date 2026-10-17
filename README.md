@@ -60,7 +60,7 @@ before enabling collectors. See the full [changelog](CHANGELOG.md).
 - **Watch movies and episodes.** Resume long videos, match clear torrent titles automatically or choose a catalogue result,
   browse artwork and cast, and add subtitles in your language.
 
-![A community room with chat, shared maps, books, comics, archives, and postered torrents](images/hobbyfiles-room-gallery.png)
+![Campaign chat and a shared map beside the gallery filtered to the illustrated STRIGA rulebook](images/hobbyfiles-room-gallery.png)
 
 ## Rooms Made for Communities
 
@@ -85,7 +85,11 @@ downloads, and fulfilled requests.
 PDF, ePub, and MOBI reading runs in the browser. Native tools are used only for
 server-generated previews and formats such as RAR/7Z extraction.
 
-![The in-room PDF reader showing an illustrated rulebook cover](images/hobbyfiles-pdf-reader.png)
+![The in-room PDF reader showing the illustrated STRIGA rulebook cover](images/hobbyfiles-pdf-reader.png)
+
+![An open ePub reader showing a readable page from the Lancer core book](images/hobbyfiles-epub-reader.png)
+
+![The comic reader scrolled to an illustrated interior page](images/hobbyfiles-comic-reader.png)
 
 The same room also previews archive contents before extraction:
 

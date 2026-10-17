@@ -276,8 +276,10 @@ const BOOK_VP = 40;
  * Total pages: measured from a sentinel span appended at the end of scroller.
  */
 function bookColors() {
-  const style = getComputedStyle(document.documentElement);
-  return ["canvas", "text", "accent"].map(name => style.getPropertyValue(`--theme-${name}`).trim());
+  // Book pages use a stable paper palette, independent of the surrounding
+  // room theme. Epubs often carry their own background colors, so inheriting
+  // a dark application palette can leave their text unreadable on white pages.
+  return ["#ffffff", "#222222", "#245b9f"];
 }
 
 function buildSrcdoc(html, cssUrls, pageWidth, pageHeight, opts) {
@@ -354,9 +356,12 @@ ${linkTags}
     line-height: ${lineHeight};
   }
   img, svg, video { max-width: ${textW}px; height: auto; display: block; }
-  /* Force all inline text colours to a readable light value, overriding
-     publisher styles that may embed dark-on-dark colour declarations. */
+  /* Force book text to readable ink, overriding publisher colors that clash
+     with the paper background or the room theme. */
   *:not(a) { color: var(--book-fg) !important; background-color: transparent !important; }
+  #scroller, #scroller *:not(a) { color: var(--book-fg) !important; opacity: 1 !important; }
+  /* Keep the paper background opaque after neutralizing publisher colors. */
+  html, body { background-color: var(--book-bg) !important; }
   a { color: var(--book-link) !important; }
   p { margin: 0 0 0.85em; text-align: justify; }
   h1,h2,h3,h4,h5,h6 { color: var(--book-fg) !important; margin-top: 0; break-after: avoid; }
