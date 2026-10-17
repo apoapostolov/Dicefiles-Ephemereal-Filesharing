@@ -1,14 +1,14 @@
 "use strict";
 
 // Exercise the real SDK and transport, including schema validation. No live
-// Dicefiles API, private configuration, or Redis is needed for these tests.
+// Hobbyfiles API, private configuration, or Redis is needed for these tests.
 const http = require("http");
 const { PROTOCOL_VERSION_META_KEY, CLIENT_INFO_META_KEY, CLIENT_CAPABILITIES_META_KEY } = require("@modelcontextprotocol/server");
 const { createHttpServer } = require("../../scripts/mcp-server");
 
 const meta = {
   [PROTOCOL_VERSION_META_KEY]: "2026-07-28",
-  [CLIENT_INFO_META_KEY]: { name: "dicefiles-test", version: "1.0.0" },
+  [CLIENT_INFO_META_KEY]: { name: "hobbyfiles-test", version: "1.0.0" },
   [CLIENT_CAPABILITIES_META_KEY]: {},
 };
 

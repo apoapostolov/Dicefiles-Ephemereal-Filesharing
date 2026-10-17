@@ -19,7 +19,7 @@ describe("status page capability-link security", () => {
 
   beforeEach(() => {
     temporaryDirectory = fs.mkdtempSync(
-      path.join(os.tmpdir(), "dicefiles-status-"),
+      path.join(os.tmpdir(), "hobbyfiles-status-"),
     );
     configPath = path.join(temporaryDirectory, ".config.json");
   });

@@ -6,7 +6,7 @@ ship in 1.4.7. Use the [current API reference](../core/plugins/PLUGIN_API.md) an
 [remote-import guide](../core/plugins/REMOTE_HOST_IMPORTS.md) for implementation
 contracts. The library comparisons remain research, not installation instructions.
 
-**Audience:** maintainers embedding import adapters inside Dicefiles (not shipping a standalone multi-hoster product).  
+**Audience:** maintainers embedding import adapters inside Hobbyfiles (not shipping a standalone multi-hoster product).
 **Related design:** [REMOTE_HOST_IMPORTS.md](../core/plugins/REMOTE_HOST_IMPORTS.md) (contract + build order).
 **Related operator/dev guides:** [MEGA_FOLDER.md](../core/plugins/MEGA_FOLDER.md), [DEVELOPING_PLUGINS.md](../core/plugins/DEVELOPING_PLUGINS.md).
 **Related code today:** `lib/plugins/mega-folder/`, `lib/plugins/runtime-adapters.js`, optionalDep `megajs`.  
@@ -19,7 +19,7 @@ contracts. The library comparisons remain research, not installation instruction
 
 ### Goal
 
-Find **GitHub / npm libraries** (or thin API strategies) that Dicefiles can **incorporate as an internal layer**: operator/bot pastes a folder or file URL from common online file storages → server pulls bytes → existing `uploadFile` / `ingestFromBuffer` path into a room.
+Find **GitHub / npm libraries** (or thin API strategies) that Hobbyfiles can **incorporate as an internal layer**: operator/bot pastes a folder or file URL from common online file storages → server pulls bytes → existing `uploadFile` / `ingestFromBuffer` path into a room.
 
 Target hosts (community language in parentheses):
 
@@ -38,7 +38,7 @@ Target hosts (community language in parentheses):
 - Not shipping brittle Playwright scrapers or “limit bypass” proxies as core.
 - Not yt-dlp as the primary path (video sites, not classic file lockers).
 
-Constraints that match Dicefiles: self-hosted, opt-in plugins, ephemeral rooms + size/rate caps, secrets in env/config, audit `meta.sourceUrl` on ingest.
+Constraints that match Hobbyfiles: self-hosted, opt-in plugins, ephemeral rooms + size/rate caps, secrets in env/config, audit `meta.sourceUrl` on ingest.
 
 ---
 
@@ -48,7 +48,7 @@ Constraints that match Dicefiles: self-hosted, opt-in plugins, ephemeral rooms +
 
 What exists falls into five tiers:
 
-| Tier | Shape | Fit inside Dicefiles |
+| Tier | Shape | Fit inside Hobbyfiles |
 |------|--------|----------------------|
 | **A** | Thin per-host **SDK / official REST** (Node or first-party `fetch`) | **Best** — map to `RemoteDownloader` |
 | **B** | **Shell bridge** to plowshare / host CLIs | **Best** for MediaFire / 4shared / long free-tier tail |
@@ -56,7 +56,7 @@ What exists falls into five tiers:
 | **D** | Full apps (pyLoad, cyberdrop-dl, JDownloader) | **Do not** vendor as core product code |
 | **E** | Random scraper npm (`mediafire-dl`, etc.) | Fragile; optional/experiment only, never hard dep |
 
-**Recommendation:** keep Dicefiles as the product; implement a small internal **provider registry** (`RemoteDownloader`) and only optionalDeps for real SDKs (today: `megajs`). Prefer first-party REST for Pixeldrain/Gofile. Use shell/debrid for coverage, not abandoned scrapers.
+**Recommendation:** keep Hobbyfiles as the product; implement a small internal **provider registry** (`RemoteDownloader`) and only optionalDeps for real SDKs (today: `megajs`). Prefer first-party REST for Pixeldrain/Gofile. Use shell/debrid for coverage, not abandoned scrapers.
 
 This aligns with [REMOTE_HOST_IMPORTS.md](../core/plugins/REMOTE_HOST_IMPORTS.md).
 
@@ -155,7 +155,7 @@ Official HTTP API is stable enough for a thin adapter (`pixeldrain.com/api/...`)
 
 - Free public links → **shell/plowshare** or a **flagged best-effort** resolve adapter; document breakage.
 - Account library path → only if operators need MF cloud folders and a maintained SDK proves out.
-- **Do not** add random scraper packages as hard dependencies of Dicefiles.
+- **Do not** add random scraper packages as hard dependencies of Hobbyfiles.
 
 ---
 
@@ -196,9 +196,9 @@ Site-specific scrape or community scripts only. Same class as MediaFire free tie
 
 ### 4.9 Multi-host umbrellas (library vs product)
 
-| Project | Stars (approx) / license | Embed inside Dicefiles? |
+| Project | Stars (approx) / license | Embed inside Hobbyfiles? |
 |---------|--------------------------|-------------------------|
-| **[plowshare](https://github.com/mcrapet/plowshare)** (`plowdown`, modules via `plowmod`) | ~857★, **GPL-3.0**, Shell | **Yes as shell bridge.** Operator installs plowshare + modules on the host OS. Dicefiles does not ship hoster scrapers. Watch GPL if ever vendoring scripts in-tree (prefer external binary). |
+| **[plowshare](https://github.com/mcrapet/plowshare)** (`plowdown`, modules via `plowmod`) | ~857★, **GPL-3.0**, Shell | **Yes as shell bridge.** Operator installs plowshare + modules on the host OS. Hobbyfiles does not ship hoster scrapers. Watch GPL if ever vendoring scripts in-tree (prefer external binary). |
 | **[pyLoad](https://github.com/pyload/pyload)** | ~3.8k★, Python download manager | **No** as library — full app (core + plugins + webui). External bot OK. |
 | **[Cyberdrop-DL/cyberdrop-dl](https://github.com/Cyberdrop-DL/cyberdrop-dl)** | ~703★, GPL-3, Python | **No** as library — bulk multi-host **product** (gallery-oriented). External pipeline only. |
 | **[totallynotdavid/megaloader](https://github.com/totallynotdavid/megaloader)** | ~15★, Apache-2.0, Python | **Library-shaped** (GoFile, Bunkr, Pixeldrain, Cyberdrop, …). Good reference or **sidecar process**, not `require()` from Node. |
@@ -222,7 +222,7 @@ Premium debrid services turn many classic hoster URLs into direct HTTP links. Th
 
 ## 5. npm packages snapshot (embed candidates)
 
-Rough suitability for **in-process Dicefiles** (not completeness of npm):
+Rough suitability for **in-process Hobbyfiles** (not completeness of npm):
 
 | Package | Host focus | Library-shaped? | Recommend |
 |---------|------------|-----------------|-----------|
@@ -251,7 +251,7 @@ Rough suitability for **in-process Dicefiles** (not completeness of npm):
 
 - Plugin id sketch: `shell-import` / `plowshare-import`.
 - Config: allowlisted binaries (`plowdown`, `megadl`, maybe `curl`), argument template **without** free-form shell, temp dir, timeout, max bytes.
-- Operator installs tools on OS; Dicefiles ingests resulting file/stream.
+- Operator installs tools on OS; Hobbyfiles ingests resulting file/stream.
 - Security: no user-controlled command strings; URL as single substituted arg.
 
 ### C. Debrid bridge (optional)
@@ -265,7 +265,7 @@ Rough suitability for **in-process Dicefiles** (not completeness of npm):
 - Python tools (megaloader, cyberdrop-dl, gofile-downloader CLIs) stay **outside** the Node process.
 - Preferred when host logic is Python-only or GPL-awkward to combine.
 
-**Dicefiles remains the product;** A–C are internal capabilities. D is integration, not a nested multi-hoster UI.
+**Hobbyfiles remains the product;** A–C are internal capabilities. D is integration, not a nested multi-hoster UI.
 
 ---
 

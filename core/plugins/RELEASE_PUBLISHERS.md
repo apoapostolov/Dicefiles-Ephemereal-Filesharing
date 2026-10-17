@@ -1,6 +1,6 @@
 # Discord and Telegram release publishers
 
-Dicefiles ships two room-invited publisher bots:
+Hobbyfiles ships two room-invited publisher bots:
 
 - **Discord Release Publisher** (`discord-release`)
 - **Telegram Release Publisher** (`telegram-release`)
@@ -21,7 +21,7 @@ its default is false. Normal release announcements retain their existing behavio
 
 ## Before you start
 
-Set the public Dicefiles origin in `.config.json`:
+Set the public Hobbyfiles origin in `.config.json`:
 
 ```json
 {
@@ -37,7 +37,7 @@ with its own `baseUrl`.
 
 1. In Discord, open the destination channel settings.
 2. Open **Integrations → Webhooks**, create a webhook, and copy its URL.
-3. In Dicefiles, open the room and choose **Room Options → Plugins**.
+3. In Hobbyfiles, open the room and choose **Room Options → Plugins**.
 4. Invite **Discord Release Publisher**.
 5. Paste the webhook URL. Optionally set:
    - `baseUrl` when the server-wide public URL is not configured
@@ -47,14 +47,14 @@ with its own `baseUrl`.
 6. Save, then choose **Run now**. Discord should receive a connection test.
 
 The webhook URL contains a secret token. Treat it like a password. For a
-single global destination, set `DICEFILES_DISCORD_WEBHOOK_URL` in the service
+single global destination, set `HOBBYFILES_DISCORD_WEBHOOK_URL` in the service
 environment and leave the room field blank.
 
 ### Optional Discord slash commands
 
 1. In the Discord Developer Portal, create/select the application that owns
    the slash command and copy its 64-character **Public Key**.
-2. Configure the `/dicefiles` command with subcommands `help`, `status`,
+2. Configure the `/hobbyfiles` command with subcommands `help`, `status`,
    `requests`, `files`, `find`, `expiring`, `request`, and/or `say`. `find`, `request` and `say` use a string option
    named `text`.
 3. In the room plugin settings set:
@@ -69,7 +69,7 @@ environment and leave the room field blank.
    `https://files.example.org<inboundPath>`. Discord's validation PING is
    answered automatically.
 
-Dicefiles verifies Discord's Ed25519 signature over the exact raw body and
+Hobbyfiles verifies Discord's Ed25519 signature over the exact raw body and
 timestamp, rejects stale requests, checks the caller allowlist, and deduplicates
 interaction IDs. Responses are visible only to the caller unless
 `discordEphemeralResponses` is explicitly false.
@@ -83,7 +83,7 @@ in process; a worker restart can interrupt it.
 2. Add the bot to the target group/channel and grant permission to post.
 3. Find the target `chatId`. Channel and supergroup ids normally start with
    `-100`.
-4. In Dicefiles, open **Room Options → Plugins** and invite
+4. In Hobbyfiles, open **Room Options → Plugins** and invite
    **Telegram Release Publisher**.
 5. Enter `botToken` and `chatId`. Optionally set:
    - `messageThreadId` for a forum topic
@@ -91,7 +91,7 @@ in process; a worker restart can interrupt it.
    - `ignoreBotUploads` to suppress releases added by other plugins
 6. Save, then choose **Run now**. Telegram should receive a connection test.
 
-For a single global bot identity, set `DICEFILES_TELEGRAM_BOT_TOKEN` in the
+For a single global bot identity, set `HOBBYFILES_TELEGRAM_BOT_TOKEN` in the
 service environment and leave the room token field blank.
 
 ### Optional Telegram commands
@@ -110,10 +110,11 @@ curl -X POST "https://api.telegram.org/bot<BOT_TOKEN>/setWebhook" \
   -d "secret_token=<INBOUND_WEBHOOK_SECRET>"
 ```
 
-Dicefiles requires Telegram's `X-Telegram-Bot-Api-Secret-Token`, the configured
+Hobbyfiles requires Telegram's `X-Telegram-Bot-Api-Secret-Token`, the configured
 chat ID, the configured forum topic when present, and an allowed user ID.
 Updates are deduplicated by `update_id`. Supported forms include `/status`,
-`/requests`, `/request text`, `/say text`, and `/dicefiles command text`.
+`/requests`, `/request text`, `/say text`, and `/hobbyfiles command text`.
+The former `/dicefiles` command prefix remains accepted for existing rooms.
 `/files`, `/find text` and `/expiring` are also available when allowlisted.
 Set `botUsername` to recognize `/command@YourBot`; commands addressed to another
 bot, ordinary chat and bot-authored messages are ignored. Replies use Telegram's
@@ -127,7 +128,7 @@ Each notification contains:
 - file type and human-readable size
 - room name (or linked source room)
 - a direct file link
-- a button/link back to Dicefiles
+- a button/link back to Hobbyfiles
 
 User-controlled filenames are sent with Discord mentions disabled and as plain
 Telegram text. The bot tokens and webhook URLs are never included in logs or
@@ -135,7 +136,7 @@ error messages.
 
 ## Delivery behavior
 
-Dicefiles runs several HTTP workers. A Redis-backed event lease ensures only
+Hobbyfiles runs several HTTP workers. A Redis-backed event lease ensures only
 one worker publishes each `<plugin, room, event, file>` combination. Remote
 delivery is attempted up to three times; a final failure releases the lease so
 a later event replay can try again. Successful deliveries are remembered for

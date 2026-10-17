@@ -51,7 +51,7 @@ or stale generated output block handoff.
 - [ ] For preview work, verify native dependencies and upload real image, PDF,
       and archive samples.
 - [ ] Run `yarn prestart`; review the source and generated diffs together.
-- [ ] Restart `dicefiles.service` and require `/healthz` HTTP `200` from WSL and
+- [ ] Restart `hobbyfiles.service` and require `/healthz` HTTP `200` from WSL and
       Windows before a runtime-change handoff.
 - [ ] Update public docs, API/plugin docs, configuration examples, and
       `CHANGELOG.md` when user-visible behavior changed.

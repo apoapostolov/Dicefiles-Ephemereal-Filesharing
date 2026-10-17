@@ -90,8 +90,8 @@ jest.mock(
 );
 
 // ── Set env before loading module ─────────────────────────────────────────────
-process.env.DICEFILES_BASE_URL = "http://test.dicefiles.local";
-process.env.DICEFILES_API_KEY = "test-key-abc";
+process.env.HOBBYFILES_BASE_URL = "http://test.dicefiles.local";
+process.env.HOBBYFILES_API_KEY = "test-key-abc";
 
 // ── Load module under test ────────────────────────────────────────────────────
 const { registerTools } = require("../../scripts/mcp-server");

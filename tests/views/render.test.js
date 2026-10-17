@@ -17,7 +17,7 @@ const V = "test1234"; // fake asset version
 /** Shared context available in every view */
 const BASE_CTX = {
   NAME: "TestSite",
-  MOTTO: "Testing Dicefiles",
+  MOTTO: "Testing Hobbyfiles",
   v: V,
   token: "test-csrf-token",
 };
@@ -224,7 +224,7 @@ test("index.ejs renders without error", async () => {
   const html = await render("index.ejs");
   expect(html).toContain("TestSite");
   expect(html).toContain("<body");
-  expect(html).toContain("Welcome to Dicefiles");
+  expect(html).toContain("Welcome to Hobbyfiles");
 });
 
 test("room.ejs renders without error", async () => {

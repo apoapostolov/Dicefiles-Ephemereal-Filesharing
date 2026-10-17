@@ -1,6 +1,6 @@
 # Collection bots
 
-**Dicefiles 1.4.7.** See the [power-user guide](../../docs/CORE_PLUGINS.md) for
+**Hobbyfiles 1.4.7.** See the [power-user guide](../../docs/CORE_PLUGINS.md) for
 practical examples, or the [developer cookbook](./PLUGIN_COOKBOOK.md) to extend
 a provider. This page covers operator grants and recovery.
 
@@ -18,7 +18,7 @@ deletes a room copy.
 
 ## Operator connections
 
-Set `DICEFILES_PLUGIN_CONNECTIONS` to a JSON array, or `pluginConnections` in the
+Set `HOBBYFILES_PLUGIN_CONNECTIONS` to a JSON array, or `pluginConnections` in the
 private `.config.json`. The array replaces earlier values. Restart after changes.
 
 ```json

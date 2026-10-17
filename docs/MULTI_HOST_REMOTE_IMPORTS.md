@@ -8,7 +8,7 @@ deduplication are already shipped.
 
 ## 1. Outcome
 
-Dicefiles 1.4.7 extends the remote-import foundation with these implemented pieces:
+Hobbyfiles 1.4.7 extends the remote-import foundation with these implemented pieces:
 
 1. Ship a first-party **Gofile** adapter using Gofile's official REST API.
 2. Harden the downloader contract so providers expose capabilities, stable
@@ -19,8 +19,8 @@ Dicefiles 1.4.7 extends the remote-import foundation with these implemented piec
 4. Give room owners and operators useful provider availability, validation,
    run progress, skip reasons, and retry information without exposing secrets.
 
-This remains an import feature: remote bytes are copied into Dicefiles storage
-and receive the destination room's TTL. It is not Dicefiles federation, a
+This remains an import feature: remote bytes are copied into Hobbyfiles storage
+and receive the destination room's TTL. It is not Hobbyfiles federation, a
 general-purpose download manager, or a way to bypass a provider's access
 controls.
 
@@ -67,7 +67,7 @@ The settings panel should show:
 - the most recent run, its duration, imported bytes, and skip/error counts;
 - a validation result for every configured source without downloading it;
 - plain-language recovery guidance such as “Gofile token missing,” “Plowshare
-  module not installed,” or “Provider asked Dicefiles to retry later.”
+  module not installed,” or “Provider asked Hobbyfiles to retry later.”
 
 Provider secrets remain write-only. A saved token or password is represented
 as **Configured**, never returned to the browser.
@@ -89,13 +89,13 @@ Remote Import orchestrator
        |
        +--> bounded temporary stream + hash
        |
-       +--> existing Dicefiles upload/storage placement
+       +--> existing Hobbyfiles upload/storage placement
        |
        +--> sync log + run summary + events
 ```
 
 Provider adapters only understand remote services. They do not create
-Dicefiles uploads, decide room TTL, write plugin state, or emit chat messages.
+Hobbyfiles uploads, decide room TTL, write plugin state, or emit chat messages.
 The orchestrator owns those product decisions once for every provider.
 
 ## 5. Provider contract v1
@@ -249,7 +249,7 @@ GOFILE_FOLDER_PASSWORD
 ```
 
 The folder password is SHA-256 transformed only when the current Gofile API
-requires that representation. Dicefiles stores the original value only in the
+requires that representation. Hobbyfiles stores the original value only in the
 same protected plugin configuration used for other credentials and never puts
 it in a URL, log, sync key, or uploaded metadata.
 
@@ -272,7 +272,7 @@ gofile:file:{contentId}:{providerHashOrRevision}
 ```
 
 If no provider hash/revision exists, the fallback identity includes content id,
-size, and modification time. Dicefiles still computes its own content hash
+size, and modification time. Hobbyfiles still computes its own content hash
 before final upload.
 
 ### 7.4 Downloads
@@ -330,7 +330,7 @@ It is not a general shell plugin.
       "timeoutSeconds": 900,
       "maxStdoutBytes": 1048576,
       "maxStderrBytes": 262144,
-      "workingDirectory": "/var/tmp/dicefiles-remote-import"
+      "workingDirectory": "/var/tmp/hobbyfiles-remote-import"
     }
   }
 }
@@ -353,9 +353,9 @@ from the server-published module allowlist.
 - Cap stdout/stderr, wall time, output bytes, retries, and child processes.
 - Kill the complete process group on abort or timeout.
 - Use a unique `0700` work directory and `0600` files.
-- Delete partial files after failure; successful files enter Dicefiles through
+- Delete partial files after failure; successful files enter Hobbyfiles through
   the same bounded, hashing upload path as native providers.
-- On Linux, optionally run through the existing Dicefiles sandbox strategy
+- On Linux, optionally run through the existing Hobbyfiles sandbox strategy
   when available.
 
 CAPTCHA solvers, interactive prompts, browser automation, and remote hooks are
@@ -373,7 +373,7 @@ version cannot provide the fields safely, that module is reported unavailable.
 
 ### 8.5 Licensing and packaging
 
-Plowshare is GPL-3.0 and is not vendored or linked into Dicefiles. Operators
+Plowshare is GPL-3.0 and is not vendored or linked into Hobbyfiles. Operators
 install it and its host modules separately. `yarn setup:ubuntu` may detect and
 explain the optional integration, but it must not silently install or enable
 third-party host modules.
@@ -430,7 +430,7 @@ The import sequence is:
 2. Check declared size and run limits.
 3. Stream into the bounded temporary ingest path while hashing.
 4. Check destination-room content hash.
-5. Create the Dicefiles upload.
+5. Create the Hobbyfiles upload.
 6. Mark the provider identity imported only after successful creation, or
    after a confirmed existing-room hash match.
 
@@ -664,7 +664,7 @@ Use fake executables in a temporary directory to verify:
 - Rate-limit, paywall, or download-limit bypasses.
 - Arbitrary URLs, arbitrary binaries, or user-authored command templates.
 - Bundling Plowshare modules or a full download-manager application.
-- Remote archive extraction before Dicefiles ingestion.
+- Remote archive extraction before Hobbyfiles ingestion.
 - Importing content without applying normal room TTL, storage, moderation, and
   access rules.
 

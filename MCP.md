@@ -1,10 +1,10 @@
-# Dicefiles MCP Reference (`scripts/mcp-server.js`)
+# Hobbyfiles MCP Reference (`scripts/mcp-server.js`)
 
 This reference is written for developers who want to connect AI clients (Claude Desktop,
-Cursor, Continue, OpenClaw, AutoGen) to a Dicefiles instance via the
+Cursor, Continue, OpenClaw, AutoGen) to a Hobbyfiles instance via the
 [Model Context Protocol](https://modelcontextprotocol.io). It covers setup, all 57
 exposed tools, security configuration, and worked multi-step workflows.
-This is the Dicefiles 1.4.7 tool set. For room bots, see the
+This is the Hobbyfiles 1.4.7 tool set. For room bots, see the
 [power-user guide](docs/CORE_PLUGINS.md); for server extensions, use the
 [Plugin API v2 reference](core/plugins/PLUGIN_API.md) and
 [27-plugin cookbook](core/plugins/PLUGIN_COOKBOOK.md). The context API version
@@ -12,13 +12,13 @@ does not change the MCP protocol or the REST `/api/v1` namespace.
 
 ---
 
-## 1. What MCP Means for Dicefiles
+## 1. What MCP Means for Hobbyfiles
 
-The REST API (`/api/v1`) describes what Dicefiles can do given raw HTTP calls. The MCP
+The REST API (`/api/v1`) describes what Hobbyfiles can do given raw HTTP calls. The MCP
 server wraps every relevant endpoint as a **named tool with a typed schema**, so any MCP
 client can discover and call them without writing any HTTP code.
 
-From the moment Claude Desktop is pointed at a Dicefiles MCP server:
+From the moment Claude Desktop is pointed at a Hobbyfiles MCP server:
 
 - Claude can list, filter, and download files without being given a URL.
 - Claude can claim and fulfil open requests in a room as part of a tool-use loop.
@@ -36,17 +36,17 @@ From the moment Claude Desktop is pointed at a Dicefiles MCP server:
 Install the repository dependencies with the supported package manager:
 
 ```bash
-cd /path/to/Dicefiles
+cd /path/to/Hobbyfiles
 yarn install
 ```
 
 Smoke-test the server before wiring it into any client:
 
 ```bash
-DICEFILES_BASE_URL=http://localhost:10005 \
-DICEFILES_API_KEY=your-api-key-here \
+HOBBYFILES_BASE_URL=http://localhost:10005 \
+HOBBYFILES_API_KEY=your-api-key-here \
 node scripts/mcp-server.js
-# → [dicefiles-mcp] Stdio transport ready. Waiting for MCP client...
+# → [hobbyfiles-mcp] Stdio transport ready. Waiting for MCP client...
 # Ctrl-C to exit
 ```
 
@@ -54,12 +54,12 @@ Environment variables accepted by the server:
 
 | Variable             | Default                 | Description                                   |
 | -------------------- | ----------------------- | --------------------------------------------- |
-| `DICEFILES_BASE_URL` | `http://localhost:10005` | Base URL of your Dicefiles instance           |
-| `DICEFILES_API_KEY`  | _(empty)_               | Automation API key — warning printed if unset |
+| `HOBBYFILES_BASE_URL` | `http://localhost:10005` | Base URL of your Hobbyfiles instance           |
+| `HOBBYFILES_API_KEY`  | _(empty)_               | Automation API key — warning printed if unset |
 | `MCP_TRANSPORT`      | `stdio`                 | `stdio` (default) or `http`                   |
 | `MCP_PORT`           | `3001`                  | Listening port when `MCP_TRANSPORT=http`      |
 | `MCP_HOST`           | `127.0.0.1`             | Bind address when `MCP_TRANSPORT=http`        |
-| `MCP_API_TIMEOUT_MS` | `30000`                 | Per-request timeout for Dicefiles API calls   |
+| `MCP_API_TIMEOUT_MS` | `30000`                 | Per-request timeout for Hobbyfiles API calls   |
 | `MCP_AUTH_TOKEN` | _(empty)_ | Incoming bearer token for fixed-key mode; remote bindings require this or OAuth |
 | `MCP_OAUTH_CONFIG` | _(empty)_ | Absolute path to private OAuth resource-server configuration; mutually exclusive with MCP_AUTH_TOKEN |
 | `MCP_ALLOWED_HOSTS`  | _(localhost hosts)_     | Comma-separated allowed hostnames, without ports; required beyond loopback |
@@ -77,17 +77,17 @@ Config file locations:
 | Windows | `%APPDATA%\Claude\claude_desktop_config.json`                     |
 | Linux   | `~/.config/claude/claude_desktop_config.json`                     |
 
-Add a `dicefiles` entry under `mcpServers`:
+Add a `hobbyfiles` entry under `mcpServers`:
 
 ```json
 {
   "mcpServers": {
-    "dicefiles": {
+    "hobbyfiles": {
       "command": "node",
-      "args": ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
+      "args": ["/absolute/path/to/Hobbyfiles/scripts/mcp-server.js"],
       "env": {
-        "DICEFILES_BASE_URL": "http://localhost:10005",
-        "DICEFILES_API_KEY": "your-api-key-here"
+        "HOBBYFILES_BASE_URL": "http://localhost:10005",
+        "HOBBYFILES_API_KEY": "your-api-key-here"
       }
     }
   }
@@ -95,7 +95,7 @@ Add a `dicefiles` entry under `mcpServers`:
 ```
 
 Restart Claude Desktop. All 57 tools appear in the tool picker. Try: _"Use the
-`server_health` tool to check my Dicefiles instance."_
+`server_health` tool to check my Hobbyfiles instance."_
 
 ---
 
@@ -110,13 +110,13 @@ Create `.vscode/mcp.json` in the project root:
 ```json
 {
   "servers": {
-    "dicefiles": {
+    "hobbyfiles": {
       "type": "stdio",
       "command": "node",
       "args": ["${workspaceFolder}/scripts/mcp-server.js"],
       "env": {
-        "DICEFILES_BASE_URL": "http://localhost:10005",
-        "DICEFILES_API_KEY": "your-api-key-here"
+        "HOBBYFILES_BASE_URL": "http://localhost:10005",
+        "HOBBYFILES_API_KEY": "your-api-key-here"
       }
     }
   }
@@ -132,13 +132,13 @@ add:
 {
   "mcp": {
     "servers": {
-      "dicefiles": {
+      "hobbyfiles": {
         "type": "stdio",
         "command": "node",
-        "args": ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
+        "args": ["/absolute/path/to/Hobbyfiles/scripts/mcp-server.js"],
         "env": {
-          "DICEFILES_BASE_URL": "http://localhost:10005",
-          "DICEFILES_API_KEY": "your-api-key-here"
+          "HOBBYFILES_BASE_URL": "http://localhost:10005",
+          "HOBBYFILES_API_KEY": "your-api-key-here"
         }
       }
     }
@@ -146,7 +146,7 @@ add:
 }
 ```
 
-Reload VS Code. Open GitHub Copilot Chat, switch to **Agent** mode, and the Dicefiles
+Reload VS Code. Open GitHub Copilot Chat, switch to **Agent** mode, and the Hobbyfiles
 tools will be listed.
 
 ---
@@ -155,17 +155,17 @@ tools will be listed.
 
 1. Open the agent panel and click the **`…`** dropdown at the top right.
 2. Click **MCP store** → **Manage MCP Servers** → **View raw config**.
-3. Edit `mcp_config.json` to add a Dicefiles entry under `mcpServers`:
+3. Edit `mcp_config.json` to add a Hobbyfiles entry under `mcpServers`:
 
 ```json
 {
   "mcpServers": {
-    "dicefiles": {
+    "hobbyfiles": {
       "command": "node",
-      "args": ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
+      "args": ["/absolute/path/to/Hobbyfiles/scripts/mcp-server.js"],
       "env": {
-        "DICEFILES_BASE_URL": "http://localhost:10005",
-        "DICEFILES_API_KEY": "your-api-key-here"
+        "HOBBYFILES_BASE_URL": "http://localhost:10005",
+        "HOBBYFILES_API_KEY": "your-api-key-here"
       }
     }
   }
@@ -184,12 +184,12 @@ project root):
 ```json
 {
   "mcpServers": {
-    "dicefiles": {
+    "hobbyfiles": {
       "command": "node",
-      "args": ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
+      "args": ["/absolute/path/to/Hobbyfiles/scripts/mcp-server.js"],
       "env": {
-        "DICEFILES_BASE_URL": "http://localhost:10005",
-        "DICEFILES_API_KEY": "your-api-key-here"
+        "HOBBYFILES_BASE_URL": "http://localhost:10005",
+        "HOBBYFILES_API_KEY": "your-api-key-here"
       }
     }
   }
@@ -210,19 +210,19 @@ transport.
 ```toml
 # ~/.codex/config.toml
 
-[mcp_servers.dicefiles]
+[mcp_servers.hobbyfiles]
 command = "node"
-args    = ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"]
+args    = ["/absolute/path/to/Hobbyfiles/scripts/mcp-server.js"]
 
-[mcp_servers.dicefiles.env]
-DICEFILES_BASE_URL = "http://localhost:10005"
-DICEFILES_API_KEY  = "your-api-key-here"
+[mcp_servers.hobbyfiles.env]
+HOBBYFILES_BASE_URL = "http://localhost:10005"
+HOBBYFILES_API_KEY  = "your-api-key-here"
 ```
 
 > **Important**: The section key must be `mcp_servers` (underscore). Using `mcpServers`
 > or `mcp-servers` silently breaks detection.
 
-Verify inside a Codex session by typing `/mcp` — the `dicefiles` server should appear.
+Verify inside a Codex session by typing `/mcp` — the `hobbyfiles` server should appear.
 
 ---
 
@@ -237,12 +237,12 @@ combined), not separate `command` and `args` fields:
 ```json
 {
   "mcp": {
-    "dicefiles": {
+    "hobbyfiles": {
       "type": "local",
-      "command": ["node", "/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
+      "command": ["node", "/absolute/path/to/Hobbyfiles/scripts/mcp-server.js"],
       "environment": {
-        "DICEFILES_BASE_URL": "http://localhost:10005",
-        "DICEFILES_API_KEY": "your-api-key-here"
+        "HOBBYFILES_BASE_URL": "http://localhost:10005",
+        "HOBBYFILES_API_KEY": "your-api-key-here"
       }
     }
   }
@@ -256,22 +256,22 @@ Restart OpenCode after saving. Tools are accessible in the agent session immedia
 ### 2.8 OpenClaw
 
 OpenClaw supports two integration paths: the **mcporter registry** (for calling tools
-from workflows) and an **agent skill** (for teaching the agent the full Dicefiles
+from workflows) and an **agent skill** (for teaching the agent the full Hobbyfiles
 workflow so it can act autonomously). Use both for the best experience.
 
 #### mcporter (tool registry)
 
-Add Dicefiles to `~/.config/mcporter.json`:
+Add Hobbyfiles to `~/.config/mcporter.json`:
 
 ```json
 {
   "mcpServers": {
-    "dicefiles": {
+    "hobbyfiles": {
       "command": "node",
-      "args": ["/absolute/path/to/Dicefiles/scripts/mcp-server.js"],
+      "args": ["/absolute/path/to/Hobbyfiles/scripts/mcp-server.js"],
       "env": {
-        "DICEFILES_BASE_URL": "http://localhost:10005",
-        "DICEFILES_API_KEY": "your-api-key-here"
+        "HOBBYFILES_BASE_URL": "http://localhost:10005",
+        "HOBBYFILES_API_KEY": "your-api-key-here"
       }
     }
   }
@@ -281,26 +281,26 @@ Add Dicefiles to `~/.config/mcporter.json`:
 Or use the mcporter CLI:
 
 ```bash
-mcporter add dicefiles -- node /absolute/path/to/Dicefiles/scripts/mcp-server.js
-# then set env via mcporter env set dicefiles DICEFILES_API_KEY your-key
+mcporter add hobbyfiles -- node /absolute/path/to/Hobbyfiles/scripts/mcp-server.js
+# then set env via mcporter env set hobbyfiles HOBBYFILES_API_KEY your-key
 ```
 
 Every OpenClaw workflow step can call the tools.
 
 #### Agent skill (autonomous operation)
 
-For fully autonomous operation — where the agent understands Dicefiles rooms,
+For fully autonomous operation — where the agent understands Hobbyfiles rooms,
 requests, and workflows without being prompted — install the bundled skill:
 
 ```bash
-mkdir -p ~/.claude/skills/dicefiles
-cp /path/to/Dicefiles/scripts/openclaw-dicefiles-skill/SKILL.md \
-   ~/.claude/skills/dicefiles/
+mkdir -p ~/.claude/skills/hobbyfiles
+cp /path/to/Hobbyfiles/scripts/openclaw-hobbyfiles-skill/SKILL.md \
+   ~/.claude/skills/hobbyfiles/
 ```
 
 The skill teaches the agent the full 57-tool inventory, recommended call sequences,
 error handling, and fulfillment loop patterns. See
-`scripts/openclaw-dicefiles-skill/SKILL.md` for the full skill definition.
+`scripts/openclaw-hobbyfiles-skill/SKILL.md` for the full skill definition.
 
 ---
 
@@ -311,7 +311,7 @@ instead of spawning a local process:
 
 ```bash
 MCP_TRANSPORT=http MCP_PORT=3001 node scripts/mcp-server.js
-# → [dicefiles-mcp] Stateless HTTP transport at http://127.0.0.1:3001/mcp
+# → [hobbyfiles-mcp] Stateless HTTP transport at http://127.0.0.1:3001/mcp
 #   (protocol 2026-07-28, no sessions)
 ```
 
@@ -329,7 +329,7 @@ MCP_ALLOWED_HOSTS=mcp.example.com node scripts/mcp-server.js
 
 Remote binding fails at startup if either value is missing. Clients send
 `Authorization: Bearer <MCP_AUTH_TOKEN>`; this is separate from the upstream
-`DICEFILES_API_KEY`. All authorized callers share that upstream key's scopes.
+`HOBBYFILES_API_KEY`. All authorized callers share that upstream key's scopes.
 Browser clients with an `Origin` header also need its hostname explicitly
 listed in `MCP_ALLOWED_ORIGINS` (for example, `agent.example.com`, without scheme
 or port); this does not enable cross-origin CORS access.
@@ -349,7 +349,7 @@ curl http://127.0.0.1:3001/mcp \
 Add the bearer header if `MCP_AUTH_TOKEN` is configured. For `tools/call`, also
 send `Mcp-Name` matching `params.name`. Use an SDK client to build these requests
 in applications. HTTP remains stateless because the tools wrap independent REST
-calls; room state, subscriptions, and request claims remain in Dicefiles/Redis.
+calls; room state, subscriptions, and request claims remain in Hobbyfiles/Redis.
 Server-initiated sampling and interactive elicitation are outside this wrapper.
 
 Protect the port with a reverse proxy (nginx, Caddy) and TLS before exposing it
@@ -447,7 +447,7 @@ Check server health and retrieve real-time metrics counters.
 > Use this as a pre-flight before long automation runs. If Redis is degraded the
 > agent should pause and notify instead of blindly filing 50 upload requests into
 > a broken queue. Claude Desktop can surface the health data in plain English:
-> "Your Dicefiles server has been up for 2 hours and has served 130 downloads."
+> "Your Hobbyfiles server has been up for 2 hours and has served 130 downloads."
 
 ---
 
@@ -544,7 +544,7 @@ Write structured tags and AI-generated metadata back to a file.
 
 > **What this enables**
 >
-> This is the enrichment write-back endpoint — the closed loop that turns Dicefiles
+> This is the enrichment write-back endpoint — the closed loop that turns Hobbyfiles
 > into a self-curating library. After any new upload the enrichment agent:
 >
 > 1. Calls `get_file` to check for existing metadata.
@@ -757,7 +757,7 @@ Retrieve all saved filter subscriptions for this API key.
 
 ### 4.14 `archive_list_contents`
 
-List every entry inside a ZIP, RAR, 7z, or TAR archive stored in Dicefiles.
+List every entry inside a ZIP, RAR, 7z, or TAR archive stored in Hobbyfiles.
 
 - **Maps to**: `GET /api/v1/archive/:key/ls`
 - **Scope**: `files:read`
@@ -888,7 +888,7 @@ receive configuration or execution authority. The MCP layer cannot install
 code, invoke an uninvited plugin, or bypass plugin validation/import limits.
 
 Discord and Telegram inbound commands are configured through the ordinary bot
-settings, but provider webhooks call Dicefiles directly; they are not separate
+settings, but provider webhooks call Hobbyfiles directly; they are not separate
 MCP tools. See `API.md` §24 and
 [`core/plugins/RELEASE_PUBLISHERS.md`](core/plugins/RELEASE_PUBLISHERS.md).
 Plugin context API v2 is a separate in-process developer contract; it does not
@@ -981,17 +981,17 @@ with only the scopes needed for the workflow.
 Every tool declares a display `title` and the behaviour annotations a client uses
 to decide what to put in front of a user:
 
-| Annotation        | Meaning on a Dicefiles tool                                     |
+| Annotation        | Meaning on a Hobbyfiles tool                                     |
 | ----------------- | --------------------------------------------------------------- |
 | `readOnlyHint`    | `true` for inspection tools, `false` for anything writing |
 | `destructiveHint` | `true` for removals and password rotation                       |
 | `idempotentHint`  | `true` unless the tool changes state on every call               |
-| `openWorldHint`   | `true`, because every tool reaches the configured Dicefiles host |
+| `openWorldHint`   | `true`, because every tool reaches the configured Hobbyfiles host |
 
 A host may therefore auto-approve `list_files` or `get_room_snapshot` and ask for
 confirmation before `remove_room_plugin` or `rotate_room_password`.
 
-A Dicefiles API response that reports failure, a non-2xx status, an unreachable
+A Hobbyfiles API response that reports failure, a non-2xx status, an unreachable
 host, or a timeout comes back as a tool result with `isError: true`, so a failed
 call never reads as a success.
 
@@ -1003,7 +1003,7 @@ call never reads as a success.
   validates the `Host` and `Origin` headers before every request, so a hostile page
   cannot point its own domain at the local port and call your tools. Binding beyond
   loopback requires `MCP_AUTH_TOKEN` and `MCP_ALLOWED_HOSTS`. Put the endpoint
-  behind TLS. The token grants access to the configured `DICEFILES_API_KEY`'s
+  behind TLS. The token grants access to the configured `HOBBYFILES_API_KEY`'s
   scopes; use a dedicated scoped upstream key for each deployment.
 
 ### 5.5 Protocol Version
@@ -1020,7 +1020,7 @@ The server speaks **MCP 2026-07-28**, whose protocol core is stateless:
   does not have to come first.
 - `tools/list` responses carry `ttlMs` and `cacheScope`, so clients can cache the
   tool catalog instead of re-fetching it on every reconnect.
-- Roots, sampling, and logging are deprecated in the specification. The Dicefiles
+- Roots, sampling, and logging are deprecated in the specification. The Hobbyfiles
   server uses none of them.
 
 The handler in `scripts/mcp-server.js` also answers clients that speak the 2025
@@ -1143,7 +1143,7 @@ external /mcp URL as the resource audience. Example configuration with placehold
   "jwks": "https://identity.example/.well-known/jwks.json",
   "principals": {
     "operator-subject": {
-      "apiKey": "PRIVATE_DICEFILES_SCOPED_KEY",
+      "apiKey": "PRIVATE_HOBBYFILES_SCOPED_KEY",
       "scopes": ["mcp", "files:read", "requests:read"]
     }
   }
@@ -1153,13 +1153,13 @@ external /mcp URL as the resource audience. Example configuration with placehold
 Tokens must be signed with RS256, ES256, or EdDSA and contain sub, iat, exp, the
 configured issuer, audience, and scope. Granted scopes are the intersection of the
 JWT and mapped principal scopes; mcp is mandatory. Unknown callers receive 401;
-missing required scope receives 403. The caller's mapped Dicefiles key is used
+missing required scope receives 403. The caller's mapped Hobbyfiles key is used
 upstream. Provision the identity provider separately. Protected-resource metadata
 is served at /.well-known/oauth-protected-resource/mcp.
 
 ### Additional tools
 
-| Tool | Required Dicefiles scope | Purpose |
+| Tool | Required Hobbyfiles scope | Purpose |
 | --- | --- | --- |
 | list_remote_import_providers | room-plugins:read | Provider capability, availability and circuit status |
 | validate_remote_import_source | room-plugins:read | Parse an allowed URL without importing |

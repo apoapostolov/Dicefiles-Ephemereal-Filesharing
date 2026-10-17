@@ -38,26 +38,26 @@ jobs:
         with:
           context: .
           load: true
-          tags: dicefiles:ci
+          tags: hobbyfiles:ci
           cache-from: |
-            type=gha,scope=dicefiles-smoke
+            type=gha,scope=hobbyfiles-smoke
             type=gha
-          cache-to: type=gha,scope=dicefiles-smoke,mode=max
+          cache-to: type=gha,scope=hobbyfiles-smoke,mode=max
       - name: Check preview dependencies and isolated service
         run: |
-          docker run --rm dicefiles:ci node /opt/dicefiles/scripts/check-preview-tools.js
-          docker network create dicefiles-ci
-          docker run -d --name dicefiles-redis --network dicefiles-ci redis:7-alpine
+          docker run --rm hobbyfiles:ci node /opt/hobbyfiles/scripts/check-preview-tools.js
+          docker network create hobbyfiles-ci
+          docker run -d --name hobbyfiles-redis --network hobbyfiles-ci redis:7-alpine
           secret=$(openssl rand -hex 32)
-          docker run -d --name dicefiles-app --network dicefiles-ci \
+          docker run -d --name hobbyfiles-app --network hobbyfiles-ci \
             --read-only --tmpfs /tmp:rw,nosuid,nodev,size=512m --cap-drop ALL \
             --security-opt no-new-privileges:true -p 127.0.0.1:18080:8080 \
-            -e REDIS_URL=redis://dicefiles-redis:6379 -e DICEFILES_SECRET="$secret" dicefiles:ci
+            -e REDIS_URL=redis://hobbyfiles-redis:6379 -e HOBBYFILES_SECRET="$secret" hobbyfiles:ci
           for attempt in $(seq 1 60); do
             if curl -fsS http://127.0.0.1:18080/healthz > /dev/null; then exit 0; fi
             sleep 2
           done
-          docker logs dicefiles-app
+          docker logs hobbyfiles-app
           exit 1
       - name: Log in to GHCR
         if: github.event_name == 'workflow_dispatch' && inputs.publish
@@ -78,9 +78,9 @@ jobs:
           sbom: true
           provenance: mode=max
           cache-from: |
-            type=gha,scope=dicefiles-multiarch
+            type=gha,scope=hobbyfiles-multiarch
             type=gha
-          cache-to: type=gha,scope=dicefiles-multiarch,mode=max
+          cache-to: type=gha,scope=hobbyfiles-multiarch,mode=max
       - name: Verify published architectures
         if: github.event_name == 'workflow_dispatch' && inputs.publish
         env:
@@ -94,5 +94,5 @@ jobs:
       - name: Clean up smoke containers
         if: always()
         run: |
-          docker rm -f dicefiles-app dicefiles-redis || true
-          docker network rm dicefiles-ci || true
+          docker rm -f hobbyfiles-app hobbyfiles-redis || true
+          docker network rm hobbyfiles-ci || true

@@ -9,7 +9,7 @@ const { createRoomPluginRuntime } = require("../../lib/plugins/room-runtime");
 const { createMemoryEventLease, createRedisEventLease } = require("../../lib/plugins/event-lease");
 const { createMemorySyncLog } = require("../../lib/plugins/sync-log");
 const { createMemoryRunStatusStore } = require("../../lib/plugins/run-status");
-const { createPluginHttpClient, createDicefilesPluginApi, createUploadFileAdapter } = require("../../lib/plugins/runtime-adapters");
+const { createPluginHttpClient, createHobbyfilesPluginApi, createUploadFileAdapter } = require("../../lib/plugins/runtime-adapters");
 const { redactPluginConfig, upsertRoomPlugin, runRoomPlugin } = require("../../lib/http/room-automation");
 const { scopedPluginApi, scopedUpload } = require("../../lib/plugins/scoped-api");
 const { publicMetadata, sourceFingerprint } = require("../../lib/plugins/metadata");
@@ -175,7 +175,7 @@ test("disabled remote providers cannot resolve sources", () => {
 
 test("file API pages tied timestamps without gaps and filters expiring files", async () => {
   const files = [{ key: "b", name: "Book.pdf", uploaded: 10, expires: Date.now() + 60000 }, { key: "a", name: "Atlas.pdf", uploaded: 10 }, { key: "c", name: "Movie.mp4", uploaded: 5 }];
-  const api = createDicefilesPluginApi({ getRoom: async () => ({ files: { for: async () => files } }) });
+  const api = createHobbyfilesPluginApi({ getRoom: async () => ({ files: { for: async () => files } }) });
   const first = await api.listFilesPage({ roomId: "room1234", limit: 1 });
   expect(first.files[0].key).toBe("a");
   const second = await api.listFilesPage({ roomId: "room1234", limit: 1, cursor: first.nextCursor }); expect(second.files[0].key).toBe("b");

@@ -7,7 +7,7 @@ ten-second skip controls, speed, volume, fullscreen, picture in picture where
 the browser supports it, and a subtitle selector. Shaka supports progressive
 video as well as HLS/DASH; uploaded MP4 and WebM files use normal HTTP range
 playback. It loads only when a video is opened. All interface colors use the
-selected Dicefiles theme.
+selected Hobbyfiles theme.
 Opening the player starts buffering immediately and leaves playback paused until
 Play is pressed. Loading failures offer a retry without reporting a playback
 failure before Play. Close uses the × button in the header or Escape; there is
@@ -52,7 +52,7 @@ are never overwritten, including when a lookup finishes after the user's edit.
 Subtitles are preserved. Open torrent dialogs update their main artwork when a
 match arrives. Uncertain entries can always be matched through Video Information.
 
-Configure `DICEFILES_MOVIE_AUTO_MATCH=false` to disable background matching.
+Configure `HOBBYFILES_MOVIE_AUTO_MATCH=false` to disable background matching.
 This sends file-title queries to the configured catalogues; it does not download
 torrent payloads. Provider credentials and licensing still apply.
 
@@ -108,8 +108,8 @@ server does not seed payloads, use web seeds, accept incoming peers,
 or connect to local/private peers. Only the selected file's requested ranges
 are downloaded, with small protocol read-ahead. Piece hashes are verified.
 
-`DICEFILES_TORRENT_PLAYBACK=false` disables this independently of
-`DICEFILES_TORRENT_DISCOVERY`. Supported torrents are public v1/hybrid torrents;
+`HOBBYFILES_TORRENT_PLAYBACK=false` disables this independently of
+`HOBBYFILES_TORRENT_DISCOVERY`. Supported torrents are public v1/hybrid torrents;
 private torrents and v2-only torrents must use an external torrent app. Discovery
 uses supplied trackers plus the existing bounded public DHT client. Availability depends on reachable
 TCP peers; a tracker seeder count does not prove such a peer is reachable.
@@ -144,10 +144,10 @@ Automatic server transcoding is not part of this implementation.
 - [TVDB v4 API](https://thetvdb.github.io/v4-api/)
 - [Trakt API](https://trakt.docs.apiary.io/)
 
-Shaka is used with Dicefiles' own theme-aware controls, without remote player
+Shaka is used with Hobbyfiles' own theme-aware controls, without remote player
 fonts, SDKs, analytics or CDN scripts. WebTorrent's tracker dependency is pinned
 as a local MIT snapshot to remove its unpatched `ip` package; the small patch is
-documented in `vendor/bittorrent-tracker/DICEFILES.md`.
+documented in `vendor/bittorrent-tracker/HOBBYFILES.md`.
 
 
 ### Season and complete-series packs

@@ -1,6 +1,6 @@
-# Dicefiles Federation
+# Hobbyfiles Federation
 
-Dicefiles federation connects independently operated Dicefiles hosts without a
+Hobbyfiles federation connects independently operated Hobbyfiles hosts without a
 shared database, shared Redis instance, or global user directory. A destination
 room may display and download files from an explicitly allowed source room on a
 trusted peer. Chat, accounts, moderation records, room membership, request-board
@@ -12,7 +12,7 @@ required before any file metadata or bytes can cross hosts.
 
 ## Standards and design choices
 
-Dicefiles does not implement its own request-signature format.
+Hobbyfiles does not implement its own request-signature format.
 
 - **RFC 9421 HTTP Message Signatures** authenticate every peer API request.
   Requests cover the method, target URI, authority, content digest when present,
@@ -21,7 +21,7 @@ Dicefiles does not implement its own request-signature format.
   algorithm supported end to end by Fedify's RFC 9421 signer and verifier.
   Public keys are published in JWK and PEM form; private keys remain local.
 - **ActivityStreams 2.0** types are used for optional change notifications.
-  Dicefiles does not expose private rooms as public social actors and is not a
+  Hobbyfiles does not expose private rooms as public social actors and is not a
   general-purpose ActivityPub server.
 - **Matrix-inspired bilateral trust** means operators pin peers by identifier,
   canonical origin, and key. Keys are never fetched from an arbitrary URL found
@@ -30,7 +30,7 @@ Dicefiles does not implement its own request-signature format.
   ranges, explicit lengths, and content digests when one is known.
 
 The implementation uses Fedify's maintained RFC 9421 implementation for signing
-and verification. Dicefiles owns only its domain-specific authorization and file
+and verification. Hobbyfiles owns only its domain-specific authorization and file
 transport contract.
 
 ## Trust model
@@ -85,6 +85,9 @@ Redirects are never followed by federation requests.
 ## Discovery
 
 `GET /.well-known/dicefiles-federation` is public when federation is enabled.
+This well-known path and the `acct:dicefiles@host` actor name are established
+federation identifiers and remain unchanged so existing peers keep trusting
+the same actor.
 It contains only:
 
 - protocol name and version;
@@ -254,7 +257,7 @@ confirms acceptance, `activate` promotes the pending private identity and keeps
 up to three previous public records locally. Operators may remove the retired
 peer key after the agreed overlap window.
 
-A changed, unpinned key remains a hard failure. Dicefiles never performs
+A changed, unpinned key remains a hard failure. Hobbyfiles never performs
 trust-on-first-use or silently replaces a pinned peer key.
 
 Pass `--config=/absolute/path/.config.json` when the service uses a non-default
@@ -262,7 +265,7 @@ working directory. The CLI never prints a private JWK.
 
 ## Two-host verification
 
-The smoke harness starts two independent Dicefiles processes against two empty,
+The smoke harness starts two independent Hobbyfiles processes against two empty,
 dedicated Redis databases, creates and opts in rooms, applies source-side
 filename and uploader rules, and verifies privacy-safe metadata plus a ranged
 download through the destination proxy:
@@ -273,13 +276,13 @@ yarn test:federation
 
 Run it through Linux/WSL. By default it requires empty Redis databases 14 and
 15 on localhost and cleans them afterward. Operators may instead provide
-`DICEFILES_FEDERATION_SOURCE_REDIS` and
-`DICEFILES_FEDERATION_DEST_REDIS`. The script refuses a non-empty database and
-never uses the live Dicefiles database.
+`HOBBYFILES_FEDERATION_SOURCE_REDIS` and
+`HOBBYFILES_FEDERATION_DEST_REDIS`. The script refuses a non-empty database and
+never uses the live Hobbyfiles database.
 
 ## Out of scope
 
-- automatic public peer discovery or a global Dicefiles directory;
+- automatic public peer discovery or a global Hobbyfiles directory;
 - transitive or multi-hop room linking;
 - cross-host accounts, membership, chat, moderation, or request boards;
 - running a remote host's plugins;
@@ -288,7 +291,7 @@ never uses the live Dicefiles database.
 - third-party file-locker imports (Mega.nz, Pixeldrain, Gofile, and similar).
 
 That final item is the separate **multi-host remote import** proposal. Federation
-trusts another Dicefiles operator; remote import treats an external file host as
+trusts another Hobbyfiles operator; remote import treats an external file host as
 an untrusted download source. They intentionally use different credentials,
 SSRF rules, metadata, and lifecycle controls.
 

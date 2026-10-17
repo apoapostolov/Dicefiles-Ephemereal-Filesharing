@@ -1,7 +1,7 @@
 "use strict";
 
 const { createPluginStateFactory } = require("../../lib/plugins/state");
-const { createDicefilesPluginApi, createPluginHttpClient } = require("../../lib/plugins/runtime-adapters");
+const { createHobbyfilesPluginApi, createPluginHttpClient } = require("../../lib/plugins/runtime-adapters");
 const { scopedPluginApi, scopedUpload } = require("../../lib/plugins/scoped-api");
 const { createMegaDownloader } = require("../../lib/plugins/mega-folder/downloader");
 const { guardPluginRun } = require("../../lib/plugins/run-guard");
@@ -64,7 +64,7 @@ test("inventory and individual file reads stay in the invited room and redact le
     { key: "two", name: "two.pdf", size: 10, type: "pdf", hash: "same" },
     { key: "request", meta: { request: true } },
   ];
-  const api = scopedPluginApi(createDicefilesPluginApi({ getRoom: async id => id === "room" ? { files: { for: async () => files } } : null }), { roomId: "room", pluginId: "example" });
+  const api = scopedPluginApi(createHobbyfilesPluginApi({ getRoom: async id => id === "room" ? { files: { for: async () => files } } : null }), { roomId: "room", pluginId: "example" });
   expect(await api.getRoomInventory()).toMatchObject({ files: 2, bytes: 20, byType: { pdf: { files: 2, bytes: 20 } }, duplicateGroups: 1, duplicateCopies: 1, expiringWithin24Hours: 1 });
   expect((await api.getFile({ key: "one" })).meta.megaFolder).toBeUndefined();
   await expect(api.getFile({ key: "foreign" })).rejects.toMatchObject({ status: 404 });

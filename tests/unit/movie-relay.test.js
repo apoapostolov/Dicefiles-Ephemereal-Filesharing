@@ -21,7 +21,7 @@ test("separate HTTP workers share one authenticated torrent relay and retain byt
   const lease = (_key, action) => {
     const run = tail.then(action); tail = run.catch(() => {}); return run;
   };
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dicefiles-stream-relay-test-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "hobbyfiles-stream-relay-test-"));
   const payload = Buffer.alloc(100, 7);
   const session = { dir, active: 0, touched: Date.now(), torrent: { name: "Example", files: [{ name: "video.mp4", path: "Example/video.mp4", length: payload.length, createReadStream: ({ start, end }) => Readable.from([payload.subarray(start, end + 1)]) }] } };
   const createSession = jest.fn(async () => session);
@@ -74,7 +74,7 @@ test("separate HTTP workers share one authenticated torrent relay and retain byt
   finally {
     server.closeAllConnections(); await new Promise(resolve => server.close(resolve));
     await session.onClose?.();
-    if (path.dirname(dir) === os.tmpdir() && path.basename(dir).startsWith("dicefiles-stream-relay-test-")) {
+    if (path.dirname(dir) === os.tmpdir() && path.basename(dir).startsWith("hobbyfiles-stream-relay-test-")) {
       fs.rmSync(dir, { recursive: true, force: true });
     }
   }

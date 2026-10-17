@@ -1,12 +1,12 @@
-# Introduction to Dicefiles
+# Introduction to Hobbyfiles
 
-Dicefiles is a self-hosted, open-source file sharing platform built specifically for hobby communities. It provides real-time chat rooms with file sharing capabilities, perfect for groups sharing roleplaying books, digital maps, board games, 3D models (STL), fiction, and other hobby resources.
+Hobbyfiles is a self-hosted, open-source file sharing platform built specifically for hobby communities. It provides real-time chat rooms with file sharing capabilities, perfect for groups sharing roleplaying books, digital maps, board games, 3D models (STL), fiction, and other hobby resources.
 
 ## Purpose
 
-Unlike general-purpose file hosts, Dicefiles focuses on ephemeral, community-driven sharing. Files are stored temporarily (configurable TTL) and automatically deleted when expired, keeping the platform lightweight and focused on active sharing sessions.
+Unlike general-purpose file hosts, Hobbyfiles focuses on ephemeral, community-driven sharing. Files are stored temporarily (configurable TTL) and automatically deleted when expired, keeping the platform lightweight and focused on active sharing sessions.
 
-## What Makes Dicefiles Different?
+## What Makes Hobbyfiles Different?
 
 ### Self-Hosted & Privacy-First
 
@@ -82,7 +82,7 @@ See the main [README](../README.md) for complete installation and setup instruct
 
 ### Automation and core plugins
 
-Dicefiles 1.4.7 includes 27 opt-in room bots for cloud/feed collection, community
+Hobbyfiles 1.4.7 includes 27 opt-in room bots for cloud/feed collection, community
 workflows and maintenance. Start with the [power-user plugin guide](./CORE_PLUGINS.md).
 Owners can preview reports, queue durable jobs and review suggested changes.
 Operator-approved connections keep provider credentials out of room forms.
@@ -125,11 +125,11 @@ Developers can extend the trusted server with [Plugin API v2](../core/plugins/PL
 
 ## Configuration
 
-Dicefiles is highly configurable via `.config.json`:
+Hobbyfiles is highly configurable via `.config.json`:
 
 ```json
 {
-  "name": "Dicefiles",
+  "name": "Hobbyfiles",
   "motto": "Ephemereal Filesharing for Hobby Communities",
   "port": 9090,
   "maxFileSize": 10737418240,
@@ -153,7 +153,7 @@ See `defaults.js` for all available options.
 
 ## Community Guidelines
 
-Dicefiles is built for hobby communities to share resources legally and respectfully. Key principles:
+Hobbyfiles is built for hobby communities to share resources legally and respectfully. Key principles:
 
 1. **Respect Copyright**: Only share content you have the right to distribute
 2. **Be Civil**: Treat other community members with respect
@@ -164,11 +164,11 @@ On your running instance, open `/rules` and `/terms` for its rules and terms.
 
 ## Contributing
 
-Dicefiles is open source and welcomes contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Hobbyfiles is open source and welcomes contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## Support & Resources
 
-- **GitHub Repository**: https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing
+- **GitHub Repository**: https://github.com/apoapostolov/Hobbyfiles
 - **X/Twitter**: https://x.com/apoapostolov
 - **Issues**: Report bugs and request features via GitHub Issues
 

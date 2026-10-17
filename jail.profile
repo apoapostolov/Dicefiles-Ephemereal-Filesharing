@@ -1,4 +1,4 @@
-name dicefiles-jail
+name hobbyfiles-jail
 
 # will be invoked with private=
 private-dev

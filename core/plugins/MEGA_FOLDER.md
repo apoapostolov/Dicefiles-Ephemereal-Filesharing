@@ -1,6 +1,6 @@
 # Mega.nz Autoshare (`mega-folder`)
 
-First-party plugin that **monitors a Mega.nz folder**, downloads new files over time, and **auto-shares** them into a Dicefiles room.
+First-party plugin that **monitors a Mega.nz folder**, downloads new files over time, and **auto-shares** them into a Hobbyfiles room.
 
 Uploads appear under the **Mega.nz Autoshare** bot with a cyan **BOT** pill in the file list (not a human account).
 
@@ -18,7 +18,7 @@ the [cookbook](./PLUGIN_COOKBOOK.md) for examples and
 yarn add megajs
 ```
 
-2. Restart Dicefiles so the plugin catalog can load `mega-folder`.
+2. Restart Hobbyfiles so the plugin catalog can load `mega-folder`.
 
 3. Open the room → **Room Options** → **Plugins** tab:
    - Select **Mega.nz Autoshare** from *Available bots* → **Invite**
@@ -125,7 +125,7 @@ letters/digits. Polling is disabled at zero, otherwise 1–10,080 minutes.
 or fractional limits. Known oversized entries are skipped before download.
 Unknown-size downloads are measured before upload. The run result reports
 `uploaded`, `uploadedBytes`, `skipped`, reasoned skip counts, and effective
-limits; Dicefiles stores the bounded last result for room-bot operators.
+limits; Hobbyfiles stores the bounded last result for room-bot operators.
 
 ---
 

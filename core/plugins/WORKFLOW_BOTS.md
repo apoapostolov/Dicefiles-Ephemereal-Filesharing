@@ -1,10 +1,10 @@
 # Community and maintenance bots
 
-**Dicefiles 1.4.7.** For an introduction to every bundled bot, read the
+**Hobbyfiles 1.4.7.** For an introduction to every bundled bot, read the
 [power-user guide](../../docs/CORE_PLUGINS.md). Developers can use the
 [API reference](./PLUGIN_API.md) and [27-plugin cookbook](./PLUGIN_COOKBOOK.md).
 
-Dicefiles includes 27 trusted built-in bots: four existing publishers/importers,
+Hobbyfiles includes 27 trusted built-in bots: four existing publishers/importers,
 seven [collectors](./COLLECTION_BOTS.md), eight community bots and eight maintenance
 bots. Installation does not invite or enable them in rooms. Open **Room Options →
 Plugins**, select a bot, configure it and Save. Rooms accept up to 32 invitations;
@@ -82,7 +82,7 @@ Backup Verification requires provider **backup**, the bot/room grant and setting
 
 ~~~json
 {
-  "directory": "/srv/backups/dicefiles",
+  "directory": "/srv/backups/hobbyfiles",
   "manifest": "manifest.json"
 }
 ~~~

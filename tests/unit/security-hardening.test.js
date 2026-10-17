@@ -413,7 +413,7 @@ describe("Startup weak-secret detection", () => {
    * tested independently without starting the server.
    */
 
-  const WEAK_SECRETS = new Set(["dicefiles", "secret", "changeme"]);
+  const WEAK_SECRETS = new Set(["dicefiles", "hobbyfiles", "secret", "changeme"]);
 
   function isWeakSecret(s) {
     return !s || WEAK_SECRETS.has(s) || s.length < 16;

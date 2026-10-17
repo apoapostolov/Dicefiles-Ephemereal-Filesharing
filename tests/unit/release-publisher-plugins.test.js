@@ -10,7 +10,7 @@ const {
 } = require("../../lib/plugins/event-lease");
 const {
   createPluginHttpClient,
-  createDicefilesPluginApi,
+  createHobbyfilesPluginApi,
 } = require("../../lib/plugins/runtime-adapters");
 const {
   buildRelease,
@@ -44,7 +44,7 @@ function uploadPayload(overrides) {
 function baseCtx(pluginId, config, calls) {
   return {
     pluginId,
-    botName: "Dicefiles Releases",
+    botName: "Hobbyfiles Releases",
     publicBaseUrl: "https://files.example.test",
     config: Object.assign({ roomId: "room1234" }, config),
     events: createMemoryEventLease(),
@@ -172,7 +172,7 @@ describe("Discord release publisher", () => {
       id: "interaction-1",
       type: 2,
       data: {
-        name: "dicefiles",
+        name: "hobbyfiles",
         options: [{ name: "status", type: 1 }],
       },
       member: {
@@ -393,8 +393,8 @@ describe("bot runtime extensions", () => {
     }
   });
 
-  test("Dicefiles plugin API returns stable room and file objects", async () => {
-    const api = createDicefilesPluginApi({
+  test("Hobbyfiles plugin API returns stable room and file objects", async () => {
+    const api = createHobbyfilesPluginApi({
       async listRoomRequests() {
         return [];
       },

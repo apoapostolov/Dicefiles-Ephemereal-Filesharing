@@ -4,7 +4,7 @@
 - Node.js must be `^22.13.0 || >=24`; use Yarn 1.x and `yarn.lock`, never `package-lock.json`.
 - Run the user-test instance through WSL `Ubuntu` on port `10005`.
 - Never use hot reload, Webpack watch mode, Nodemon, or polling watchers.
-- After runtime-affecting changes: `yarn prestart`, restart the user service with `systemctl --user restart dicefiles.service`, wait for Redis restoration, then require `/healthz` HTTP `200` from WSL and Windows.
+- After runtime-affecting changes: `yarn prestart`, restart the installed user service (`hobbyfiles.service` for new installs; upgraded installs may still use `dicefiles.service`), wait for Redis restoration, then require `/healthz` HTTP `200` from WSL and Windows.
 - For visual validation, use the browser built into Codex; do not launch Linux Chrome or substitute an external browser.
 - Edit browser source under `client/` and `entries/`; generated JS/CSS/maps under `static/` and `lib/clientversion.js` must come from `yarn prestart`.
 - Static source media such as `static/404.jpg`, `static/HAL9000.svg`, and `static/loader.png` are hand-maintained exceptions.

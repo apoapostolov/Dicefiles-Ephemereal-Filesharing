@@ -1,4 +1,4 @@
-# Future Development Plan (Dicefiles)
+# Future Development Plan (Hobbyfiles)
 
 Working backlog of product ideas that fit self-hosted room chat + ephemeral filesharing.
 
@@ -352,9 +352,9 @@ Design: **`core/plugins/REMOTE_HOST_IMPORTS.md`**.
 
 ## Federated multi-server mesh (v1 backbone shipped)
 
-**Idea:** Independent Dicefiles operators (each with their own Node + Redis + disk) can **opt in** to a small trust mesh so a room on host **A** can mirror finished files from a room on host **B** the way today’s multi-room linking works *within* one server — without merging databases or requiring a shared filesystem.
+**Idea:** Independent Hobbyfiles operators (each with their own Node + Redis + disk) can **opt in** to a small trust mesh so a room on host **A** can mirror finished files from a room on host **B** the way today’s multi-room linking works *within* one server — without merging databases or requiring a shared filesystem.
 
-This is **not** a single global network, crypto currency, or “join the public Dicefiles cloud.” It is **bilateral (or small-club) federation** between self-hosted peers that already trust each other (same org, allied hobby groups, backup host).
+This is **not** a single global network, crypto currency, or “join the public Hobbyfiles cloud.” It is **bilateral (or small-club) federation** between self-hosted peers that already trust each other (same org, allied hobby groups, backup host).
 
 ### Why
 
@@ -362,7 +362,7 @@ This is **not** a single global network, crypto currency, or “join the public 
 | ----- | --- |
 | Multi-room linking | Same server, same Redis, same file store |
 | Automation API + webhooks | External bots can move files, but no first-class “linked row” UX across hosts |
-| Plugins (Mega.nz Autoshare) | Pull from third-party lockers, not from another Dicefiles room |
+| Plugins (Mega.nz Autoshare) | Pull from third-party lockers, not from another Hobbyfiles room |
 
 Federation reuses the **linking mental model** users already know: Linked badge, fetch-through download/Read Now, source owns trash/moderation, destination never silently copies unless an explicit “materialize” tool is added later.
 
@@ -475,7 +475,7 @@ Room-level: destination still needs an explicit link row (no automatic mesh of a
 
 ### Explicit non-goals
 
-- Public peer discovery / “Dicefiles network”
+- Public peer discovery / “Hobbyfiles network”
 - Merged Redis or shared upload volume
 - Cross-host chat federation or global nicks
 - Guaranteed strong consistency of remote lists

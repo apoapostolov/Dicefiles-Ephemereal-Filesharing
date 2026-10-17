@@ -8,20 +8,20 @@
  *   DELETE /api/v1/admin/rooms/:id
  *   DELETE /api/v1/admin/rooms        (nuclear)
  *
- * Runs against the live server selected by DICEFILES_TEST_BASE
+ * Runs against the live server selected by HOBBYFILES_TEST_BASE
  * (default http://127.0.0.1:10005).
- * Requires an automation API key in the DICEFILES_TEST_KEY environment variable
+ * Requires an automation API key in the HOBBYFILES_TEST_KEY environment variable
  * (or falls back to reading .config.json for automationApiKeys[0]).
  * All tests are skipped automatically if the server is unreachable.
  */
 
-const BASE = process.env.DICEFILES_TEST_BASE || "http://127.0.0.1:10005";
+const BASE = process.env.HOBBYFILES_TEST_BASE || "http://127.0.0.1:10005";
 
 // Resolve the API key: prefer env var, then find a key in .config.json that
 // has admin:config / admin:rooms / admin:* / mod:* / * scope.
 function resolveApiKey() {
-  if (process.env.DICEFILES_TEST_KEY) {
-    return process.env.DICEFILES_TEST_KEY;
+  if (process.env.HOBBYFILES_TEST_KEY) {
+    return process.env.HOBBYFILES_TEST_KEY;
   }
   try {
     const fs = require("fs");
@@ -99,7 +99,7 @@ beforeAll(async () => {
   }
   if (!API_KEY) {
     console.warn(
-      "\n[admin-api.test.js] No API key found — set DICEFILES_TEST_KEY or add automationApiKeys to .config.json\n",
+      "\n[admin-api.test.js] No API key found — set HOBBYFILES_TEST_KEY or add automationApiKeys to .config.json\n",
     );
   }
 });

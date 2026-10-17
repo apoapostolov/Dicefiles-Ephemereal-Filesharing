@@ -1,17 +1,17 @@
 ---
-name: dicefiles-ops
-description: Operate a Dicefiles instance. Install, configure, run as a service, upgrade, back up and restore, wire the MCP server, manage room bots, and diagnose a degraded server.
+name: hobbyfiles-ops
+description: Operate a Hobbyfiles instance. Install, configure, run as a service, upgrade, back up and restore, wire the MCP server, manage room bots, and diagnose a degraded server.
 ---
 
-# Dicefiles Operations
+# Hobbyfiles Operations
 
-Operator skill for running a Dicefiles instance. For *using* rooms through the
-MCP tools, see `scripts/openclaw-dicefiles-skill/SKILL.md`. This document covers
+Operator skill for running a Hobbyfiles instance. For *using* rooms through the
+MCP tools, see `scripts/openclaw-hobbyfiles-skill/SKILL.md`. This document covers
 the instance itself: install, config, service, upgrades, backups, and diagnosis.
 
 ## When to use
 
-- Standing up, moving, or restoring a Dicefiles instance
+- Standing up, moving, or restoring a Hobbyfiles instance
 - Wiring the MCP server into an agent, IDE, or orchestrator
 - An upgrade, a node or Redis problem, or a `/healthz` that is not 200
 - Backing up or restoring rooms, uploads, and federation identity
@@ -51,7 +51,7 @@ node server.js         # foreground; use a service for anything long-lived
 ```
 
 Redis is a hard dependency. The broker keeps room state, bans, plugin state, and
-request claims there, so a Dicefiles instance without Redis starts and then fails
+request claims there, so a Hobbyfiles instance without Redis starts and then fails
 its first real operation. `yarn check:preview-tools` reports the optional native
 tools used for thumbnails, PDF rendering, and archive browsing; `yarn setup:ubuntu`
 installs the Ubuntu set.
@@ -93,13 +93,13 @@ crash:
 
 ```ini
 [Unit]
-Description=Dicefiles Ephemeral Filesharing
+Description=Hobbyfiles Ephemeral Filesharing
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/path/to/Dicefiles-Ephemereal-Filesharing
+WorkingDirectory=/path/to/Hobbyfiles
 Environment=NODE_ENV=production
 Environment=PATH=/usr/local/bin:/usr/bin:/bin
 ExecStart=/usr/bin/node server.js
@@ -112,14 +112,14 @@ StandardError=journal
 WantedBy=default.target
 ```
 
-`contrib/dicefiles.service` is the shipped template. Put absolute paths in it, since
+`contrib/hobbyfiles.service` is the shipped template. Put absolute paths in it, since
 a unit never inherits an interactive shell `PATH`.
 
 ```bash
 systemctl --user daemon-reload
-systemctl --user enable --now dicefiles.service
+systemctl --user enable --now hobbyfiles.service
 curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:<port>/healthz
-journalctl --user -u dicefiles.service -n 80 --no-pager
+journalctl --user -u hobbyfiles.service -n 80 --no-pager
 ```
 
 `server.js` starts a cluster plus an expiration worker, so several `node` processes
@@ -130,7 +130,7 @@ belong to one unit. Judge health by `/healthz`, not by process count.
 ```bash
 yarn install --frozen-lockfile
 yarn prestart
-systemctl --user restart dicefiles.service
+systemctl --user restart hobbyfiles.service
 # then require 200 from /healthz before handing the instance over
 ```
 
@@ -165,8 +165,8 @@ check `/healthz`.
 
 ```bash
 # stdio, the default
-DICEFILES_BASE_URL=http://localhost:<port> \
-DICEFILES_API_KEY=<key> \
+HOBBYFILES_BASE_URL=http://localhost:<port> \
+HOBBYFILES_API_KEY=<key> \
 node scripts/mcp-server.js
 
 # stateless Streamable HTTP
@@ -175,12 +175,12 @@ MCP_TRANSPORT=http MCP_PORT=3001 node scripts/mcp-server.js
 
 | Variable | Default | Purpose |
 | -------- | ------- | ------- |
-| `DICEFILES_BASE_URL` | `http://localhost:10005` | Dicefiles instance the tools call |
-| `DICEFILES_API_KEY` | empty | Automation key; without it most tools return 401 |
+| `HOBBYFILES_BASE_URL` | `http://localhost:10005` | Hobbyfiles instance the tools call |
+| `HOBBYFILES_API_KEY` | empty | Automation key; without it most tools return 401 |
 | `MCP_TRANSPORT` | `stdio` | `stdio` or `http` |
 | `MCP_PORT` | `3001` | HTTP port |
 | `MCP_HOST` | `127.0.0.1` | Bind address for HTTP mode |
-| `MCP_API_TIMEOUT_MS` | `30000` | Timeout for each Dicefiles API call |
+| `MCP_API_TIMEOUT_MS` | `30000` | Timeout for each Hobbyfiles API call |
 | `MCP_AUTH_TOKEN` | empty | Incoming HTTP bearer token; required beyond loopback |
 | `MCP_ALLOWED_HOSTS` | localhost hosts | Accepted hostnames; required beyond loopback |
 | `MCP_ALLOWED_ORIGINS` | localhost hosts | Accepted Origin hostnames, without scheme or port |
@@ -230,7 +230,7 @@ the registry includes 27 built-in modules. Start with the
 | Symptom | Look at |
 | ------- | ------- |
 | `/healthz` 503 | The `checks` object names the failing dependency, Redis or storage |
-| `ok: false` from every tool | `DICEFILES_API_KEY` unset, or the key lacks the scope for that route |
+| `ok: false` from every tool | `HOBBYFILES_API_KEY` unset, or the key lacks the scope for that route |
 | Port already in use | Another worker or a stale process still holds the port; the unit owns exactly one |
 | Node exits at once | Node below 22, or a weak `secret` while `NODE_ENV=production` |
 | Browser assets stale or 404 | `yarn prestart`, then restart the service |

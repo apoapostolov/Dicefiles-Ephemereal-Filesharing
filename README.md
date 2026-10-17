@@ -2,33 +2,33 @@
 
 <div align="center">
 
-  <h1>Dicefiles</h1>
+  <h1>Hobbyfiles</h1>
 
   <p>Host a community room where people can share, find, request, and read files together.</p>
 
   <p>
     <a href="#readme"><img src="https://img.shields.io/badge/Type-Self-hosted%20app-555" alt="Type: Self-hosted app"></a>
     <a href="./package.json"><img src="https://img.shields.io/badge/Language-JavaScript-555" alt="Language: JavaScript"></a>
-    <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/releases/latest"><img src="https://img.shields.io/github/v/release/apoapostolov/Dicefiles-Ephemereal-Filesharing" alt="Latest stable release version"></a>
-    <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/releases/latest"><img src="https://img.shields.io/github/release-date/apoapostolov/Dicefiles-Ephemereal-Filesharing?display_date=published_at&amp;label=last%20release" alt="Published date of latest stable release"></a>
+    <a href="https://github.com/apoapostolov/Hobbyfiles/releases/latest"><img src="https://img.shields.io/github/v/release/apoapostolov/Hobbyfiles" alt="Latest stable release version"></a>
+    <a href="https://github.com/apoapostolov/Hobbyfiles/releases/latest"><img src="https://img.shields.io/github/release-date/apoapostolov/Hobbyfiles?display_date=published_at&amp;label=last%20release" alt="Published date of latest stable release"></a>
   </p>
 
 </div>
 
 <div align="center">
-  <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing">
+  <a href="https://github.com/apoapostolov/Hobbyfiles">
     <img src="images/hero.png" width="100%"
-      alt="Dicefiles: ephemeral file sharing for hobby communities"></a>
+      alt="Hobbyfiles: ephemeral file sharing for hobby communities"></a>
 </div>
 
-Dicefiles is built for collections people actively browse and discuss: RPG
+Hobbyfiles is built for collections people actively browse and discuss: RPG
 books and maps, board games, STL models, comics, fiction, and other hobby media.
 Each room combines live chat, temporary file sharing, requests, readers,
 moderation, and optional automation without feeling like a generic cloud-drive
-dashboard. You host it; there is no public Dicefiles service.
+dashboard. You host it; there is no public Hobbyfiles service.
 
 <p align="center">
-  <img src="images/dicefiles-room-gallery.png" alt="A Dicefiles room with live chat, filters, and a gallery of shared files" width="100%">
+  <img src="images/hobbyfiles-room-gallery.png" alt="A Hobbyfiles room with live chat, filters, and a gallery of shared files" width="100%">
 </p>
 
 ## What's New in 1.4.7
@@ -65,8 +65,8 @@ before enabling collectors. See the full [changelog](CHANGELOG.md).
   browse artwork and cast, and add subtitles in your language.
 
 <p align="center">
-  <img src="images/dicefiles-books-gallery.png" alt="A Dicefiles gallery with generated book and comic covers" width="49%">
-  <img src="images/dicefiles-archive-browser.png" alt="The in-room archive browser listing package contents" width="49%">
+  <img src="images/hobbyfiles-books-gallery.png" alt="A Hobbyfiles gallery with generated book and comic covers" width="49%">
+  <img src="images/hobbyfiles-archive-browser.png" alt="The in-room archive browser listing package contents" width="49%">
 </p>
 
 ## Rooms Made for Communities
@@ -81,8 +81,8 @@ activity, contribution statistics, and achievement tracks for uploads,
 downloads, and fulfilled requests.
 
 <p align="center">
-  <img src="images/dicefiles-request-board.png" alt="The request board with open requests ready to be fulfilled" width="49%">
-  <img src="images/dicefiles-room-options.png" alt="Room options for identity, retention, privacy, linking, and themes" width="49%">
+  <img src="images/hobbyfiles-request-board.png" alt="The request board with open requests ready to be fulfilled" width="49%">
+  <img src="images/hobbyfiles-room-options.png" alt="Room options for identity, retention, privacy, linking, and themes" width="49%">
 </p>
 
 ## Built-in Readers
@@ -96,8 +96,8 @@ PDF, ePub, and MOBI reading runs in the browser. Native tools are used only for
 server-generated previews and formats such as RAR/7Z extraction.
 
 <p align="center">
-  <img src="images/dicefiles-epub-reader.png" alt="An ePub chapter open in the in-room reader" width="49%">
-  <img src="images/dicefiles-comic-reader.png" alt="A comic page open in the in-room reader" width="49%">
+  <img src="images/hobbyfiles-epub-reader.png" alt="An ePub chapter open in the in-room reader" width="49%">
+  <img src="images/hobbyfiles-comic-reader.png" alt="A comic page open in the in-room reader" width="49%">
 </p>
 
 ## Quick Start
@@ -107,13 +107,13 @@ Windows host. Yarn is the supported package manager; use the committed
 `yarn.lock`.
 
 ```bash
-git clone https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing.git
-cd Dicefiles-Ephemereal-Filesharing
+git clone https://github.com/apoapostolov/Hobbyfiles.git
+cd Hobbyfiles
 yarn install --production=false
 cp .env.example .env
 ```
 
-Edit `.env` before the first start: set a unique random `DICEFILES_SECRET`
+Edit `.env` before the first start: set a unique random `HOBBYFILES_SECRET`
 and `HTTP_PORT=8080`. Generate a secret with `openssl rand -hex 32`.
 Then run `yarn start` (which builds assets before starting). Open
 `http://127.0.0.1:8080`. See [environment configuration](docs/ENVIRONMENT.md)
@@ -137,7 +137,7 @@ Verify the live service:
 curl -s http://127.0.0.1:8080/healthz
 ```
 
-Production deployments should place Dicefiles behind an HTTPS reverse proxy.
+Production deployments should place Hobbyfiles behind an HTTPS reverse proxy.
 Never commit `.config.json`, API keys, room credentials, federation private
 keys, or generated capability URLs.
 
@@ -146,11 +146,11 @@ keys, or generated capability URLs.
 Use Docker Engine with Compose, or Docker Desktop in Linux-container mode:
 
 ```bash
-docker build -t dicefiles:local .
+docker build -t hobbyfiles:local .
 cp .env.docker.example .env.docker
 ```
 
-Set a unique random `DICEFILES_SECRET` in `.env.docker`, then start the stack:
+Set a unique random `HOBBYFILES_SECRET` in `.env.docker`, then start the stack:
 
 ```bash
 docker compose --env-file .env.docker up -d --no-build
@@ -158,10 +158,11 @@ docker compose --env-file .env.docker ps
 curl -fsS http://127.0.0.1:8080/healthz
 ```
 
-Docker Desktop shows the **dicefiles** project in Containers. The app listens
-on loopback port 8080; Redis and uploads use separate persistent volumes.
-To use a published GHCR build, set `DICEFILES_IMAGE` to
-`ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing:TAG`, run
+Docker Desktop shows the **Hobbyfiles** project in Containers. The Compose
+project key remains `dicefiles` to keep existing Redis and upload volumes
+attached. The app listens on loopback port 8080.
+To use a published GHCR build, set `HOBBYFILES_IMAGE` to
+`ghcr.io/apoapostolov/hobbyfiles:TAG`, run
 `docker compose --env-file .env.docker pull`, then `up -d --no-build`.
 
 The [Docker guide](docs/DOCKER.md) covers the complete recipe, GHCR publication,
@@ -183,11 +184,11 @@ access. Permissions are split into scopes, rate limited, and audited.
 - [Core plugin power-user guide](./docs/CORE_PLUGINS.md) — practical setup for all 27 bundled bots
 - [Plugin API v2 reference](./core/plugins/PLUGIN_API.md) — callable contracts, complete modules and limits
 - [27-plugin developer cookbook](./core/plugins/PLUGIN_COOKBOOK.md) — configuration recipes and implementation patterns
-- [Offline power-user handbook](./docs/handbooks/dicefiles-core-plugins-1.4.7.html) and [developer handbook](./docs/handbooks/dicefiles-plugin-developer-1.4.7.html) — self-contained HTML; also attached to the [1.4.7 release](https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/releases/tag/v1.4.7)
+- [Offline power-user handbook](./docs/handbooks/hobbyfiles-core-plugins-1.4.7.html) and [developer handbook](./docs/handbooks/hobbyfiles-plugin-developer-1.4.7.html) — self-contained HTML; also attached to the [1.4.7 release](https://github.com/apoapostolov/Hobbyfiles/releases/tag/v1.4.7)
 - [Collection bots: provider setup and recovery](./core/plugins/COLLECTION_BOTS.md)
 - [Community and maintenance bots: reviews, sessions and operator grants](./core/plugins/WORKFLOW_BOTS.md)
 - [Bots audit and ordered development checklist](./docs/BOTS_AND_PLUGINS.md)
-- [Operations skill for AI agents](./skills/dicefiles-ops/SKILL.md)
+- [Operations skill for AI agents](./skills/hobbyfiles-ops/SKILL.md)
 - [Environment flags and private provider keys](./docs/ENVIRONMENT.md)
 - [Appearance and theme tokens](./docs/THEMES.md)
 - [Magnet and torrent metadata](./docs/TORRENTS.md)
@@ -198,7 +199,7 @@ The protected operator dashboard reports capacity, uptime, traffic, requests,
 and service health without exposing filesystem paths or secrets.
 
 <p align="center">
-  <img src="images/dicefiles-status-dashboard.png" alt="The operator dashboard with service health, capacity, and activity" width="100%">
+  <img src="images/hobbyfiles-status-dashboard.png" alt="The operator dashboard with service health, capacity, and activity" width="100%">
 </p>
 
 ## Development
@@ -212,6 +213,6 @@ yarn prestart
 Contributor workflow and release checks live in [`dev/README.md`](./dev/README.md).
 The complete documentation index is [`docs/README.md`](./docs/README.md).
 
-Dicefiles is licensed under MIT. It began as a fork of
+Hobbyfiles is licensed under MIT. It began as a fork of
 [droppy](https://github.com/silverwind/droppy) and now includes substantial new
 community, reading, automation, storage, and federation systems.

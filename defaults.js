@@ -23,7 +23,7 @@ module.exports = {
   tvdbPin: "",
   traktClientId: "",
   // Your site's name
-  name: "Dicefiles",
+  name: "Hobbyfiles",
 
   // Your site's motto
   motto: "Ephemereal Filesharing for Hobby Communities",
@@ -45,8 +45,8 @@ module.exports = {
 
   // Session signing secret.
   // MUST be changed to a unique, high-entropy value (≥16 random chars) in production.
-  // The default "dicefiles" value triggers a startup warning if not overridden.
-  // Override in ~/.config/dicefiles.json or ./.config.json:
+  // The historical default "dicefiles" value triggers a startup warning if not overridden.
+  // Override in ~/.config/hobbyfiles.json or ./.config.json:
   //   { "secret": "your-long-random-secret-here" }
   secret: "dicefiles",
 
@@ -56,7 +56,7 @@ module.exports = {
   statusPagePrivate: true,
   statusPageToken: "",
 
-  // Bilateral Dicefiles peer federation. Disabled until an operator supplies
+  // Bilateral Hobbyfiles peer federation. Disabled until an operator supplies
   // a canonical public origin and peer id. On first enabled start an RSA-3072
   // identity is generated in the ignored .config.json file.
   // See docs/FEDERATION.md for the complete trust and room opt-in model.
@@ -85,7 +85,7 @@ module.exports = {
   // Path to upload directory
   uploads: "uploads",
 
-  // Optional multi-volume storage. With no volumes configured, Dicefiles uses
+  // Optional multi-volume storage. With no volumes configured, Hobbyfiles uses
   // the legacy `uploads` path as a single volume named "uploads".
   storage: {
     policy: "balanced", // "balanced" or "primary-then-fallback"
@@ -146,7 +146,7 @@ module.exports = {
   // Example:
   // webhooks: [{
   //   id: "ops-bot",
-  //   url: "https://example.org/dicefiles-webhook",
+  //   url: "https://example.org/hobbyfiles-webhook",
   //   secret: "replace-with-long-random-secret",
   //   events: [
   //     "file_uploaded", "request_created", "request_fulfilled", "file_deleted",

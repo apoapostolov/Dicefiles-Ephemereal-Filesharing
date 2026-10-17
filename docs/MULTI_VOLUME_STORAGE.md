@@ -3,11 +3,11 @@
 **Status:** Core placement, reservations, health, and operator inspection are
 implemented for v1.4.5. Journaled manual drain/rebalance is now implemented in
 the 1.4.7 release.
-**Scope:** Local filesystem directories and mounted drives on one Dicefiles host
+**Scope:** Local filesystem directories and mounted drives on one Hobbyfiles host
 
 ## Summary
 
-Dicefiles should support several storage locations without exposing storage
+Hobbyfiles should support several storage locations without exposing storage
 topology to rooms, users, or plugins. Each physical content blob is assigned to
 one configured volume when its upload begins. That volume identifier is stored
 with the blob and remains stable for its lifetime. Downloads, previews,
@@ -54,13 +54,13 @@ The first implementation is not:
 
 - RAID, erasure coding, replication, or a backup system;
 - striping one file across several drives;
-- shared multi-host storage or a replacement for Dicefiles federation;
+- shared multi-host storage or a replacement for Hobbyfiles federation;
 - an object-storage abstraction for S3-compatible services;
 - automatic recovery from physical media failure;
 - an automatic hot/cold lifecycle manager.
 
 A blob has one authoritative physical location. Operators who need redundancy
-must continue to provide it beneath Dicefiles or through backups.
+must continue to provide it beneath Hobbyfiles or through backups.
 
 ## Current architecture and compatibility seam
 
@@ -119,7 +119,7 @@ Keep `uploads` for backward compatibility. Add a new `storage` object:
     "volumes": [
       {
         "id": "primary-a",
-        "path": "/srv/dicefiles-a",
+        "path": "/srv/hobbyfiles-a",
         "role": "primary",
         "enabled": true,
         "readOnly": false,
@@ -131,7 +131,7 @@ Keep `uploads` for backward compatibility. Add a new `storage` object:
       },
       {
         "id": "primary-b",
-        "path": "/mnt/dicefiles-b",
+        "path": "/mnt/hobbyfiles-b",
         "role": "primary",
         "enabled": true,
         "readOnly": false,
@@ -143,7 +143,7 @@ Keep `uploads` for backward compatibility. Add a new `storage` object:
       },
       {
         "id": "fallback",
-        "path": "/mnt/archive/dicefiles",
+        "path": "/mnt/archive/hobbyfiles",
         "role": "fallback",
         "enabled": true,
         "readOnly": false,
@@ -681,7 +681,7 @@ projected pressure. This prevents oscillation and pointless drive wear.
 | Config removes referenced volume id | Fail startup validation with a count of affected blobs |
 
 When no volume can safely accept an upload, fail before consuming its body when
-possible. Dicefiles should never degrade capacity protection into best-effort
+possible. Hobbyfiles should never degrade capacity protection into best-effort
 writing.
 
 ## Security and privacy
@@ -693,7 +693,7 @@ writing.
 - Open files with safe flags and do not follow unexpected symlinks.
 - Restrict storage inspection and movement to dedicated automation scopes.
 - Audit configuration validation, state changes, moves, and destructive cleanup.
-- Avoid automatic mount commands or privilege escalation; Dicefiles consumes
+- Avoid automatic mount commands or privilege escalation; Hobbyfiles consumes
   already-mounted paths.
 - A network mount is untrusted operational infrastructure. Time out probes and
   file operations, and never let one stalled volume block unrelated reads or

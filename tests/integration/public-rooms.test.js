@@ -3,14 +3,14 @@
 /**
  * Integration tests for the public room directory (publicRooms feature).
  *
- * These tests run against the live Dicefiles server selected by
- * DICEFILES_TEST_BASE (default http://127.0.0.1:10005).
+ * These tests run against the live Hobbyfiles server selected by
+ * HOBBYFILES_TEST_BASE (default http://127.0.0.1:10005).
  * They require that the server is started with `publicRooms: true` in the
  * project configuration file (.config.json).
  * All tests are skipped automatically if the server is unreachable.
  */
 
-const BASE = process.env.DICEFILES_TEST_BASE || "http://127.0.0.1:10005";
+const BASE = process.env.HOBBYFILES_TEST_BASE || "http://127.0.0.1:10005";
 
 async function get(path) {
   const res = await fetch(BASE + path);
@@ -48,7 +48,7 @@ beforeAll(async () => {
       const body = await r.text();
       if (
         !body.includes("id=\"room-directory\"") &&
-        body.includes("Welcome to Dicefiles")
+        body.includes("Welcome to Hobbyfiles")
       ) {
         serverUp = false; // treat as skip
         console.warn(
@@ -150,7 +150,7 @@ describe("GET / — public room directory", () => {
     const { body } = await get("/");
     const hasDirectory = body.includes("id=\"room-directory\"");
     const hasEmpty = body.includes("No rooms yet");
-    const hasWelcome = body.includes("Welcome to Dicefiles");
+    const hasWelcome = body.includes("Welcome to Hobbyfiles");
     expect(hasDirectory || hasEmpty || hasWelcome).toBe(true);
   });
 

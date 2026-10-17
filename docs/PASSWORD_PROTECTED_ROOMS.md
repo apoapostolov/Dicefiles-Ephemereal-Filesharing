@@ -6,10 +6,10 @@ Cohort and personal credentials are now implemented in the 1.4.7 release.
 
 ## Summary
 
-Dicefiles should let a room owner place an access gate in front of the entire
+Hobbyfiles should let a room owner place an access gate in front of the entire
 room. A visitor sees a minimal password prompt before receiving the room name,
 chat, files, requests, member information, plugins, or other protected data.
-After a successful entry, Dicefiles grants that browser or account access until
+After a successful entry, Hobbyfiles grants that browser or account access until
 the end of the credential's current period. The password does not need to be
 entered again during that period.
 
@@ -17,7 +17,7 @@ The central community use case is a **rotating shared password**:
 
 - protection is opt-in per room;
 - calendar-month rotation is the recommended default;
-- Dicefiles prepares the next password before the next month so owners have
+- Hobbyfiles prepares the next password before the next month so owners have
   time to distribute it to contributing community members;
 - the next password becomes valid only when its period starts;
 - access granted by the old period expires at the boundary;
@@ -65,7 +65,7 @@ The first release is not:
 - an identity provider or single sign-on system;
 - a way to embed passwords in room URLs.
 
-Dicefiles never sends a raw room password to a third-party integration by
+Hobbyfiles never sends a raw room password to a third-party integration by
 default. Distribution remains an explicit owner action.
 
 ## Terminology
@@ -164,7 +164,7 @@ pretend to prove who actually used a shared browser or account.
 
 ### Manual password
 
-An owner supplies a custom value and decides when to rotate it. Dicefiles
+An owner supplies a custom value and decides when to rotate it. Hobbyfiles
 should assess weak values and warn, but owners may need compatibility with an
 existing community process. Instance operators may enforce a minimum strength.
 
@@ -173,7 +173,7 @@ never stored in exported room configuration.
 
 ### Generated non-rotating password
 
-Dicefiles generates a strong value that remains active until an owner rotates
+Hobbyfiles generates a strong value that remains active until an owner rotates
 or disables it. This is useful for small private rooms but should be presented
 after monthly rotation in the interface.
 
@@ -213,7 +213,7 @@ event cycles.
 ### Preparation window
 
 A monthly password generated only at midnight on the first gives the owner no
-time to distribute it. Dicefiles should therefore:
+time to distribute it. Hobbyfiles should therefore:
 
 1. generate the next period's secret seven days before the boundary by default;
 2. show **Next password ready** to room owners;
@@ -349,7 +349,7 @@ placing them in Redis keys or audit records.
 
 ### Do not use exported room config
 
-Dicefiles currently exports ordinary room configuration to clients.
+Hobbyfiles currently exports ordinary room configuration to clients.
 Consequently, raw passwords, password verifiers, encrypted secrets, salts, and
 recovery material must never be stored in the exported `rco:<roomId>` map.
 
@@ -452,7 +452,7 @@ service rather than create a second verification path.
 `GET /r/:roomId` performs access evaluation before rendering the room template.
 If password access is missing, it renders a dedicated gate page containing:
 
-- Dicefiles branding;
+- Hobbyfiles branding;
 - **This room is protected**;
 - one password field and **Enter room** button;
 - optional browser/account grant scope;
@@ -767,7 +767,7 @@ be a separate explicit integration with its own threat model.
 
 ## Runtime consistency
 
-Dicefiles may run several Node workers. Use Redis coordination:
+Hobbyfiles may run several Node workers. Use Redis coordination:
 
 - one lock per room, credential, and period;
 - idempotent period identifiers;
@@ -977,7 +977,7 @@ complexity.
    two-factor-authenticated owners be required when 2FA is available?
 4. Should custom owner-supplied passwords be revealable or verifier-only by
    default?
-5. What verifier parameters are safe on the smallest supported Dicefiles host
+5. What verifier parameters are safe on the smallest supported Hobbyfiles host
    without creating a denial-of-service risk?
 6. Should the prepared-password lead time be fixed at seven days or configurable
    from one through fourteen?

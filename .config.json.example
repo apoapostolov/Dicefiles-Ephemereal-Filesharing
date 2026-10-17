@@ -1,6 +1,6 @@
 {
   // ============================================================
-  // Dicefiles – Annotated Configuration Example
+  // Hobbyfiles – Annotated Configuration Example
   // ============================================================
   // This file uses JSONC format (JSON with comments).
   //
@@ -15,7 +15,7 @@
   //
   // Config loading order (last value wins):
   //   1. defaults.js  (built-in, do not edit)
-  //   2. ~/.config/dicefiles.json  (user-level override)
+  //   2. ~/.config/hobbyfiles.json  (user-level override; dicefiles.json is still read as a fallback)
   //   3. .config.json  (this file, project-level)
   // ============================================================
 
@@ -24,7 +24,7 @@
   // ----------------------------------------------------------
 
   // Name shown in the browser title bar and room headers.
-  "name": "My Dicefiles",
+  "name": "My Hobbyfiles",
 
   // Tagline shown on the landing page below the site name.
   "motto": "Ephemereal Filesharing for Hobby Communities",
@@ -44,7 +44,7 @@
   "secret": "REPLACE_WITH_64_RANDOM_HEX_CHARS",
 
   // Protect the operator dashboard with a unique capability link.
-  // On first startup Dicefiles adds statusPageToken to the local .config.json.
+  // On first startup Hobbyfiles adds statusPageToken to the local .config.json.
   // Keep that generated token secret. Set this to false only when you
   // intentionally want /status and /api/public/status to be public.
   "statusPagePrivate": true,
@@ -74,9 +74,9 @@
   // Required for publisher plugins unless each room plugin sets baseUrl.
   // "publicBaseUrl": "https://files.example.org",
 
-  // --- Trusted Dicefiles federation (optional; disabled by default) ---
-  // Connects only operator-pinned Dicefiles peers. Production peers require
-  // HTTPS. On first enabled start Dicefiles generates this host's RSA-3072
+  // --- Trusted Hobbyfiles federation (optional; disabled by default) ---
+  // Connects only operator-pinned Hobbyfiles peers. Production peers require
+  // HTTPS. On first enabled start Hobbyfiles generates this host's RSA-3072
   // identity inside .config.json. Never share or commit privateKeyJwk.
   //
   // Exchange each host's /.well-known/dicefiles-federation document and verify
@@ -320,7 +320,7 @@
   // First-party room bots are normally invited from Room Options → Plugins.
   // They can also be configured globally here. Discord uses an incoming
   // webhook; Telegram uses a BotFather token and destination chat id.
-  // Prefer DICEFILES_DISCORD_WEBHOOK_URL / DICEFILES_TELEGRAM_BOT_TOKEN
+  // Prefer HOBBYFILES_DISCORD_WEBHOOK_URL / HOBBYFILES_TELEGRAM_BOT_TOKEN
   // environment variables when one global secret is sufficient.
   // "plugins": [
   //   {

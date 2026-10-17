@@ -1,6 +1,6 @@
-# Contributing to Dicefiles
+# Contributing to Hobbyfiles
 
-Thanks for contributing to Dicefiles.
+Thanks for contributing to Hobbyfiles.
 
 This document defines the expected workflow and quality bar for code, documentation, and UX changes.
 

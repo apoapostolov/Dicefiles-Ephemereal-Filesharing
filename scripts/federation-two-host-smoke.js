@@ -16,7 +16,7 @@ const REPO_ROOT = path.resolve(__dirname, "..");
 const SERVER = path.join(REPO_ROOT, "server.js");
 const API_KEY = "federation-smoke-api-key";
 const SOURCE_BYTES = Buffer.from(
-  "%PDF-1.4\nDicefiles federation smoke fixture\n",
+  "%PDF-1.4\nHobbyfiles federation smoke fixture\n",
 );
 
 function sleep(ms) {
@@ -90,7 +90,7 @@ function peerRecord(peerId, baseUrl, identity) {
 
 function hostConfig(spec, identity, peer) {
   return {
-    name: `Dicefiles Federation Smoke ${spec.peerId}`,
+    name: `Hobbyfiles Federation Smoke ${spec.peerId}`,
     port: spec.port,
     workers: 1,
     secret: `federation-smoke-secret-${spec.peerId}-2026`,
@@ -249,10 +249,10 @@ async function main() {
     );
   }
   const sourceRedis =
-    process.env.DICEFILES_FEDERATION_SOURCE_REDIS ||
+    process.env.HOBBYFILES_FEDERATION_SOURCE_REDIS ||
     "redis://127.0.0.1:6379/14";
   const destinationRedis =
-    process.env.DICEFILES_FEDERATION_DEST_REDIS ||
+    process.env.HOBBYFILES_FEDERATION_DEST_REDIS ||
     "redis://127.0.0.1:6379/15";
   if (sourceRedis === destinationRedis) {
     throw new Error("The two hosts require separate Redis databases");
@@ -268,17 +268,17 @@ async function main() {
   }
 
   const root = fs.mkdtempSync(
-    path.join(os.tmpdir(), "dicefiles-federation-smoke-"),
+    path.join(os.tmpdir(), "hobbyfiles-federation-smoke-"),
   );
   const source = {
     peerId: "smoke-source",
-    port: Number(process.env.DICEFILES_FEDERATION_SOURCE_PORT) || 19141,
+    port: Number(process.env.HOBBYFILES_FEDERATION_SOURCE_PORT) || 19141,
     redisUrl: sourceRedis,
     directory: path.join(root, "source"),
   };
   const destination = {
     peerId: "smoke-destination",
-    port: Number(process.env.DICEFILES_FEDERATION_DEST_PORT) || 19142,
+    port: Number(process.env.HOBBYFILES_FEDERATION_DEST_PORT) || 19142,
     redisUrl: destinationRedis,
     directory: path.join(root, "destination"),
   };

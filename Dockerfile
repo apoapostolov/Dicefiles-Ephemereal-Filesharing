@@ -17,17 +17,17 @@ COPY scripts/check-preview-tools.js ./scripts/check-preview-tools.js
 RUN yarn install --frozen-lockfile --non-interactive --production=true && yarn cache clean
 
 FROM ${NODE_IMAGE} AS runtime
-LABEL org.opencontainers.image.title="Dicefiles" \
+LABEL org.opencontainers.image.title="Hobbyfiles" \
       org.opencontainers.image.description="Ephemeral filesharing and live community rooms" \
-      org.opencontainers.image.source="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing"
-ENV NODE_ENV=production HTTP_PORT=8080 DICEFILES_WORKERS=2 DICEFILES_NATIVE_TOOLS=false
+      org.opencontainers.image.source="https://github.com/apoapostolov/Hobbyfiles"
+ENV NODE_ENV=production HTTP_PORT=8080 HOBBYFILES_WORKERS=2 HOBBYFILES_NATIVE_TOOLS=false
 RUN sed -i 's/Components: main$/Components: main non-free/' /etc/apt/sources.list.d/debian.sources \
     && apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates tini file libimage-exiftool-perl ghostscript poppler-utils \
       ffmpeg p7zip-full unrar firejail \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /opt/dicefiles /data/uploads && chown -R node:node /data
-WORKDIR /opt/dicefiles
+    && mkdir -p /opt/hobbyfiles /data/uploads && chown -R node:node /data
+WORKDIR /opt/hobbyfiles
 COPY --from=dependencies /src/node_modules ./node_modules
 COPY --from=build /src/lib ./lib
 COPY --from=build /src/common ./common
@@ -44,4 +44,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=3 \
   CMD ["node", "-e", "fetch('http://127.0.0.1:'+(process.env.HTTP_PORT||8080)+'/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["node", "/opt/dicefiles/server.js"]
+CMD ["node", "/opt/hobbyfiles/server.js"]

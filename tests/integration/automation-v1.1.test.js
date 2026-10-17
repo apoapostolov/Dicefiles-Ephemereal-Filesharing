@@ -14,21 +14,21 @@
  *   Server listening at http://127.0.0.1:10005
  *
  * Live tests run automatically when env vars are set:
- *   export DICEFILES_TEST_API_KEY=<key-with-files:read+rooms:write+requests:write+admin:read>
- *   export DICEFILES_TEST_UPLOAD_KEY=<key-with-uploads:write+files:write>
- *   export DICEFILES_TEST_ROOMID=<existing-room-id>
+ *   export HOBBYFILES_TEST_API_KEY=<key-with-files:read+rooms:write+requests:write+admin:read>
+ *   export HOBBYFILES_TEST_UPLOAD_KEY=<key-with-uploads:write+files:write>
+ *   export HOBBYFILES_TEST_ROOMID=<existing-room-id>
  *
  * Without those vars the auth-boundary and schema-free tests still run.
  */
 
 const BASE =
-  process.env.DICEFILES_TEST_BASE || "http://127.0.0.1:10005";
-const TEST_KEY = process.env.DICEFILES_TEST_API_KEY || "";
-const UPLOAD_KEY = process.env.DICEFILES_TEST_UPLOAD_KEY || TEST_KEY;
-const TEST_ROOM = process.env.DICEFILES_TEST_ROOMID || "";
+  process.env.HOBBYFILES_TEST_BASE || "http://127.0.0.1:10005";
+const TEST_KEY = process.env.HOBBYFILES_TEST_API_KEY || "";
+const UPLOAD_KEY = process.env.HOBBYFILES_TEST_UPLOAD_KEY || TEST_KEY;
+const TEST_ROOM = process.env.HOBBYFILES_TEST_ROOMID || "";
 const LIVE = Boolean(TEST_KEY && TEST_ROOM);
 const LIVE_MSG =
-  "skipped — set DICEFILES_TEST_API_KEY + DICEFILES_TEST_ROOMID to enable";
+  "skipped — set HOBBYFILES_TEST_API_KEY + HOBBYFILES_TEST_ROOMID to enable";
 
 // ── helpers ────────────────────────────────────────────────────────────────
 

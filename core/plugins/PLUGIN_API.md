@@ -1,4 +1,4 @@
-# Dicefiles plugin developer reference
+# Hobbyfiles plugin developer reference
 
 **Product release: 1.4.7 · In-process context API: 2 · Runtime: Node.js `^22.13.0 || >=24`**
 
@@ -61,7 +61,7 @@ module.exports = {
       throw Object.assign(new Error("Choose Preview or Run."), { retryable: false });
     }
     ctx.signal?.throwIfAborted();
-    const inventory = await ctx.dicefiles.getRoomInventory();
+    const inventory = await ctx.hobbyfiles.getRoomInventory();
     return {
       checked: inventory.files,
       report: {
@@ -202,7 +202,8 @@ source cursor. Provider token refresh can still occur during metadata reads.
 
 ## 4. Room reads
 
-Methods below live on `ctx.dicefiles`. All object arguments can include the
+Methods below live on `ctx.hobbyfiles`. The established `ctx.dicefiles` property
+remains available as a compatibility alias. All object arguments can include the
 scoped `roomId`; omit it for a room invitation. Times are Unix milliseconds
 unless a field explicitly says otherwise. Treat revisions and cursors as opaque.
 
@@ -237,7 +238,7 @@ async function collectWindow(ctx, maxItems = 250) {
   let cursor;
   do {
     ctx.signal?.throwIfAborted();
-    const page = await ctx.dicefiles.listFilesPage({
+    const page = await ctx.hobbyfiles.listFilesPage({
       cursor, limit: Math.min(100, maxItems - files.length),
     });
     files.push(...page.files);
@@ -467,7 +468,7 @@ module.exports = defineWorkflow({
   },
   actions: {
     async apply(ctx, data) {
-      const result = await ctx.dicefiles.curateFile(data);
+      const result = await ctx.hobbyfiles.curateFile(data);
       return {
         detail: "Collection applied. Undo is available.",
         data: { expectedRevision: result.revision },
@@ -475,7 +476,7 @@ module.exports = defineWorkflow({
       };
     },
     async undo(ctx, data) {
-      await ctx.dicefiles.curateFile({ ...data, undo: true });
+      await ctx.hobbyfiles.curateFile({ ...data, undo: true });
       return { detail: "Curation undone." };
     },
   },
@@ -550,7 +551,7 @@ const hooks = {
 
 async function loadQueuedItem(ctx, args) {
   if (args.job?.type !== "event") return null;
-  return ctx.dicefiles.getEventItem({ event: args.job.event, key: args.job.key });
+  return ctx.hobbyfiles.getEventItem({ event: args.job.event, key: args.job.key });
 }
 ```
 
@@ -577,7 +578,7 @@ leases are not atomic with an external provider's write.
 ## 10. Connections and collection providers
 
 Operators configure `pluginConnections` in private configuration or set
-`DICEFILES_PLUGIN_CONNECTIONS` to a JSON array. Restart after changes.
+`HOBBYFILES_PLUGIN_CONNECTIONS` to a JSON array. Restart after changes.
 
 ```json
 {
@@ -675,20 +676,20 @@ password-protected rooms also need `room-access:bypass`.
 ```sh
 # Requires room-plugins:write. Save a manual-only Feed Collector invitation.
 curl --fail-with-body -X PUT \
-  "$DICEFILES_URL/api/v1/rooms/$ROOM_ID/plugins/feed-collector" \
-  -H "Authorization: Bearer $DICEFILES_API_KEY" -H 'Content-Type: application/json' \
+  "$HOBBYFILES_URL/api/v1/rooms/$ROOM_ID/plugins/feed-collector" \
+  -H "Authorization: Bearer $HOBBYFILES_API_KEY" -H 'Content-Type: application/json' \
   --data '{"enabled":true,"config":{"feedUrl":"https://example.org/feed.xml","allowedOrigins":["https://example.org"],"pollIntervalMinutes":0}}'
 
 # Requires room-plugins:run. Queue a metadata preview.
 curl --fail-with-body -X POST \
-  "$DICEFILES_URL/api/v1/rooms/$ROOM_ID/plugins/feed-collector/jobs" \
-  -H "Authorization: Bearer $DICEFILES_API_KEY" -H 'Content-Type: application/json' \
+  "$HOBBYFILES_URL/api/v1/rooms/$ROOM_ID/plugins/feed-collector/jobs" \
+  -H "Authorization: Bearer $HOBBYFILES_API_KEY" -H 'Content-Type: application/json' \
   --data '{"mode":"preview","idempotencyKey":"feed-setup-1"}'
 
 # Requires room-plugins:read. Inspect jobs and the latest report.
 curl --fail-with-body \
-  "$DICEFILES_URL/api/v1/rooms/$ROOM_ID/plugins/feed-collector/operations?limit=20" \
-  -H "Authorization: Bearer $DICEFILES_API_KEY"
+  "$HOBBYFILES_URL/api/v1/rooms/$ROOM_ID/plugins/feed-collector/operations?limit=20" \
+  -H "Authorization: Bearer $HOBBYFILES_API_KEY"
 ```
 
 For a review, POST `{reportId,itemId,action}` to

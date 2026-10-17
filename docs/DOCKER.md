@@ -10,13 +10,13 @@ must use Linux containers; ordinary Linux Docker Engine works too.
 From the repository root:
 
 ```bash
-docker build --pull -t dicefiles:local .
+docker build --pull -t hobbyfiles:local .
 cp .env.docker.example .env.docker
 chmod 600 .env.docker
 openssl rand -hex 32
 ```
 
-Put the generated value in `DICEFILES_SECRET` in `.env.docker`. Keep the file
+Put the generated value in `HOBBYFILES_SECRET` in `.env.docker`. Keep the file
 private. Optional provider keys go in the same file. Do not pass credentials as
 build arguments; `.dockerignore` allows only public application build inputs.
 The build installs dev dependencies in a separate build stage, compiles the
@@ -29,32 +29,38 @@ curl -fsS http://127.0.0.1:8080/healthz
 ```
 
 The site opens at `http://127.0.0.1:8080`. In Docker Desktop, it appears in the
-Containers view under **dicefiles**; expand the project and open the app's port.
+Containers view under **Hobbyfiles**. Compose keeps the historical project key
+`dicefiles` so existing installations continue using the same persistent
+volumes; expand that project and open the app's port.
 To build and start in one step, use `up -d --build`. Stop with `down`; the named
 volumes remain. Avoid `down -v` unless you intend to erase this deployment.
 
 ## Use a GHCR image
 
 The package path is:
-`ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing:TAG`.
+`ghcr.io/apoapostolov/hobbyfiles:TAG`.
 Use a published tag or immutable digest; a tag is not available until publication
-succeeds. Set `DICEFILES_IMAGE` in `.env.docker` to that reference, then run:
+succeeds. Set `HOBBYFILES_IMAGE` in `.env.docker` to that reference, then run:
 
 ```bash
 docker compose --env-file .env.docker pull
 docker compose --env-file .env.docker up -d --no-build
 ```
 
-The current released image is `:1.4.7`, built from release commit `90de9bb`
-for Linux AMD64 and ARM64. Pin the multi-architecture manifest for reproducible use:
+The final Dicefiles release image is available at
+`ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing:1.4.7`, built from release
+commit `90de9bb` for Linux AMD64 and ARM64. GitHub redirects the source repository
+to Hobbyfiles, but GHCR keeps the published package path stable. New publications
+from the renamed repository use `ghcr.io/apoapostolov/hobbyfiles`.
+Pin the existing multi-architecture manifest for reproducible use:
 
 ```text
 ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing@sha256:ea96e0dc808a128ea6799cefaa1857d1929b4fb957ce68dd1f7493c175b3dd22
 ```
 
-The [1.4.7 publication run](https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/actions/runs/38949345610)
+The [1.4.7 publication run](https://github.com/apoapostolov/Hobbyfiles/actions/runs/38949345610)
 includes SBOM and provenance. Its matching source and portable plugin handbooks
-are available on the [release page](https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/releases/tag/v1.4.7).
+are available on the [release page](https://github.com/apoapostolov/Hobbyfiles/releases/tag/v1.4.7).
 The moving `:preview` channel is for development builds; its earlier October 16
 image predates the released plugin/TV-pack work. Do not select it as an upgrade
 from 1.4.7 merely because it is called preview.
@@ -86,8 +92,8 @@ Local publication requires a classic GitHub token with `write:packages`:
 
 ```bash
 printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u YOUR_USER --password-stdin
-docker tag dicefiles:local ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing:preview
-docker push ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing:preview
+docker tag hobbyfiles:local ghcr.io/apoapostolov/hobbyfiles:preview
+docker push ghcr.io/apoapostolov/hobbyfiles:preview
 ```
 
 Do not use an existing released version tag for an unreleased working tree.
@@ -99,7 +105,7 @@ visibility is controlled separately in GitHub Packages. See GitHub's
 
 - `dicefiles-data:/data` holds uploads, generated private `.config.json`, audit
   logs and any env file explicitly mounted there. Keep the generated status token
-  and federation keys private. Do not mount over `/opt/dicefiles`.
+  and federation keys private. Do not mount over `/opt/hobbyfiles`.
 - `redis-data:/data` holds Redis AOF and snapshots. Redis has no published host
   port. The named volume is separate from the app's volume despite the same
   in-container path.
@@ -108,7 +114,7 @@ visibility is controlled separately in GitHub Packages. See GitHub's
   `docker compose --env-file .env.docker cp .config.json app:/data/.config.json`,
   followed by `restart app`. Stop the app first when replacing existing config.
   Preserve its generated private fields. A directory mount works too; a
-  single-file mount is unsuitable for Dicefiles' atomic config replacement.
+  single-file mount is unsuitable for Hobbyfiles' atomic config replacement.
 - New named volumes inherit UID 1000 ownership. For a bind mount, create it with
   that ownership (`chown 1000:1000 ./dicefiles-data`) before starting. Do not
   recursively change ownership of unrelated host directories.
@@ -117,14 +123,14 @@ visibility is controlled separately in GitHub Packages. See GitHub's
   back by restoring the previous image reference; do not roll back Redis data
   separately from uploads.
 - To expose the site beyond this computer, put a TLS reverse proxy in front of
-  the loopback port and set `DICEFILES_PUBLIC_BASE_URL`. The example does not
+  the loopback port and set `HOBBYFILES_PUBLIC_BASE_URL`. The example does not
   open the host's external interfaces.
 
 ## Preview sandbox limitations
 
 The default Compose policy is non-root, read-only code, no additional Linux
 capabilities and `no-new-privileges`. The image sets
-`DICEFILES_NATIVE_TOOLS=false`: external metadata/preview/extraction commands
+`HOBBYFILES_NATIVE_TOOLS=false`: external metadata/preview/extraction commands
 are disabled. Firejail can treat a container as an existing sandbox and skip
 nested isolation, so a successful exit alone is not sufficient proof of safety.
 The same automatic detection can occur on WSL. A fixture rendering successfully
@@ -136,31 +142,31 @@ available. New server-generated PDF/book/video covers and native RAR/7Z extracti
 are unavailable by default. ZIP features that use bounded JavaScript parsing
 remain available. Native tools are installed so operators can validate a dedicated
 sandbox policy later. The image includes Debian's non-free `unrar` package;
-its upstream license applies separately from Dicefiles' MIT source license.
+its upstream license applies separately from Hobbyfiles' MIT source license.
 
 Public tracker/DHT/peer metadata discovery uses Node networking and does not
-require native tools. Set `DICEFILES_TORRENT_DISCOVERY=false` in `.env.docker`
+require native tools. Set `HOBBYFILES_TORRENT_DISCOVERY=false` in `.env.docker`
 to disable that outbound traffic; see [torrent metadata](./TORRENTS.md).
 
 The example environment disables torrent payload playback because Compose uses
 a 512 MiB memory-backed `/tmp`. For payload streaming, provide a disk-backed
 temporary cache with space for up to two 4 GiB sessions before setting
-`DICEFILES_TORRENT_PLAYBACK=true`. Keep uploaded-video playback enabled; it does
+`HOBBYFILES_TORRENT_PLAYBACK=true`. Keep uploaded-video playback enabled; it does
 not use this torrent cache. TMDB/TVDB/Trakt credentials may be placed in the
 private `.env.docker`; see [movies and subtitles](./MOVIES.md).
 
 For untrusted/public uploads needing the full native preview stack, use the
 host deployment with functioning Firejail, or validate a dedicated container
-sandbox policy before enabling `DICEFILES_NATIVE_TOOLS=true`. Do not solve
+sandbox policy before enabling `HOBBYFILES_NATIVE_TOOLS=true`. Do not solve
 preview errors with privileged mode or a mounted Docker socket.
-`DICEFILES_JAIL=false` explicitly opts out of the per-file sandbox and is for
+`HOBBYFILES_JAIL=false` explicitly opts out of the per-file sandbox and is for
 trusted local data only. Time/output limits do not replace process isolation.
 
 ## Standalone MCP in the image
 
 MCP remains a separate process. Run the same image with the command
-`node /opt/dicefiles/scripts/mcp-server.js` and supply the MCP settings from
+`node /opt/hobbyfiles/scripts/mcp-server.js` and supply the MCP settings from
 [MCP.md](../MCP.md). For stdio clients use `docker run --rm -i --no-healthcheck …`
 without `-t`; attach it to the app's Compose network and use
-`DICEFILES_BASE_URL=http://app:8080`. An HTTP MCP service needs its own port,
+`HOBBYFILES_BASE_URL=http://app:8080`. An HTTP MCP service needs its own port,
 health policy, incoming bearer token and explicit host/origin allowlists.

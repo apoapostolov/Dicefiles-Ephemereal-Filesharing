@@ -1,15 +1,15 @@
 [Unit]
-Description=Dicefiles Ephemeral Filesharing
+Description=Hobbyfiles Ephemeral Filesharing
 After=network-online.target
 Wants=network-online.target
 # If Redis is provided by a companion unit, uncomment:
-# After=dicefiles-redis.service
-# Requires=dicefiles-redis.service
+# After=hobbyfiles-redis.service
+# Requires=hobbyfiles-redis.service
 
 [Service]
 Type=simple
 # Adjust paths for your install
-WorkingDirectory=/mnt/c/git-public/Dicefiles-Ephemereal-Filesharing
+WorkingDirectory=/path/to/Hobbyfiles
 Environment=NODE_ENV=production
 Environment=PATH=/usr/local/bin:/usr/bin:/bin
 # Port is taken from .config.json (set "port": 10005)
@@ -18,8 +18,10 @@ Restart=always
 RestartSec=5
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=dicefiles
+SyslogIdentifier=hobbyfiles
 
 [Install]
 WantedBy=multi-user.target
-# For user systemd: WantedBy=default.target and place under ~/.config/systemd/user/
+Alias=dicefiles.service
+# For user systemd: change WantedBy to default.target and install under ~/.config/systemd/user/.
+# Existing dicefiles.service installs can keep their current unit until they are migrated.

@@ -1,6 +1,6 @@
 # Bots and plugins: audit and expansion plan
 
-Audit date: 2026-10-16. Implementation shipped in Dicefiles 1.4.7.
+Audit date: 2026-10-16. Implementation shipped in Hobbyfiles 1.4.7.
 For current usage, read the [power-user guide](./CORE_PLUGINS.md),
 [API reference](../core/plugins/PLUGIN_API.md) and
 [cookbook](../core/plugins/PLUGIN_COOKBOOK.md). The audit below records the

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- The project is now named **Hobbyfiles**. Existing `DICEFILES_*` environment
+  variables, plugin API properties, API headers, federation identifiers, and
+  browser preference keys remain accepted so existing installations keep
+  working during the rename.
+
 ## [1.4.7] - 2026-10-16 [Collections, Communities and TV Packs]
 
 Rooms gain approved file collectors, reviewed community workflows and movie/TV
@@ -107,7 +112,7 @@ instances, with a few client and host settings to check before upgrading.
 
 ### Added
 
-- An installable [operations skill](skills/dicefiles-ops/SKILL.md) guides AI
+- An installable [operations skill](skills/hobbyfiles-ops/SKILL.md) guides AI
   agents through setup, upgrades, backups, MCP scopes, and room bots.
 
 ### Changed

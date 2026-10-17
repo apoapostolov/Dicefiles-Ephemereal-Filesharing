@@ -1,24 +1,24 @@
-# Dicefiles Skill
+# Hobbyfiles Skill
 
-**Trigger**: Use this skill whenever the user asks you to interact with a Dicefiles
+**Trigger**: Use this skill whenever the user asks you to interact with a Hobbyfiles
 room — listing files, uploading URLs, fulfilling requests, enriching metadata,
 checking server status, managing storage volumes, protected-room access,
 local/federated links, guest invites, room bots, or running any multi-step
-file-management workflow against a Dicefiles instance.
+file-management workflow against a Hobbyfiles instance.
 
-**Requires**: The `dicefiles` MCP server must be registered in mcporter. Verify with:
-`mcporter list` — `dicefiles` must appear and show status `connected`.
+**Requires**: The `hobbyfiles` MCP server must be registered in mcporter. Verify with:
+`mcporter list` — `hobbyfiles` must appear and show status `connected`.
 
 ---
 
-## What Dicefiles Is
+## What Hobbyfiles Is
 
-Dicefiles is an ephemeral file-sharing platform for hobby communities. Files are
+Hobbyfiles is an ephemeral file-sharing platform for hobby communities. Files are
 organised into rooms. Each room has uploads (files), requests (unfulfilled asks from
 participants), and a chat channel. Rooms are identified by a short alphanumeric
 `roomid`.
 
-Dicefiles 1.4.7 exposes 57 MCP tools. All network calls go through the tools; never
+Hobbyfiles 1.4.7 exposes 57 MCP tools. All network calls go through the tools; never
 construct raw HTTP requests.
 
 ---
@@ -279,12 +279,12 @@ The MCP server is started by mcporter using:
 ```json
 {
   "mcpServers": {
-    "dicefiles": {
+    "hobbyfiles": {
       "command": "node",
-      "args": ["/path/to/Dicefiles/scripts/mcp-server.js"],
+      "args": ["/path/to/Hobbyfiles/scripts/mcp-server.js"],
       "env": {
-        "DICEFILES_BASE_URL": "http://localhost:10005",
-        "DICEFILES_API_KEY": "your-api-key-here"
+        "HOBBYFILES_BASE_URL": "http://localhost:10005",
+        "HOBBYFILES_API_KEY": "your-api-key-here"
       }
     }
   }

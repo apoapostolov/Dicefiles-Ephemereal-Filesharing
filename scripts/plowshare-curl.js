@@ -4,7 +4,7 @@
 // Operator-installed modules use normal curl semantics through a pinned proxy.
 const { spawn } = require("child_process");
 
-const proxy = process.env.DICEFILES_EGRESS_PROXY;
+const proxy = process.env.HOBBYFILES_EGRESS_PROXY;
 if (!proxy) {
   process.exit(2);
 }

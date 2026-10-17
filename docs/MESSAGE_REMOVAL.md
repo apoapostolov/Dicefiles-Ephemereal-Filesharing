@@ -2,7 +2,7 @@
 
 ## Goals
 
-Dicefiles moderators want to remove spam messages retroactively.
+Hobbyfiles moderators want to remove spam messages retroactively.
 
 They get a message removal tool that allows them to:
 
@@ -16,7 +16,7 @@ They get a message removal tool that allows them to:
 Non-Goals
 ---
 
-Make this idiot proof. Dicefiles is "volatile" in that chat history
+Make this idiot proof. Hobbyfiles is "volatile" in that chat history
 is stored in browsers but not on the server. This shouldn't be violated. If some messages are missed in some browsers, that's a valid trade-off.
 
 Prerequisites

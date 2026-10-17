@@ -1,4 +1,4 @@
-# Dicefiles Achievement System
+# Hobbyfiles Achievement System
 
 ## Goals
 - Turn user profile pages into a "trophy room".
@@ -43,7 +43,7 @@ Rationale:
   - unlocked count / total count
 
 ## Current Icon Mapping (built-in symbol font)
-Because Dicefiles already ships a custom icon font (`i-*` classes), this implementation maps achievements to existing icon classes.
+Because Hobbyfiles already ships a custom icon font (`i-*` classes), this implementation maps achievements to existing icon classes.
 
 Examples:
 - file progression: `i-file`, `i-upload`, `i-document`, `i-images`, `i-video`, `i-audio`, `i-archive`

@@ -6,7 +6,7 @@ const path = require("path");
 
 test("real stdio server initializes and lists tools for existing clients", async () => {
   const child = spawn(process.execPath, [path.join(__dirname, "../../scripts/mcp-server.js")], {
-    env: { ...process.env, MCP_TRANSPORT: "stdio", DICEFILES_API_KEY: "test-unused-key" },
+    env: { ...process.env, MCP_TRANSPORT: "stdio", HOBBYFILES_API_KEY: "test-unused-key" },
     stdio: ["pipe", "pipe", "ignore"],
   });
   const lines = readline.createInterface({ input: child.stdout });
@@ -26,7 +26,7 @@ test("real stdio server initializes and lists tools for existing clients", async
     const init = await call(1, "initialize", {
       protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "test", version: "1" },
     });
-    expect(init.result.serverInfo.name).toBe("dicefiles");
+    expect(init.result.serverInfo.name).toBe("hobbyfiles");
     child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })}\n`);
     const listing = await call(2, "tools/list", {});
     expect(listing.result.tools).toHaveLength(57);

@@ -1,6 +1,6 @@
-# Dicefiles UI Style Guide
+# Hobbyfiles UI Style Guide
 
-This document outlines the standard UI components and styling rules for Dicefiles. When adding new features, always refer to this guide to ensure consistency across the application.
+This document outlines the standard UI components and styling rules for Hobbyfiles. When adding new features, always refer to this guide to ensure consistency across the application.
 
 ## Color and compact metadata conventions
 

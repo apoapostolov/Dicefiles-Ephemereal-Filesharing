@@ -1,6 +1,6 @@
 # Remote host imports: implemented adapters and expansion
 
-Dicefiles 1.4.7 provides approved adapters beyond Mega.nz. This document combines
+Hobbyfiles 1.4.7 provides approved adapters beyond Mega.nz. This document combines
 the implemented remote-host contract with historical research and explicit future
 provider proposals. For current usage, start with the
 [power-user guide](../../docs/CORE_PLUGINS.md) and
@@ -25,8 +25,8 @@ Plowshare security boundary, migration rules, and acceptance tests are defined
 in [the multi-host remote imports guide](../../docs/MULTI_HOST_REMOTE_IMPORTS.md).
 
 This is intentionally separate from shipped
-[Dicefiles trusted-host federation](../../docs/FEDERATION.md). Federation
-authenticates another operator-pinned Dicefiles server and streams an approved
+[Hobbyfiles trusted-host federation](../../docs/FEDERATION.md). Federation
+authenticates another operator-pinned Hobbyfiles server and streams an approved
 room without copying it. Remote host import treats a third-party file locker as
 an untrusted download source and materializes its bytes into local storage.
 
@@ -39,10 +39,10 @@ shell/debrid options):
 ## 1. Goal
 
 Operators paste a supported **folder or file URL** into the Remote Host Import
-room bot. Dicefiles resolves it through an allowlisted provider and streams the
+room bot. Hobbyfiles resolves it through an allowlisted provider and streams the
 bytes through the same bounded upload path used by Mega.nz.
 
-Constraints that match Dicefiles:
+Constraints that match Hobbyfiles:
 
 - Ephemeral rooms + TTL — bulk imports must be rate-limited and size-capped.
 - Self-hosted trust model — plugins run in-process; only **opt-in** operators enable hosters.
@@ -138,7 +138,7 @@ Mega.nz bot.
 
 - Plugin id: `shell-import` or `plowshare-import`.
 - Config: `commandTemplate`, allowlist of binaries (`plowdown`, `megadl`, `curl`), temp dir, timeout.
-- Operator installs plowshare/modules on the host OS; Dicefiles never ships hoster scrapers in-repo.
+- Operator installs plowshare/modules on the host OS; Hobbyfiles never ships hoster scrapers in-repo.
 - Pros: huge host coverage without Node bitrot. Cons: ops complexity, security (command injection — template must be locked).
 
 ### C. External bot (webhook-only)

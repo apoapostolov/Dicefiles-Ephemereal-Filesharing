@@ -1,4 +1,4 @@
-name: Validate Dicefiles
+name: Validate Hobbyfiles
 on:
   push:
   pull_request:

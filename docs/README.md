@@ -12,13 +12,13 @@ operator instructions live under `../core/plugins/`.
 - **Use room bots:** [power-user guide](./CORE_PLUGINS.md), then provider setup as needed.
 - **Build a plugin:** [API reference](../core/plugins/PLUGIN_API.md), [cookbook](../core/plugins/PLUGIN_COOKBOOK.md), then [event/installation guide](../core/plugins/DEVELOPING_PLUGINS.md).
 - **Connect an agent:** [MCP setup and all 57 tools](../MCP.md), then [automation workflows](./ai_automation.md).
-- **Read offline:** [power-user HTML](./handbooks/dicefiles-core-plugins-1.4.7.html) or [developer HTML](./handbooks/dicefiles-plugin-developer-1.4.7.html). Download editions from [release 1.4.7](https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/releases/tag/v1.4.7).
+- **Read offline:** [power-user HTML](./handbooks/hobbyfiles-core-plugins-1.4.7.html) or [developer HTML](./handbooks/hobbyfiles-plugin-developer-1.4.7.html). Download editions from [release 1.4.7](https://github.com/apoapostolov/Hobbyfiles/releases/tag/v1.4.7).
 
 ## Reference index
 
 | Document | Purpose |
 | -------- | ------- |
-| [INTRODUCTION.md](./INTRODUCTION.md) | What Dicefiles is, use cases, getting started |
+| [INTRODUCTION.md](./INTRODUCTION.md) | What Hobbyfiles is, use cases, getting started |
 | [CORE_PLUGINS.md](./CORE_PLUGINS.md) | All 27 core bots: settings, practical uses, review actions and troubleshooting |
 | [../core/plugins/PLUGIN_API.md](../core/plugins/PLUGIN_API.md) | In-process context API 2, independent of REST and MCP versions |
 | [../core/plugins/PLUGIN_COOKBOOK.md](../core/plugins/PLUGIN_COOKBOOK.md) | Examples from every bundled plugin and complete extension modules |
@@ -42,7 +42,7 @@ operator instructions live under `../core/plugins/`.
 | [ai_automation.md](./ai_automation.md) | Current REST/MCP workflows, durable bot jobs, review and sessions |
 | [REMOTE_HOST_LIBRARY_RESEARCH.md](./REMOTE_HOST_LIBRARY_RESEARCH.md) | Research: embeddable multi-host download libs (not a standalone product) |
 | [../dev/README.md](../dev/README.md) | AI/human development workflow, generated files, review, and release checks |
-| [../skills/dicefiles-ops/SKILL.md](../skills/dicefiles-ops/SKILL.md) | Operator skill for AI agents: install, config, service, upgrade, backup, MCP wiring, room bots, diagnostics |
+| [../skills/hobbyfiles-ops/SKILL.md](../skills/hobbyfiles-ops/SKILL.md) | Operator skill for AI agents: install, config, service, upgrade, backup, MCP wiring, room bots, diagnostics |
 | [../SECURITY.md](../SECURITY.md) | Private vulnerability reporting and repository security policy |
 
 ## Archived (historical only)

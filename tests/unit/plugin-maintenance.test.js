@@ -16,10 +16,10 @@ jest.mock("../../lib/net-guard", () => ({ guardedStream: jest.fn() }));
 
 let directory;
 beforeAll(async () => {
-  directory = await fs.mkdtemp(path.join(os.tmpdir(), "dicefiles-maintenance-test-"));
+  directory = await fs.mkdtemp(path.join(os.tmpdir(), "hobbyfiles-maintenance-test-"));
 });
 afterAll(async () => {
-  if (!path.resolve(directory).startsWith(`${path.resolve(os.tmpdir())}${path.sep}dicefiles-maintenance-test-`)) {
+  if (!path.resolve(directory).startsWith(`${path.resolve(os.tmpdir())}${path.sep}hobbyfiles-maintenance-test-`)) {
     throw new Error("Invalid test cleanup target");
   }
   await fs.rm(directory, { recursive: true, force: true });

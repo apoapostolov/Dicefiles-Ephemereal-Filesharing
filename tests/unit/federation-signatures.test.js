@@ -39,7 +39,7 @@ describe("RFC 9421 federation signatures", () => {
     generateIdentity(),
   );
 
-  test("signs with a pinned key id, nonce, and Dicefiles tag", async () => {
+  test("signs with a pinned key id, nonce, and Hobbyfiles tag", async () => {
     const request = new Request(
       "http://beta.localhost/api/federation/v1/hello",
       { headers: { host: "beta.localhost" } },

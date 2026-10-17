@@ -38,7 +38,7 @@ test("bridge probes versions/modules and uses fixed argv with guarded streaming"
   expect(run.mock.calls.at(-1)[1]).toContain("--captchamethod=none");
   expect(run.mock.calls.at(-1)[1]).toContain("--no-plowsharerc");
   expect(download.mock.calls[0][2].httpsOnly).toBe(true);
-  expect(run.mock.calls.every(([, , options]) => options.env.HOME.includes("dicefiles-plow-"))).toBe(true);
+  expect(run.mock.calls.every(([, , options]) => options.env.HOME.includes("hobbyfiles-plow-"))).toBe(true);
 });
 
 test("egress proxy refuses private targets and anonymous tunnels", async () => {

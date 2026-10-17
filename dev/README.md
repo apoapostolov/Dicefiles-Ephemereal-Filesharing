@@ -8,7 +8,7 @@ authoritative when guidance conflicts.
 | --- | --- |
 | [DEV_SERVER_WORKFLOW.md](./DEV_SERVER_WORKFLOW.md) | Stable WSL service, rebuild, restart, and health checks |
 | [GENERATED_FILES.md](./GENERATED_FILES.md) | Source-to-output mappings and regeneration rules |
-| [CODE_REVIEW_CHECKLIST.md](./CODE_REVIEW_CHECKLIST.md) | Dicefiles-specific correctness, security, UI, and operations review |
+| [CODE_REVIEW_CHECKLIST.md](./CODE_REVIEW_CHECKLIST.md) | Hobbyfiles-specific correctness, security, UI, and operations review |
 | [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md) | User-testing handoff and public release checks |
 | [DECISION_RECORD_TEMPLATE.md](./DECISION_RECORD_TEMPLATE.md) | Template for durable architectural decisions |
 

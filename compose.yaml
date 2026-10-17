@@ -1,7 +1,8 @@
+# Keep the historical Compose project key so existing named volumes remain attached.
 name: dicefiles
 services:
   app:
-    image: ${DICEFILES_IMAGE:-dicefiles:local}
+    image: ${HOBBYFILES_IMAGE:-${DICEFILES_IMAGE:-hobbyfiles:local}}
     build:
       context: .
     restart: unless-stopped
@@ -11,9 +12,9 @@ services:
       NODE_ENV: production
       HTTP_PORT: "8080"
       REDIS_URL: redis://redis:6379/0
-      DICEFILES_SECRET: ${DICEFILES_SECRET:?Set a unique random DICEFILES_SECRET in .env.docker}
+      HOBBYFILES_SECRET: ${HOBBYFILES_SECRET:-${DICEFILES_SECRET:?Set a unique random HOBBYFILES_SECRET in .env.docker}}
     ports:
-      - "127.0.0.1:${DICEFILES_HOST_PORT:-8080}:8080"
+      - "127.0.0.1:${HOBBYFILES_HOST_PORT:-${DICEFILES_HOST_PORT:-8080}}:8080"
     volumes:
       - dicefiles-data:/data
     tmpfs:

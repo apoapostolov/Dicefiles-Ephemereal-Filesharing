@@ -1,6 +1,6 @@
 # Development Server Workflow
 
-Dicefiles uses one stable production-mode test server. Source watchers caused
+Hobbyfiles uses one stable production-mode test server. Source watchers caused
 the app to disappear during edits and made interactive testing unreliable, so
 hot reload is intentionally not part of this checkout's workflow.
 
@@ -9,8 +9,8 @@ hot reload is intentionally not part of this checkout's workflow.
 | Setting | Value |
 | --- | --- |
 | WSL distribution | `Ubuntu` |
-| Repository in WSL | `/mnt/c/git-public/Dicefiles-Ephemereal-Filesharing` |
-| Service | user-level `dicefiles.service` |
+| Repository in WSL | Your Hobbyfiles checkout path |
+| Service | Installed user unit (`hobbyfiles.service`; older installs may retain `dicefiles.service`) |
 | Test URL | `http://localhost:10005` |
 | Health URL | `http://localhost:10005/healthz` |
 
@@ -27,13 +27,13 @@ dependencies, runtime configuration, or generated browser assets:
 2. Build all browser assets from source:
 
    ```powershell
-   wsl -d Ubuntu -e bash -lc "cd /mnt/c/git-public/Dicefiles-Ephemereal-Filesharing && yarn prestart"
+   wsl -d Ubuntu -e bash -lc "cd /path/to/Hobbyfiles && yarn prestart"
    ```
 
 3. Restart the single service:
 
    ```powershell
-   wsl -d Ubuntu -e bash -lc "systemctl --user restart dicefiles.service"
+   wsl -d Ubuntu -e bash -lc "systemctl --user restart hobbyfiles.service"
    ```
 
 4. Wait for startup and Redis room restoration, then verify from WSL:

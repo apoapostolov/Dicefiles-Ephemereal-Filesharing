@@ -5,11 +5,17 @@ const { Readable } = require("stream");
 const {
   createUploadFileAdapter,
   createMegaDownloader,
+  createHobbyfilesPluginApi,
+  createDicefilesPluginApi,
   buildPluginRuntimeCtx,
 } = require("../../lib/plugins/runtime-adapters");
 const { PluginRegistry } = require("../../lib/plugins/registry");
 
 describe("plugin runtime adapters (shipped)", () => {
+  test("keeps the legacy plugin API factory name as an alias", () => {
+    expect(createDicefilesPluginApi).toBe(createHobbyfilesPluginApi);
+  });
+
   test("createUploadFileAdapter uses getRoom + ingestFromBuffer as bot", async () => {
     const ingested = [];
     const uploadFile = createUploadFileAdapter({
@@ -170,6 +176,7 @@ describe("plugin runtime adapters (shipped)", () => {
       },
       scheduleRun() {},
     });
+    expect(runtime.hobbyfiles).toBe(runtime.dicefiles);
 
     await registry.startAll(runtime);
     // scheduleRun → run must NOT throw when adapters are on ctx

@@ -20,7 +20,7 @@ test("Istanbul reads YAML configuration using the maintained js-yaml API", async
 test("container smoke and multi-architecture publication keep separate caches", async () => {
   const workflow = (await fs.readFile(path.join(__dirname, "../../.github/workflows/container.yml"), "utf8")).replace(/\r\n/g, "\n");
   const scopes = [...workflow.matchAll(/cache-to: type=gha,scope=([\w-]+),mode=max/g)].map(match => match[1]);
-  expect(scopes).toEqual(["dicefiles-smoke", "dicefiles-multiarch"]);
+  expect(scopes).toEqual(["hobbyfiles-smoke", "hobbyfiles-multiarch"]);
   for (const scope of scopes) {
     expect(workflow).toContain(`type=gha,scope=${scope}\n`);
   }

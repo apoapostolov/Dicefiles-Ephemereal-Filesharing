@@ -17,7 +17,7 @@ class HashPlugin {
         name: "HashPlugin",
         stage: webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT,
       }, () => {
-        const d = crypto.createHmac("sha224", "dicefiles");
+        const d = crypto.createHmac("sha224", "hobbyfiles");
         const assets = compilation.getAssets().sort((a, b) => a.name.localeCompare(b.name));
         for (const asset of assets) {
           d.update(asset.name);

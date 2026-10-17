@@ -1,6 +1,6 @@
 # Plugin cookbook: 27 examples from the core
 
-**Dicefiles 1.4.7 · Plugin context API 2**
+**Hobbyfiles 1.4.7 · Plugin context API 2**
 
 Use these recipes with the [developer reference](./PLUGIN_API.md). Each example
 names a real bundled module and its extension pattern. Configuration objects
@@ -225,7 +225,7 @@ index without calling `open` or downloading the selected file.
 }
 ```
 
-The operator can provide `DICEFILES_DISCORD_WEBHOOK_URL`. Inbound mode requires
+The operator can provide `HOBBYFILES_DISCORD_WEBHOOK_URL`. Inbound mode requires
 an application public key, allowed users/roles and explicit commands.
 **Pattern:** verify the raw signed request, deduplicate delivery, queue work by
 event/key and reconstruct current room data. Never treat a public inbound URL
@@ -243,7 +243,7 @@ as authorization by itself.
 }
 ```
 
-The operator can provide `DICEFILES_TELEGRAM_BOT_TOKEN`.
+The operator can provide `HOBBYFILES_TELEGRAM_BOT_TOKEN`.
 **Pattern:** check webhook secret, destination and user allowlists before command
 dispatch; ignore unrelated conversation. Preserve provider Retry-After and send
 safe reply parameters instead of assembling deprecated fields.

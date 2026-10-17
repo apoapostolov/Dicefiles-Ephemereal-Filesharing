@@ -1,23 +1,23 @@
-# Developing Dicefiles plugins
+# Developing Hobbyfiles plugins
 
-This guide explains how to build **first-party plugins** that hook Dicefiles’
+This guide explains how to build **first-party plugins** that hook Hobbyfiles’
 event bus and automation surface. Shipped examples include **Mega.nz Autoshare**
 (`mega-folder`) plus the Discord and Telegram release publishers. See
 **[RELEASE_PUBLISHERS.md](./RELEASE_PUBLISHERS.md)** for operator setup.
 
-Audience: operators and developers who already run a self-hosted Dicefiles instance.
+Audience: operators and developers who already run a self-hosted Hobbyfiles instance.
 
 ---
 
 ## Current runtime contract
 
-Dicefiles 1.4.7 ships 27 core plugins and the additive in-process context API 2.
+Hobbyfiles 1.4.7 ships 27 core plugins and the additive in-process context API 2.
 Start with the [API reference](./PLUGIN_API.md) for exact signatures and limits,
 or the [27-plugin cookbook](./PLUGIN_COOKBOOK.md) for configuration and code.
 The [power-user guide](../../docs/CORE_PLUGINS.md) covers owner workflows.
 
 Event-driven plugins are a supported first-party integration path:
-plugins can subscribe to room lifecycle events, call bounded Dicefiles adapters,
+plugins can subscribe to room lifecycle events, call bounded Hobbyfiles adapters,
 perform timeout-limited JSON requests, and acquire Redis-backed one-time event
 leases before publishing to an external service. Scheduled runs are leased
 across workers, bounded last-run status is retained, and room bots have scoped
@@ -43,7 +43,7 @@ implemented fixes and ordered expansion. Existing v1 modules remain supported.
 | **Plugin `run()`** | Imperative entry point (e.g. “sync Mega.nz folder now”) |
 | **Automation API** | REST `/api/v1/*` with scoped API keys (unchanged; plugins complement it) |
 
-Plugins run **inside the Dicefiles Node worker**, with the same trust as core code. Do not load untrusted third-party code without your own sandboxing.
+Plugins run **inside the Hobbyfiles Node worker**, with the same trust as core code. Do not load untrusted third-party code without your own sandboxing.
 
 ---
 
@@ -156,19 +156,19 @@ Provided by the registry:
 | `uploadFile` | Bot-attributed buffer or stream ingest. Streams are written through bounded temporary storage when `maxBytes` is supplied. |
 | `megaDownloader` | Compatibility adapter for the dedicated Mega.nz bot. |
 | `remoteDownloaders` | Allowlisted provider registry used by multi-host importers (`resolve` / `listFolder`). |
-| `publicBaseUrl` | Operator-configured public Dicefiles origin for external links |
+| `publicBaseUrl` | Operator-configured public Hobbyfiles origin for external links |
 | `http.requestJson(url, options)` | Timeout-bounded JSON HTTP client whose errors do not echo secret-bearing URLs |
 | `http.requestText/requestBuffer` | Bounded UTF-8 feed or small binary responses, with the same timeout/error contract |
 | `events.begin/complete/fail` | Redis-backed one-time event lease for multi-worker idempotency |
 | `events.renew` | Ownership-checked lease renewal; the runtime renews run leases every minute |
-| `dicefiles.getRoomSummary(roomId)` | Stable room identity/read surface |
-| `dicefiles.listFiles({roomId, since?, limit?})` | Stable, bounded file read surface |
-| `dicefiles.listFilesPage({roomId, query?, since?, expiresBefore?, cursor?, limit?})` | Stable timestamp/key pagination; returns files and nextCursor |
-| `dicefiles.getFile({roomId, key})` | One visible room file with sanitized metadata |
-| `dicefiles.getRoomInventory({roomId})` | Counts, logical bytes, type totals, duplicate hashes and 24-hour expiry counts |
-| `dicefiles.listRequests({roomId, status?, limit?})` | Stable, bounded request read surface |
-| `dicefiles.createRequest({roomId, text, remoteUser?})` | Create a bot-attributed request |
-| `dicefiles.postMessage({roomId, text})` | Post bot-attributed room chat without importing Broker internals |
+| `hobbyfiles.getRoomSummary(roomId)` | Stable room identity/read surface |
+| `hobbyfiles.listFiles({roomId, since?, limit?})` | Stable, bounded file read surface |
+| `hobbyfiles.listFilesPage({roomId, query?, since?, expiresBefore?, cursor?, limit?})` | Stable timestamp/key pagination; returns files and nextCursor |
+| `hobbyfiles.getFile({roomId, key})` | One visible room file with sanitized metadata |
+| `hobbyfiles.getRoomInventory({roomId})` | Counts, logical bytes, type totals, duplicate hashes and 24-hour expiry counts |
+| `hobbyfiles.listRequests({roomId, status?, limit?})` | Stable, bounded request read surface |
+| `hobbyfiles.createRequest({roomId, text, remoteUser?})` | Create a bot-attributed request |
+| `hobbyfiles.postMessage({roomId, text})` | Post bot-attributed room chat without importing Broker internals |
 
 `capabilities` are documentation and catalog metadata, not a sandbox. First-
 party plugins still run as trusted server code. The injected adapters make the
@@ -231,7 +231,7 @@ In `.config.json`:
 
 - `enabled: false` skips load.
 - Unknown `id` values log a warning and are skipped.
-- Restart workers after changing plugins (`systemctl --user restart dicefiles` or your process manager).
+- Restart workers after changing plugins (`systemctl --user restart hobbyfiles` or your process manager; upgraded installs may retain `dicefiles`).
 
 ---
 
@@ -291,7 +291,7 @@ Tests inject fakes so they never hit the network.
 
 - Plugins inherit server filesystem and network access.
 - Prefer **secrets in env** (`MEGA_PASSWORD`,
-  `DICEFILES_DISCORD_WEBHOOK_URL`, `DICEFILES_TELEGRAM_BOT_TOKEN`) over config
+  `HOBBYFILES_DISCORD_WEBHOOK_URL`, `HOBBYFILES_TELEGRAM_BOT_TOKEN`) over config
   files.
 - Never log full invite tokens or API keys.
 - Validate `roomId` exists before upload.
@@ -367,7 +367,7 @@ UI: Room Options → **Invites** tab.
 | `lib/plugins/mega-folder/index.js` | Mega.nz example plugin |
 | `lib/plugins/discord-release/index.js` | Discord release publisher |
 | `lib/plugins/telegram-release/index.js` | Telegram release publisher |
-| `lib/plugins/runtime-adapters.js` | Stable Dicefiles, HTTP, and upload adapters |
+| `lib/plugins/runtime-adapters.js` | Stable Hobbyfiles, HTTP, and upload adapters |
 | `lib/plugins/event-lease.js` | Cross-worker one-time event leases |
 | `lib/webhooks.js` | Event dispatch + HTTP delivery |
 | `lib/room/guest-invites.js` | Pure invite create/redeem |

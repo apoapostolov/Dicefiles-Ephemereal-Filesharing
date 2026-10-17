@@ -16,7 +16,7 @@ const config = require("./lib/config");
 const cluster = require("cluster");
 const { execFileSync } = require("child_process");
 
-const EXPIRATION_WORKER = "DICEFILES_EXPIRATION_WORKER";
+const EXPIRATION_WORKER = "HOBBYFILES_EXPIRATION_WORKER";
 
 function master() {
   console.log(`Master ${process.pid.toString().bold} is running`);

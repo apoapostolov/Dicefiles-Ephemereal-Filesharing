@@ -45,7 +45,7 @@
 /.playwright/
 /.playwright-cli/
 /output/
-dicefiles-v*.tgz
+hobbyfiles-v*.tgz
 lib/clientversion.js
 package-lock.json
 npm-debug.log*

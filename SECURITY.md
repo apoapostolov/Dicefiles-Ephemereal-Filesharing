@@ -23,7 +23,7 @@ bot credentials, passwords, IP addresses, or account details as evidence.
 
 ## Sensitive Areas
 
-Dicefiles handles untrusted uploads, archives, remote downloads, room access,
+Hobbyfiles handles untrusted uploads, archives, remote downloads, room access,
 automation keys, bot credentials, webhooks, and native preview tools. Reports
 about authorization bypass, path traversal, unsafe archive extraction, SSRF,
 XSS, command injection, denial of service, secret exposure, or cross-room data

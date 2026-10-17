@@ -56,12 +56,12 @@ These checks use HTTP(S)/UDP scrape only, including supplied private trackers
 that support scraping. They do not announce participation, contact peers, query
 DHT, or fetch torrent payloads. Trackers may still observe the server IP and
 requested hash. Unsupported WebSocket/announce-only trackers show unknown.
-Disable background checks with `DICEFILES_TORRENT_MONITOR=false`, or disable
-all protocol discovery with `DICEFILES_TORRENT_DISCOVERY=false`.
+Disable background checks with `HOBBYFILES_TORRENT_MONITOR=false`, or disable
+all protocol discovery with `HOBBYFILES_TORRENT_DISCOVERY=false`.
 
 ## Server discovery
 
-With `DICEFILES_TORRENT_DISCOVERY=true` (default), ingestion and details checks
+With `HOBBYFILES_TORRENT_DISCOVERY=true` (default), ingestion and details checks
 can retrieve metadata from public services. This needs outbound DNS, UDP and TCP;
 no inbound listening port is opened.
 
@@ -86,13 +86,13 @@ A known private torrent never queries DHT or announces for metadata. A bare magn
 flag before metadata is available. Lookups expose the server's public IP and
 requested info hash to trackers/DHT/peers; tracker URLs can contain operator or
 uploader credentials. The UI displays hosts, never tracker paths or passkeys.
-Disable online protocol discovery with `DICEFILES_TORRENT_DISCOVERY=false` where
+Disable online protocol discovery with `HOBBYFILES_TORRENT_DISCOVERY=false` where
 that outbound traffic is unsuitable. Guarded HTTP exact-source and cover lookup
 are separate features and remain available. Discovery failure never invalidates
 an otherwise valid upload or prevents opening the magnet.
 
 There is no general protocol source for ratings, trusted-release status, genres,
-language, screenshots or reviews. Dicefiles does not invent them from a filename
+language, screenshots or reviews. Hobbyfiles does not invent them from a filename
 or hash. Artwork is best effort; no paid lookup or image-search key is required.
 
 ## Resource and access limits

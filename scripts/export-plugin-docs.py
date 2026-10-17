@@ -16,7 +16,7 @@ except ImportError as exc:
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REPOSITORY = "https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing"
+REPOSITORY = "https://github.com/apoapostolov/Hobbyfiles"
 CSS = """
 :root{color-scheme:light dark;--bg:#fafafa;--paper:#fff;--text:#222;--muted:#595959;
 --line:#ddd;--code:#f1f1f1;--link:#215a82;--mark:#e7eef4}
@@ -94,23 +94,23 @@ def main() -> None:
         included = {path.resolve(): prefix for path, prefix in parts}
         rendered = [render_part(path, prefix, included) for path, prefix in parts]
         links = "".join(
-            f'<a href="dicefiles-{item[0]}-{version}.html">{html.escape(item[1])}</a>'
+            f'<a href="hobbyfiles-{item[0]}-{version}.html">{html.escape(item[1])}</a>'
             for item in editions
         )
         toc = "".join(part[1] for part in rendered)
         body = "".join(part[0] for part in rendered)
         document = f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="{html.escape(description)}"><title>{html.escape(title)} | Dicefiles {version}</title>
+<meta name="description" content="{html.escape(description)}"><title>{html.escape(title)} | Hobbyfiles {version}</title>
 <style>{CSS}</style></head><body><a class="skip" href="#content">Skip to content</a>
-<header class="masthead"><div class="eyebrow">Dicefiles {version} / Handbooks</div><h1>{html.escape(title)}</h1>
+<header class="masthead"><div class="eyebrow">Hobbyfiles {version} / Handbooks</div><h1>{html.escape(title)}</h1>
 <p>{html.escape(description)} Save this file for offline reading. Use your browser's Find or Print to PDF.</p>
 <nav class="editions" aria-label="Handbook editions">{links}<a href="{REPOSITORY}/releases/tag/v{version}">Release downloads</a></nav></header>
 <div class="layout"><aside aria-label="Table of contents"><details open><summary>Contents</summary>{toc}</details></aside>
 <main id="content"><article>{body}</article></main></div>
-<footer>Dicefiles {version}. Generated from the public Markdown documentation. No scripts, external fonts or network assets.</footer>
+<footer>Hobbyfiles {version}. Generated from the public Markdown documentation. No scripts, external fonts or network assets.</footer>
 </body></html>'''
-        destination = output / f"dicefiles-{slug}-{version}.html"
+        destination = output / f"hobbyfiles-{slug}-{version}.html"
         destination.write_text(document, encoding="utf-8", newline="\n")
         print(destination.relative_to(ROOT))
 

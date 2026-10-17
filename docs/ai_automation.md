@@ -1,6 +1,6 @@
-# Automation workflows for Dicefiles 1.4.7
+# Automation workflows for Hobbyfiles 1.4.7
 
-Dicefiles exposes a scoped REST API, 57 MCP tools and 27 opt-in core plugins.
+Hobbyfiles exposes a scoped REST API, 57 MCP tools and 27 opt-in core plugins.
 Use MCP for an agent that needs typed tools. Use REST for an external service.
 Use an in-process plugin for operator-installed background collection or room
 workflows. The [power-user guide](./CORE_PLUGINS.md),
@@ -17,8 +17,8 @@ workflows. The [power-user guide](./CORE_PLUGINS.md),
 The standalone MCP process reads the same environment file as the application:
 
 ```sh
-DICEFILES_BASE_URL=http://127.0.0.1:8080 \
-DICEFILES_API_KEY=replace-with-scoped-key \
+HOBBYFILES_BASE_URL=http://127.0.0.1:8080 \
+HOBBYFILES_API_KEY=replace-with-scoped-key \
 node scripts/mcp-server.js
 ```
 

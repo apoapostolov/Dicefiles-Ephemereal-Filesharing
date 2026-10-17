@@ -23,12 +23,12 @@ function encode(value) {
 }
 
 const info = { "name": "Synthetic fixture.txt", "length": 4, "piece length": 16384, "pieces": Buffer.alloc(20, 1) };
-const fixture = encode({ "announce": "https://tracker.example/announce", "comment": "Synthetic metadata", "created by": "Dicefiles fixture", "creation date": 1234567890, info });
+const fixture = encode({ "announce": "https://tracker.example/announce", "comment": "Synthetic metadata", "created by": "Hobbyfiles fixture", "creation date": 1234567890, info });
 
 test("v1 hashes the original encoded info and exposes full file metadata", () => {
   const torrent = parseTorrent(fixture);
   expect(torrent.infoHashV1).toBe(createHash("sha1").update(encode(info)).digest("hex"));
-  expect(torrent).toMatchObject({ totalSize: 4, fileCount: 1, files: [{ path: info.name, size: 4 }], pieceCount: 1, createdBy: "Dicefiles fixture" });
+  expect(torrent).toMatchObject({ totalSize: 4, fileCount: 1, files: [{ path: info.name, size: 4 }], pieceCount: 1, createdBy: "Hobbyfiles fixture" });
   expect(parseMagnet(torrent.magnet).infoHashV1).toBe(torrent.infoHashV1);
 });
 test("multi-file, private torrents and tracker tiers are retained", () => {

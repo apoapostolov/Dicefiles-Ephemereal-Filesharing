@@ -1,4 +1,4 @@
-# Dicefiles API Reference (`/api/v1`)
+# Hobbyfiles API Reference (`/api/v1`)
 
 This spec is written for automation clients (agentic tools, skill builders, MCP wrappers).
 
@@ -21,7 +21,7 @@ take precedence. Room file metadata includes its per-video matching state. See
 
 ### 1.1 A2A Manifest (Agent‑to‑Agent)
 
-To support Google’s Agent‑to‑Agent protocol, Dicefiles exposes a simple
+To support Google’s Agent‑to‑Agent protocol, Hobbyfiles exposes a simple
 self‑describing manifest at `/.well-known/a2a`. Agents can fetch this URL to
 discover the service name, API base, version, and a small list of representative
 endpoints with required scopes. The manifest returns:
@@ -29,7 +29,7 @@ endpoints with required scopes. The manifest returns:
 ```json
 {
   "ok": true,
-  "service": "Dicefiles",
+  "service": "Hobbyfiles",
   "version": "1.4.7",
   "baseUrl": "/api/v1",
   "endpoints": [
@@ -762,7 +762,7 @@ Persisted state:
 
 ## 12. File Management Endpoints (v1.1)
 
-These endpoints let agents read and write individual file metadata, making Dicefiles
+These endpoints let agents read and write individual file metadata, making Hobbyfiles
 a full two-way mirror between your AI pipeline and the room.
 
 ### 12.1 Get single file metadata
@@ -837,7 +837,7 @@ Only the fields listed above are accepted; unknown keys are silently dropped.
 
 > **What this enables**
 >
-> This is the enrichment endpoint — the closed loop that makes Dicefiles act as a
+> This is the enrichment endpoint — the closed loop that makes Hobbyfiles act as a
 > living, AI-curated library. After uploading a PDF your agent can:
 >
 > 1. Run it through an OCR pipeline → PATCH writes `ocr_text_preview`
@@ -881,7 +881,7 @@ Only the fields listed above are accepted; unknown keys are silently dropped.
 > room shelf looks polished.
 >
 > ```bash
-> # Fetch cover from Open Library, push to Dicefiles
+> # Fetch cover from Open Library, push to Hobbyfiles
 > curl -sL "https://covers.openlibrary.org/b/isbn/9780441569595-L.jpg" \
 >   | curl -X POST "$BASE/api/v1/file/$KEY/asset/cover" \
 >     -H "Authorization: Bearer $AGENT_KEY" \
@@ -1026,7 +1026,7 @@ automation boxes.
 >
 > ```python
 > # SimpleBot health pre-flight
-> metrics = await dicefiles.metrics()
+> metrics = await hobbyfiles.metrics()
 > if metrics["previewFailures"] > metrics_baseline["previewFailures"] + 10:
 >     alert("Preview pipeline degraded — pausing uploads")
 >     return
@@ -1107,7 +1107,7 @@ Optional discovery fields under `meta.torrent`:
 | `imageDataUrl` | Optional bounded JPEG artwork; no browser fetch to the source is needed. |
 
 These fields are best effort snapshots, not download guarantees. Online protocol
-lookup is controlled by `DICEFILES_TORRENT_DISCOVERY`; original metadata files and
+lookup is controlled by `HOBBYFILES_TORRENT_DISCOVERY`; original metadata files and
 magnet links remain usable when it is disabled or external services do not respond.
 
 ```json
@@ -1352,7 +1352,7 @@ including `meta.hints`, and can match against it programmatically.
 
 ## 19. MCP Server Integration
 
-> **Quick answer on MCP:** Dicefiles ships a 36-tool MCP server at
+> **Quick answer on MCP:** Hobbyfiles ships a 36-tool MCP server at
 > `scripts/mcp-server.js`. It translates typed MCP calls from Claude Desktop,
 > Cursor, OpenClaw, and other clients into the scoped REST API documented here.
 > See `MCP.md` for client setup, tool schemas, and security guidance.
@@ -1364,17 +1364,17 @@ defines a JSON-RPC 2.0 protocol over stdio or HTTP/SSE that lets AI clients
 (Claude Desktop, Cursor IDE, Continue.dev, any agent using the MCP SDK) call
 named **tools** with typed inputs.
 
-Dicefiles keeps REST as its core automation contract and ships an MCP adapter over
+Hobbyfiles keeps REST as its core automation contract and ships an MCP adapter over
 that contract. Local clients connect via stdio; remote agents connect through the
 optional Streamable HTTP transport.
 
-### 19.2 The bundled `dicefiles-mcp` server
+### 19.2 The bundled `hobbyfiles-mcp` server
 
 The wrapper lives at `scripts/mcp-server.js` in the repo. Configure with two env vars:
 
 ```bash
-DICEFILES_BASE_URL=http://localhost:9090
-DICEFILES_API_KEY=your-agent-key-here
+HOBBYFILES_BASE_URL=http://localhost:9090
+HOBBYFILES_API_KEY=your-agent-key-here
 node scripts/mcp-server.js  # stdio mode for Claude Desktop / local agents
 ```
 
@@ -1420,12 +1420,12 @@ Add to `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "dicefiles": {
+    "hobbyfiles": {
       "command": "node",
-      "args": ["/path/to/Dicefiles/scripts/mcp-server.js"],
+      "args": ["/path/to/Hobbyfiles/scripts/mcp-server.js"],
       "env": {
-        "DICEFILES_BASE_URL": "http://localhost:9090",
-        "DICEFILES_API_KEY": "your-api-key-here"
+        "HOBBYFILES_BASE_URL": "http://localhost:9090",
+        "HOBBYFILES_API_KEY": "your-api-key-here"
       }
     }
   }
@@ -1439,7 +1439,7 @@ After restarting Claude Desktop, Claude can directly answer questions like:
 ### 19.5 Remote agent / HTTP transport
 
 For non-local agents, the MCP wrapper can also run in StreamableHTTP mode
-(HTTP + SSE transport), making Dicefiles accessible to remote orchestrators
+(HTTP + SSE transport), making Hobbyfiles accessible to remote orchestrators
 like OpenClaw, AutoGen, or CrewAI that support the MCP remote-server spec.
 
 ```bash
@@ -1636,7 +1636,7 @@ Success:
 ## 22. Archive Viewer Endpoints (v1.2)
 
 These endpoints expose the contents of ZIP, RAR, 7z, and TAR archives stored in
-Dicefiles. They are read-only and require `files:read` scope (or a valid session).
+Hobbyfiles. They are read-only and require `files:read` scope (or a valid session).
 Archives larger than 50 MB are rejected to prevent runaway memory usage.
 
 ### 22.1 List archive contents
@@ -1738,7 +1738,7 @@ rooms, files, users, or configured peers.
 
 Every request must contain an RFC 9421 `Signature-Input` and `Signature`. The
 signature key id must exactly match an enabled, operator-pinned peer record.
-Dicefiles never follows a request-supplied key URL. Signatures use
+Hobbyfiles never follows a request-supplied key URL. Signatures use
 `rsa-v1_5-sha256`, cover the method, target URI, authority, host and date (plus
 the content digest for a body), and carry a `dicefiles-federation` tag and
 one-time nonce.
@@ -1868,7 +1868,7 @@ or unrestricted code execution is reachable through this endpoint.
 
 Set `applicationPublicKey`, `allowedInboundUserIds` and/or
 `allowedInboundRoleIds`, and point the Discord application's Interactions
-Endpoint URL at the plugin's returned `inboundPath`. Dicefiles verifies
+Endpoint URL at the plugin's returned `inboundPath`. Hobbyfiles verifies
 `X-Signature-Ed25519` over the timestamp plus exact raw body, rejects
 timestamps outside five minutes, handles Discord PING, and deduplicates
 interaction IDs. Configure a `/dicefiles` command with subcommands named after
@@ -1882,7 +1882,7 @@ results in the Discord channel.
 
 Set `inboundWebhookSecret`, `allowedInboundUserIds`, and the existing `chatId`.
 Register the returned `inboundPath` with Telegram `setWebhook` and pass the same
-value as `secret_token`. Dicefiles compares
+value as `secret_token`. Hobbyfiles compares
 `X-Telegram-Bot-Api-Secret-Token` in constant time, enforces the configured
 chat and optional forum topic, and deduplicates `update_id`.
 

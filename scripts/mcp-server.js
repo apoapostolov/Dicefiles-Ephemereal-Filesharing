@@ -2,11 +2,11 @@
 
 require("../lib/environment").loadEnvironment();
 /**
- * scripts/mcp-server.js — Dicefiles MCP server wrapper
+ * scripts/mcp-server.js — Hobbyfiles MCP server wrapper
  *
- * Wraps the Dicefiles REST API as 57 MCP tools, allowing any MCP-compatible
+ * Wraps the Hobbyfiles REST API as 57 MCP tools, allowing any MCP-compatible
  * AI client (Claude Desktop, Cursor, Continue, OpenClaw, AutoGen) to interact with
- * a Dicefiles instance directly.
+ * a Hobbyfiles instance directly.
  *
  * Usage (stdio — Claude Desktop, Cursor, local agents):
  *   node scripts/mcp-server.js
@@ -19,14 +19,14 @@ require("../lib/environment").loadEnvironment();
  * request, so it scales horizontally behind a plain load balancer.
  *
  * Required env vars:
- *   DICEFILES_BASE_URL   Base URL of your Dicefiles instance (default: http://localhost:10005)
- *   DICEFILES_API_KEY    Automation API key (minimum scope: files:read)
+ *   HOBBYFILES_BASE_URL   Base URL of your Hobbyfiles instance (default: http://localhost:10005)
+ *   HOBBYFILES_API_KEY    Automation API key (minimum scope: files:read)
  *
  * Optional env vars:
  *   MCP_TRANSPORT        "stdio" (default) | "http"
  *   MCP_PORT             HTTP port when MCP_TRANSPORT=http (default: 3001)
  *   MCP_HOST             HTTP bind address when MCP_TRANSPORT=http (default: 127.0.0.1)
- *   MCP_API_TIMEOUT_MS   Per-request Dicefiles API timeout (default: 30000)
+ *   MCP_API_TIMEOUT_MS   Per-request Hobbyfiles API timeout (default: 30000)
  *   MCP_AUTH_TOKEN       Separate incoming HTTP bearer token
  *   MCP_ALLOWED_HOSTS    Comma-separated accepted HTTP hostnames
  *   MCP_ALLOWED_ORIGINS  Comma-separated accepted Origin hostnames
@@ -57,17 +57,17 @@ const { AsyncLocalStorage } = require("async_hooks");
 const { scopeAllowed, loadOAuthConfig, createOAuthAuthorization } = require("./mcp-authorization");
 
 const CALLER = new AsyncLocalStorage();
-const { version: DICEFILES_VERSION } = require("../package.json");
+const { version: HOBBYFILES_VERSION } = require("../package.json");
 const { readBoundedJson } = require("../lib/bounded-json");
 
 // ── Configuration ──────────────────────────────────────────────────────────
 
 const BASE = (
-  process.env.DICEFILES_BASE_URL || "http://localhost:10005"
+  process.env.HOBBYFILES_BASE_URL || "http://localhost:10005"
 ).replace(/\/+$/, "");
-const KEY = process.env.DICEFILES_API_KEY || "";
+const KEY = process.env.HOBBYFILES_API_KEY || "";
 
-/** Network timeout for every outbound Dicefiles API call, in ms. */
+/** Network timeout for every outbound Hobbyfiles API call, in ms. */
 function positiveInteger(value, fallback, name, max = 2147483647) {
   const number = value == null || value === "" ? fallback : Number(value);
   if (!Number.isSafeInteger(number) || number <= 0 || number > max) {
@@ -83,7 +83,7 @@ const MAX_DOWNLOAD_BYTES = 20 * 1024 * 1024;
 
 if (!KEY) {
   console.error(
-    "[dicefiles-mcp] WARNING: DICEFILES_API_KEY is not set. " +
+    "[hobbyfiles-mcp] WARNING: HOBBYFILES_API_KEY is not set. " +
       "Most tools require an API key and will return 401/404.",
   );
 }
@@ -96,7 +96,7 @@ function authHeaders() {
 }
 
 /**
- * Call the Dicefiles REST API.
+ * Call the Hobbyfiles REST API.
  * @param {string} method  HTTP method
  * @param {string} path    Path under /api/v1 (e.g. "/files")
  * @param {object} [body]  Request body (JSON-serialised)
@@ -384,7 +384,7 @@ function defineTool(srv, name, description, inputSchema, handler) {
 // ── Tool registration ──────────────────────────────────────────────────────
 
 /**
- * Build a fresh server instance with every Dicefiles tool registered.
+ * Build a fresh server instance with every Hobbyfiles tool registered.
  *
  * The 2026-07-28 protocol core is stateless: the HTTP handler calls this
  * factory once per request, so no instance state is shared between callers.
@@ -392,13 +392,13 @@ function defineTool(srv, name, description, inputSchema, handler) {
  * @returns {McpServer}
  */
 function createServer() {
-  const srv = new McpServer({ name: "dicefiles", version: DICEFILES_VERSION });
+  const srv = new McpServer({ name: "hobbyfiles", version: HOBBYFILES_VERSION });
   registerTools(srv);
   return srv;
 }
 
 /**
- * Register all Dicefiles tools on an McpServer (or mock server for tests).
+ * Register all Hobbyfiles tools on an McpServer (or mock server for tests).
  * @param {McpServer|{registerTool:Function}} srv
  */
 function registerTools(srv) {
@@ -431,7 +431,7 @@ function registerTools(srv) {
   // ── 1. server_health ───────────────────────────────────────────────────
   defineTool(srv,
     "server_health",
-    "Check Dicefiles server health and retrieve metrics counters " +
+    "Check Hobbyfiles server health and retrieve metrics counters " +
       "(uploads, downloads, preview failures, uptime). " +
       "Use this as a pre-flight check before long automation runs.",
     {},
@@ -451,7 +451,7 @@ function registerTools(srv) {
   // ── 2. list_files ──────────────────────────────────────────────────────
   defineTool(srv,
     "list_files",
-    "List files and/or requests in a Dicefiles room. " +
+    "List files and/or requests in a Hobbyfiles room. " +
       "Use type=requests to see open requests, type=new with since=<ms> for incremental polling, " +
       "or combine name_contains and ext for targeted searches.",
     {
@@ -730,7 +730,7 @@ function registerTools(srv) {
   // ── 14. archive_list_contents ─────────────────────────────────────────
   defineTool(srv,
     "archive_list_contents",
-    "List every entry inside a ZIP, RAR, 7z, or TAR archive stored in Dicefiles. " +
+    "List every entry inside a ZIP, RAR, 7z, or TAR archive stored in Hobbyfiles. " +
       "Returns name, size, compressed size, and path for every file in the archive. " +
       "Use this to inspect what is inside an archive before deciding whether to download it. " +
       "Requires files:read scope.",
@@ -900,7 +900,7 @@ function registerTools(srv) {
   // ── 21. list_federated_room_links ──────────────────────────────────────
   defineTool(srv,
     "list_federated_room_links",
-    "List a room's trusted cross-host Dicefiles links and live peer status. " +
+    "List a room's trusted cross-host Hobbyfiles links and live peer status. " +
       "Requires federation-links:read.",
     {
       roomid: z.string().describe("Destination room ID"),
@@ -917,7 +917,7 @@ function registerTools(srv) {
   // ── 22. create_federated_room_link ─────────────────────────────────────
   defineTool(srv,
     "create_federated_room_link",
-    "Link a room from an operator-pinned Dicefiles peer. The source peer and " +
+    "Link a room from an operator-pinned Hobbyfiles peer. The source peer and " +
       "source room must independently allow access. Requires federation-links:write.",
     {
       roomid: z.string().describe("Destination room ID"),
@@ -1133,7 +1133,7 @@ function registerTools(srv) {
 
   defineTool(srv,
     "get_storage_volumes",
-    "Inspect configured Dicefiles storage volumes, capacity, health, roles, " +
+    "Inspect configured Hobbyfiles storage volumes, capacity, health, roles, " +
       "and placement thresholds. Requires admin:read.",
     {},
     async () => wrap(await api("GET", "/admin/storage")),
@@ -1300,7 +1300,7 @@ function createHttpServer(options = {}) {
         });
         res.end(
           req.method === "GET" ?
-            "Dicefiles MCP server running. POST /mcp for JSON-RPC.\n" :
+            "Hobbyfiles MCP server running. POST /mcp for JSON-RPC.\n" :
             "Not Found",
         );
         return;
@@ -1337,13 +1337,13 @@ async function startHttpTransport() {
   process.once("SIGTERM", shutdown);
 
   console.error(
-    `[dicefiles-mcp] Stateless HTTP transport at http://${host}:${port}/mcp ` +
+    `[hobbyfiles-mcp] Stateless HTTP transport at http://${host}:${port}/mcp ` +
       "(protocol 2026-07-28, no sessions)",
   );
   if (!["127.0.0.1", "localhost", "::1"].includes(host)) {
     console.error(
-      "[dicefiles-mcp] Remote callers require the MCP bearer token and an allowed Host. " +
-        "Use TLS at the reverse proxy; OAuth callers use their mapped Dicefiles credentials.",
+      "[hobbyfiles-mcp] Remote callers require the MCP bearer token and an allowed Host. " +
+        "Use TLS at the reverse proxy; OAuth callers use their mapped Hobbyfiles credentials.",
     );
   }
   return handler;
@@ -1361,14 +1361,14 @@ async function main() {
   const server = createServer();
   await server.connect(new StdioServerTransport());
   console.error(
-    "[dicefiles-mcp] Stdio transport ready. Waiting for MCP client...",
+    "[hobbyfiles-mcp] Stdio transport ready. Waiting for MCP client...",
   );
 }
 
 // Allow require()-ing this module without auto-starting (for tests)
 if (require.main === module) {
   main().catch(err => {
-    console.error("[dicefiles-mcp] Fatal:", err);
+    console.error("[hobbyfiles-mcp] Fatal:", err);
     process.exit(1);
   });
 }

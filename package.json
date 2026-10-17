@@ -1,5 +1,5 @@
 {
-  "name": "dicefiles",
+  "name": "hobbyfiles",
   "version": "1.4.7",
   "description": "Ephemereal Filesharing for Hobby Communities",
   "main": "server.js",

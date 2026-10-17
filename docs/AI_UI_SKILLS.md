@@ -1,6 +1,6 @@
 # AI guide: UI audit, polish, rework, and themes
 
-**Audience:** coding agents (Codex, Claude Code, Cursor, Pi, Hermes, etc.) working on Dicefiles UI.  
+**Audience:** coding agents (Codex, Claude Code, Cursor, Pi, Hermes, etc.) working on Hobbyfiles UI.
 **Product type:** dense **Operate**-mode interface (real-time room: chat + files + gallery + readers + modals). Not a marketing landing page.
 
 Read this before changing colors, layout, chrome, or “themes.” Pair it with:
@@ -14,7 +14,7 @@ Read this before changing colors, layout, chrome, or “themes.” Pair it with:
 
 ---
 
-## 0. Non-negotiables (Dicefiles-specific)
+## 0. Non-negotiables (Hobbyfiles-specific)
 
 1. **Stack is vanilla client JS + EJS + Webpack CSS.** There is no React/Next/Tailwind app shell. Do not introduce a framework “just for theming.” Prefer editing `entries/css/*` and existing DOM patterns in `client/` + `views/`.
 2. **Greytone product chrome is intentional.** CONTRIBUTING: keep visual changes consistent with the current greytone theme unless the human explicitly asks for a new theme or a redesign.
@@ -62,7 +62,7 @@ Webpack: `webpack.config.js` entry `"style": "./css/style.css"` (cwd under `entr
 
 Skills live in the operator’s agent skill trees (examples: `~/.agents/skills/`, `~/.codex/skills/`, `~/.pi/agent/skills/`). Manifest of the curated pack: `WEBDEV-INTERFACE-PACK.md` in those trees.
 
-**Dicefiles is Operate-mode product UI.** Prefer skills built for apps/tools over landing-page aesthetics.
+**Hobbyfiles is Operate-mode product UI.** Prefer skills built for apps/tools over landing-page aesthetics.
 
 ### Tier A — always consider for UI work here
 
@@ -242,7 +242,7 @@ impeccable (critique/audit posture), **ui-audit**, **web-design-guidelines**, **
 
 ## 6. Workflow D — Implement themes (single or multi)
 
-Dicefiles today is effectively **one greytone theme** driven by `:root` in `base.css`. “Implement themes” means making that system explicit and switchable without forking every rule.
+Hobbyfiles today is effectively **one greytone theme** driven by `:root` in `base.css`. “Implement themes” means making that system explicit and switchable without forking every rule.
 
 ### Skills
 

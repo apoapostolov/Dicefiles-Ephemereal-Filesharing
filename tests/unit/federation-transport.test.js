@@ -131,7 +131,7 @@ describe("federation transport contracts", () => {
       expect(seen.method).toBe("GET");
       expect(seen.url).toBe("/api/federation/v1/hello");
       expect(seen.accept).toBe("application/json");
-      expect(seen.agent).toBe("Dicefiles-Federation/1.0");
+      expect(seen.agent).toBe("Hobbyfiles-Federation/1.0");
     }
     finally {
       federation.peers[0].baseUrl = previous;

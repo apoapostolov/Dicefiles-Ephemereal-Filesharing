@@ -1,10 +1,10 @@
-# The Dicefiles core plugin guide
+# The Hobbyfiles core plugin guide
 
-**Dicefiles 1.4.7 · All 27 bundled plugins · For room owners and power users**
+**Hobbyfiles 1.4.7 · All 27 bundled plugins · For room owners and power users**
 
 Want a room that collects new releases, catches forgotten requests and gives you
 a useful maintenance report? Start here. This guide covers every bot shipped
-with Dicefiles, what to give it, and what to expect when you press Run.
+with Hobbyfiles, what to give it, and what to expect when you press Run.
 
 The bots are included with the server. You still choose which ones to invite.
 An operator may need to approve a connection before a collector can read a
@@ -13,7 +13,7 @@ service.
 
 For code, see the [developer reference](../core/plugins/PLUGIN_API.md) and the
 [27-plugin cookbook](../core/plugins/PLUGIN_COOKBOOK.md). Portable HTML editions
-are linked from the [1.4.7 release](https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/releases/tag/v1.4.7).
+are linked from the [1.4.7 release](https://github.com/apoapostolov/Hobbyfiles/releases/tag/v1.4.7).
 
 ## Start with one useful job
 
@@ -55,7 +55,7 @@ it does not certify the whole server.
 
 ## Collect files and links
 
-Collectors copy material into the room, where normal Dicefiles expiry applies.
+Collectors copy material into the room, where normal Hobbyfiles expiry applies.
 Deleting something at the source does not remove the room copy. The seven newer
 collectors track source revisions: a changed source file can create a new room
 copy while the older copy remains available.
@@ -168,7 +168,7 @@ files from that folder. It takes an initial snapshot, then follows Drive changes
 This is useful for PDFs, archives, images and other files already stored in Drive.
 
 The operator must grant the folder and provision OAuth credentials, an access
-token or a service account with access. Dicefiles does not provide an OAuth
+token or a service account with access. Hobbyfiles does not provide an OAuth
 consent screen. Native Google Docs, Sheets and Slides are excluded; export them
 to a regular file if you want a room copy. Source removals never delete room files.
 
@@ -219,7 +219,7 @@ limits before collecting large model weights.
 
 The two publishers send updates to destinations you configure. Their **Test**
 mode sends a real test message. **Digest** sends a real summary. Unlike collector
-Preview, these modes deliberately publish outside Dicefiles.
+Preview, these modes deliberately publish outside Hobbyfiles.
 
 Both can announce uploads, optionally include requests, and accept a restricted
 set of authenticated inbound commands. Inbound commands start disabled. Configure
@@ -397,7 +397,7 @@ bot does not extend retention.
 
 **Plugin ID: `preview-repair`**
 
-Find missing previews and queue a reviewed retry through Dicefiles' existing
+Find missing previews and queue a reviewed retry through Hobbyfiles' existing
 preview worker. A missing stored file gets a different explanation, because a
 thumbnail retry cannot restore lost content.
 
@@ -518,6 +518,6 @@ it when deliberately reconciling a source, rather than as a routine retry button
 - [Community and maintenance setup](../core/plugins/WORKFLOW_BOTS.md): review actions, sessions and backup manifests.
 - [REST API](../API.md) and [MCP guide](../MCP.md): manage invited bots from external tools.
 
-This guide describes the implementation shipped in Dicefiles 1.4.7. Provider
+This guide describes the implementation shipped in Hobbyfiles 1.4.7. Provider
 credentials and live destinations must be checked in your own deployment;
 bundling a connector does not establish access to an external account.

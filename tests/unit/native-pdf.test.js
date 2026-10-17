@@ -37,7 +37,7 @@ test("PDF.js parses the same fixture with its actual worker", async () => {
 });
 
 (process.platform === "linux" ? test : test.skip)("the actual PDF fixture renders through firejail", async () => {
-  const directory = await fs.mkdtemp(path.join(os.homedir(), "dicefiles-preview-fixture-"));
+  const directory = await fs.mkdtemp(path.join(os.homedir(), "hobbyfiles-preview-fixture-"));
   const full = path.join(directory, "synthetic.pdf");
   try {
     await fs.writeFile(full, tinyPdf());

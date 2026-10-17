@@ -121,7 +121,7 @@ describe("spawnBounded", () => {
   test("surfaces a spawn failure instead of hanging", async () => {
     const { spawnBounded } = loadJail(false);
     await expect(
-      spawnBounded(["/nonexistent/dicefiles-tool"], { timeoutMs: 5000 }),
+      spawnBounded(["/nonexistent/hobbyfiles-tool"], { timeoutMs: 5000 }),
     ).rejects.toMatchObject({ code: "ENOENT" });
   });
 });

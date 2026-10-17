@@ -12,7 +12,7 @@ describe("real ZIP reader dependency contract", () => {
   let directory;
   let archivePath;
   beforeAll(async () => {
-    directory = await fs.mkdtemp(path.join(os.tmpdir(), "dicefiles-zip-test-"));
+    directory = await fs.mkdtemp(path.join(os.tmpdir(), "hobbyfiles-zip-test-"));
     archivePath = path.join(directory, "sample.zip");
     const zip = new JSZip();
     zip.file("books/café.txt", "Unicode archive content");

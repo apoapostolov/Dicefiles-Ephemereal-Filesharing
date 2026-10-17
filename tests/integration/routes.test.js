@@ -3,8 +3,8 @@
 /**
  * Integration / end-to-end route tests.
  *
- * These tests run against the live Dicefiles server selected by
- * DICEFILES_TEST_BASE (default http://127.0.0.1:10005).
+ * These tests run against the live Hobbyfiles server selected by
+ * HOBBYFILES_TEST_BASE (default http://127.0.0.1:10005).
  * They confirm that:
  *   - Every public page returns the correct HTTP status
  *   - HTML pages contain expected structural elements
@@ -15,7 +15,7 @@
  * If the server is unreachable, ALL tests in this file are skipped.
  */
 
-const BASE = process.env.DICEFILES_TEST_BASE || "http://127.0.0.1:10005";
+const BASE = process.env.HOBBYFILES_TEST_BASE || "http://127.0.0.1:10005";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -86,7 +86,7 @@ describe("GET /.well-known/a2a", () => {
     const { status, json } = await get("/.well-known/a2a");
     expect(status).toBe(200);
     expect(json).toHaveProperty("ok", true);
-    expect(json).toHaveProperty("service", "Dicefiles");
+    expect(json).toHaveProperty("service", "Hobbyfiles");
     expect(json).toHaveProperty("baseUrl", "/api/v1");
     expect(Array.isArray(json.endpoints)).toBe(true);
   });
@@ -125,7 +125,7 @@ describe("GET /", () => {
     expect(body).toContain("<body");
     // Home page shows either the welcome text (publicRooms disabled) or the
     // room directory card grid (publicRooms enabled). Both share the footer.
-    const hasWelcome = body.includes("Welcome to Dicefiles");
+    const hasWelcome = body.includes("Welcome to Hobbyfiles");
     const hasDirectory =
       body.includes("room-cards") || body.includes("room-card");
     expect(hasWelcome || hasDirectory).toBe(true);

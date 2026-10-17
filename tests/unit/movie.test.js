@@ -140,8 +140,10 @@ test("stream relays accept only private generated socket locations and capabilit
   const os = require("node:os"); const path = require("node:path");
 
   const secret = "00000000-0000-4000-8000-000000000000";
-  const socket = process.platform === "win32" ? `\\\\.\\pipe\\dicefiles-stream-${secret}` : path.join(os.tmpdir(), "dicefiles-stream-synthetic", "relay.sock");
+  const socket = process.platform === "win32" ? `\\\\.\\pipe\\hobbyfiles-stream-${secret}` : path.join(os.tmpdir(), "hobbyfiles-stream-synthetic", "relay.sock");
   expect(validRelay({ socket, secret })).toBe(true);
+  const legacySocket = process.platform === "win32" ? `\\\\.\\pipe\\dicefiles-stream-${secret}` : path.join(os.tmpdir(), "dicefiles-stream-synthetic", "relay.sock");
+  expect(validRelay({ socket: legacySocket, secret })).toBe(true);
   expect(validRelay({ socket: "/etc/passwd", secret })).toBe(false);
   expect(validRelay({ socket, secret: "" })).toBe(false);
 });
@@ -149,7 +151,7 @@ test("stream relays accept only private generated socket locations and capabilit
 test("private piece storage follows chunk-store slicing and callback contracts", async () => {
   const fs = require("node:fs/promises"); const os = require("node:os"); const path = require("node:path");
 
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "dicefiles-piece-test-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "hobbyfiles-piece-test-"));
   try {
     const store = new PieceStore(8, { path: dir, length: 16 });
     const put = (index, buffer) => new Promise((resolve, reject) => store.put(index, buffer, error => error ? reject(error) : resolve()));
@@ -161,7 +163,7 @@ test("private piece storage follows chunk-store slicing and callback contracts",
     store.close(); await expect(get({})).rejects.toThrow("not available");
   }
   finally {
-    if (path.dirname(dir) === os.tmpdir() && path.basename(dir).startsWith("dicefiles-piece-test-")) {
+    if (path.dirname(dir) === os.tmpdir() && path.basename(dir).startsWith("hobbyfiles-piece-test-")) {
       await fs.rm(dir, { recursive: true, force: true });
     }
   }

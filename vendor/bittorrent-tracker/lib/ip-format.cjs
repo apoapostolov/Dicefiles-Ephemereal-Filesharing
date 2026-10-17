@@ -1,7 +1,7 @@
 "use strict";
 
 // bittorrent-tracker imports the unmaintained `ip` package solely for toString
-// in its UDP server parser. Dicefiles does not run that server. Supply only the
+// in its UDP server parser. Hobbyfiles does not run that server. Supply only the
 // required formatting API; never import its vulnerable address classification.
 function toString(value, offset = 0, length) {
   if (typeof value === "number") {
