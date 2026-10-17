@@ -116,8 +116,8 @@ can quickly switch to files added since their last visit or download All, New,
 or Since Last Visit through a resumable queue.
 
 Linked rooms let you pull useful files into the room where your group works.
-For example, a Pathfinder room can link to a consenting Foundry community room
-and filter for files with “PF2E” in the name. Matching files appear alongside
+For example, a Pathfinder room can link to an opted-in Foundry module-sharing
+room and filter for files with “PF2E” in the name. Matching files appear alongside
 your room’s own uploads, clearly labeled with their source; they stay hosted in
 the original room, so there’s no second upload to manage. The same idea works
 across separate Hobbyfiles servers: admins set up a trusted federation between
