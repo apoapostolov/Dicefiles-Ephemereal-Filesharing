@@ -115,14 +115,20 @@ libraries, plugins, invitations, and access without leaving the room. Members
 can quickly switch to files added since their last visit or download All, New,
 or Since Last Visit through a resumable queue.
 
-Linked rooms let you pull useful files into the room where your group works.
-For example, a Pathfinder room can link to an opted-in Foundry module-sharing
-room and filter for files with “PF2E” in the name. Matching files appear alongside
-your room’s own uploads, clearly labeled with their source; they stay hosted in
-the original room, so there’s no second upload to manage. The same idea works
-across separate Hobbyfiles servers: admins set up a trusted federation between
-the hosts, then authorize specific room links. Both hosts and the source room
-have to opt in, so a link shares only the rooms and files they approve.
+Say one Hobbyfiles server has a Pathfinder community and a Foundry module-sharing
+community, each with its own room. The Pathfinder room can link to the Foundry
+room after it opts in, then use a filter such as “PF2E” in the filename. Matching
+modules show up in Pathfinder’s file list beside its own uploads, with a label
+that points back to the Foundry room. The files stay in their original room:
+people can find and use them from Pathfinder without uploading a second copy,
+and the source community keeps control of access.
+
+The same setup works when the communities are on different Hobbyfiles servers.
+Their admins establish a trusted federation between the servers, then link only
+the rooms they choose. The source server and room must allow the connection, and
+the destination still picks what to show with its filters. That way a Pathfinder
+room can surface just the relevant Foundry modules without opening up the other
+server’s rooms or copying its files.
 
 The optional public directory exposes only rooms that opt in. Profiles collect
 activity, contribution statistics, and achievement tracks for uploads,
