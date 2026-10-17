@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- PDF and comic readers now share a three-part zoom control with the current
+  fitted-size ratio; both paginated comics and Webtoon pages can zoom and scroll.
 - Open supported files inside ZIP archives in the archive dialog, including
   images, PDFs, ePubs, comics, video, and audio. Nested comic pages can be read
   there, and previewed files can be downloaded from the viewer.

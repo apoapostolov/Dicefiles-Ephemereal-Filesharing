@@ -369,9 +369,10 @@
       <button id="reader-close" class="i-clear" type="button" aria-label="Close reader" title="Close reader"></button>
       <span id="reader-title"></span>
       <span id="reader-info"></span>
-      <div class="reader-zoom-pill">
-        <button id="reader-zoom-out" title="Zoom out">&#8722;</button>
-        <button id="reader-zoom-in" title="Zoom in">&#43;</button>
+      <div id="reader-zoom-pill" class="reader-zoom-pill hidden" role="group" aria-label="Zoom">
+        <button id="reader-zoom-out" type="button" title="Zoom out" aria-label="Zoom out">&#8722;</button>
+        <span id="reader-zoom-value" class="reader-zoom-value" aria-live="polite">1.00×</span>
+        <button id="reader-zoom-in" type="button" title="Zoom in" aria-label="Zoom in">&#43;</button>
       </div>
       <div id="reader-view-pill" class="hidden reader-view-pill">
         <button

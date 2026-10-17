@@ -36,6 +36,8 @@ class PDFReader {
     this.observer = null;
     this.canvases = [];
     this.scale = 1.4;
+    this._baseScale = 1.4;
+    this.zoomRatio = 1;
     this._pageHeight = 0;
     this._currentPageNum = 1;
     this._destroyed = false;
@@ -131,6 +133,7 @@ class PDFReader {
       const naturalViewport = firstPage.getViewport({ scale: 1 });
       const pageDisplayW = Math.max(1, Math.floor(containerWidth * 0.8));
       this.scale = pageDisplayW / naturalViewport.width;
+      this._baseScale = this.scale;
       // Pre-compute placeholder height so IntersectionObserver thresholds are accurate
       this._pageHeight = Math.ceil(naturalViewport.height * this.scale);
       dbg(
@@ -335,9 +338,13 @@ class PDFReader {
     vis.observe(wrapperEl);
   }
 
-  setZoom(delta) {
+  setZoom(zoomRatio) {
+    this.zoomRatio = Math.max(0.5, Math.min(3, zoomRatio));
+    this.scale = this._baseScale * this.zoomRatio;
+    if (!this.pdfDoc || !this.totalPages) {
+      return;
+    }
     const savedPage = this._currentPageNum;
-    this.scale = Math.max(0.6, Math.min(3.0, this.scale + delta));
     // Re-render visible pages at new scale
     this.renderedPages.clear();
     this._buildPagePlaceholders();

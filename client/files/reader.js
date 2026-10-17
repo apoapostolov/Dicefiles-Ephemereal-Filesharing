@@ -104,8 +104,10 @@ export default class Reader {
     this.closeEl = document.querySelector("#reader-close");
     this.titleEl = document.querySelector("#reader-title");
     this.infoEl = document.querySelector("#reader-info");
+    this.zoomPillEl = document.querySelector("#reader-zoom-pill");
     this.zoomInEl = document.querySelector("#reader-zoom-in");
     this.zoomOutEl = document.querySelector("#reader-zoom-out");
+    this.zoomValueEl = document.querySelector("#reader-zoom-value");
     this.prevEl = document.querySelector("#reader-prev");
     this.nextEl = document.querySelector("#reader-next");
     this.downloadEl = document.querySelector("#reader-download");
@@ -140,6 +142,7 @@ export default class Reader {
     this._returnFocus = null;
     this._renderer = null;
     this._readerType = null;
+    this._zoomRatio = 1;
     this._mangaMode = !!(
       typeof localStorage !== "undefined" &&
       localStorage.getItem("reader_manga") === "1"
@@ -375,6 +378,8 @@ export default class Reader {
     this._returnFocus = document.activeElement;
     this.file = file;
     this._readerType = rtype;
+    this._zoomRatio = 1;
+    this._updateZoomValue();
 
     if (this.titleEl) {
       this.titleEl.textContent = file.name;
@@ -392,11 +397,8 @@ export default class Reader {
     const isPdf = rtype === "pdf";
     const isBook = rtype === "epub" || rtype === "mobi";
     const isComic = rtype === "comic";
-    if (this.zoomInEl) {
-      this.zoomInEl.classList.toggle("hidden", !isPdf);
-    }
-    if (this.zoomOutEl) {
-      this.zoomOutEl.classList.toggle("hidden", !isPdf);
+    if (this.zoomPillEl) {
+      this.zoomPillEl.classList.toggle("hidden", !(isPdf || isComic));
     }
     if (this.prevEl) {
       this.prevEl.classList.toggle("hidden", !(isBook || isComic));
@@ -438,6 +440,9 @@ export default class Reader {
       if (isPdf) {
         this._renderer = new PDFReader(this.contentEl, this.infoEl);
         await this._renderer.open(file.url, file.key);
+        if (this._zoomRatio !== 1) {
+          this._renderer.setZoom(this._zoomRatio);
+        }
       }
       else if (isComic) {
         await this._openComicRenderer();
@@ -481,6 +486,7 @@ export default class Reader {
       this._renderer.setMangaMode(this._mangaMode);
       await this._renderer.open(this.file);
     }
+    this._renderer.setZoom(this._zoomRatio);
   }
 
   _toggleOptsModal() {
@@ -677,8 +683,30 @@ export default class Reader {
   }
 
   _zoom(delta) {
-    if (this._renderer instanceof PDFReader) {
-      this._renderer.setZoom(delta);
+    if (
+      this._renderer instanceof PDFReader ||
+      this._renderer instanceof ComicReader ||
+      this._renderer instanceof WebtoonReader
+    ) {
+      this._zoomRatio = Math.max(0.5, Math.min(3, this._zoomRatio + delta));
+      this._zoomRatio = Math.round(this._zoomRatio * 20) / 20;
+      this._renderer.setZoom(this._zoomRatio);
+      this._updateZoomValue();
+    }
+  }
+
+  _updateZoomValue() {
+    if (!this.zoomValueEl) {
+      return;
+    }
+    const rounded = Math.round(this._zoomRatio * 20) / 20;
+    this.zoomValueEl.textContent = `${rounded.toFixed(2)}×`;
+    this.zoomValueEl.title = `Zoom ${rounded.toFixed(2)}×`;
+    if (this.zoomOutEl) {
+      this.zoomOutEl.disabled = rounded <= 0.5;
+    }
+    if (this.zoomInEl) {
+      this.zoomInEl.disabled = rounded >= 3;
     }
   }
 

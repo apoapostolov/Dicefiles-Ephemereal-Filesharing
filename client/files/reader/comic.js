@@ -28,6 +28,8 @@ class ComicReader {
     this._currentPage = 0; // 0-indexed
     this._mangaMode = false;
     this._imgEl = null;
+    this.zoomRatio = 1;
+    this._resizeObserver = null;
     this._destroyed = false;
     this.onPageChange = null; // callback(page) — set by Reader
   }
@@ -66,12 +68,43 @@ class ComicReader {
     this._imgEl = dom("img", { classes: ["reader-comic-page"] });
     this._imgEl.alt = "";
     this.container.appendChild(this._imgEl);
+    this._applyZoom();
+    if (typeof ResizeObserver !== "undefined") {
+      this._resizeObserver = new ResizeObserver(() => this._applyZoom());
+      this._resizeObserver.observe(this.container);
+    }
 
     // Restore saved position
     const saved = loadProgress(this._fileKey);
     const startPage =
       saved && saved.page >= 0 && saved.page < pages ? saved.page : 0;
     await this._showPage(startPage);
+  }
+
+  _applyZoom() {
+    if (!this._imgEl) {
+      return;
+    }
+    const style = getComputedStyle(this.container);
+    const width = Math.max(
+      1,
+      this.container.clientWidth -
+        parseFloat(style.paddingLeft) -
+        parseFloat(style.paddingRight),
+    );
+    const height = Math.max(
+      1,
+      this.container.clientHeight -
+        parseFloat(style.paddingTop) -
+        parseFloat(style.paddingBottom),
+    );
+    this._imgEl.style.maxWidth = `${width * this.zoomRatio}px`;
+    this._imgEl.style.maxHeight = `${height * this.zoomRatio}px`;
+  }
+
+  setZoom(zoomRatio) {
+    this.zoomRatio = Math.max(0.5, Math.min(3, zoomRatio));
+    this._applyZoom();
   }
 
   _showPage(n) {
@@ -132,6 +165,8 @@ class ComicReader {
 
   destroy() {
     this._destroyed = true;
+    this._resizeObserver?.disconnect();
+    this._resizeObserver = null;
     this._imgEl = null;
     this.container.textContent = "";
   }
@@ -147,6 +182,8 @@ class WebtoonReader {
     this._destroyed = false;
     this._stripEl = null;
     this._imgEls = [];
+    this.zoomRatio = 1;
+    this._resizeObserver = null;
     this._observer = null;
     this._visiblePage = 0; // 0-indexed page currently most visible
     this._fileKey = null;
@@ -187,6 +224,11 @@ class WebtoonReader {
     this.container.textContent = "";
     this._stripEl = dom("div", { classes: ["reader-webtoon-strip"] });
     this.container.appendChild(this._stripEl);
+    this._applyZoom();
+    if (typeof ResizeObserver !== "undefined") {
+      this._resizeObserver = new ResizeObserver(() => this._applyZoom());
+      this._resizeObserver.observe(this.container);
+    }
     this._imgEls = [];
 
     for (let i = 0; i < pages; i++) {
@@ -342,6 +384,25 @@ class WebtoonReader {
     this._updateInfo();
   }
 
+  _applyZoom() {
+    if (!this._stripEl) {
+      return;
+    }
+    const style = getComputedStyle(this.container);
+    const width = Math.max(
+      1,
+      this.container.clientWidth -
+        parseFloat(style.paddingLeft) -
+        parseFloat(style.paddingRight),
+    );
+    this._stripEl.style.width = `${Math.min(width, 900) * this.zoomRatio}px`;
+  }
+
+  setZoom(zoomRatio) {
+    this.zoomRatio = Math.max(0.5, Math.min(3, zoomRatio));
+    this._applyZoom();
+  }
+
   /** Scroll the container down by one step; save progress immediately. */
   nextPage() {
     const step = Math.round(this._pageHeight * 0.25);
@@ -366,6 +427,8 @@ class WebtoonReader {
 
   destroy() {
     this._destroyed = true;
+    this._resizeObserver?.disconnect();
+    this._resizeObserver = null;
     if (this._observer) {
       this._observer.disconnect();
       this._observer = null;
