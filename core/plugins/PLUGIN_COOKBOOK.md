@@ -283,7 +283,7 @@ they are not evidence that a file satisfies the request.
 
 ```js
 async function applyRequestSuggestion(ctx, data) {
-  await ctx.dicefiles.fulfillRequest({
+  await ctx.hobbyfiles.fulfillRequest({
     key: data.key, fileKey: data.fileKey, expectedRevision: data.expectedRevision,
   });
   return { detail: "Request fulfilled with the reviewed file." };

@@ -173,7 +173,7 @@ credentials and large operator settings.
 | `signal` | AbortSignal during guarded execution; pass it into I/O |
 | `log.info/warn/error` | Operator logging; redact secrets before calling |
 | `publicBaseUrl` | Operator-configured external origin; it can be empty |
-| `dicefiles` | Typed room reads and actions, sections 4–5 |
+| `hobbyfiles` | Typed room reads and actions, sections 4–5 |
 | `uploadFile`, `http` | File ingest and bounded HTTP, section 6 |
 | `state`, `report` | Private state and host-rendered activity, sections 7–8 |
 | `jobs`, `connections` | Durable work and approved provider access, sections 9–10 |
