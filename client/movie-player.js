@@ -316,6 +316,9 @@ export class MoviePlayer extends Modal {
       }
       this.playButton.focus(); this.update();
       this.fit();
+      if (this.reference.index >= 0) {
+        await this.startPlayback(true);
+      }
     }
     catch (error) {
       if (!this.closed && this.reference.index >= 0 && this.usingCompatible === false && !this.forceCompatible) {
@@ -355,18 +358,31 @@ export class MoviePlayer extends Modal {
       if (this.closed || this.loadFailed) {
         return;
       }
-      await this.video.play().catch(error => {
-        if (error?.name === "NotAllowedError") {
-          this.setFeedback("Your browser paused playback. Press Play again to start.");
-        }
-        else if (error?.name !== "AbortError") {
-          this.playbackError(error);
-        }
-      });
+      if (this.video.paused) {
+        await this.startPlayback();
+      }
     }
     else {
       this.video.pause();
     }
+  }
+
+  async startPlayback(automatic = false) {
+    if (this.closed || this.loadFailed) {
+      return;
+    }
+    this.playbackAttempted = true;
+    await this.video.play().catch(error => {
+      if (this.closed) {
+        return;
+      }
+      if (error?.name === "NotAllowedError") {
+        this.setFeedback(automatic ? "Your browser blocked automatic playback. Press Play to start." : "Your browser paused playback. Press Play to start.");
+      }
+      else if (error?.name !== "AbortError") {
+        this.playbackError(error);
+      }
+    });
   }
 
   update() {

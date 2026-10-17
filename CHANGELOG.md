@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Torrent videos start playing automatically when ready, resuming saved progress.
+  Browsers that block autoplay show a Play-button fallback.
 - Torrent dialogs offer a right-aligned Watch action: play the largest movie
   video or resume the earliest unwatched TV episode across season packs.
   Episodes count as watched at 90%, including in Continue Watching.

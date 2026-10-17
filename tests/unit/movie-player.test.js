@@ -171,16 +171,47 @@ test("preparation failures offer a real retry before any playback failure messag
   player.onhidden();
 });
 
-test("MKV torrents prepare a browser-compatible HLS source before loading Shaka", async () => {
+test("MKV torrents prepare a browser-compatible HLS source and play automatically when ready", async () => {
   const { MoviePlayer, context } = fixture();
   const player = new MoviePlayer({ name: "Synthetic.mkv" }, { kind: "file", key: "synthetic", index: 0 }, { name: "Synthetic.mkv" });
   await player.onshown();
   expect(context.fetch).toHaveBeenCalledTimes(1);
   expect(player.player.source).toBe("/media/file/synthetic/-1/hls.m3u8");
   expect(player.player.mime).toBe("application/x-mpegurl");
-  expect(player.video.paused).toBe(true);
+  expect(player.video.paused).toBe(false);
+  expect(player.playbackAttempted).toBe(true);
   const {signal} = context.fetch.mock.calls[0][1];
   player.onhidden(); expect(signal.aborted).toBe(true);
+});
+
+test("progressive torrent autoplay resumes its timestamp and never overrides a later pause", async () => {
+  const { MoviePlayer, localStorage } = fixture();
+  videoHelpers.saveWatch(localStorage, "file:synthetic:0", 93, 660);
+  const player = new MoviePlayer({ name: "Synthetic.mp4" }, { kind: "file", key: "synthetic", index: 0 }, { name: "Synthetic.mp4" });
+  const play = jest.spyOn(player.video, "play");
+  await player.onshown();
+  expect(player.player.source).toContain("/stream");
+  expect(player.video.currentTime).toBe(93); expect(player.video.paused).toBe(false);
+  expect(play).toHaveBeenCalledTimes(1);
+  await player.toggle();
+  player.video.dispatchEvent(new Event("canplay"));
+  expect(player.video.paused).toBe(true); expect(play).toHaveBeenCalledTimes(1);
+  player.onhidden();
+});
+
+test("browser autoplay refusal leaves a usable Play button without marking the stream failed", async () => {
+  const { MoviePlayer } = fixture();
+  const player = new MoviePlayer({ name: "Synthetic.mkv" }, { kind: "link", key: "synthetic", index: 0 }, { name: "Synthetic.mkv" });
+  const play = jest.spyOn(player.video, "play").mockRejectedValueOnce(Object.assign(new Error("policy"), { name: "NotAllowedError" }));
+  await player.onshown();
+  expect(player.video.paused).toBe(true); expect(player.loadFailed).toBe(false);
+  expect(player.playButton.disabled).toBe(false);
+  expect(player.feedback.textContent).toBe("Your browser blocked automatic playback. Press Play to start.");
+  await player.toggle();
+  expect(play).toHaveBeenCalledTimes(2); expect(player.video.paused).toBe(false);
+  player.onhidden();
+  await player.startPlayback(true);
+  expect(play).toHaveBeenCalledTimes(2);
 });
 
 test("torrent preparation presents the server's recovery message and retries", async () => {
@@ -225,7 +256,7 @@ test("closing aborts an in-flight sample and late progress cannot replace a play
   expect(signal.aborted).toBe(true);
   deliver(new Response(JSON.stringify({ downloadedParts: 9, totalParts: 99 })));
   await jest.advanceTimersByTimeAsync(0);
-  expect(player.feedback.textContent).toContain("Video preparation did not finish");
+  expect(player.feedback.textContent).toContain("Playback stopped");
   expect(player.feedback.attrs["data-buffering"]).toBe("false");
   player.onhidden();
   await jest.advanceTimersByTimeAsync(4000);

@@ -40,7 +40,9 @@ two full-width preference selectors, then evenly filled view actions. Controls
 have 44px minimum height; missing picture-in-picture support leaves no empty cell.
 The player Close action is a header × button, with no footer row. Size the frame
 using the measured title header, status and controls so everything fits within
-the viewport; buffer on opening and leave playback paused until Play.
+the viewport; buffer on opening. Start torrent videos automatically when ready;
+if the browser blocks autoplay, keep Play available with a short explanation.
+Uploaded videos stay paused until Play.
 Tracker rows keep the hostname, protocol and report on one line. Truncate long
 hostnames and reports visually with full text available in their tooltips.
 

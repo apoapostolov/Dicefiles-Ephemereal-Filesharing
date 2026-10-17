@@ -8,9 +8,11 @@ the browser supports it, and a subtitle selector. Shaka supports progressive
 video as well as HLS/DASH; uploaded MP4 and WebM files use normal HTTP range
 playback. It loads only when a video is opened. All interface colors use the
 selected Hobbyfiles theme.
-Opening the player starts buffering immediately and leaves playback paused until
-Play is pressed. Loading failures offer a retry without reporting a playback
-failure before Play. Close uses the × button in the header or Escape; there is
+Opening the player starts buffering immediately. Torrent videos start playing
+automatically once ready, at their saved position. If browser autoplay policy
+blocks playback, press Play to start. Uploaded videos remain paused until
+Play is pressed. Preparation failures offer a retry before playback starts.
+Close uses the × button in the header or Escape; there is
 no footer action row. The video and controls fit the available window height.
 On small screens, controls fill equal-width rows. The player follows the video's
 intrinsic proportions and available height, narrowing its controls with the
