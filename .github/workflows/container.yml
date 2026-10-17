@@ -46,6 +46,7 @@ jobs:
       - name: Check preview dependencies and isolated service
         run: |
           docker run --rm hobbyfiles:ci node /opt/hobbyfiles/scripts/check-preview-tools.js
+          docker run --rm hobbyfiles:ci node /opt/hobbyfiles/scripts/check-torrent-runtime.js
           docker network create hobbyfiles-ci
           docker run -d --name hobbyfiles-redis --network hobbyfiles-ci redis:7-alpine
           secret=$(openssl rand -hex 32)

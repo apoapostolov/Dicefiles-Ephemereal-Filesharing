@@ -1,0 +1,10 @@
+{
+  "name": "webrtc-polyfill",
+  "version": "1.2.2-hobbyfiles.1",
+  "description": "Explicitly disabled WebRTC for Hobbyfiles' TCP-only server torrent client",
+  "type": "module",
+  "main": "index.js",
+  "exports": "./index.js",
+  "license": "MIT",
+  "private": true
+}

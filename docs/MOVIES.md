@@ -176,6 +176,14 @@ fonts, SDKs, analytics or CDN scripts. WebTorrent's tracker dependency is pinned
 as a local MIT snapshot to remove its unpatched `ip` package; the small patch is
 documented in `vendor/bittorrent-tracker/HOBBYFILES.md`.
 
+The server's TCP-only runtime also resolves the unused WebRTC polyfill to a
+small [disabled-capability adapter](../vendor/webrtc-disabled/README.md). This
+prevents an eager native WebRTC import from breaking playback when Windows and
+WSL use the same checkout. Run `yarn check:torrent-runtime` on the server to
+verify the installed client starts; this performs no public peer discovery.
+The integration suite additionally transfers a synthetic byte range between
+two local clients using the production piece store.
+
 
 ### Season and complete-series packs
 

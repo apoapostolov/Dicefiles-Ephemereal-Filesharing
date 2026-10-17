@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fix torrent startup in WSL when the checkout's dependencies were installed on
+  Windows. The TCP-only torrent client no longer loads an unused native WebRTC
+  addon, and startup failures now report a clear recovery step.
 - Torrent video playback tries the full bounded peer pool when recovering
   magnet metadata. MKV, AVI, MOV and transport-stream videos gain on-demand
   browser-compatible HLS conversion with seeking, subtitles and watch progress;
