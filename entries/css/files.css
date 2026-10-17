@@ -828,6 +828,11 @@ body.links-mode #filelist-scroller {
   align-self: center;
 }
 
+#files.gallerymode .torrent-gallery-artwork { position: absolute; inset: 0; overflow: hidden; }
+#files.gallerymode .torrent-gallery-artwork.has-clearlogo::after { content: ''; position: absolute; inset: 40% 0 0; background: linear-gradient(transparent, var(--overlay-bg)); pointer-events: none; }
+#files.gallerymode .torrent-gallery-logo { position: absolute; inset-inline: 8%; bottom: 4.7rem; height: 23%; max-height: 5rem; z-index: 2; pointer-events: none; }
+#files.gallerymode .preview .torrent-gallery-logo img { object-fit: contain; object-position: center bottom; filter: drop-shadow(0 2px 4px var(--shadow-color)); }
+
 #files.gallerymode .preview .gallery-placeholder {
   position: relative;
   isolation: isolate;

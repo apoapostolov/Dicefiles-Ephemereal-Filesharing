@@ -6,6 +6,9 @@
   variables, plugin API properties, API headers, federation identifiers, and
   browser preference keys remain accepted so existing installations keep
   working during the rename.
+- Torrent gallery cards use matched posters, with available clearlogos layered
+  over the lower image area above the file details. Missing artwork falls back
+  to the cached torrent image or standard placeholder.
 
 ## [1.4.7] - 2026-10-16 [Collections, Communities and TV Packs]
 

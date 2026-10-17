@@ -8,6 +8,7 @@ import registry from "../registry";
 import { compactTag } from "../compact-tag";
 import { showMovieInfo } from "../movie";
 import { durationSeconds } from "../../common/video";
+import { torrentArtwork } from "../../common/torrent-presentation";
 import { dom, nukeEvent, sort, toPrettyDuration, toPrettySize } from "../util";
 import { REMOVALS, TTL } from "./tracker";
 
@@ -261,8 +262,11 @@ export default class File extends BaseFile {
       return;
     }
     this.previewEl.classList.remove("loading");
-    if (this.meta?.torrent?.imageDataUrl?.startsWith("data:image/jpeg;base64,")) {
-      this.previewEl.src = this.meta.torrent.imageDataUrl;
+    const artwork = torrentArtwork(this.meta?.torrent, this.meta?.cinema, this.displayMovie);
+    if (artwork) {
+      const preview = this.createTorrentArtworkPreview(artwork);
+      this.previewContEl.replaceChild(preview, this.previewEl);
+      this.previewEl = preview;
       return;
     }
     const preview = this.findPreview() || { type: "none" };
@@ -305,12 +309,19 @@ export default class File extends BaseFile {
     }
 
     case "image": {
+      const pending = this.previewEl;
       const loaded = new Image();
       loaded.onload = () => {
+        if (this.previewEl !== pending) {
+          return;
+        }
         this.previewContEl.replaceChild(loaded, this.previewEl);
         this.previewEl = loaded;
       };
       loaded.onerror = () => {
+        if (this.previewEl !== pending) {
+          return;
+        }
         const placeholder = this.createPreviewPlaceholder();
         this.previewContEl.replaceChild(placeholder, this.previewEl);
         this.previewEl = placeholder;
@@ -326,6 +337,35 @@ export default class File extends BaseFile {
       return;
     }
     }
+  }
+
+  createTorrentArtworkPreview({ poster, logo, fallback }) {
+    const artwork = dom("span", { classes: ["torrent-gallery-artwork", ...(logo ? ["has-clearlogo"] : [])] });
+    const cover = dom("img", { classes: ["torrent-gallery-poster"], attrs: { src: poster, alt: `Poster for ${this.displayName}`, loading: "lazy", decoding: "async", referrerpolicy: "no-referrer", draggable: "false" } });
+    let overlay;
+    const removeLogo = () => {
+      overlay?.remove(); artwork.classList.remove("has-clearlogo");
+    };
+    cover.onerror = () => {
+      if (this.previewEl !== artwork) {
+        return;
+      }
+      removeLogo();
+      if (fallback) {
+        cover.src = fallback; fallback = null;
+      }
+      else {
+        const placeholder = this.createPreviewPlaceholder();
+        this.previewContEl.replaceChild(placeholder, artwork); this.previewEl = placeholder;
+      }
+    };
+    artwork.appendChild(cover);
+    if (logo) {
+      overlay = dom("span", { classes: ["torrent-gallery-logo"], attrs: { "aria-hidden": "true" } });
+      const image = dom("img", { attrs: { src: logo, alt: "", loading: "lazy", decoding: "async", referrerpolicy: "no-referrer", draggable: "false" } });
+      image.onerror = removeLogo; overlay.appendChild(image); artwork.appendChild(overlay);
+    }
+    return artwork;
   }
 
   createPreviewPlaceholder() {

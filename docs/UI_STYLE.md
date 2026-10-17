@@ -44,6 +44,12 @@ the viewport; buffer on opening and leave playback paused until Play.
 Tracker rows keep the hostname, protocol and report on one line. Truncate long
 hostnames and reports visually with full text available in their tooltips.
 
+Torrent gallery cards prefer the matched movie/series poster over cached image
+discovery. Crop posters to fill the existing card; contain transparent clearlogos
+in the lower image area above the name/details footer, with a themed scrim and
+no extra controls. Logos are decorative, never stretched, and do not intercept
+clicks. Failed artwork uses the cached torrent image or normal placeholder.
+
 Video Information subtitles use a two-column grid at every supported width:
 language dropdown on the left and Add file on the right, both with 44px targets.
 List uploaded language/filename pairs below, with wrapping filenames and a

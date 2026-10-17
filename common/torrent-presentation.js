@@ -52,4 +52,14 @@ function featuredMovie(torrent, cinema = {}) {
   return matched.length ? { ...matched[0], count: matched.length, presentation: torrentMedia(torrent, cinema) } : null;
 }
 
-module.exports = { fileKind, presentTorrent, availabilityView, featuredMovie };
+function torrentArtwork(torrent, cinema = {}, preferredMovie) {
+  if (!torrent) {
+    return null;
+  }
+  const candidates = (torrent.files || []).map((file, index) => ({ file, movie: cinema[index]?.movie })).filter(row => row.movie?.poster && fileKind(row.file.path || "").icon === "video").sort((a, b) => (b.file.size || 0) - (a.file.size || 0));
+  const movie = preferredMovie?.poster ? preferredMovie : candidates[0]?.movie;
+  const embedded = torrent.imageDataUrl?.startsWith("data:image/jpeg;base64,") ? torrent.imageDataUrl : null;
+  return movie?.poster ? { poster: movie.poster, logo: movie.logo || null, fallback: embedded } : embedded ? { poster: embedded, logo: null, fallback: null } : null;
+}
+
+module.exports = { fileKind, presentTorrent, availabilityView, featuredMovie, torrentArtwork };

@@ -27,10 +27,6 @@ Each room combines live chat, temporary file sharing, requests, readers,
 moderation, and optional automation without feeling like a generic cloud-drive
 dashboard. You host it; there is no public Hobbyfiles service.
 
-<p align="center">
-  <img src="images/hobbyfiles-room-gallery.png" alt="A Hobbyfiles room with live chat, filters, and a gallery of shared files" width="100%">
-</p>
-
 ## What's New in 1.4.7
 
 Rooms can collect from approved feeds and cloud folders, review uploads and
@@ -64,10 +60,7 @@ before enabling collectors. See the full [changelog](CHANGELOG.md).
 - **Watch movies and episodes.** Resume long videos, match clear torrent titles automatically or choose a catalogue result,
   browse artwork and cast, and add subtitles in your language.
 
-<p align="center">
-  <img src="images/hobbyfiles-books-gallery.png" alt="A Hobbyfiles gallery with generated book and comic covers" width="49%">
-  <img src="images/hobbyfiles-archive-browser.png" alt="The in-room archive browser listing package contents" width="49%">
-</p>
+![A community room with chat, shared maps, books, comics, archives, and postered torrents](images/hobbyfiles-room-gallery.png)
 
 ## Rooms Made for Communities
 
@@ -80,10 +73,7 @@ The optional public directory exposes only rooms that opt in. Profiles collect
 activity, contribution statistics, and achievement tracks for uploads,
 downloads, and fulfilled requests.
 
-<p align="center">
-  <img src="images/hobbyfiles-request-board.png" alt="The request board with open requests ready to be fulfilled" width="49%">
-  <img src="images/hobbyfiles-room-options.png" alt="Room options for identity, retention, privacy, linking, and themes" width="49%">
-</p>
+![An RPG map preview with image dimensions, tags, and file details](images/hobbyfiles-map-viewer.png)
 
 ## Built-in Readers
 
@@ -95,10 +85,19 @@ downloads, and fulfilled requests.
 PDF, ePub, and MOBI reading runs in the browser. Native tools are used only for
 server-generated previews and formats such as RAR/7Z extraction.
 
-<p align="center">
-  <img src="images/hobbyfiles-epub-reader.png" alt="An ePub chapter open in the in-room reader" width="49%">
-  <img src="images/hobbyfiles-comic-reader.png" alt="A comic page open in the in-room reader" width="49%">
-</p>
+![The in-room PDF reader showing an illustrated rulebook cover](images/hobbyfiles-pdf-reader.png)
+
+The same room also previews archive contents before extraction:
+
+![Archive browser showing the contents of a 3D-printing STL archive](images/hobbyfiles-archive-browser.png)
+
+## Torrent and Video Support
+
+Magnet links and torrent files expose searchable contents, tracker status,
+availability estimates, and matched movie or episode details. Movie and TV
+season packs can be streamed when peers and codecs allow it.
+
+![Torrent details for a matched TV season pack, including episodes, tracker status, and availability](images/hobbyfiles-torrent-details.png)
 
 ## Quick Start
 
@@ -143,7 +142,81 @@ keys, or generated capability URLs.
 
 ## Docker: build and run
 
-Use Docker Engine with Compose, or Docker Desktop in Linux-container mode:
+For a new installation, copy this into `compose.yaml` to run the published
+Hobbyfiles 1.4.7 image with Docker Compose:
+
+```yaml
+services:
+  hobbyfiles:
+    image: ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing:1.4.7
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      HTTP_PORT: "8080"
+      REDIS_URL: redis://redis:6379/0
+      HOBBYFILES_SECRET: ${HOBBYFILES_SECRET:?Set HOBBYFILES_SECRET in .env}
+    ports:
+      - "127.0.0.1:${HOBBYFILES_PORT:-8080}:8080"
+    volumes:
+      - hobbyfiles-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=512m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
+    mem_limit: 2g
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 512m
+
+volumes:
+  hobbyfiles-data:
+  redis-data:
+```
+
+Create a `.env` file beside `compose.yaml`. Generate a private secret with
+`openssl rand -hex 32`, then put the generated value here:
+
+```dotenv
+HOBBYFILES_SECRET=paste-generated-value-here
+HOBBYFILES_PORT=8080
+```
+
+Then start Hobbyfiles and check that it is healthy:
+
+```bash
+docker compose up -d
+docker compose ps
+curl -fsS http://127.0.0.1:8080/healthz
+```
+
+Docker Desktop shows the **Hobbyfiles** project in Containers. The app listens
+on loopback port 8080. To expose it beyond this computer, put it behind an HTTPS
+reverse proxy as described in the [Docker guide](docs/DOCKER.md).
+For an existing Docker installation, keep its current Compose project and
+follow the guide's upgrade steps so its volumes remain attached.
+
+To build from the repository instead, use Docker Engine with Compose or Docker
+Desktop in Linux-container mode:
 
 ```bash
 docker build -t hobbyfiles:local .
@@ -158,12 +231,9 @@ docker compose --env-file .env.docker ps
 curl -fsS http://127.0.0.1:8080/healthz
 ```
 
-Docker Desktop shows the **Hobbyfiles** project in Containers. The Compose
-project key remains `dicefiles` to keep existing Redis and upload volumes
-attached. The app listens on loopback port 8080.
-To use a published GHCR build, set `HOBBYFILES_IMAGE` to
-`ghcr.io/apoapostolov/hobbyfiles:TAG`, run
-`docker compose --env-file .env.docker pull`, then `up -d --no-build`.
+For a newer published build, change the `image` line in the Compose example to
+`ghcr.io/apoapostolov/hobbyfiles:TAG` using a tag that has been published to
+GHCR.
 
 The [Docker guide](docs/DOCKER.md) covers the complete recipe, GHCR publication,
 configuration, backups, upgrades and preview sandbox limitations. The default
@@ -197,10 +267,6 @@ access. Permissions are split into scopes, rate limited, and audited.
 
 The protected operator dashboard reports capacity, uptime, traffic, requests,
 and service health without exposing filesystem paths or secrets.
-
-<p align="center">
-  <img src="images/hobbyfiles-status-dashboard.png" alt="The operator dashboard with service health, capacity, and activity" width="100%">
-</p>
 
 ## Development
 
