@@ -75,6 +75,31 @@ before enabling collectors.
 
 ![The Indie Adventurer room with community chat beside a gallery of RPG books, archives, maps, and a matched torrent](images/hobbyfiles-room-gallery.png)
 
+## Built-in Readers & Viewers
+
+- **PDF:** lazy page rendering, range requests, zoom, progress, and download.
+- **ePub:** A5-style pages, chapter navigation, typography controls, and soft page curls.
+- **MOBI / AZW / AZW3:** browser-side parsing with the same paginated reading view.
+- **Comics:** sequential CBZ, CBR, and CB7 pages with keyboard navigation.
+- **3D objects:** inspect STL, 3MF, OBJ, glTF/GLB, PLY, FBX, and USD models in the Babylon.js viewer, including models opened from supported archives with linked assets.
+
+PDF, ePub, and MOBI reading runs in the browser. Native tools are used only for
+server-generated previews and formats such as RAR/7Z extraction.
+
+![The PDF reader open to an illustrated page in Designers & Dragons: Origins](images/hobbyfiles-pdf-reader.png)
+
+![The ePub reader with its dark page color and typography controls open](images/hobbyfiles-epub-reader.png)
+
+![The Witcher comic open to an illustrated interior page in Webtoon mode](images/hobbyfiles-comic-reader.png)
+
+The archive viewer opens supported files in the same preview dialog used for
+room files, so members can read a PDF, flip through a comic, inspect an image,
+or launch a 3D model without extracting it first. Linked model assets are
+resolved from the archive and cached with the preview. The action column stays
+aligned alongside each file's size:
+
+![A 3D-printing ZIP archive with aligned View and 3D View actions beside its files](images/hobbyfiles-archive-browser.png)
+
 ![An STL miniature rendered in the in-browser 3D model viewer](images/hobbyfiles-3d-model-viewer.png)
 
 ## Rooms Made for Communities
@@ -97,30 +122,6 @@ Room owners manage room behavior, access, and automation in one place:
 ![The room plugin picker with collection, community, and publishing bots](images/hobbyfiles-room-plugins.png)
 
 ![A full-size dungeon map opened in the room's image preview](images/hobbyfiles-map-viewer.png)
-
-## Built-in Readers
-
-- **PDF:** lazy page rendering, range requests, zoom, progress, and download.
-- **ePub:** A5-style pages, chapter navigation, typography controls, and soft page curls.
-- **MOBI / AZW / AZW3:** browser-side parsing with the same paginated reading view.
-- **Comics:** sequential CBZ, CBR, and CB7 pages with keyboard navigation.
-
-PDF, ePub, and MOBI reading runs in the browser. Native tools are used only for
-server-generated previews and formats such as RAR/7Z extraction.
-
-![The PDF reader open to an illustrated page in Designers & Dragons: Origins](images/hobbyfiles-pdf-reader.png)
-
-![The ePub reader with its dark page color and typography controls open](images/hobbyfiles-epub-reader.png)
-
-![The Witcher comic open to an illustrated interior page in Webtoon mode](images/hobbyfiles-comic-reader.png)
-
-The archive viewer opens supported files in the same preview dialog used for
-room files, so members can read a PDF, flip through a comic, inspect an image,
-or launch a 3D model without extracting it first. Linked model assets are
-resolved from the archive and cached with the preview. The action column stays
-aligned alongside each file's size:
-
-![A 3D-printing ZIP archive with aligned View and 3D View actions beside its files](images/hobbyfiles-archive-browser.png)
 
 ## Torrent and Video Support
 
