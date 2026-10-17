@@ -13,6 +13,13 @@
   --theme-checkbox-on: #707070;
   --theme-checkbox-mark: #ffffff;
   --theme-checkbox-border: #999999;
+  /* ePub paper samples stay fixed across Appearance palettes. */
+  --theme-reader-page-white: #fff;
+  --theme-reader-page-white-edge: #8b8b8b;
+  --theme-reader-page-dark: #191919;
+  --theme-reader-page-dark-edge: #777;
+  --theme-reader-page-sepia: #f4ecd8;
+  --theme-reader-page-sepia-edge: #9b8767;
   --shadow-color: rgb(0 0 0 / 30%);
   --main-bg: var(--theme-chrome);
   --text-fg: var(--theme-text);
