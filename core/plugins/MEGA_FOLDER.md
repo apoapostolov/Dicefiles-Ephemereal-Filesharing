@@ -4,7 +4,9 @@ First-party plugin that **monitors a Mega.nz folder**, downloads new files over 
 
 Uploads appear under the **Mega.nz Autoshare** bot with a cyan **BOT** pill in the file list (not a human account).
 
-See [DEVELOPING_PLUGINS.md](./DEVELOPING_PLUGINS.md) for the full plugin contract.
+See the [Plugin API reference](./PLUGIN_API.md) for the current context contract,
+the [cookbook](./PLUGIN_COOKBOOK.md) for examples and
+[DEVELOPING_PLUGINS.md](./DEVELOPING_PLUGINS.md) for lifecycle and installation.
 
 ---
 

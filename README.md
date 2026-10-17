@@ -180,7 +180,10 @@ access. Permissions are split into scopes, rate limited, and audited.
 - [MCP setup and 57-tool reference](./MCP.md)
 - [Trusted-host federation](./docs/FEDERATION.md)
 - [Plugin development](./core/plugins/DEVELOPING_PLUGINS.md)
-- [Plugin API v2](./core/plugins/PLUGIN_API.md) — scoped reads, imports, checkpoints and integration patterns
+- [Core plugin power-user guide](./docs/CORE_PLUGINS.md) — practical setup for all 27 bundled bots
+- [Plugin API v2 reference](./core/plugins/PLUGIN_API.md) — callable contracts, complete modules and limits
+- [27-plugin developer cookbook](./core/plugins/PLUGIN_COOKBOOK.md) — configuration recipes and implementation patterns
+- [Offline power-user handbook](./docs/handbooks/dicefiles-core-plugins-1.4.7.html) and [developer handbook](./docs/handbooks/dicefiles-plugin-developer-1.4.7.html) — self-contained HTML; also attached to the [1.4.7 release](https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/releases/tag/v1.4.7)
 - [Collection bots: provider setup and recovery](./core/plugins/COLLECTION_BOTS.md)
 - [Community and maintenance bots: reviews, sessions and operator grants](./core/plugins/WORKFLOW_BOTS.md)
 - [Bots audit and ordered development checklist](./docs/BOTS_AND_PLUGINS.md)

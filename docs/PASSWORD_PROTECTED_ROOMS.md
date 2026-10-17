@@ -1,7 +1,7 @@
 # Password-protected rooms
 
 **Status:** Shared rotating community passwords are implemented for v1.4.5.
-Cohort and personal credentials are now implemented in the unreleased maintenance round.
+Cohort and personal credentials are now implemented in the 1.4.7 release.
 **Scope:** First-class shared and personal room access credentials
 
 ## Summary
@@ -990,7 +990,7 @@ These decisions do not change the core contract: secrets remain private,
 authorization is server-side and period-bounded, every content path uses one
 guard, and rotation invalidates old grants predictably.
 
-## Unreleased cohort and personal credentials
+## Cohort and personal credentials (1.4.7)
 
 Room Options provides creation, metadata, rotation, reveal and revocation controls.
 Each room supports 50 additional credentials. Cohort passwords can be shared;

@@ -1,6 +1,10 @@
 # Remote host imports: implemented adapters and expansion
 
-How Dicefiles should grow beyond **Mega.nz** toward the hosts hobby communities actually use: MediaFire, 4shared, Pixeldrain, Gofile, Catbox, Workupload, Dropbox public links, etc.
+Dicefiles 1.4.7 provides approved adapters beyond Mega.nz. This document combines
+the implemented remote-host contract with historical research and explicit future
+provider proposals. For current usage, start with the
+[power-user guide](../../docs/CORE_PLUGINS.md) and
+[multi-host operator guide](../../docs/MULTI_HOST_REMOTE_IMPORTS.md).
 
 Implemented: the shared downloader registry, `remote-import`, Mega.nz,
 official-API Pixeldrain and Gofile adapters, and the optional operator-allowlisted
@@ -16,9 +20,9 @@ marks sources as synced; results include `planned` and `plannedBytes`.
 Explicitly disabled providers cannot be resolved. Scans share a five-minute
 deadline and bounded provider/file/byte budgets.
 
-The implementation-ready 1.4.6 scope, provider contract, Gofile design,
+The implemented provider contract, Gofile design,
 Plowshare security boundary, migration rules, and acceptance tests are defined
-in [the multi-host remote imports proposal](../../docs/MULTI_HOST_REMOTE_IMPORTS.md).
+in [the multi-host remote imports guide](../../docs/MULTI_HOST_REMOTE_IMPORTS.md).
 
 This is intentionally separate from shipped
 [Dicefiles trusted-host federation](../../docs/FEDERATION.md). Federation
@@ -65,7 +69,7 @@ type RemoteDownloader = {
   /** Host id: mega | mediafire | fourshared | pixeldrain | … */
   id: string;
   /** Return true if this adapter can handle the URL */
-  canHandle(url: string): boolean;
+  canHandle(url: URL): boolean;
   /**
    * List a folder or resolve a single-file link to one entry.
    * credentials optional (premium / account hosts).
@@ -79,8 +83,9 @@ Orchestration (shared, not per-plugin):
 1. Match URL → downloader (`canHandle` / registry).
 2. `listFolder` → entries (skip dirs or recurse with depth cap).
 3. For each file: `openStream()` when available, with bounded buffer fallback.
-4. `uploadFile({ roomId, name, body, size, meta: { plugin, sourceUrl, host } })`.
-5. Emit normal `file_uploaded` webhooks; optional plugin events later.
+4. `uploadFile({ roomId, name, body, maxBytes, signal, meta })`, with hashed
+   source/revision provenance; never attach a secret-bearing source URL.
+5. Normal upload lifecycle events reach webhooks and subscribed room plugins.
 
 Shipped code uses `ctx.remoteDownloaders`, a registry of provider adapters.
 `ctx.megaDownloader` remains as a compatibility surface for the dedicated

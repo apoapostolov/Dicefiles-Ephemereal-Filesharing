@@ -11,7 +11,12 @@ Audience: operators and developers who already run a self-hosted Dicefiles insta
 
 ## Current runtime contract
 
-Release 1.4.4 makes event-driven plugins a supported first-party integration path:
+Dicefiles 1.4.7 ships 27 core plugins and the additive in-process context API 2.
+Start with the [API reference](./PLUGIN_API.md) for exact signatures and limits,
+or the [27-plugin cookbook](./PLUGIN_COOKBOOK.md) for configuration and code.
+The [power-user guide](../../docs/CORE_PLUGINS.md) covers owner workflows.
+
+Event-driven plugins are a supported first-party integration path:
 plugins can subscribe to room lifecycle events, call bounded Dicefiles adapters,
 perform timeout-limited JSON requests, and acquire Redis-backed one-time event
 leases before publishing to an external service. Scheduled runs are leased
@@ -19,7 +24,7 @@ across workers, bounded last-run status is retained, and room bots have scoped
 REST/MCP administration. Discord and Telegram release publishers are the
 reference outbound and authenticated-inbound implementations.
 
-The unreleased maintenance round adds the additive
+The released 1.4.7 implementation includes
 [Plugin API v2](./PLUGIN_API.md): private durable checkpoints, room inventory,
 individual file reads, paginated search, text/binary HTTP and cooperative
 cancellation. The [audit and ordered bot plan](../../docs/BOTS_AND_PLUGINS.md) describes
@@ -42,6 +47,7 @@ Plugins run **inside the Dicefiles Node worker**, with the same trust as core co
 
 ---
 
+<a id="plugin-event-catalog"></a>
 ## 2. Event catalog (webhooks + plugins)
 
 Configure outbound hooks in `.config.json` → `webhooks[]`. Each hook lists the events it wants.
@@ -55,6 +61,7 @@ Configure outbound hooks in `.config.json` → `webhooks[]`. Each hook lists the
 | `linked_file_appeared` | A file uploaded to source room **S** matches destination room **D**’s multi-room link rules (S has cross-linking on) |
 | `guest_invite_created` | Owner mints a guest invite link |
 | `guest_invite_redeemed` | A guest invite use is consumed |
+| `member_joined` | Room plugin onboarding event with an opaque member key; used by Welcome Guide, not an external webhook subscription |
 
 Payload shape (common envelope):
 
@@ -268,14 +275,17 @@ Tests inject fakes so they never hit the network.
 2. **Define `configSchema` + `validateConfig`** — fail closed on bad URLs/rooms.
 3. **Implement `run(ctx, args)`** for the main work; keep side effects behind injectables (`download`, `uploadFile`).
 4. **Optional `onEvent`** — declare `eventSubscriptions`; use
-   `ctx.events` when an external side effect must happen only once across
-   multiple workers.
+   durable `ctx.jobs` for deferred work and `ctx.events` for ownership/deduplication.
+   An external service write is not part of a Redis transaction; delivery can
+   remain uncertain after a crash.
 5. **Optional inbound endpoint** — verify the provider signature/secret against
    the exact raw body, require explicit caller/action allowlists, deduplicate
    provider event IDs with `ctx.events`, and return a bounded provider response.
 6. **Unit tests** that `require` the real module and inject fakes (see `tests/unit/plugins.test.js`).
 7. **Document** operator config in this folder or README.
-8. **Enable** in `.config.json` and restart.
+8. **Register and enable:** add the ID to `BUILTIN_IDS` for the room catalog,
+   rebuild/restart, then invite it. A global `.config.json` instance can load
+   a module by ID without a room-catalog entry. See the API reference.
 
 ### Permissions & safety
 

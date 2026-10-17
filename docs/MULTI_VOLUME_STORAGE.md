@@ -2,7 +2,7 @@
 
 **Status:** Core placement, reservations, health, and operator inspection are
 implemented for v1.4.5. Journaled manual drain/rebalance is now implemented in
-the unreleased maintenance round.
+the 1.4.7 release.
 **Scope:** Local filesystem directories and mounted drives on one Dicefiles host
 
 ## Summary
@@ -834,7 +834,7 @@ The architecture does not depend on these policy choices. They can be resolved
 before their respective implementation phase without changing stored blob
 identity or the `StorageLocation` contract.
 
-## Unreleased mover operations
+## Mover operations (1.4.7)
 
 Use the admin:storage scope to POST /api/v1/admin/storage/migrations. An explicit
 move takes hashes and targetVolumeId. Drain/rebalance takes mode, optional target,

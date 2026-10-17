@@ -121,7 +121,11 @@ If your change modifies user-facing behavior or setup:
 - Update `README.md`.
 - Update `CHANGELOG.md`.
 - Add migration notes when behavior changes can affect existing deployments.
-- Docs index: [README.md](./README.md). Product backlog: [FUTURE_DEVELOPMENT_PLAN.md](./FUTURE_DEVELOPMENT_PLAN.md). Plugins: `../core/plugins/`.
+- Docs index: [README.md](./README.md). Product backlog: [FUTURE_DEVELOPMENT_PLAN.md](./FUTURE_DEVELOPMENT_PLAN.md). Plugins: [API reference](../core/plugins/PLUGIN_API.md), [cookbook](../core/plugins/PLUGIN_COOKBOOK.md) and [power-user guide](./CORE_PLUGINS.md).
+- After changing plugin documentation, regenerate the offline editions with
+  `python3 scripts/export-plugin-docs.py` (requires Python 3.10+ and the `Markdown` package).
+  Keep the guide's 27-plugin inventory and examples aligned with the registry,
+  and document product/context/MCP versions separately.
 
 ## Review Criteria
 

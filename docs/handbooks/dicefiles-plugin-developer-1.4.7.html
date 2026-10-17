@@ -1,0 +1,1497 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="API contracts, complete modules and recipes from all 27 core plugins."><title>Plugin developer handbook | Dicefiles 1.4.7</title>
+<style>
+:root{color-scheme:light dark;--bg:#fafafa;--paper:#fff;--text:#222;--muted:#595959;
+--line:#ddd;--code:#f1f1f1;--link:#215a82;--mark:#e7eef4}
+*{box-sizing:border-box}html{scroll-padding-top:1.5rem}body{margin:0;background:var(--bg);
+color:var(--text);font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+a{color:var(--link);text-underline-offset:.2em}a:hover{text-decoration-thickness:2px}
+a:focus-visible{outline:2px solid currentColor;outline-offset:4px;border-radius:2px}
+.skip{position:absolute;left:1rem;top:-5rem;padding:.6rem;background:var(--paper)}.skip:focus{top:1rem}
+.masthead{padding:2.5rem max(1.5rem,calc((100vw - 1400px)/2));border-bottom:1px solid var(--line)}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.75rem;font-weight:750;color:var(--muted)}
+.masthead h1{font-size:clamp(2rem,4vw,3rem);line-height:1.15;letter-spacing:-.035em;max-width:22ch;margin:.5rem 0 1rem}
+.masthead p{max-width:70ch;color:var(--muted)}.editions{display:flex;flex-wrap:wrap;gap:.5rem 1.3rem;font-size:.9rem}
+.layout{max-width:1400px;margin:auto;display:grid;grid-template-columns:17rem minmax(0,1fr);gap:3rem;padding:2rem 1.5rem 5rem}
+aside{font-size:.83rem;align-self:start;position:sticky;top:1rem;max-height:calc(100vh - 2rem);overflow:auto;padding-right:1rem}
+aside h2{font-size:1rem;margin:.4rem 0}aside ul{padding-left:1.15rem}aside li{margin:.35rem 0}
+aside .toc>ul{padding-left:0;list-style:none}aside .toc>ul>li>ul{border-left:1px solid var(--line);padding-left:.9rem}
+main{min-width:0}article{min-width:0;max-width:84ch;background:var(--paper);padding:1.5rem 2rem 3rem;border:1px solid var(--line);border-radius:.6rem}
+article h1{font-size:2rem;line-height:1.2;letter-spacing:-.025em}article h2{margin-top:2.8rem;padding-top:1rem;border-top:1px solid var(--line);font-size:1.5rem;line-height:1.3}
+article h3{margin-top:2rem;font-size:1.14rem;line-height:1.35}article p,article li{overflow-wrap:anywhere}
+article li{margin:.35rem 0}article section+section{margin-top:5rem;border-top:4px double var(--line);padding-top:2rem}
+pre,code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.85em}
+code{background:var(--code);padding:.12em .3em;border-radius:.2rem}pre{padding:1rem;overflow:auto;border:1px solid var(--line);border-radius:.35rem;background:var(--code);line-height:1.6}
+pre code{padding:0;background:none;font-size:1em}table{display:block;max-width:100%;overflow:auto;border-collapse:collapse;font-size:.89rem;margin:1.4rem 0}
+th,td{padding:.65rem .8rem;text-align:left;vertical-align:top;border:1px solid var(--line);min-width:8rem}th{background:var(--code);font-weight:650}
+blockquote{margin-left:0;padding-left:1rem;border-left:3px solid var(--line);color:var(--muted)}footer{max-width:1400px;margin:auto;padding:1rem 1.5rem 2rem;color:var(--muted);font-size:.82rem}
+@media(prefers-color-scheme:dark){:root{--bg:#181818;--paper:#202020;--text:#ededed;--muted:#b9b9b9;--line:#444;--code:#292929;--link:#a5cdea;--mark:#333}}
+@media(max-width:900px){.layout{grid-template-columns:1fr;gap:1.5rem;padding:1.5rem 1rem}aside{position:static;max-height:none;padding:0}aside details{border:1px solid var(--line);border-radius:.4rem;padding:.75rem}aside .toc{max-height:18rem;overflow:auto}aside details:not([open]) .toc{display:none}article{padding:1rem 1.1rem}article h1{font-size:1.7rem}.masthead{padding:2rem 1.25rem}}
+@media print{:root{color-scheme:light;--bg:#fff;--paper:#fff;--text:#000;--muted:#444;--line:#bbb;--code:#f5f5f5;--link:#000}body{font-size:10pt}.masthead{padding:0}.layout{display:block;padding:0}aside,.editions,.skip{display:none}article{border:0;max-width:none;padding:0}pre{white-space:pre-wrap;overflow-wrap:anywhere}table{display:table;font-size:8pt;width:100%}th,td{min-width:0}h1,h2,h3{break-after:avoid}pre,tr{break-inside:avoid}a{text-decoration:none}footer{padding:1rem 0}}
+</style></head><body><a class="skip" href="#content">Skip to content</a>
+<header class="masthead"><div class="eyebrow">Dicefiles 1.4.7 / Handbooks</div><h1>Plugin developer handbook</h1>
+<p>API contracts, complete modules and recipes from all 27 core plugins. Save this file for offline reading. Use your browser's Find or Print to PDF.</p>
+<nav class="editions" aria-label="Handbook editions"><a href="dicefiles-core-plugins-1.4.7.html">The core plugin guide</a><a href="dicefiles-plugin-developer-1.4.7.html">Plugin developer handbook</a><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/releases/tag/v1.4.7">Release downloads</a></nav></header>
+<div class="layout"><aside aria-label="Table of contents"><details open><summary>Contents</summary><div class="toc">
+<ul>
+<li><a href="#api-dicefiles-plugin-developer-reference">Dicefiles plugin developer reference</a><ul>
+<li><a href="#api-1-choose-an-integration-surface">1. Choose an integration surface</a></li>
+<li><a href="#api-2-create-and-register-a-module">2. Create and register a module</a><ul>
+<li><a href="#api-module-exports">Module exports</a></li>
+<li><a href="#api-authenticated-inbound-handlers">Authenticated inbound handlers</a></li>
+<li><a href="#api-configuration-forms-and-defaults">Configuration forms and defaults</a></li>
+</ul>
+</li>
+<li><a href="#api-3-runtime-context-and-execution">3. Runtime context and execution</a></li>
+<li><a href="#api-4-room-reads">4. Room reads</a></li>
+<li><a href="#api-5-room-actions-and-maintenance">5. Room actions and maintenance</a><ul>
+<li><a href="#api-community-actions">Community actions</a></li>
+<li><a href="#api-maintenance-reads-and-retries">Maintenance reads and retries</a></li>
+<li><a href="#api-sessions-from-external-applications">Sessions from external applications</a></li>
+</ul>
+</li>
+<li><a href="#api-6-http-and-file-ingest">6. HTTP and file ingest</a></li>
+<li><a href="#api-7-private-state">7. Private state</a></li>
+<li><a href="#api-8-reports-and-review-actions">8. Reports and review actions</a></li>
+<li><a href="#api-9-durable-jobs-and-event-handling">9. Durable jobs and event handling</a><ul>
+<li><a href="#api-keep-hooks-short">Keep hooks short</a></li>
+</ul>
+</li>
+<li><a href="#api-10-connections-and-collection-providers">10. Connections and collection providers</a><ul>
+<li><a href="#api-extend-a-collector">Extend a collector</a></li>
+</ul>
+</li>
+<li><a href="#api-11-external-automation-examples">11. External automation examples</a></li>
+<li><a href="#api-12-errors-verification-and-compatibility">12. Errors, verification and compatibility</a></li>
+<li><a href="#api-source-map">Source map</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toc">
+<ul>
+<li><a href="#cookbook-plugin-cookbook-27-examples-from-the-core">Plugin cookbook: 27 examples from the core</a><ul>
+<li><a href="#cookbook-collectors">Collectors</a><ul>
+<li><a href="#cookbook-1-mega-folder-a-focused-mega-library">1. mega-folder: a focused Mega library</a></li>
+<li><a href="#cookbook-2-remote-import-multiple-supported-hosts">2. remote-import: multiple supported hosts</a></li>
+<li><a href="#cookbook-3-feed-collector-release-links-first">3. feed-collector: release links first</a></li>
+<li><a href="#cookbook-4-s3-collection-one-approved-prefix">4. s3-collection: one approved prefix</a></li>
+<li><a href="#cookbook-5-nextcloud-collection-a-direct-webdav-folder">5. nextcloud-collection: a direct WebDAV folder</a></li>
+<li><a href="#cookbook-6-drive-collection-snapshot-followed-by-changes">6. drive-collection: snapshot followed by changes</a></li>
+<li><a href="#cookbook-7-dropbox-collection-recursive-revision-tracking">7. dropbox-collection: recursive revision tracking</a></li>
+<li><a href="#cookbook-8-onedrive-collection-selected-folder-delta">8. onedrive-collection: selected-folder delta</a></li>
+<li><a href="#cookbook-9-huggingface-collection-reproducible-selected-files">9. huggingface-collection: reproducible selected files</a></li>
+<li><a href="#cookbook-a-complete-new-collector-using-the-shared-engine">A complete new collector using the shared engine</a></li>
+</ul>
+</li>
+<li><a href="#cookbook-publishers">Publishers</a><ul>
+<li><a href="#cookbook-10-discord-release-authenticated-publication-and-commands">10. discord-release: authenticated publication and commands</a></li>
+<li><a href="#cookbook-11-telegram-release-a-topic-specific-destination">11. telegram-release: a topic-specific destination</a></li>
+</ul>
+</li>
+<li><a href="#cookbook-community-workflows">Community workflows</a><ul>
+<li><a href="#cookbook-12-welcome-guide-event-driven-onboarding">12. welcome-guide: event-driven onboarding</a></li>
+<li><a href="#cookbook-13-request-triage-a-proposal-with-a-current-revision">13. request-triage: a proposal with a current revision</a></li>
+<li><a href="#cookbook-14-request-steward-respect-claim-ownership">14. request-steward: respect claim ownership</a></li>
+<li><a href="#cookbook-15-community-digest-publish-then-advance-the-watermark">15. community-digest: publish then advance the watermark</a></li>
+<li><a href="#cookbook-16-collection-curator-apply-and-undo-without-overwriting">16. collection-curator: apply and undo without overwriting</a></li>
+<li><a href="#cookbook-17-duplicate-review-dismiss-unchanged-findings">17. duplicate-review: dismiss unchanged findings</a></li>
+<li><a href="#cookbook-18-upload-review-a-separately-granted-reversible-action">18. upload-review: a separately granted reversible action</a></li>
+<li><a href="#cookbook-19-session-organizer-aggregate-social-features">19. session-organizer: aggregate social features</a></li>
+</ul>
+</li>
+<li><a href="#cookbook-maintenance">Maintenance</a><ul>
+<li><a href="#cookbook-20-expiry-concierge-report-a-lifecycle-decision">20. expiry-concierge: report a lifecycle decision</a></li>
+<li><a href="#cookbook-21-preview-repair-reuse-a-bounded-worker">21. preview-repair: reuse a bounded worker</a></li>
+<li><a href="#cookbook-22-file-integrity-rotate-through-old-files">22. file-integrity: rotate through old files</a></li>
+<li><a href="#cookbook-23-storage-capacity-hysteresis-for-useful-alerts">23. storage-capacity: hysteresis for useful alerts</a></li>
+<li><a href="#cookbook-24-backup-verification-a-sample-restore-you-can-account-for">24. backup-verification: a sample restore you can account for</a></li>
+<li><a href="#cookbook-25-link-health-distinguish-failure-types">25. link-health: distinguish failure types</a></li>
+<li><a href="#cookbook-26-access-review-useful-administration-without-secrets">26. access-review: useful administration without secrets</a></li>
+<li><a href="#cookbook-27-metadata-steward-preserve-manual-decisions">27. metadata-steward: preserve manual decisions</a></li>
+</ul>
+</li>
+<li><a href="#cookbook-use-these-examples-as-a-development-checklist">Use these examples as a development checklist</a></li>
+<li><a href="#cookbook-reproduce-the-portable-handbooks">Reproduce the portable handbooks</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></aside>
+<main id="content"><article><section id="api-document"><h1 id="api-dicefiles-plugin-developer-reference">Dicefiles plugin developer reference</h1>
+<p><strong>Product release: 1.4.7 · In-process context API: 2 · Runtime: Node.js <code>^22.13.0 || &gt;=24</code></strong></p>
+<p>Build trusted server plugins that collect files, help a community and maintain
+its library. This reference documents callable interfaces in 1.4.7. The
+<a href="#cookbook-document">cookbook</a> gives configuration recipes and implementation
+patterns drawn from all 27 core plugins. The <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/docs/CORE_PLUGINS.md">power-user guide</a>
+explains their room-facing behavior.</p>
+<h2 id="api-1-choose-an-integration-surface">1. Choose an integration surface</h2>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Use it for</th>
+<th>Version and authority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>In-process plugin</td>
+<td>Operator-installed Node modules, provider imports, lifecycle hooks and host-rendered reports</td>
+<td><code>ctx.apiVersion === 2</code>; trusted server code</td>
+</tr>
+<tr>
+<td>REST</td>
+<td>External applications managing files, requests and invited bots</td>
+<td><code>/api/v1</code>; explicit automation key scopes; <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/API.md">REST reference</a></td>
+</tr>
+<tr>
+<td>MCP</td>
+<td>Agent tools for the same scoped room operations</td>
+<td>Separate protocol/transport version; <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/MCP.md">MCP reference</a></td>
+</tr>
+<tr>
+<td>Webhooks</td>
+<td>External receivers of room events</td>
+<td>HTTP delivery contract; <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/API.md#8-webhooks">webhook reference</a></td>
+</tr>
+</tbody>
+</table>
+<p>An API v2 plugin does not require REST v2 or an MCP version migration.
+Manifest <code>capabilities</code> describe intent. They do not sandbox Node code or grant
+permissions. A module can import server internals, so install only reviewed code.
+The injected adapters enforce room scope, bot attribution and specific operator
+grants; use them to avoid accidental coupling and cross-room operations.</p>
+<h2 id="api-2-create-and-register-a-module">2. Create and register a module</h2>
+<p>Place the CommonJS module at <code>lib/plugins/&lt;id&gt;/index.js</code>. IDs use lowercase
+letters, numbers and hyphens; follow the existing short kebab-case IDs. The
+following complete module produces a report and makes no room changes.</p>
+<pre><code class="language-js">&quot;use strict&quot;;
+
+module.exports = {
+  id: &quot;library-overview&quot;,
+  name: &quot;Library Overview&quot;,
+  version: &quot;1.0.0&quot;,
+  description: &quot;Summarize this room's file collection.&quot;,
+  capabilities: [&quot;files:read&quot;, &quot;reports&quot;],
+  runModes: [&quot;preview&quot;, &quot;run&quot;],
+  configSchema: {
+    type: &quot;object&quot;,
+    properties: {
+      roomId: { type: &quot;string&quot; },
+      pollIntervalMinutes: {
+        type: &quot;number&quot;, default: 0, minimum: 0, maximum: 10080,
+      },
+    },
+  },
+  validateConfig(config = {}) {
+    const minutes = config.pollIntervalMinutes ?? 0;
+    const ok = typeof config.roomId === &quot;string&quot; &amp;&amp;
+      config.roomId.length &gt;= 4 &amp;&amp; Number.isSafeInteger(minutes) &amp;&amp;
+      minutes &gt;= 0 &amp;&amp; minutes &lt;= 10080;
+    return { ok, errors: ok ? [] : [&quot;Choose a room and a valid scan interval.&quot;] };
+  },
+  async run(ctx, args = {}) {
+    const mode = args.mode || &quot;run&quot;;
+    if (![&quot;preview&quot;, &quot;run&quot;].includes(mode)) {
+      throw Object.assign(new Error(&quot;Choose Preview or Run.&quot;), { retryable: false });
+    }
+    ctx.signal?.throwIfAborted();
+    const inventory = await ctx.dicefiles.getRoomInventory();
+    return {
+      checked: inventory.files,
+      report: {
+        title: &quot;Library overview&quot;,
+        summary: `${inventory.files} files; ${inventory.bytes} logical bytes.`,
+        items: [{
+          title: &quot;Expiring within 24 hours&quot;,
+          detail: String(inventory.expiringWithin24Hours),
+        }],
+      },
+    };
+  },
+};
+</code></pre>
+<p>For a room-invitable plugin, add its ID to <code>BUILTIN_IDS</code> in
+<a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/registry.js"><code>registry.js</code></a>. Creating the directory alone does
+not add it to the room catalog. Rebuild/restart using the repository's deployment
+workflow, invite it in Room Options and save its configuration.</p>
+<p>An operator can instead load a module globally through private configuration:</p>
+<pre><code class="language-json">{
+  &quot;plugins&quot;: [{
+    &quot;id&quot;: &quot;library-overview&quot;,
+    &quot;enabled&quot;: true,
+    &quot;config&quot;: { &quot;roomId&quot;: &quot;replace-with-room-id&quot;, &quot;pollIntervalMinutes&quot;: 0 }
+  }]
+}
+</code></pre>
+<p>Global loading resolves the module by ID. A global instance with <code>roomId</code> gets
+the room-scoped adapters. One without a room remains operator-trusted and lacks
+room-scoped jobs. Avoid enabling both a global instance and a room invitation
+for the same task unless duplicate scheduling is intentional.</p>
+<h3 id="api-module-exports">Module exports</h3>
+<table>
+<thead>
+<tr>
+<th>Export</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code>, <code>name</code></td>
+<td>Required identity and display name</td>
+</tr>
+<tr>
+<td><code>version</code>, <code>description</code>, <code>botName</code>, <code>category</code></td>
+<td>Optional catalog/display metadata</td>
+</tr>
+<tr>
+<td><code>capabilities</code></td>
+<td>Array of descriptive strings; no permission enforcement</td>
+</tr>
+<tr>
+<td><code>runModes</code></td>
+<td>Advertised modes, usually <code>preview</code>/<code>run</code>, collector <code>test</code>, publisher <code>test</code>/<code>digest</code></td>
+</tr>
+<tr>
+<td><code>configSchema</code></td>
+<td>JSON-schema-like object used by the host configuration form</td>
+</tr>
+<tr>
+<td><code>validateConfig(config)</code></td>
+<td>Return <code>{ok, errors?}</code>; authoritative server validation</td>
+</tr>
+<tr>
+<td><code>run(ctx, args)</code></td>
+<td>Imperative execution; return a small JSON result, optionally with <code>report</code></td>
+</tr>
+<tr>
+<td><code>eventSubscriptions</code></td>
+<td>Array of room event names handled by the plugin</td>
+</tr>
+<tr>
+<td><code>hooks.onEvent(event, payload, ctx)</code></td>
+<td>Quick event handling; queue expensive work</td>
+</tr>
+<tr>
+<td><code>hooks.onStart(ctx)</code>, <code>hooks.onStop(ctx)</code></td>
+<td>Global registry lifecycle hooks; room invitations use room runtime scheduling</td>
+</tr>
+<tr>
+<td><code>inbound.handle(request, ctx)</code></td>
+<td>Optional authenticated provider handler; see publisher implementation before extending</td>
+</tr>
+<tr>
+<td><code>syncLog</code></td>
+<td>Import-memory manifest; see section 10</td>
+</tr>
+</tbody>
+</table>
+<h3 id="api-authenticated-inbound-handlers">Authenticated inbound handlers</h3>
+<p>The host routes <code>POST /api/plugins/:pluginId/:roomId/inbound</code> to an enabled room
+invitation's <code>inbound.handle(request, ctx)</code>. The request supplies parsed <code>body</code>,
+exact <code>rawBody</code> and lower-case header names in <code>headers</code>. Return
+<code>{status,body}</code> in the provider's expected response shape. Inbound authority is
+separate from automation API keys: verify the provider signature or secret,
+destination, caller allowlist and command allowlist before any action.</p>
+<p>Discord verifies the raw Ed25519-signed body and supports caller-only replies;
+Telegram checks its secret header and ignores unrelated messages. Follow
+<a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/discord-release/index.js">Discord</a>,
+<a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/telegram-release/index.js">Telegram</a> and their
+<a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/RELEASE_PUBLISHERS.md">operator setup</a> for provider-specific response/deferred
+delivery handling. Reject invalid signatures rather than parsing them as commands.
+Queue slow work, deduplicate provider event IDs and bound returned text. Never
+expose arbitrary HTTP, shell or module-loading commands through an inbound bot.</p>
+<h3 id="api-configuration-forms-and-defaults">Configuration forms and defaults</h3>
+<p>Use <code>type</code>, <code>title</code>, <code>description</code>, <code>default</code>, <code>enum</code>, <code>minimum</code>, <code>maximum</code> and
+<code>required</code> where relevant. Arrays contain short strings. <code>multiline: true</code>
+requests a multiline editor. Mark secrets with <code>writeOnly: true</code> and
+<code>format: "password"</code>. A <code>connectionProvider</code> field offers approved connections:</p>
+<pre><code class="language-js">const fields = {
+  connectionId: {
+    type: &quot;string&quot;, title: &quot;Source&quot;, connectionProvider: &quot;drive&quot;,
+  },
+  token: {
+    type: &quot;string&quot;, title: &quot;Access token&quot;, writeOnly: true, format: &quot;password&quot;,
+  },
+};
+</code></pre>
+<p>Schema defaults populate the room form; raw custom modules must also handle
+missing defaults in their validator and run method. The shared workflow and
+collector helpers merge defaults themselves. The server validator must enforce
+types, lengths and bounds; a form schema is not validation by itself.</p>
+<p>Partial updates preserve omitted configuration and enabled state. In the room
+form, a blank password preserves the existing secret; blank non-secret text and
+optional numeric fields clear those settings. A room allows 32 invitations and
+8,000 characters of shared configuration. Prefer connection references for
+credentials and large operator settings.</p>
+<h2 id="api-3-runtime-context-and-execution">3. Runtime context and execution</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apiVersion</code></td>
+<td><code>2</code></td>
+</tr>
+<tr>
+<td><code>pluginId</code>, <code>pluginName</code>, <code>botName</code>, <code>enabled</code></td>
+<td>Active instance identity</td>
+</tr>
+<tr>
+<td><code>config</code></td>
+<td>Saved instance configuration; room invitations inject <code>roomId</code></td>
+</tr>
+<tr>
+<td><code>signal</code></td>
+<td>AbortSignal during guarded execution; pass it into I/O</td>
+</tr>
+<tr>
+<td><code>log.info/warn/error</code></td>
+<td>Operator logging; redact secrets before calling</td>
+</tr>
+<tr>
+<td><code>publicBaseUrl</code></td>
+<td>Operator-configured external origin; it can be empty</td>
+</tr>
+<tr>
+<td><code>dicefiles</code></td>
+<td>Typed room reads and actions, sections 4–5</td>
+</tr>
+<tr>
+<td><code>uploadFile</code>, <code>http</code></td>
+<td>File ingest and bounded HTTP, section 6</td>
+</tr>
+<tr>
+<td><code>state</code>, <code>report</code></td>
+<td>Private state and host-rendered activity, sections 7–8</td>
+</tr>
+<tr>
+<td><code>jobs</code>, <code>connections</code></td>
+<td>Durable work and approved provider access, sections 9–10</td>
+</tr>
+<tr>
+<td><code>events</code></td>
+<td>Ownership-checked event leases, section 9</td>
+</tr>
+<tr>
+<td><code>scheduleRun(id, args)</code></td>
+<td>Compatibility scheduling shim; prefer explicit <code>jobs.enqueue</code></td>
+</tr>
+<tr>
+<td><code>remoteDownloaders</code>, <code>megaDownloader</code></td>
+<td>Existing provider/legacy Mega adapters</td>
+</tr>
+</tbody>
+</table>
+<p>Room-scoped methods default to the invited room. Passing another <code>roomId</code>
+fails. Uploads, messages, requests and links carry the active bot identity;
+supplying another identity does not impersonate it through these adapters.</p>
+<p>The runtime serializes a bot's active runs with a renewable 900-second lease,
+renewed every minute. Queued work also takes a room lease so one queued job runs
+per room across workers. Cancellation and lease loss abort cooperative work.
+The runtime cannot terminate JavaScript that ignores its signal.</p>
+<p>Positive scan intervals run once at startup and then periodically. Zero disables
+the timer, while event subscriptions remain active. Unchanged settings retain
+their existing timer. A failed global startup hook disables that instance for
+the process without stopping other plugins.</p>
+<p>Validate mode explicitly in custom plugins. Never infer preview from the absence
+of a mode: several core bots default to a real run. A preview may read metadata
+and write its report; it must not import, publish, change a file or advance the
+source cursor. Provider token refresh can still occur during metadata reads.</p>
+<h2 id="api-4-room-reads">4. Room reads</h2>
+<p>Methods below live on <code>ctx.dicefiles</code>. All object arguments can include the
+scoped <code>roomId</code>; omit it for a room invitation. Times are Unix milliseconds
+unless a field explicitly says otherwise. Treat revisions and cursors as opaque.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Input / return</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>getRoomSummary(roomId?)</code></td>
+<td>Positional room ID; <code>{roomId,name,href,fileTTL,files,openRequests}</code></td>
+</tr>
+<tr>
+<td><code>getRoomGuide(spec?)</code></td>
+<td><code>{name,motd,allowRequests,ttlHours}</code>; rules bounded to 1,000 characters</td>
+</tr>
+<tr>
+<td><code>listFilesPage(spec?)</code></td>
+<td><code>query?</code>, <code>since?</code>, <code>expiresBefore?</code>, <code>cursor?</code>, <code>limit?</code> 1–500; <code>{files,nextCursor}</code></td>
+</tr>
+<tr>
+<td><code>listFiles(spec?)</code></td>
+<td>Compatibility array containing one page; not an unbounded inventory</td>
+</tr>
+<tr>
+<td><code>getFile({key})</code></td>
+<td>One room file or 404</td>
+</tr>
+<tr>
+<td><code>getRoomInventory(spec?)</code></td>
+<td><code>{roomId,files,bytes,byType,expiringWithin24Hours,duplicateGroups,duplicateCopies,measuredAt}</code></td>
+</tr>
+<tr>
+<td><code>listRequests({status?,limit?})</code></td>
+<td>Newest first; open/fulfilled status; limit 1–100; array with opaque revisions</td>
+</tr>
+<tr>
+<td><code>listLinks({limit?})</code></td>
+<td>Up to 500; default 100; <code>{id,name,url,date,expires,meta}</code> entries</td>
+</tr>
+<tr>
+<td><code>getEventItem({event,key})</code></td>
+<td>Reconstruct a current file/request from its event identity; returns null if unavailable</td>
+</tr>
+<tr>
+<td><code>listSessions(spec?)</code></td>
+<td>Sessions with aggregate RSVP counts and preparation links; no attendee list</td>
+</tr>
+<tr>
+<td><code>getAccessSummary(spec?)</code></td>
+<td>Invite/bot counts and approved connection summaries; no credentials</td>
+</tr>
+</tbody>
+</table>
+<p>File results include <code>key</code>, <code>name</code>, <code>size</code>, <code>hash</code>, <code>type</code>, <code>uploaded</code>, <code>expires</code>,
+<code>href</code>, <code>tags</code>, sanitized <code>meta</code>, <code>revision</code> and <code>assets</code>. These are plugin-facing
+shapes, not direct access to internal Room or Upload objects. A scoped privileged
+inventory can include moderation fields such as hidden tags: filter them before
+publishing a public digest.</p>
+<p>Pagination sorts by uploaded timestamp descending, then key ascending. <code>since</code>
+is strict. A cursor is not a frozen snapshot; additions and deletions can affect
+later pages. Inventory bytes are logical file totals, not disk usage or free
+capacity. Hash groups identify review candidates.</p>
+<pre><code class="language-js">async function collectWindow(ctx, maxItems = 250) {
+  const files = [];
+  let cursor;
+  do {
+    ctx.signal?.throwIfAborted();
+    const page = await ctx.dicefiles.listFilesPage({
+      cursor, limit: Math.min(100, maxItems - files.length),
+    });
+    files.push(...page.files);
+    cursor = page.nextCursor;
+  } while (cursor &amp;&amp; files.length &lt; maxItems);
+  return files;
+}
+</code></pre>
+<h2 id="api-5-room-actions-and-maintenance">5. Room actions and maintenance</h2>
+<h3 id="api-community-actions">Community actions</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>postMessage({text})</code></td>
+<td>Bot-attributed chat, up to 2,000 characters</td>
+</tr>
+<tr>
+<td><code>createRequest({text,remoteUser?})</code></td>
+<td>Bot-attributed request, up to 200 characters; respects Allow requests</td>
+</tr>
+<tr>
+<td><code>claimRequest({key,ttlMs?})</code></td>
+<td>Own bot claim; default five minutes, bounded five seconds–one hour</td>
+</tr>
+<tr>
+<td><code>releaseRequest({key})</code></td>
+<td>Releases only this bot's claim</td>
+</tr>
+<tr>
+<td><code>fulfillRequest({key,fileKey,expectedRevision})</code></td>
+<td>Current open request, visible same-room file; checks active claims, records association and fulfillment</td>
+</tr>
+<tr>
+<td><code>curateFile({key,expectedRevision,tags?,undo?})</code></td>
+<td>Fill absent <code>genre</code>, <code>language</code>, <code>series</code>, <code>author</code>, <code>collection</code> strings, each up to 200 characters; own-receipt undo</td>
+</tr>
+<tr>
+<td><code>quarantineFile({key,expectedRevision,release?})</code></td>
+<td>Only the enabled <code>upload-review</code> plugin with <code>allowQuarantine: true</code>; reversible hidden-state change</td>
+</tr>
+<tr>
+<td><code>addLink({url,title,sourceId,revision,provider})</code></td>
+<td>HTTP or HTTPS URL, no embedded credentials, up to 2,048 characters; respects link policy; <code>{id,added}</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>addLink</code> removes the URL fragment and deduplicates canonical URLs or stable
+source identity. Keep meaningful source IDs stable across feed edits. It is not
+the generic room magnet-upload API.</p>
+<p>Use a fresh opaque <code>revision</code> in reviewed mutations. A 409 means the item/report
+changed or the operation is busy; refresh and ask for a new review. Curation
+preserves existing fields. Undo checks its own receipt and rejects intervening
+edits. Quarantine is a restricted built-in operation, not a general grant to
+custom modules. Typed mutations retain up to 50 private audit entries; operations
+reads expose the latest 20.</p>
+<h3 id="api-maintenance-reads-and-retries">Maintenance reads and retries</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Behavior and bounds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>inspectFile({key,expectedRevision?})</code></td>
+<td>Existence, size and preview state; no server path</td>
+</tr>
+<tr>
+<td><code>retryFilePreview({key,expectedRevision})</code></td>
+<td>Queue existing preview retry work with its native-tool, concurrency and attempt limits</td>
+</tr>
+<tr>
+<td><code>verifyFile({key,maxBytes?,signal?})</code></td>
+<td>Read-only stored-byte verification; default 32 MiB, maximum 1 GiB, 8 MiB/s throttle</td>
+</tr>
+<tr>
+<td><code>getStorageMetrics({connectionId})</code></td>
+<td>Aggregate volumes; approved <code>maintenance</code> connection with <code>settings.capabilities: ["storage:read"]</code></td>
+</tr>
+<tr>
+<td><code>probeLink({id,signal?})</code></td>
+<td>Same-room collected link; public DNS-pinned HEAD, bounded GET fallback, at most three redirects and ten-second deadline</td>
+</tr>
+<tr>
+<td><code>inspectBackup({connectionId})</code></td>
+<td>Approved <code>backup</code> manifest's creation time, file count and bytes</td>
+</tr>
+<tr>
+<td><code>verifyBackup({connectionId,maxFiles?,maxBytes?,cursor?,signal?})</code></td>
+<td>Isolated sample restore/readback; default two, maximum five samples; default 32 MiB, maximum 1 GiB total reads</td>
+</tr>
+<tr>
+<td><code>retryFileMetadata({key,expectedRevision,signal?})</code></td>
+<td>Existing embedded book extraction or torrent matching; preserves manual choices</td>
+</tr>
+</tbody>
+</table>
+<p><code>verifyFile</code> returns a <code>state</code> such as <code>verified</code>, <code>mismatch</code>, <code>missing</code>,
+<code>unreadable</code>, <code>over-budget</code> or <code>not-file</code>, plus byte accounting. It checks the
+existing upload checksum format; do not substitute SHA-256 for that format.</p>
+<p><code>probeLink</code> distinguishes <code>reachable</code>, <code>broken</code>, <code>restricted</code>, <code>temporary</code>,
+<code>rate-limited</code>, <code>unreachable</code> and <code>unsupported</code>. A response can include <code>status</code>
+and <code>retryAfterMs</code>. Do not delete a link because access was restricted.</p>
+<p>Backup verification counts source and restored reads against its budget, uses
+8 MiB/s throttling and removes temporary copies. The manifest is at most 1 MiB
+with 1–500 relative regular-file entries containing <code>path</code>, <code>size</code> and <code>sha256</code>.
+Real-path containment checks reject traversal. See the
+<a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/WORKFLOW_BOTS.md#operator-grants">manifest recipe</a>. This API neither creates a
+backup nor restores production data.</p>
+<p>Ordinary video matching still needs the user-facing Video Information search.
+<code>retryFileMetadata</code> is not a general catalogue query API.</p>
+<h3 id="api-sessions-from-external-applications">Sessions from external applications</h3>
+<p>The injected context exposes <code>listSessions</code>; it does not expose a session-create
+or RSVP method. Use the existing REST/MCP actions for owner planning:</p>
+<table>
+<thead>
+<tr>
+<th>REST route</th>
+<th>Scope</th>
+<th>Input</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /api/v1/rooms/:id/sessions</code></td>
+<td><code>files:read</code></td>
+<td>Returns <code>{ok,sessions}</code></td>
+</tr>
+<tr>
+<td><code>POST /api/v1/rooms/:id/sessions</code></td>
+<td><code>rooms:write</code></td>
+<td><code>title,startsAt,endsAt?,timezone,description?,links?</code></td>
+</tr>
+<tr>
+<td><code>PATCH /api/v1/rooms/:id/sessions/:sessionId</code></td>
+<td><code>rooms:write</code></td>
+<td><code>revision,cancelled</code></td>
+</tr>
+</tbody>
+</table>
+<p>Creation requires Session Organizer enabled. Titles have at most 120 characters,
+descriptions 1,000, and preparation links 20 local <code>/g/</code>, <code>/q/</code> or <code>/r/</code> paths.
+Starts must be within 60 days and duration at most 24 hours. A room retains at
+most 100 sessions, each with at most 100 responses, expiring seven days after
+its end. RSVP remains a member action through the room UI; automation cannot
+impersonate an attendee. Protected rooms also require <code>room-access:bypass</code>.</p>
+<h2 id="api-6-http-and-file-ingest">6. HTTP and file ingest</h2>
+<p>All three HTTP methods return <code>{ok,status,body,headers}</code>. Non-success status
+codes throw a typed error rather than returning an ordinary success value.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Successful body</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ctx.http.requestJson(url, options?)</code></td>
+<td>Parsed JSON, or null for an empty body</td>
+</tr>
+<tr>
+<td><code>ctx.http.requestText(url, options?)</code></td>
+<td>UTF-8 string</td>
+</tr>
+<tr>
+<td><code>ctx.http.requestBuffer(url, options?)</code></td>
+<td>Buffer for small binary metadata</td>
+</tr>
+</tbody>
+</table>
+<p>Options: <code>method</code>, <code>headers</code>, JSON <code>body</code>, <code>signal</code>, <code>timeoutMs</code> and
+<code>maxResponseBytes</code>. Timeout defaults to 10 seconds, bounded 500–120,000 ms;
+response size defaults to 1 MiB, bounded 1 KiB–8 MiB. Redirects are rejected.
+The timeout covers body consumption. Stream larger files through a provider
+adapter instead of buffering them through this client.</p>
+<pre><code class="language-js">async function readApprovedManifest(ctx) {
+  const connection = ctx.connections.resolve(ctx.config.connectionId, &quot;example&quot;);
+  // The operator fixes this origin in the reviewed module/connection contract.
+  const response = await ctx.http.requestJson(&quot;https://api.example.org/releases&quot;, {
+    headers: { authorization: `Bearer ${connection.credentials.accessToken}` },
+    signal: ctx.signal, timeoutMs: 10000, maxResponseBytes: 262144,
+  });
+  return response.body;
+}
+</code></pre>
+<p><code>example</code> is an illustrative provider name, not a bundled connector. The generic
+HTTP client is not an SSRF-safe arbitrary URL proxy. Validate operator-owned
+destinations; use the collection network helper for room-supplied public sources.
+Never forward credentials across an unapproved redirect.</p>
+<pre><code class="language-js">async function uploadSmallManifest(ctx, manifest) {
+  const body = Buffer.from(JSON.stringify(manifest, null, 2));
+  return ctx.uploadFile({
+    name: &quot;release-manifest.json&quot;, body,
+    maxBytes: 262144, signal: ctx.signal, skipIfRoomHashExists: true,
+  });
+}
+</code></pre>
+<p><code>uploadFile({name,body,roomId?,maxBytes?,signal?,meta?,skipIfRoomHashExists?})</code>
+accepts Buffer, Uint8Array or a Node readable stream. The byte cap defaults to
+256 MiB. Prefer streams with an explicit cap for imports. The return includes
+<code>key</code> and <code>href</code>; deduplicated calls can include <code>skipped</code>. Preserve only safe
+source provenance in metadata. Never copy tokens, signed URLs, Mega keys or raw
+connection settings into a room file.</p>
+<h2 id="api-7-private-state">7. Private state</h2>
+<p><code>ctx.state</code> stores small checkpoints in a private plugin/room namespace. A global
+instance without a room uses a separate global namespace. Global and invited
+instances targeting the same plugin/room share that state scope.
+Production uses Redis; Redis persistence
+must be configured to survive its own restart.</p>
+<pre><code class="language-js">async function advanceCursor(ctx, cursor) {
+  const previous = await ctx.state.get(&quot;source:cursor&quot;);
+  return ctx.state.set(&quot;source:cursor&quot;, { cursor }, {
+    ifVersion: previous?.version ?? null,
+    ttlSeconds: 30 * 86400,
+  });
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>get(key)</code></td>
+<td>Null or <code>{value,version,updatedAt,expiresAt}</code></td>
+</tr>
+<tr>
+<td><code>set(key,value,{ifVersion?,ttlSeconds?}?)</code></td>
+<td>Return the new record</td>
+</tr>
+<tr>
+<td><code>delete(key,{ifVersion?}?)</code></td>
+<td>Return whether deleted</td>
+</tr>
+<tr>
+<td><code>list({prefix?,limit?,cursor?}?)</code></td>
+<td><code>{entries,nextCursor}</code>; record metadata, not stored values</td>
+</tr>
+</tbody>
+</table>
+<p>Keys match <code>[a-zA-Z0-9][a-zA-Z0-9:._-]{0,127}</code>. JSON values have at most
+16 KiB and 16 levels of nesting. A namespace has at most 256 keys and 256 KiB,
+including record encoding. TTL defaults to 30 days, bounded 60 seconds–90 days.
+State is not a blob store, credential vault or replacement room database.</p>
+<p><code>ifVersion: null</code> means create only. A version means compare-and-set; omission
+permits replacement. Conflicts throw <code>PLUGIN_STATE_CONFLICT</code> with status 409;
+capacity errors use <code>PLUGIN_STATE_LIMIT</code>. Writes/deletes enforce version checks
+atomically. Revoking an invitation does not immediately erase its checkpoints.</p>
+<p>Advance a source cursor only after its entire page succeeds. Keep stable source
+IDs separate from filenames. If a page partly succeeds, revisit it and skip
+completed revisions. Recover an expired provider token with bounded reconciliation.</p>
+<h2 id="api-8-reports-and-review-actions">8. Reports and review actions</h2>
+<p>Return <code>{report:{title,summary,items}}</code> from <code>run</code>; the runtime persists it. Or
+call <code>ctx.report.write(report)</code> directly. <code>ctx.report.read()</code> returns the private
+stored record to trusted plugin code. Public operations/UI responses strip each
+row's <code>data</code>.</p>
+<pre><code class="language-js">const proposal = {
+  title: &quot;Collection proposals&quot;,
+  summary: &quot;Review before applying collection tags.&quot;,
+  items: [{
+    id: &quot;candidate-1&quot;, title: &quot;Example book&quot;, detail: &quot;Suggested collection: Essays&quot;,
+    status: &quot;info&quot;, href: &quot;/g/example-file&quot;,
+    data: { key: &quot;example-file&quot;, expectedRevision: &quot;opaque-revision&quot;, tags: { collection: &quot;Essays&quot; } },
+    actions: [{ id: &quot;apply&quot;, label: &quot;Add to collection&quot; }],
+  }],
+};
+</code></pre>
+<p>Use real keys/revisions from reads when constructing this illustrative proposal.
+Reports have at most 40 rows, three actions per row and 14,000 bytes total. Private
+row data is at most 1,024 bytes. Reports expire after 30 days; truncation is
+reported. Titles are short, statuses are <code>info</code>, <code>success</code>, <code>warning</code> or <code>error</code>,
+and links must be local <code>/g/</code>, <code>/q/</code> or <code>/r/</code> paths without query/fragment. Text
+passes through bounded redaction. Keep detail text within 300 characters.</p>
+<p>Action IDs match <code>[a-z][a-z0-9-]{0,31}</code>; item IDs use 1–80 letters, digits,
+underscores or hyphens. The host renders controls. Reports cannot inject scripts,
+HTML, CSS, iframes or arbitrary new toolbar widgets.</p>
+<p>For reviewable workflows, use <code>defineWorkflow</code> from
+<a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/workflows.js"><code>workflows.js</code></a>. It validates the latest report
+ID, item, declared action and handler before executing <code>args.review</code>:</p>
+<pre><code class="language-js">&quot;use strict&quot;;
+const { defineWorkflow, filesFor } = require(&quot;../workflows&quot;);
+
+module.exports = defineWorkflow({
+  id: &quot;essay-curator&quot;, name: &quot;Essay Curator&quot;,
+  fields: {},
+  async scan(ctx) {
+    const files = await filesFor(ctx);
+    return { report: {
+      title: &quot;Essay collections&quot;, summary: &quot;Review files with a genre but no collection.&quot;,
+      items: files.filter(file =&gt; file.tags?.genre &amp;&amp; !file.tags?.collection).map(file =&gt; ({
+        id: file.key, title: file.name, href: file.href,
+        data: { key: file.key, expectedRevision: file.revision, tags: { collection: file.tags.genre } },
+        actions: [{ id: &quot;apply&quot;, label: &quot;Add to collection&quot; }],
+      })),
+    } };
+  },
+  actions: {
+    async apply(ctx, data) {
+      const result = await ctx.dicefiles.curateFile(data);
+      return {
+        detail: &quot;Collection applied. Undo is available.&quot;,
+        data: { expectedRevision: result.revision },
+        actions: [{ id: &quot;undo&quot;, label: &quot;Undo curation&quot; }],
+      };
+    },
+    async undo(ctx, data) {
+      await ctx.dicefiles.curateFile({ ...data, undo: true });
+      return { detail: &quot;Curation undone.&quot; };
+    },
+  },
+});
+</code></pre>
+<p>This is a complete module for <code>lib/plugins/essay-curator/index.js</code>; register it
+as described in section 2. The helper adds <code>preview</code>/<code>run</code>, config defaults,
+validation, report handling and review dispatch. Handler return <code>data</code> merges
+into the private receipt. Return <code>actions</code> when another review is available;
+otherwise the row's action/data is removed. The helper uses a state version
+check to update the report. Do not return a public report after a review: that
+would discard private undo data. The helper returns a small review result itself.</p>
+<p>Shared workflow defaults: <code>pollIntervalMinutes: 1440</code>, <code>maxItems: 100</code> (maximum
+500), <code>postToChat: false</code>, <code>timezone: "UTC"</code>, <code>quietStart: 22</code>, <code>quietEnd: 8</code>.
+<code>filesFor(ctx)</code> paginates only to <code>maxItems</code>. <code>bulletin(ctx,id,text,dryRun)</code>
+honors preview, chat opt-in, quiet hours and a retained notice key. It records
+the key after acceptance; this is not an external delivery transaction.</p>
+<h2 id="api-9-durable-jobs-and-event-handling">9. Durable jobs and event handling</h2>
+<pre><code class="language-js">async function queuePreview(ctx) {
+  return ctx.jobs.enqueue({ mode: &quot;preview&quot;, idempotencyKey: &quot;source-check-1&quot; });
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>enqueue({type?,mode?,event?,key?,idempotencyKey?,dueAt?})</code></td>
+<td>Default type <code>run</code>; returns public job plus <code>added</code></td>
+</tr>
+<tr>
+<td><code>get(id)</code></td>
+<td>Current owned public job</td>
+</tr>
+<tr>
+<td><code>list({cursor?,limit?}?)</code></td>
+<td><code>{jobs,nextCursor}</code>; default 20, maximum 50</td>
+</tr>
+<tr>
+<td><code>cancel(id)</code></td>
+<td><code>{cancelled}</code>; fences work and signals active cooperative execution</td>
+</tr>
+<tr>
+<td><code>replay(id)</code></td>
+<td><code>{replayed}</code>; failed/cancelled jobs only, with current settings</td>
+</tr>
+</tbody>
+</table>
+<p>Jobs require a room scope. Modes are <code>run</code>, <code>preview</code>, <code>test</code> or <code>digest</code>, and
+must also be supported by the plugin. For event jobs, <code>event</code> matches
+<code>[a-z_]{1,64}</code> and <code>key</code> matches <code>[a-zA-Z0-9_-]{1,128}</code>. Idempotency keys have
+at most 256 characters. <code>dueAt</code> is Unix milliseconds, at most 30 days ahead.</p>
+<p>The job ID hashes instance scope, configuration fingerprint, type, mode and
+idempotency key. Jobs store identifiers and the fingerprint, not raw settings,
+credentials or event bodies. Use the same idempotency key for retries of the
+same intended operation; use a new one for a distinct scheduled occurrence.
+Only the latest 200 finished jobs are retained service-wide. Deduplication is
+bounded by retained state, not a permanent exactly-once guarantee.</p>
+<p>Public job fields include <code>id</code>, <code>pluginId</code>, <code>type</code>, <code>mode</code>, <code>status</code>, <code>attempt</code>,
+<code>createdAt</code>, <code>dueAt</code>, <code>finishedAt</code>, <code>error</code> and a bounded <code>result</code>. Status is
+<code>queued</code>, <code>running</code>, <code>retrying</code>, <code>completed</code>, <code>failed</code> or <code>cancelled</code>.</p>
+<p>Retries are bounded to five within seven days and honor Retry-After. A busy
+lock gets a delayed retry without spending an attempt. Changed settings or a
+disabled/removed invitation invalidate queued work. Replay requires an enabled
+invitation and uses its current configuration. A crash after a provider accepts
+a message can leave an uncertain delivery; reconcile before replaying it.</p>
+<h3 id="api-keep-hooks-short">Keep hooks short</h3>
+<pre><code class="language-js">const eventSubscriptions = [&quot;file_uploaded&quot;];
+const hooks = {
+  async onEvent(event, payload, ctx) {
+    if (event !== &quot;file_uploaded&quot; || !payload?.key) return;
+    await ctx.jobs.enqueue({
+      type: &quot;event&quot;, event, key: payload.key,
+      idempotencyKey: `${event}:${payload.key}`,
+    });
+  },
+};
+
+async function loadQueuedItem(ctx, args) {
+  if (args.job?.type !== &quot;event&quot;) return null;
+  return ctx.dicefiles.getEventItem({ event: args.job.event, key: args.job.key });
+}
+</code></pre>
+<p>These are fragments for a module's exports/run method. The worker passes the job
+in <code>args.job</code>. Reconstruct the item at execution time and accept that it may
+have expired. Do not serialize webhook envelopes into job arguments. The shared
+workflow helper can declare <code>events</code> and queue its event work automatically;
+Welcome Guide uses <code>member_joined</code> and its opaque member key.</p>
+<p>Common lifecycle names include <code>file_uploaded</code>, <code>linked_file_appeared</code>,
+<code>file_deleted</code>, <code>request_created</code> and <code>request_fulfilled</code>. Use the
+<a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/DEVELOPING_PLUGINS.md#plugin-event-catalog">event catalog</a> and the actual publisher or
+workflow hook as payload examples. External HTTP webhook envelopes are a
+separate contract. Do not log entire payloads.</p>
+<p><code>ctx.events.begin(scope,eventId,{leaseSeconds?})</code> returns a lease or null when
+busy/completed. <code>renew(lease,seconds?)</code> returns ownership success;
+<code>complete(lease)</code> marks completion and <code>fail(lease)</code> releases ownership. The
+default lease is 120 seconds, bounded 10–900; default completion retention is
+30 days. The runtime renews its own execution leases. If custom code acquires
+another long-lived lease, it must renew it and stop on lost ownership. These
+leases are not atomic with an external provider's write.</p>
+<h2 id="api-10-connections-and-collection-providers">10. Connections and collection providers</h2>
+<p>Operators configure <code>pluginConnections</code> in private configuration or set
+<code>DICEFILES_PLUGIN_CONNECTIONS</code> to a JSON array. Restart after changes.</p>
+<pre><code class="language-json">{
+  &quot;pluginConnections&quot;: [{
+    &quot;id&quot;: &quot;community-drive&quot;, &quot;provider&quot;: &quot;drive&quot;, &quot;label&quot;: &quot;Community library&quot;,
+    &quot;pluginIds&quot;: [&quot;drive-collection&quot;], &quot;roomIds&quot;: [&quot;replace-with-room-id&quot;],
+    &quot;credentials&quot;: {
+      &quot;clientIdEnv&quot;: &quot;DRIVE_CLIENT_ID&quot;,
+      &quot;clientSecretEnv&quot;: &quot;DRIVE_CLIENT_SECRET&quot;,
+      &quot;refreshTokenEnv&quot;: &quot;DRIVE_REFRESH_TOKEN&quot;
+    },
+    &quot;settings&quot;: { &quot;folderIds&quot;: [&quot;replace-with-folder-id&quot;] }
+  }]
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Return / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>connections.list(provider?)</code></td>
+<td>Approved <code>{id,provider,label,configured}</code> values; configured means credentials present, not successful remote access</td>
+</tr>
+<tr>
+<td><code>connections.resolve(id,provider?)</code></td>
+<td>Server-only <code>{id,provider,credentials,settings,tokens}</code></td>
+</tr>
+<tr>
+<td><code>connections.settings(id,provider?)</code></td>
+<td>Approved cloned settings without resolving credentials; useful for source-memory inspection</td>
+</tr>
+</tbody>
+</table>
+<p>Every connection requires bot and room grants. <code>roomIds: ["*"]</code> deliberately
+grants every room. IDs use up to 64 lowercase letters/digits/hyphens. Credential
+keys ending in <code>Env</code> resolve their environment variable at use; direct strings
+are supported but environment references are preferred. An unavailable grant
+throws <code>PLUGIN_CONNECTION_UNAVAILABLE</code>; a missing environment value throws
+<code>PLUGIN_CREDENTIAL_MISSING</code>. Both need a configuration repair before retrying.</p>
+<p>Resolved values stay on the server. Do not return them from <code>run</code>, include them
+in reports/logs/state, attach them to uploads or send them to API clients.
+Shared OAuth helpers cache rotated tokens in an encrypted Redis vault for 30
+days, derived from operator credentials. Changing those credentials invalidates
+the cache. The vault is not a general plugin secret store or OAuth consent API.</p>
+<h3 id="api-extend-a-collector">Extend a collector</h3>
+<p>Use <code>defineCollector</code> in <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/collection/engine.js"><code>collection/engine.js</code></a>
+for a new approved source. Its shared engine supplies modes, budgets, filtering,
+reports, source/revision deduplication and checkpoint handling. Provider code
+supplies <code>page({config,connection,net,checkpoint,signal})</code>:</p>
+<pre><code class="language-js">// Shape only: provider-specific discovery and streaming code must be supplied.
+const pageResult = {
+  entries: [{
+    id: &quot;stable-provider-id&quot;, name: &quot;release.pdf&quot;, revision: &quot;provider-version&quot;,
+    size: 4096, license: &quot;CC-BY-4.0&quot;,
+    open: async maxBytes =&gt; { throw new Error(&quot;Implement a bounded Node stream.&quot;); },
+  }],
+  checkpoint: { cursor: &quot;next-provider-page&quot; },
+  hasMore: false,
+};
+</code></pre>
+<p>This shape is not a runnable provider. A link entry uses <code>kind: "link"</code> and
+<code>url</code> instead of <code>open</code>; a removal uses <code>removed: true</code>. Discovery returns
+metadata without downloading file payloads. Use the injected collection network
+guard and signal; validate approved folder/prefix/path grants. The guard pins
+DNS, denies private destinations, bounds redirects/bodies and strips cross-origin
+authorization. S3 uses its official SDK and operator-owned endpoint/IAM grants.</p>
+<p>Common collector defaults are 30 minutes, 25 items, 256 MiB/file and 1 GiB/run;
+S3 changes the interval to 60 minutes. Bounds are 200 items, 10 GiB/file and
+20 GiB/run, with at most ten pages of 500 entries. Import filters share
+<code>includeExtensions</code>, <code>excludeNameContains</code> and <code>dryRun</code>.</p>
+<p>The engine hashes provider identity, source fields and approved settings. Filter
+and budget changes retain source identity. It commits a checkpoint only after
+the whole page succeeds, remembers successful revisions and checks existing room
+provenance after an interrupted import. Source removals do not delete local
+copies; a new revision creates another file. Preview/test never import or commit
+a source cursor.</p>
+<p>The helper declares a <code>syncLog</code> manifest with <code>label</code>, <code>scope(config)</code> and
+<code>clearLocal(config)</code>. Import-memory inspection and confirmed reset use this
+manifest. Await cursor deletion during reset. Pause/cancel work first. Existing
+room provenance still protects current copies after forgetting revisions.</p>
+<p><code>remoteDownloaders</code> is a separate existing multi-host registry, with
+<code>listProviders()</code>, <code>resolve(url,allowedProviders?)</code>,
+<code>listFolder(url,credentials,allowedProviders)</code> and the asynchronous iterator
+<code>entries(url,credentials,allowedProviders,{signal,pageSize}?)</code> for newer paged
+stream adapters. Follow
+<a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/remote-import/index.js"><code>remote-import</code></a> and
+<a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/remote-downloaders.js"><code>remote-downloaders.js</code></a> for that
+contract. Do not mix its <code>openStream</code> entries with the collector engine's <code>open</code>
+entries. <code>megaDownloader</code> remains the dedicated Mega compatibility adapter.</p>
+<h2 id="api-11-external-automation-examples">11. External automation examples</h2>
+<p>Keep tokens in your shell environment. Use a scoped key restricted to the room;
+password-protected rooms also need <code>room-access:bypass</code>.</p>
+<pre><code class="language-sh"># Requires room-plugins:write. Save a manual-only Feed Collector invitation.
+curl --fail-with-body -X PUT \
+  &quot;$DICEFILES_URL/api/v1/rooms/$ROOM_ID/plugins/feed-collector&quot; \
+  -H &quot;Authorization: Bearer $DICEFILES_API_KEY&quot; -H 'Content-Type: application/json' \
+  --data '{&quot;enabled&quot;:true,&quot;config&quot;:{&quot;feedUrl&quot;:&quot;https://example.org/feed.xml&quot;,&quot;allowedOrigins&quot;:[&quot;https://example.org&quot;],&quot;pollIntervalMinutes&quot;:0}}'
+
+# Requires room-plugins:run. Queue a metadata preview.
+curl --fail-with-body -X POST \
+  &quot;$DICEFILES_URL/api/v1/rooms/$ROOM_ID/plugins/feed-collector/jobs&quot; \
+  -H &quot;Authorization: Bearer $DICEFILES_API_KEY&quot; -H 'Content-Type: application/json' \
+  --data '{&quot;mode&quot;:&quot;preview&quot;,&quot;idempotencyKey&quot;:&quot;feed-setup-1&quot;}'
+
+# Requires room-plugins:read. Inspect jobs and the latest report.
+curl --fail-with-body \
+  &quot;$DICEFILES_URL/api/v1/rooms/$ROOM_ID/plugins/feed-collector/operations?limit=20&quot; \
+  -H &quot;Authorization: Bearer $DICEFILES_API_KEY&quot;
+</code></pre>
+<p>For a review, POST <code>{reportId,itemId,action}</code> to
+<code>/api/v1/rooms/:id/plugins/:pluginId/review</code> using <code>room-plugins:write</code>.
+Use current values returned by operations, never a fabricated revision. Cancel
+and replay use POST <code>/jobs/:jobId/cancel</code> or <code>/jobs/:jobId/replay</code> with
+<code>room-plugins:run</code>. GET <code>/connections</code> requires <code>room-plugins:read</code>.</p>
+<p>MCP equivalents include <code>configure_room_plugin</code>, <code>queue_room_plugin_job</code>,
+<code>inspect_room_plugin_operations</code>, <code>update_room_plugin_job</code>,
+<code>review_room_plugin_item</code> and <code>list_room_plugin_connections</code>. Their exact inputs
+are in the <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/MCP.md">MCP tool reference</a>. Neither REST nor MCP installs new
+server code or expands an operator's provider grant.</p>
+<h2 id="api-12-errors-verification-and-compatibility">12. Errors, verification and compatibility</h2>
+<p>Use an actionable message plus typed fields. Avoid embedding a URL, provider
+response body or resolved credential in an error:</p>
+<pre><code class="language-js">function missingFolderError() {
+  return Object.assign(
+    new Error(&quot;The selected folder is unavailable. Check its ID and connection grant, then test again.&quot;),
+    { code: &quot;SOURCE_FOLDER_UNAVAILABLE&quot;, status: 404, retryable: false },
+  );
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Handling</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PLUGIN_STATE_CONFLICT</code>, stale review / revision 409</td>
+<td>Read fresh state/report; recompute, then request another review</td>
+</tr>
+<tr>
+<td>Missing connection or credential</td>
+<td>Operator repair; do not loop retries</td>
+</tr>
+<tr>
+<td><code>REMOTE_HTTP_ERROR</code> 429 or 5xx</td>
+<td>Preserve <code>retryable</code> and <code>retryAfterMs</code>; queue bounded retry</td>
+</tr>
+<tr>
+<td><code>REMOTE_NETWORK_ERROR</code></td>
+<td>Retry only when marked retryable; caller cancellation is not retryable</td>
+</tr>
+<tr>
+<td><code>INVALID_RESPONSE</code>, <code>RESPONSE_TOO_LARGE</code></td>
+<td>Fix contract/page/body limits; do not claim success</td>
+</tr>
+<tr>
+<td><code>PLUGIN_UPLOAD_TOO_LARGE</code></td>
+<td>Reduce source size or deliberately raise the file/scan budget</td>
+</tr>
+<tr>
+<td>Aborted signal</td>
+<td>Stop I/O, clean up streams/temp resources and leave the cursor uncommitted</td>
+</tr>
+</tbody>
+</table>
+<p>For a new plugin, cover default/invalid configuration, preview side effects,
+room isolation, retries, aborts, partial pages, revision conflicts and secret
+redaction. Inject fake adapters around the real module for contract tests. Use
+operator-owned destinations for live provider acceptance. A fixture proves the
+adapter's expected contract; it does not prove today's account credentials or
+external permissions. Follow the repository's test and deployment instructions.</p>
+<p>There is no generic arbitrary-code UI slot, automatic provider OAuth consent,
+general session-write context method, file-deletion adapter or universal
+metadata mutation API in this contract. Add a bounded typed API with a real
+plugin, explicit authority, conflict handling and documentation when needed.
+Future product work belongs in the <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/docs/FUTURE_DEVELOPMENT_PLAN.md">backlog</a>,
+not in the callable reference.</p>
+<h2 id="api-source-map">Source map</h2>
+<table>
+<thead>
+<tr>
+<th>Implementation</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/registry.js">registry</a> / <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/room-runtime.js">room runtime</a></td>
+<td>Module loading, catalog, lifecycle, scheduling and context</td>
+</tr>
+<tr>
+<td><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/runtime-adapters.js">runtime adapters</a> / <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/scoped-api.js">scoped API</a></td>
+<td>Reads, HTTP, upload and room/identity wrappers</td>
+</tr>
+<tr>
+<td><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/workflows.js">workflows</a> / <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/workflow-api.js">workflow API</a></td>
+<td>Shared reports, review dispatch and typed room actions</td>
+</tr>
+<tr>
+<td><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/maintenance-api.js">maintenance API</a></td>
+<td>File, preview, storage, backup and metadata operations</td>
+</tr>
+<tr>
+<td><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/state.js">state</a> / <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/reports.js">reports</a></td>
+<td>Versioned private checkpoints and public/private report shapes</td>
+</tr>
+<tr>
+<td><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/jobs.js">jobs</a> / <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/event-lease.js">event leases</a></td>
+<td>Durable execution, retry, cancellation and ownership</td>
+</tr>
+<tr>
+<td><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/connections.js">connections</a> / <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/credential-vault.js">credential vault</a></td>
+<td>Operator grants and encrypted OAuth cache</td>
+</tr>
+<tr>
+<td><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/collection/engine.js">collector engine</a> / <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/collection/network.js">network guard</a></td>
+<td>Revision-aware collection and public-network restrictions</td>
+</tr>
+<tr>
+<td><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/sessions.js">sessions</a></td>
+<td>Room session storage, limits and RSVP privacy</td>
+</tr>
+</tbody>
+</table>
+<p>Continue with the <a href="#cookbook-document">27-plugin cookbook</a>.</p></section><section id="cookbook-document"><h1 id="cookbook-plugin-cookbook-27-examples-from-the-core">Plugin cookbook: 27 examples from the core</h1>
+<p><strong>Dicefiles 1.4.7 · Plugin context API 2</strong></p>
+<p>Use these recipes with the <a href="#api-document">developer reference</a>. Each example
+names a real bundled module and its extension pattern. Configuration objects
+are invitation <code>config</code> values: the room UI and scoped API supply <code>roomId</code>.
+Global configuration must include it. Placeholder URLs, IDs and commits must be
+replaced before use. Secrets belong in private operator configuration.</p>
+<p>The recipes deliberately use manual scan intervals. Read a preview before
+enabling a schedule. Publisher Test and Digest modes send real external messages.</p>
+<h2 id="cookbook-collectors">Collectors</h2>
+<h3 id="cookbook-1-mega-folder-a-focused-mega-library">1. mega-folder: a focused Mega library</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/mega-folder/index.js">Source</a> · <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/MEGA_FOLDER.md">Operator guide</a></p>
+<pre><code class="language-json">{
+  &quot;folderUrl&quot;: &quot;https://mega.nz/folder/replace-id#replace-decryption-key&quot;,
+  &quot;includeExtensions&quot;: [&quot;pdf&quot;, &quot;epub&quot;],
+  &quot;excludeNameContains&quot;: [&quot;sample&quot;],
+  &quot;pollIntervalMinutes&quot;: 0, &quot;maxFilesPerRun&quot;: 10,
+  &quot;maxBytesPerFile&quot;: 268435456, &quot;maxBytesPerRun&quot;: 1073741824
+}
+</code></pre>
+<p><strong>Pattern:</strong> keep secret-bearing source URLs out of public provenance. Study
+the Mega adapter for stream cleanup, source memory and preview behavior. Its
+SDK integration differs from the newer shared collector engine.</p>
+<h3 id="cookbook-2-remote-import-multiple-supported-hosts">2. remote-import: multiple supported hosts</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/remote-import/index.js">Source</a> · <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/REMOTE_HOST_IMPORTS.md">Provider contract</a></p>
+<pre><code class="language-json">{
+  &quot;urls&quot;: [&quot;https://pixeldrain.com/u/replace-id&quot;],
+  &quot;providers&quot;: [&quot;pixeldrain&quot;], &quot;pollIntervalMinutes&quot;: 0,
+  &quot;includeExtensions&quot;: [&quot;zip&quot;], &quot;maxFilesPerRun&quot;: 5
+}
+</code></pre>
+<p><strong>Pattern:</strong> resolve an allowlisted provider rather than fetching an arbitrary
+room-supplied URL. The registry offers availability, provider circuits and paged
+stream traversal. A registered provider may still require installation or credentials.</p>
+<h3 id="cookbook-3-feed-collector-release-links-first">3. feed-collector: release links first</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/feed-collector/index.js">Source</a></p>
+<pre><code class="language-json">{
+  &quot;feedUrl&quot;: &quot;https://example.org/releases.atom&quot;,
+  &quot;allowedOrigins&quot;: [&quot;https://example.org&quot;, &quot;https://downloads.example.org&quot;],
+  &quot;importEnclosures&quot;: false, &quot;pollIntervalMinutes&quot;: 0
+}
+</code></pre>
+<p><strong>Pattern:</strong> parse bounded metadata, reject XML entities, preserve stable entry
+IDs and use cache validators. <code>parseFeed</code> is exported for focused parser checks.
+Its link entries use <code>kind: "link"</code>; enclosures use <code>open(maxBytes)</code>.</p>
+<h3 id="cookbook-4-s3-collection-one-approved-prefix">4. s3-collection: one approved prefix</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/s3-collection/index.js">Source</a></p>
+<pre><code class="language-json">{
+  &quot;connectionId&quot;: &quot;community-s3&quot;, &quot;prefix&quot;: &quot;releases/books/&quot;,
+  &quot;includeExtensions&quot;: [&quot;pdf&quot;, &quot;epub&quot;], &quot;pollIntervalMinutes&quot;: 0
+}
+</code></pre>
+<p><strong>Pattern:</strong> derive an object revision from provider metadata and make a
+conditional read. The connection owns <code>bucket</code>, <code>region</code>, <code>prefixes</code> and any
+custom endpoint. Use read-only IAM; room config cannot choose an arbitrary endpoint.</p>
+<h3 id="cookbook-5-nextcloud-collection-a-direct-webdav-folder">5. nextcloud-collection: a direct WebDAV folder</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/nextcloud-collection/index.js">Source</a></p>
+<pre><code class="language-json">{
+  &quot;connectionId&quot;: &quot;community-webdav&quot;, &quot;folder&quot;: &quot;Releases&quot;,
+  &quot;pollIntervalMinutes&quot;: 0, &quot;maxFilesPerRun&quot;: 20
+}
+</code></pre>
+<p><strong>Pattern:</strong> constrain relative paths to an approved base, list depth one and
+read using ETag conditions. Do not describe this adapter as recursive sync.</p>
+<h3 id="cookbook-6-drive-collection-snapshot-followed-by-changes">6. drive-collection: snapshot followed by changes</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/drive-collection/index.js">Source</a></p>
+<pre><code class="language-json">{
+  &quot;connectionId&quot;: &quot;community-drive&quot;, &quot;folderId&quot;: &quot;replace-folder-id&quot;,
+  &quot;pollIntervalMinutes&quot;: 0, &quot;includeExtensions&quot;: [&quot;pdf&quot;]
+}
+</code></pre>
+<p><strong>Pattern:</strong> get a change token before the initial binary-file snapshot, then
+reconcile changes. Preserve the page checkpoint only after successful imports.
+Native Google document exports are outside this adapter's implementation.</p>
+<h3 id="cookbook-7-dropbox-collection-recursive-revision-tracking">7. dropbox-collection: recursive revision tracking</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/dropbox-collection/index.js">Source</a></p>
+<pre><code class="language-json">{
+  &quot;connectionId&quot;: &quot;community-dropbox&quot;, &quot;folder&quot;: &quot;/Community&quot;,
+  &quot;pollIntervalMinutes&quot;: 0, &quot;maxFilesPerRun&quot;: 25
+}
+</code></pre>
+<p><strong>Pattern:</strong> handle continued listing and reset reconciliation while deduplicating
+file revisions. An empty path needs an explicit operator grant for the app root.</p>
+<h3 id="cookbook-8-onedrive-collection-selected-folder-delta">8. onedrive-collection: selected-folder delta</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/onedrive-collection/index.js">Source</a></p>
+<pre><code class="language-json">{
+  &quot;connectionId&quot;: &quot;community-onedrive&quot;, &quot;folderId&quot;: &quot;replace-folder-id&quot;,
+  &quot;pollIntervalMinutes&quot;: 0
+}
+</code></pre>
+<p><strong>Pattern:</strong> validate delta and download URLs, and resnapshot an expired token.
+The connection fixes <code>driveId</code> and <code>folderIds</code>. Never forward an access token
+to an unapproved download host.</p>
+<h3 id="cookbook-9-huggingface-collection-reproducible-selected-files">9. huggingface-collection: reproducible selected files</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/huggingface-collection/index.js">Source</a></p>
+<pre><code class="language-json">{
+  &quot;repositoryType&quot;: &quot;datasets&quot;, &quot;repository&quot;: &quot;example/community-data&quot;,
+  &quot;revision&quot;: &quot;0123456789abcdef0123456789abcdef01234567&quot;,
+  &quot;files&quot;: [&quot;README.md&quot;, &quot;samples/example.json&quot;],
+  &quot;license&quot;: &quot;replace-with-reviewed-license&quot;, &quot;pollIntervalMinutes&quot;: 0
+}
+</code></pre>
+<p><strong>Pattern:</strong> pin an immutable full commit and an explicit file list. This commit
+is a format placeholder, not an existing release. Private sources also
+need <code>connectionId</code> with an approved repository and token. Gated access and
+license terms remain provider requirements.</p>
+<h3 id="cookbook-a-complete-new-collector-using-the-shared-engine">A complete new collector using the shared engine</h3>
+<p>This example imports at most one JSON manifest per scan from a fixed approved
+public origin. It shows the actual <code>page</code> signature and Node streaming
+contract. Replace the illustrative service and register <code>manifest-collector</code>
+before deployment. The service contract is a small <code>/latest.json</code> index with
+<code>{"revision":"release-1"}</code> and an immutable
+<code>/releases/release-1/manifest.json</code> file. The origin is fixed in reviewed code.</p>
+<pre><code class="language-js">&quot;use strict&quot;;
+const { defineCollector } = require(&quot;../collection/engine&quot;);
+const { approvedUrl } = require(&quot;../collection/network&quot;);
+
+const origin = &quot;https://releases.example.org&quot;;
+const allowedUrl = value =&gt; approvedUrl(value, [origin]);
+
+module.exports = defineCollector({
+  id: &quot;manifest-collector&quot;, name: &quot;Manifest Collector&quot;, provider: &quot;manifest&quot;,
+  description: &quot;Collect the current approved release manifest.&quot;,
+  properties: {},
+  async page({ checkpoint, net, signal }) {
+    signal?.throwIfAborted();
+    const response = await net.response(allowedUrl(`${origin}/latest.json`), {
+      headers: checkpoint.etag ? { &quot;if-none-match&quot;: checkpoint.etag } : {},
+    }, { allowedUrl, maxBytes: 262144 });
+    if (response.status === 304) {
+      return { entries: [], checkpoint, hasMore: false };
+    }
+    const manifest = await response.json();
+    if (typeof manifest.revision !== &quot;string&quot; || !manifest.revision ||
+        manifest.revision.length &gt; 200) {
+      throw Object.assign(new Error(&quot;The manifest needs a short revision. Check the release source.&quot;), {
+        retryable: false,
+      });
+    }
+    const downloadUrl = allowedUrl(
+      `${origin}/releases/${encodeURIComponent(manifest.revision)}/manifest.json`,
+    );
+    return {
+      entries: [{
+        id: &quot;current-manifest&quot;, name: &quot;manifest.json&quot;, revision: manifest.revision,
+        open: maxBytes =&gt; net.stream(downloadUrl, {}, {
+          allowedUrl, maxBytes,
+        }),
+      }],
+      checkpoint: { etag: response.headers.get(&quot;etag&quot;) || &quot;&quot; }, hasMore: false,
+    };
+  },
+});
+</code></pre>
+<p>The revision-specific download URL keeps discovery and download consistent.
+If a different provider uses mutable URLs, enforce If-Match or its equivalent.
+Unknown sizes are enforced while streaming. Preview/test read the small release
+index without calling <code>open</code> or downloading the selected file.</p>
+<h2 id="cookbook-publishers">Publishers</h2>
+<h3 id="cookbook-10-discord-release-authenticated-publication-and-commands">10. discord-release: authenticated publication and commands</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/discord-release/index.js">Source</a> · <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/RELEASE_PUBLISHERS.md">Setup</a></p>
+<pre><code class="language-json">{
+  &quot;baseUrl&quot;: &quot;https://files.example.org&quot;, &quot;ignoreBotUploads&quot;: true,
+  &quot;notifyRequests&quot;: true, &quot;inboundEnabled&quot;: false,
+  &quot;discordEphemeralResponses&quot;: true
+}
+</code></pre>
+<p>The operator can provide <code>DICEFILES_DISCORD_WEBHOOK_URL</code>. Inbound mode requires
+an application public key, allowed users/roles and explicit commands.
+<strong>Pattern:</strong> verify the raw signed request, deduplicate delivery, queue work by
+event/key and reconstruct current room data. Never treat a public inbound URL
+as authorization by itself.</p>
+<h3 id="cookbook-11-telegram-release-a-topic-specific-destination">11. telegram-release: a topic-specific destination</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/telegram-release/index.js">Source</a> · <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/RELEASE_PUBLISHERS.md">Setup</a></p>
+<pre><code class="language-json">{
+  &quot;chatId&quot;: &quot;replace-chat-id&quot;, &quot;messageThreadId&quot;: 42,
+  &quot;baseUrl&quot;: &quot;https://files.example.org&quot;, &quot;ignoreBotUploads&quot;: true,
+  &quot;notifyRequests&quot;: false, &quot;inboundEnabled&quot;: false
+}
+</code></pre>
+<p>The operator can provide <code>DICEFILES_TELEGRAM_BOT_TOKEN</code>.
+<strong>Pattern:</strong> check webhook secret, destination and user allowlists before command
+dispatch; ignore unrelated conversation. Preserve provider Retry-After and send
+safe reply parameters instead of assembling deprecated fields.</p>
+<h2 id="cookbook-community-workflows">Community workflows</h2>
+<p>These modules use <code>defineWorkflow</code>. All recipes keep <code>postToChat: false</code>.
+Their scans return reports; declared action handlers perform reviewed mutations.</p>
+<h3 id="cookbook-12-welcome-guide-event-driven-onboarding">12. welcome-guide: event-driven onboarding</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/welcome-guide/index.js">Source</a></p>
+<pre><code class="language-json">{
+  &quot;welcomeText&quot;: &quot;Search before requesting. Add a clear title and edition to requests.&quot;,
+  &quot;cooldownDays&quot;: 30, &quot;maxWelcomesPerDay&quot;: 10,
+  &quot;pollIntervalMinutes&quot;: 0, &quot;postToChat&quot;: false, &quot;timezone&quot;: &quot;Europe/Sofia&quot;
+}
+</code></pre>
+<p><strong>Pattern:</strong> subscribe to <code>member_joined</code>, queue only its opaque identity and
+use daily private-state buckets to suppress reconnects. Enable chat delivery
+only after the owner reviews the composed welcome text.</p>
+<h3 id="cookbook-13-request-triage-a-proposal-with-a-current-revision">13. request-triage: a proposal with a current revision</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/request-triage/index.js">Source</a></p>
+<pre><code class="language-json">{ &quot;maxItems&quot;: 200, &quot;pollIntervalMinutes&quot;: 0, &quot;postToChat&quot;: false }
+</code></pre>
+<p><strong>Pattern:</strong> put request key, file key and request revision in private row data.
+Only the review handler calls <code>fulfillRequest</code>. Similarity scores help ranking;
+they are not evidence that a file satisfies the request.</p>
+<pre><code class="language-js">async function applyRequestSuggestion(ctx, data) {
+  await ctx.dicefiles.fulfillRequest({
+    key: data.key, fileKey: data.fileKey, expectedRevision: data.expectedRevision,
+  });
+  return { detail: &quot;Request fulfilled with the reviewed file.&quot; };
+}
+</code></pre>
+<h3 id="cookbook-14-request-steward-respect-claim-ownership">14. request-steward: respect claim ownership</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/request-steward/index.js">Source</a></p>
+<pre><code class="language-json">{ &quot;staleDays&quot;: 14, &quot;pollIntervalMinutes&quot;: 0, &quot;postToChat&quot;: false }
+</code></pre>
+<p><strong>Pattern:</strong> distinguish age from ownership. <code>releaseRequest</code> can release only
+this plugin's claim, even when another claim is stale. Do not make a review
+button promise a mutation its adapter will reject.</p>
+<h3 id="cookbook-15-community-digest-publish-then-advance-the-watermark">15. community-digest: publish then advance the watermark</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/community-digest/index.js">Source</a></p>
+<pre><code class="language-json">{
+  &quot;publishDay&quot;: &quot;Sun&quot;, &quot;publishHour&quot;: 18, &quot;timezone&quot;: &quot;Europe/Sofia&quot;,
+  &quot;quietStart&quot;: 22, &quot;quietEnd&quot;: 8, &quot;maxItems&quot;: 250,
+  &quot;pollIntervalMinutes&quot;: 0, &quot;postToChat&quot;: false
+}
+</code></pre>
+<p><strong>Pattern:</strong> exclude hidden files, use a bounded file window, publish only in the
+configured window and advance the watermark after acceptance. To activate this
+recipe, choose an hourly scan and enable chat summaries. A failed post must not
+mark the week's content as already delivered.</p>
+<h3 id="cookbook-16-collection-curator-apply-and-undo-without-overwriting">16. collection-curator: apply and undo without overwriting</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/collection-curator/index.js">Source</a></p>
+<pre><code class="language-json">{ &quot;groupBy&quot;: &quot;author&quot;, &quot;maxItems&quot;: 200, &quot;pollIntervalMinutes&quot;: 0, &quot;postToChat&quot;: false }
+</code></pre>
+<p><strong>Pattern:</strong> fill an absent collection from existing metadata. Keep the returned
+revision in private report data and offer Undo. The reference contains a
+<a href="#api-8-reports-and-review-actions">complete custom curation module</a>.</p>
+<h3 id="cookbook-17-duplicate-review-dismiss-unchanged-findings">17. duplicate-review: dismiss unchanged findings</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/duplicate-review/index.js">Source</a></p>
+<pre><code class="language-json">{ &quot;maxItems&quot;: 300, &quot;pollIntervalMinutes&quot;: 0, &quot;postToChat&quot;: false }
+</code></pre>
+<p><strong>Pattern:</strong> fingerprint the candidate group rather than suppressing a filename
+forever. <code>reviewKey</code>, <code>dismissedReviews</code> and <code>dismissReview</code> in <code>workflows.js</code>
+support bounded dismissal memory. The current helper keeps up to 150 keys for
+30 days. Changed candidates can return for review.</p>
+<h3 id="cookbook-18-upload-review-a-separately-granted-reversible-action">18. upload-review: a separately granted reversible action</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/upload-review/index.js">Source</a></p>
+<pre><code class="language-json">{
+  &quot;maxFileBytes&quot;: 1073741824, &quot;blockedExtensions&quot;: [&quot;exe&quot;, &quot;scr&quot;],
+  &quot;blockedTerms&quot;: [], &quot;allowQuarantine&quot;: false,
+  &quot;pollIntervalMinutes&quot;: 0, &quot;postToChat&quot;: false
+}
+</code></pre>
+<p><strong>Pattern:</strong> flags are recommendations. Quarantine needs a saved owner opt-in
+and a reviewed file revision. The host adapter restricts this operation to
+<code>upload-review</code>; copying this handler into a new plugin does not grant access.
+Restore retains the pre-existing hidden state rather than blindly unhiding.</p>
+<h3 id="cookbook-19-session-organizer-aggregate-social-features">19. session-organizer: aggregate social features</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/session-organizer/index.js">Source</a></p>
+<pre><code class="language-json">{
+  &quot;reminderMinutes&quot;: 60, &quot;pollIntervalMinutes&quot;: 0,
+  &quot;postToChat&quot;: false, &quot;timezone&quot;: &quot;Europe/Sofia&quot;
+}
+</code></pre>
+<p><strong>Pattern:</strong> read aggregate sessions and counts; use per-session notice IDs.
+Planning/cancellation uses owner REST/MCP actions, while RSVP stays in the room
+UI. A plugin does not need an attendee list to post a useful reminder. Set a
+15-minute scan and opt into chat when reminders are wanted.</p>
+<h2 id="cookbook-maintenance">Maintenance</h2>
+<h3 id="cookbook-20-expiry-concierge-report-a-lifecycle-decision">20. expiry-concierge: report a lifecycle decision</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/expiry-concierge/index.js">Source</a></p>
+<pre><code class="language-json">{
+  &quot;withinHours&quot;: 48, &quot;valuableOnly&quot;: true,
+  &quot;pollIntervalMinutes&quot;: 0, &quot;postToChat&quot;: false
+}
+</code></pre>
+<p><strong>Pattern:</strong> identify relevant expiring files without silently changing TTL.
+Use local-time daily notice IDs. Explain how users can save files while keeping
+the room's retention policy intact.</p>
+<h3 id="cookbook-21-preview-repair-reuse-a-bounded-worker">21. preview-repair: reuse a bounded worker</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/preview-repair/index.js">Source</a></p>
+<pre><code class="language-json">{ &quot;maxItems&quot;: 100, &quot;pollIntervalMinutes&quot;: 0, &quot;postToChat&quot;: false }
+</code></pre>
+<p><strong>Pattern:</strong> inspect first, then offer <code>retryFilePreview</code> with the current file
+revision. If the blob is missing, a preview retry is not a recovery action.
+Delegate heavy work to the existing queue instead of spawning a renderer in a hook.</p>
+<h3 id="cookbook-22-file-integrity-rotate-through-old-files">22. file-integrity: rotate through old files</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/file-integrity/index.js">Source</a></p>
+<pre><code class="language-json">{
+  &quot;maxChecksPerRun&quot;: 5, &quot;maxBytesPerRun&quot;: 33554432,
+  &quot;pollIntervalMinutes&quot;: 0, &quot;postToChat&quot;: false
+}
+</code></pre>
+<p><strong>Pattern:</strong> request one page item at a time, account for actual read bytes and
+save the next cursor only in Run mode. An over-budget result needs a larger
+deliberate budget, not an unchecked read. See <code>verifyFile</code> in the reference.</p>
+<h3 id="cookbook-23-storage-capacity-hysteresis-for-useful-alerts">23. storage-capacity: hysteresis for useful alerts</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/storage-capacity/index.js">Source</a></p>
+<pre><code class="language-json">{
+  &quot;connectionId&quot;: &quot;room-storage&quot;, &quot;warnPercent&quot;: 85, &quot;resumePercent&quot;: 75,
+  &quot;pollIntervalMinutes&quot;: 0, &quot;postToChat&quot;: false
+}
+</code></pre>
+<p><strong>Pattern:</strong> retain the prior high/normal state to avoid threshold flapping.
+An operator <code>maintenance</code> connection must include
+<code>settings.capabilities: ["storage:read"]</code>. Growth estimates need spaced samples;
+they are estimates, not a guarantee of remaining time.</p>
+<h3 id="cookbook-24-backup-verification-a-sample-restore-you-can-account-for">24. backup-verification: a sample restore you can account for</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/backup-verification/index.js">Source</a></p>
+<pre><code class="language-json">{
+  &quot;connectionId&quot;: &quot;room-backup&quot;, &quot;maxAgeHours&quot;: 48,
+  &quot;sampleFiles&quot;: 2, &quot;maxBytesPerRun&quot;: 33554432,
+  &quot;pollIntervalMinutes&quot;: 0, &quot;postToChat&quot;: false
+}
+</code></pre>
+<p><strong>Pattern:</strong> separate manifest preview from read/copy/readback work. Store the
+sample cursor only after verification. The operator connection fixes the backup
+directory and manifest; report rows never reveal server paths. Read both source
+and restored bytes against the same I/O budget.</p>
+<h3 id="cookbook-25-link-health-distinguish-failure-types">25. link-health: distinguish failure types</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/link-health/index.js">Source</a></p>
+<pre><code class="language-json">{ &quot;checksPerRun&quot;: 10, &quot;pollIntervalMinutes&quot;: 0, &quot;postToChat&quot;: false }
+</code></pre>
+<p><strong>Pattern:</strong> rotate through collected links and persist rate-limit backoff.
+Use <code>probeLink</code> instead of generic fetching for a user-supplied destination.
+Do not label a restricted response as a removed resource or delete it automatically.</p>
+<h3 id="cookbook-26-access-review-useful-administration-without-secrets">26. access-review: useful administration without secrets</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/access-review/index.js">Source</a></p>
+<pre><code class="language-json">{ &quot;pollIntervalMinutes&quot;: 0, &quot;postToChat&quot;: false }
+</code></pre>
+<p><strong>Pattern:</strong> use <code>getAccessSummary</code> to report stale invitations, unused
+connections and broad grants. Keep revocation in explicit owner/operator flows.
+A credential-presence flag is not an authenticated provider health check.</p>
+<h3 id="cookbook-27-metadata-steward-preserve-manual-decisions">27. metadata-steward: preserve manual decisions</h3>
+<p><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/v1.4.7/lib/plugins/metadata-steward/index.js">Source</a></p>
+<pre><code class="language-json">{ &quot;maxItems&quot;: 200, &quot;pollIntervalMinutes&quot;: 0, &quot;postToChat&quot;: false }
+</code></pre>
+<p><strong>Pattern:</strong> propose a retry only where an existing extraction/matching worker
+can help. Preserve confirmed movie choices and populated book fields. Ordinary
+videos link the user to Video Information instead of promising an unsupported
+automatic match.</p>
+<h2 id="cookbook-use-these-examples-as-a-development-checklist">Use these examples as a development checklist</h2>
+<ol>
+<li>Pick the closest source module and read its adapter/helper too.</li>
+<li>Define the data it can read, the exact mutation it may make, and who approves it.</li>
+<li>Add a schema and authoritative server validation with bounded inputs.</li>
+<li>Implement Preview before writes; keep source discovery separate from ingest.</li>
+<li>Use private data/revisions for review and stable identities for deduplication.</li>
+<li>Pass cancellation through every I/O path and clean up streams on errors.</li>
+<li>Verify partial success, retries, stale actions and secret redaction with injected adapters.</li>
+<li>Validate a real operator-owned provider destination before enabling a schedule.</li>
+<li>Add operator instructions, an API example and a user-visible changelog entry.</li>
+</ol>
+<h2 id="cookbook-reproduce-the-portable-handbooks">Reproduce the portable handbooks</h2>
+<p>The Markdown sources are canonical. From the repository root, with Python 3.10+ and
+the <code>Markdown</code> package installed, run:</p>
+<pre><code class="language-sh">python3 scripts/export-plugin-docs.py
+</code></pre>
+<p>This writes self-contained, searchable, printable HTML editions under
+<code>docs/handbooks/</code>. The developer edition combines the reference and this cookbook.
+It has no external fonts, JavaScript or network assets. Reading it needs no server.</p></section></article></main></div>
+<footer>Dicefiles 1.4.7. Generated from the public Markdown documentation. No scripts, external fonts or network assets.</footer>
+</body></html>

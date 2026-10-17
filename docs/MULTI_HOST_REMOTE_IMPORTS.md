@@ -1,6 +1,6 @@
 # Multi-host remote imports
 
-**Status:** Implemented in the unreleased maintenance round; live provider acceptance remains deployment-specific.
+**Status:** Shipped in 1.4.7; live provider acceptance remains deployment-specific.
 **Audience:** Maintainers, plugin authors, and self-hosting operators
 **Existing foundation:** Mega.nz, Pixeldrain, the shared downloader registry,
 the Remote Host Import room bot, streamed ingestion, run leases, and durable
@@ -8,8 +8,7 @@ deduplication are already shipped.
 
 ## 1. Outcome
 
-Dicefiles 1.4.6 should turn the current remote-import foundation into a
-predictable provider platform:
+Dicefiles 1.4.7 extends the remote-import foundation with these implemented pieces:
 
 1. Ship a first-party **Gofile** adapter using Gofile's official REST API.
 2. Harden the downloader contract so providers expose capabilities, stable

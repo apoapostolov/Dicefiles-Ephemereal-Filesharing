@@ -45,17 +45,19 @@ docker compose --env-file .env.docker pull
 docker compose --env-file .env.docker up -d --no-build
 ```
 
-The unreleased development channel is `:preview`. It includes the October
-maintenance, themes, movie playback/matching, torrent metadata and upload dialog changes. It is separate
-from the last tagged source release, v1.4.6; pin its digest for reproducible use.
+The current released image is `:1.4.7`, built from release commit `90de9bb`
+for Linux AMD64 and ARM64. Pin the multi-architecture manifest for reproducible use:
 
-The October 16 validated preview, including movie playback, automatic title
-matching and relaxed torrent availability checks, has digest
-`sha256:b583054fb63ed85814661075d7dbf83641babb268c53c70c320a77514f0fd500`.
-Use `ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing@sha256:b583054fb63ed85814661075d7dbf83641babb268c53c70c320a77514f0fd500`
-to pin that build instead of following the moving channel.
-The [publication run](https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/actions/runs/38808749637)
-builds source commit `e8407ea` for AMD64 and ARM64, with SBOM and provenance.
+```text
+ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing@sha256:ea96e0dc808a128ea6799cefaa1857d1929b4fb957ce68dd1f7493c175b3dd22
+```
+
+The [1.4.7 publication run](https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/actions/runs/38949345610)
+includes SBOM and provenance. Its matching source and portable plugin handbooks
+are available on the [release page](https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/releases/tag/v1.4.7).
+The moving `:preview` channel is for development builds; its earlier October 16
+image predates the released plugin/TV-pack work. Do not select it as an upgrade
+from 1.4.7 merely because it is called preview.
 
 For a private package, authenticate with a classic GitHub token that has
 `read:packages`, using `docker login ghcr.io -u YOUR_USER --password-stdin`.

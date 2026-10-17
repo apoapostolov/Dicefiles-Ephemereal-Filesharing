@@ -78,7 +78,16 @@ Unlike general-purpose file hosts, Dicefiles focuses on ephemeral, community-dri
 
 ### For Server Hosts
 
-See the main [README](README.md) for complete installation and setup instructions.
+See the main [README](../README.md) for complete installation and setup instructions.
+
+### Automation and core plugins
+
+Dicefiles 1.4.7 includes 27 opt-in room bots for cloud/feed collection, community
+workflows and maintenance. Start with the [power-user plugin guide](./CORE_PLUGINS.md).
+Owners can preview reports, queue durable jobs and review suggested changes.
+Operator-approved connections keep provider credentials out of room forms.
+External applications use scoped [REST](../API.md) or [57 MCP tools](../MCP.md).
+Developers can extend the trusted server with [Plugin API v2](../core/plugins/PLUGIN_API.md).
 
 ## Room Features
 
@@ -151,7 +160,7 @@ Dicefiles is built for hobby communities to share resources legally and respectf
 3. **Follow Local Rules**: Room owners may set additional rules
 4. **Report Issues**: Use moderation tools to flag inappropriate content
 
-See the full [Rules](rules) and [Terms of Service](terms) for complete guidelines.
+On your running instance, open `/rules` and `/terms` for its rules and terms.
 
 ## Contributing
 

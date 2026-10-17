@@ -10,6 +10,10 @@ resume videos, browse episode packs and plan room-local sessions.
 
 ### Added
 
+- Standalone power-user guide to all 27 bundled plugins, a full Plugin API v2
+  reference and a developer cookbook with examples from every core bot.
+  Offline HTML handbooks are attached to this release. README, automation,
+  MCP, provider and deployment instructions now reflect the 1.4.7 system.
 - **27 built-in bots**, including seven new collectors for RSS/Atom, S3,
   Nextcloud, Google Drive, Dropbox, OneDrive and pinned Hugging Face files.
   Provider connections use explicit operator grants and read-only source access.

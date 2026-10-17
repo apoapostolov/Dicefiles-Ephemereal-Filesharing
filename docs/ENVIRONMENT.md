@@ -30,6 +30,7 @@ secrets. Restart the service after changes; rebuilding assets is unnecessary.
 | Flags | `DICEFILES_JAIL`, `DICEFILES_NATIVE_TOOLS`, `DICEFILES_PUBLIC_ROOMS`, `DICEFILES_LINK_COLLECTION`, `DICEFILES_STATUS_PRIVATE`, `DICEFILES_TORRENT_DISCOVERY` | `jail`, `nativeTools`, `publicRooms`, `linkCollection`, `statusPagePrivate`, `torrentDiscovery` |
 | Providers | `DICEFILES_GIPHY_API_KEY`, `DICEFILES_OPENGRAPH_API_KEY` | `giphyApiKey`, `opengraphIoKey` |
 | Automation | `DICEFILES_AUTOMATION_KEYS` | `automationApiKeys` (JSON array) |
+| Bot connections | `DICEFILES_PLUGIN_CONNECTIONS` | `pluginConnections` (JSON array of operator grants and credential references) |
 | Background media | `DICEFILES_TORRENT_MONITOR`, `DICEFILES_MOVIE_AUTO_MATCH` | `torrentMonitor`, `movieAutoMatch` |
 | Video playback | `DICEFILES_TORRENT_PLAYBACK` | `torrentPlayback` |
 | Movie metadata | `DICEFILES_TMDB_TOKEN`, `DICEFILES_TMDB_API_KEY`, `DICEFILES_TVDB_API_KEY`, `DICEFILES_TVDB_PIN`, `DICEFILES_TRAKT_CLIENT_ID` | `tmdbToken`, `tmdbApiKey`, `tvdbApiKey`, `tvdbPin`, `traktClientId` |

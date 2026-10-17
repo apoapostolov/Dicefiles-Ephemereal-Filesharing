@@ -1,11 +1,17 @@
 # Remote host download libraries — research notes
 
+**Historical research snapshot, July 2026.** The registry, streamed imports,
+Gofile adapter and guarded Plowshare bridge described as future work below now
+ship in 1.4.7. Use the [current API reference](../core/plugins/PLUGIN_API.md) and
+[remote-import guide](../core/plugins/REMOTE_HOST_IMPORTS.md) for implementation
+contracts. The library comparisons remain research, not installation instructions.
+
 **Audience:** maintainers embedding import adapters inside Dicefiles (not shipping a standalone multi-hoster product).  
-**Related design:** [REMOTE_HOST_IMPORTS.md](../../core/plugins/REMOTE_HOST_IMPORTS.md) (contract + build order).  
-**Related operator/dev guides:** [MEGA_FOLDER.md](../../core/plugins/MEGA_FOLDER.md), [DEVELOPING_PLUGINS.md](../../core/plugins/DEVELOPING_PLUGINS.md).  
+**Related design:** [REMOTE_HOST_IMPORTS.md](../core/plugins/REMOTE_HOST_IMPORTS.md) (contract + build order).
+**Related operator/dev guides:** [MEGA_FOLDER.md](../core/plugins/MEGA_FOLDER.md), [DEVELOPING_PLUGINS.md](../core/plugins/DEVELOPING_PLUGINS.md).
 **Related code today:** `lib/plugins/mega-folder/`, `lib/plugins/runtime-adapters.js`, optionalDep `megajs`.  
 **Researched:** 2026-07-27.  
-**Location:** `docs/plugins/` (research). Design sketches live under `core/plugins/`.
+**Location:** `docs/REMOTE_HOST_LIBRARY_RESEARCH.md`. Plugin contracts live under `core/plugins/`.
 
 ---
 
@@ -52,7 +58,7 @@ What exists falls into five tiers:
 
 **Recommendation:** keep Dicefiles as the product; implement a small internal **provider registry** (`RemoteDownloader`) and only optionalDeps for real SDKs (today: `megajs`). Prefer first-party REST for Pixeldrain/Gofile. Use shell/debrid for coverage, not abandoned scrapers.
 
-This aligns with [REMOTE_HOST_IMPORTS.md](../../core/plugins/REMOTE_HOST_IMPORTS.md).
+This aligns with [REMOTE_HOST_IMPORTS.md](../core/plugins/REMOTE_HOST_IMPORTS.md).
 
 ---
 
@@ -101,7 +107,7 @@ Refactor target over time: `ctx.megaDownloader` → `ctx.remoteDownloaders` (map
 
 **Import shape:** existing `listFolder` / per-entry `download` (buffer or stream). Prefer streams later for large files.
 
-**Mega.nz docs:** [MEGA_FOLDER.md](../../core/plugins/MEGA_FOLDER.md), mega.js.org.
+**Mega.nz docs:** [MEGA_FOLDER.md](../core/plugins/MEGA_FOLDER.md), mega.js.org.
 
 ---
 
@@ -296,9 +302,9 @@ Safety rails (non-negotiable): size/count caps; no crawl of arbitrary pastes wit
 | Plugin registry | `lib/plugins/registry.js` |
 | Mega.nz plugin | `lib/plugins/mega-folder/` |
 | Production wiring | `lib/plugins/runtime-adapters.js` |
-| Design sketch | [core/plugins/REMOTE_HOST_IMPORTS.md](../../core/plugins/REMOTE_HOST_IMPORTS.md) |
-| Operator Mega.nz guide | [core/plugins/MEGA_FOLDER.md](../../core/plugins/MEGA_FOLDER.md) |
-| Plugin author guide | [core/plugins/DEVELOPING_PLUGINS.md](../../core/plugins/DEVELOPING_PLUGINS.md) |
+| Design sketch | [core/plugins/REMOTE_HOST_IMPORTS.md](../core/plugins/REMOTE_HOST_IMPORTS.md) |
+| Operator Mega.nz guide | [core/plugins/MEGA_FOLDER.md](../core/plugins/MEGA_FOLDER.md) |
+| Plugin author guide | [core/plugins/DEVELOPING_PLUGINS.md](../core/plugins/DEVELOPING_PLUGINS.md) |
 | This research | `docs/plugins/REMOTE_HOST_LIBRARY_RESEARCH.md` |
 | Feature backlog pointer | `docs/FUTURE_DEVELOPMENT_PLAN.md` / feature creep notes (multi-host open item) |
 
@@ -351,4 +357,4 @@ Next code step when scheduled: extract `RemoteDownloader` + register Mega.nz; ad
 |------|--------|
 | 2026-07-27 | Initial research dump: tiers, host matrix, npm/GitHub candidates, embed vs product boundary, build order. |
 
-*When implementation drifts, update [REMOTE_HOST_IMPORTS.md](../../core/plugins/REMOTE_HOST_IMPORTS.md) for the contract and this file for library landscape / rejects.*
+*When implementation drifts, update [REMOTE_HOST_IMPORTS.md](../core/plugins/REMOTE_HOST_IMPORTS.md) for the contract and this file for library landscape / rejects.*

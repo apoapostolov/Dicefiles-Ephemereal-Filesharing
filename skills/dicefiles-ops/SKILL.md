@@ -20,7 +20,7 @@ the instance itself: install, config, service, upgrades, backups, and diagnosis.
 
 | Rule | Why |
 | ---- | --- |
-| Node.js 22 or newer | `server.js` exits before any require when the major is below 22 |
+| Node.js `^22.13.0` or `>=24` | Match `package.json` engines and native dependency support |
 | Yarn 1.x with `yarn.lock` | `package.json` pins `packageManager`; never create `package-lock.json` |
 | No hot reload, no `webpack --watch`, no Nodemon | The service owns the port; watchers make the app vanish mid-edit |
 | Browser code is edited in `client/` and `entries/` | `static/*.js`, `static/*.css`, their maps, and `lib/clientversion.js` are build output from `yarn prestart` |
@@ -59,8 +59,10 @@ installs the Ubuntu set.
 ## Configuration
 
 Config loads in this order, last value wins: `defaults.js`, then
-`~/.config/dicefiles.json`, then `.config.json` in the project directory, then a
-`.config` module if present. Only the keys you set need to appear.
+`~/.config/dicefiles.json`, then `~/.config/dicefiles`, `.config.json` in the
+project directory, a project `.config` module, then environment overrides.
+The private `.env` supplies environment values without replacing existing process
+variables. See [environment configuration](../../docs/ENVIRONMENT.md).
 
 Keys that decide whether an instance works:
 
@@ -199,13 +201,17 @@ to its scope and endpoint.
 ## Room bots
 
 Bots are per-room plugins. Design and operator guides live in `core/plugins/`;
-the registry includes 27 built-in modules. Start with
+the registry includes 27 built-in modules. Start with the
+[power-user guide](../../docs/CORE_PLUGINS.md),
+[API reference](../../core/plugins/PLUGIN_API.md) or
+[cookbook](../../core/plugins/PLUGIN_COOKBOOK.md), then
 [collection setup](../../core/plugins/COLLECTION_BOTS.md) or
 [community and maintenance setup](../../core/plugins/WORKFLOW_BOTS.md).
 
 - Secrets such as a Mega password or a bot token belong in the room settings, which
   are stored in Redis, never in git and never in room chat.
-- The API surface is `GET/PUT/DELETE /api/v1/rooms/:id/plugins` and
+- The API surface is `GET /api/v1/rooms/:id/plugins`,
+  `PUT/DELETE /api/v1/rooms/:id/plugins/:pluginId` and
   `POST /api/v1/rooms/:id/plugins/:pluginId/run`, gated by `room-plugins:*`.
 - The MCP equivalents are `list_room_plugins`, `configure_room_plugin`,
   `run_room_plugin`, `remove_room_plugin`, `inspect_room_plugin_sync_memory`, and

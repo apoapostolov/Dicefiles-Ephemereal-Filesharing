@@ -18,7 +18,7 @@ organised into rooms. Each room has uploads (files), requests (unfulfilled asks 
 participants), and a chat channel. Rooms are identified by a short alphanumeric
 `roomid`.
 
-The MCP server exposes 36 tools. All network calls go through the tools — never
+Dicefiles 1.4.7 exposes 57 MCP tools. All network calls go through the tools; never
 construct raw HTTP requests.
 
 ---
@@ -63,6 +63,31 @@ construct raw HTTP requests.
 | `configure_room_password_access` | Enable, update, or disable rotating room access           |
 | `rotate_room_password`  | Replace the password and revoke existing visitor grants                |
 | `reveal_room_passwords` | Reveal current/prepared secrets under a sensitive scope                 |
+| `list_remote_import_providers` | Inspect provider availability and capabilities |
+| `validate_remote_import_source` | Validate a supported source without importing |
+| `list_storage_migrations` | Read the paginated migration journal |
+| `plan_storage_migration` | Plan move/drain/rebalance; dry run by default |
+| `control_storage_migration` | Explicitly pause, resume or roll back a move |
+| `set_storage_volume_draining` | Stop new allocations or re-enable a volume |
+| `list_room_access_credentials` | Read cohort/personal credential metadata |
+| `create_room_access_credential` | Create a bounded cohort/personal credential |
+| `update_room_access_credential` | Change label, state or activation limits |
+| `revoke_room_access_credential` | Revoke one credential and its grants |
+| `rotate_room_access_credential` | Rotate one credential |
+| `reveal_room_access_credential` | Sensitive owner-authorized password reveal |
+| `get_room_access_audit` | Read bounded access administration history |
+| `inspect_room_plugin_operations` | Read jobs, report and reviewed-action history |
+| `list_room_plugin_connections` | List approved connection references without secrets |
+| `queue_room_plugin_job` | Queue an invited bot's preview or real run |
+| `update_room_plugin_job` | Cancel or replay failed/cancelled work |
+| `review_room_plugin_item` | Apply a current declared report action |
+| `list_room_sessions` | Read sessions and aggregate RSVP counts |
+| `create_room_session` | Plan a room-local session with preparation links |
+| `update_room_session` | Cancel or restore using the current revision |
+
+See [MCP.md](../../MCP.md) for exact schemas and scopes. In-process extensions
+use a separate [Plugin API 2](../../core/plugins/PLUGIN_API.md). Room owners can
+use the [27-bot guide](../../docs/CORE_PLUGINS.md).
 
 ---
 
@@ -129,7 +154,8 @@ there is nothing to write.
    c. attempt to source the file
    d. on success: upload_file_from_urls(roomid, [url])
    e. release_request(key)               # or let TTL expire on crash
-   f. post_room_chat: "Fulfilled: <request text>"
+   f. verify request state before reporting fulfillment; a plain URL upload
+      and claim release do not establish a file/request association
    g. on failure: release_request(key) immediately, do not leave it claimed
 ```
 
@@ -188,6 +214,16 @@ Omit stored secret fields unless replacing them; the API preserves omitted
 credentials and never returns their values. A tool cannot install code or run
 an uninvited catalog plugin.
 
+For recoverable work prefer queue_room_plugin_job with an explicit mode, then
+inspect_room_plugin_operations. Read reports before reviewing an action with
+review_room_plugin_item. A stale report or revision needs a refresh. Connection
+grants remain operator-owned. Cancellation cannot undo completed side effects;
+replay uses current settings. Disabled bots cannot execute.
+
+Session Organizer enables owner planning through create_room_session and
+revision-checked cancellation/restore. RSVP stays in the room UI; tools expose
+aggregate counts, not attendee identities.
+
 ### J. Inspect storage placement
 
 ```
@@ -196,8 +232,10 @@ get_storage_volumes()
 → report the selected tier and any hard-full or unavailable volume
 ```
 
-These tools never move existing blobs. Do not rename durable volume ids or edit
-storage configuration through an agent.
+These two inspection tools do not move existing blobs. The separate migration
+and draining tools can change storage with admin:storage authority. Use a dry-run
+plan first and explicit authorization before executing. Do not rename durable
+volume IDs or edit storage configuration as a substitute for a migration.
 
 ### K. Operate protected community access
 
@@ -226,9 +264,11 @@ Content tools also require explicit `room-access:bypass` for protected rooms.
 
 ## Scope Reminder
 
-The MCP server cannot delete files, access moderation endpoints, or impersonate users.
-If a task requires those actions, inform the user that the REST API must be called
-directly with appropriate credentials (see API.md).
+The tool set does not expose generic file deletion or user impersonation.
+Specific reviewed bot actions, owner session changes, access administration and
+storage migrations are available with their documented scopes and saved grants.
+Check MCP.md for each tool's authority; do not treat a plugin capability label
+as permission. Use a separate scoped REST integration for unsupported actions.
 
 ---
 
@@ -251,11 +291,19 @@ The MCP server is started by mcporter using:
 }
 ```
 
-Scopes needed for full automation:
+Possible scopes by workflow (grant only those needed):
 `files:read`, `files:write`, `uploads:write`, `requests:write`, `rooms:write`,
 `room-links:read`, `room-links:write`, `guest-invites:read`,
 `guest-invites:write`, `federation-links:read`,
 `federation-links:write`, `room-plugins:read`, `room-plugins:write`,
-`room-plugins:run`, `room-access:read`, `room-access:write`, `admin:read`
+`room-plugins:run`, `room-access:read`, `room-access:write`,
+`room-access:secrets`, `room-access:bypass`, `admin:read`, `admin:storage`
 
-For read-only monitoring, `files:read` alone is sufficient.
+Basic public-room file reads use files:read. Add room-plugins:read for bot
+activity, admin:read for storage health, and room-access:bypass for protected
+content. Sensitive reveal/write scopes are not needed for ordinary monitoring.
+
+Local configuration above uses stdio. HTTP follows the stateless 2026-07-28
+protocol, without initialize or Mcp-Session-Id. Remote use requires incoming
+authentication and explicit host/origin controls; OAuth mode separates callers.
+See MCP.md before exposing a listener.

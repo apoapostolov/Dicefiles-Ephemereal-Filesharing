@@ -24,7 +24,7 @@
 
 - node-redis **v6** with Lua scripts loaded at connect; rate-limit and distributed maps use the same script surface as 1.3.x.
 
-## Unreleased bounded work
+## Bounded work shipped in 1.4.7
 
 Disk probes use async filesystem calls, coalesce concurrent probes and fail closed
 after two seconds. Gallery paging bounds mounted tiles to 100 while preserving

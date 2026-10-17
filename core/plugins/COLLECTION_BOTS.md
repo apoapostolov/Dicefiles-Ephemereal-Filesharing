@@ -1,5 +1,9 @@
 # Collection bots
 
+**Dicefiles 1.4.7.** See the [power-user guide](../../docs/CORE_PLUGINS.md) for
+practical examples, or the [developer cookbook](./PLUGIN_COOKBOOK.md) to extend
+a provider. This page covers operator grants and recovery.
+
 Invite collectors in **Room Options → Bots & plugins**. Choose a connection,
 save settings, then use **Connection test** and **Preview** before **Import**.
 **Queue job** survives a service restart; Refresh activity shows job history and

@@ -2,11 +2,26 @@
 
 Canonical product and contributor docs. Filenames use **FULL_CAPS** (except this index).
 
-Plugin system docs live under **`../core/plugins/`** (design + operator guides). Research notes may also live under **`plugins/`** here.
+For room owners, start with the [core plugin guide](./CORE_PLUGINS.md). Developers
+can follow the [API reference](../core/plugins/PLUGIN_API.md) and
+[27-plugin cookbook](../core/plugins/PLUGIN_COOKBOOK.md). Provider-specific
+operator instructions live under `../core/plugins/`.
+
+## Choose a reading path
+
+- **Use room bots:** [power-user guide](./CORE_PLUGINS.md), then provider setup as needed.
+- **Build a plugin:** [API reference](../core/plugins/PLUGIN_API.md), [cookbook](../core/plugins/PLUGIN_COOKBOOK.md), then [event/installation guide](../core/plugins/DEVELOPING_PLUGINS.md).
+- **Connect an agent:** [MCP setup and all 57 tools](../MCP.md), then [automation workflows](./ai_automation.md).
+- **Read offline:** [power-user HTML](./handbooks/dicefiles-core-plugins-1.4.7.html) or [developer HTML](./handbooks/dicefiles-plugin-developer-1.4.7.html). Download editions from [release 1.4.7](https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/releases/tag/v1.4.7).
+
+## Reference index
 
 | Document | Purpose |
 | -------- | ------- |
 | [INTRODUCTION.md](./INTRODUCTION.md) | What Dicefiles is, use cases, getting started |
+| [CORE_PLUGINS.md](./CORE_PLUGINS.md) | All 27 core bots: settings, practical uses, review actions and troubleshooting |
+| [../core/plugins/PLUGIN_API.md](../core/plugins/PLUGIN_API.md) | In-process context API 2, independent of REST and MCP versions |
+| [../core/plugins/PLUGIN_COOKBOOK.md](../core/plugins/PLUGIN_COOKBOOK.md) | Examples from every bundled plugin and complete extension modules |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | Dev setup, PR expectations, quality bar |
 | [FUTURE_DEVELOPMENT_PLAN.md](./FUTURE_DEVELOPMENT_PLAN.md) | Product backlog — checked = shipped, open = proposed |
 | [AUDIT_2026-10-14.md](./AUDIT_2026-10-14.md) | Maintenance findings, dependency results, MCP decision, and priorities |
@@ -24,7 +39,7 @@ Plugin system docs live under **`../core/plugins/`** (design + operator guides).
 | [ACHIEVEMENT_SYSTEM.md](./ACHIEVEMENT_SYSTEM.md) | Profile trophy / achievement design |
 | [ARCHIVE_VIEWER.md](./ARCHIVE_VIEWER.md) | In-browser archive browser spec |
 | [MESSAGE_REMOVAL.md](./MESSAGE_REMOVAL.md) | Moderator message removal behavior |
-| [AI_AUTOMATION.md](./AI_AUTOMATION.md) | AI agent automation use cases vs REST/MCP |
+| [ai_automation.md](./ai_automation.md) | Current REST/MCP workflows, durable bot jobs, review and sessions |
 | [REMOTE_HOST_LIBRARY_RESEARCH.md](./REMOTE_HOST_LIBRARY_RESEARCH.md) | Research: embeddable multi-host download libs (not a standalone product) |
 | [../dev/README.md](../dev/README.md) | AI/human development workflow, generated files, review, and release checks |
 | [../skills/dicefiles-ops/SKILL.md](../skills/dicefiles-ops/SKILL.md) | Operator skill for AI agents: install, config, service, upgrade, backup, MCP wiring, room bots, diagnostics |

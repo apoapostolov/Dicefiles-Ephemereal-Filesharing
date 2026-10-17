@@ -30,7 +30,7 @@ endpoints with required scopes. The manifest returns:
 {
   "ok": true,
   "service": "Dicefiles",
-  "version": "1.4.4",
+  "version": "1.4.7",
   "baseUrl": "/api/v1",
   "endpoints": [
     { "path": "/api/v1/files", "scope": "files:read" },
@@ -1450,7 +1450,11 @@ See `MCP.md` for the full specification, security model, and deployment guide.
 
 ---
 
-## 20. Complete Endpoint Matrix (v1.0 through v1.4.4)
+## 20. Core endpoint matrix (introduced through v1.4.4)
+
+The version column records introduction, not the current product version.
+The 1.4.7 additions below document bounded reads, provider inspection, storage
+migrations, cohort credentials, durable bot jobs, review actions and sessions.
 
 | Method   | Path                                | Scope            | Session Required | Version |
 | -------- | ----------------------------------- | ---------------- | ---------------- | ------- |
@@ -1931,7 +1935,7 @@ service must also receive the explicit `room-access:bypass` scope before it may
 list, post, upload, or mutate protected-room content. Keep bypass off
 general-purpose and monitoring keys.
 
-## Unreleased maintenance APIs
+## 1.4.7 maintenance APIs
 
 ### Bounded results
 
@@ -2001,7 +2005,7 @@ cannot undo completed remote side effects. See
 [Plugin API](core/plugins/PLUGIN_API.md) for in-process contracts.
 
 
-### Reviewed bot actions and room sessions (unreleased)
+### Reviewed bot actions and room sessions (1.4.7)
 
 POST /api/v1/rooms/:id/plugins/:pluginId/review requires room-plugins:write.
 Supply {reportId,itemId,action} from the latest operations report. The enabled
@@ -2024,3 +2028,8 @@ links, cancelled state and aggregate counts. RSVP is available to authenticated
 room visitors through the room Sessions interface; automation cannot impersonate
 an attendee. Protected rooms additionally require room-access:bypass for these
 REST operations. See [workflow setup](core/plugins/WORKFLOW_BOTS.md).
+
+For in-process authors, use the [Plugin API v2 reference](core/plugins/PLUGIN_API.md)
+and [27-plugin cookbook](core/plugins/PLUGIN_COOKBOOK.md). Room owners can start
+with the [power-user guide](docs/CORE_PLUGINS.md). Context API 2 is independent
+of this REST `/api/v1` namespace and the MCP transport version.

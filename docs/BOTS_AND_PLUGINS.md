@@ -1,7 +1,11 @@
 # Bots and plugins: audit and expansion plan
 
-Audit date: 2026-10-16. Implementation is in the current unreleased maintenance
-round. The registry now includes 27 built-in bots: the four existing modules and all
+Audit date: 2026-10-16. Implementation shipped in Dicefiles 1.4.7.
+For current usage, read the [power-user guide](./CORE_PLUGINS.md),
+[API reference](../core/plugins/PLUGIN_API.md) and
+[cookbook](../core/plugins/PLUGIN_COOKBOOK.md). The audit below records the
+implementation findings and acceptance boundaries.
+The registry includes 27 built-in bots: the four existing modules and all
 23 retained collectors, community workflows and maintenance bots below. Provider
 access still requires operator grants and credential-bound live acceptance.
 See the [collection guide](../core/plugins/COLLECTION_BOTS.md) and
@@ -61,9 +65,10 @@ administration, provider resolution and operator documentation.
 - **API v2 foundations:** private Redis checkpoint storage with atomic versions,
   expiry and quotas; room-scoped individual file reads and inventory summaries;
   bounded text/binary HTTP; renewable execution leases with cooperative
-  cancellation. [The contract and extension design](../core/plugins/PLUGIN_API.md)
-  covers implemented APIs and 15 proposed extension domains, including jobs,
-  collections, review, metadata, maintenance and restricted UI panels.
+  cancellation. [The current contract](../core/plugins/PLUGIN_API.md)
+  documents callable jobs, collection, review and maintenance adapters. Historical
+  extension proposals remain separate from that reference; the
+  [cookbook](../core/plugins/PLUGIN_COOKBOOK.md) shows the implemented patterns.
 
 ## Architecture limits and required foundations
 

@@ -1,382 +1,176 @@
-# AI Agent Automation Guide — Dicefiles
+# Automation workflows for Dicefiles 1.4.7
 
-This document catalogues automation use cases for AI agents operating against a
-Dicefiles 1.4.4 instance. Items marked **\[implemented\]** are available today;
-explicit proposals remain candidates for later evaluation.
+Dicefiles exposes a scoped REST API, 57 MCP tools and 27 opt-in core plugins.
+Use MCP for an agent that needs typed tools. Use REST for an external service.
+Use an in-process plugin for operator-installed background collection or room
+workflows. The [power-user guide](./CORE_PLUGINS.md),
+[Plugin API reference](../core/plugins/PLUGIN_API.md) and
+[cookbook](../core/plugins/PLUGIN_COOKBOOK.md) cover the plugin path.
 
----
+## Connect with the right authority
 
-## Prerequisites
+1. Check `server_health` or `GET /healthz`. Resolve degraded storage/Redis before writes.
+2. Give the caller only the needed scopes and room restrictions.
+3. Protected rooms require `room-access:bypass` in addition to the action scope.
+4. Keep secrets out of room chat, reports and saved job payloads.
 
-All automation uses the stable `/api/v1` endpoint namespace with a scoped API key.
-See `API.md` for the complete reference.
+The standalone MCP process reads the same environment file as the application:
 
-```bash
-# Quick smoke-test: list files in room "media"
-curl -sH "Authorization: Bearer $DICEFILES_API_KEY" \
-     "https://your-instance/api/v1/files?roomid=media"
+```sh
+DICEFILES_BASE_URL=http://127.0.0.1:8080 \
+DICEFILES_API_KEY=replace-with-scoped-key \
+node scripts/mcp-server.js
 ```
 
-Set `DICEFILES_API_KEY` to an API key with the minimum scope required for the task.
+Local clients use stdio. HTTP uses the stateless MCP 2026-07-28 core: no initialize
+handshake or `Mcp-Session-Id`, with a fresh server per request. Remote bindings
+need explicit incoming authentication and host/origin controls. OAuth mode maps
+callers to separate upstream keys and allowed scopes. Use the full
+[MCP setup](../MCP.md) for transport headers, OAuth and client configuration.
+Context API 2 is the in-process plugin contract; REST remains `/api/v1`.
 
----
+## 1. Monitor files without skipping a page
 
-## 1 — Real-time File Monitoring
+Use `list_files` with `limit` and `cursor`, or REST
+`GET /api/v1/files?roomid=...&limit=100`. Paginated REST results include
+`pagination.nextCursor`. Keep filters identical for every page; signed cursors
+expire after 30 minutes. Deduplicate by stable file key in the receiving agent.
 
-**Goal**: An agent watches a room and reacts to every new file that appears.
+For incremental scans, hold the previous timestamp fixed while reading every
+page. Persist a watermark only after processing the window. Revisit a small
+overlap and skip known keys to handle tied timestamps and concurrent arrivals.
+Do not increment `since` after each individual result or use the displayed name
+as an identity. A cursor is not a frozen snapshot.
 
-### How it works today **\[implemented\]**
+For event-driven external work, configure signed `file_uploaded` webhooks.
+Verify HMAC-SHA256 over the timestamp and exact raw body with a constant-time
+comparison, reject malformed signatures before comparing their lengths, and
+apply a freshness/replay policy. The [REST webhook reference](../API.md) defines
+the headers and envelope. In-process hooks receive the event name and payload,
+not that HTTP envelope. Queue expensive work and re-read current room data.
 
-Poll `/api/v1/files?roomid=<room>&since=<timestamp>` on a short interval and compare
-against a locally persisted high-water mark. The `since` parameter takes a Unix ms
-timestamp and returns only files uploaded after it.
+## 2. Collect files from an approved source
 
-```js
-// Minimal polling loop (Node 18+)
-let since = Date.now();
-async function poll() {
-  const res = await fetch(
-    `${BASE}/api/v1/files?roomid=${ROOM}&since=${since}`,
-    {
-      headers: { Authorization: `Bearer ${KEY}` },
-    },
-  );
-  const { files } = await res.json();
-  for (const f of files) {
-    console.log("New file:", f.name, f.href);
-    since = Math.max(since, f.uploaded + 1);
-  }
-}
-setInterval(poll, 5000);
+Prefer a built-in collector when the source is RSS/Atom, S3, Nextcloud, Drive,
+Dropbox, OneDrive or pinned Hugging Face files. Supported locker URLs use
+Remote Host Import or Mega.nz Autoshare. Provider permissions remain with the
+operator; an agent cannot grant itself access by saving a connection ID.
+
+MCP sequence:
+
+```text
+list_room_plugins(roomid)
+list_room_plugin_connections(roomid, pluginId)
+configure_room_plugin(roomid, pluginId, config, enabled=true)
+queue_room_plugin_job(roomid, pluginId, mode="preview", idempotencyKey="setup-1")
+inspect_room_plugin_operations(roomid, pluginId)
 ```
 
-### Webhook push **\[implemented\]**
-
-Rather than polling, register a webhook for the `file_uploaded` event. The server will
-POST to your agent's endpoint within seconds of every upload, eliminating poll latency
-and reducing API traffic. See the Webhooks section of `API.md`.
-
-```json
-// .config.json
-{
-  "webhooks": [
-    {
-      "url": "https://your-agent.example.com/hooks/dicefiles",
-      "events": ["file_uploaded", "request_fulfilled"],
-      "secret": "shared-hmac-secret"
-    }
-  ]
-}
-```
-
-Verify the `x-dicefiles-signature` header before processing:
-
-```js
-const crypto = require("crypto");
-function verify(secret, timestamp, body, sig) {
-  const expected = crypto
-    .createHmac("sha256", secret)
-    .update(`${timestamp}.${body}`)
-    .digest("hex");
-  return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
-}
-```
-
----
-
-## 2 — Conditional Auto-Download
-
-**Goal**: An agent monitors incoming files and automatically downloads those matching a
-user's criteria (file type, room, keyword in name, size range, uploader, tags, etc.).
-
-### Polling-based implementation **\[partially implemented\]**
-
-1. Poll `/api/v1/files?roomid=<room>&since=<ts>` (or use webhooks above).
-2. Apply local filter conditions to each `file` object.
-3. Download matching files via `GET /api/v1/download/<hash>` (or the file's `href`).
-
-```js
-async function maybeDownload(file) {
-  if (!file.name.match(/\.(pdf|epub|mobi)$/i)) return; // only books
-  if (file.size > 200 * 1024 * 1024) return; // skip >200 MB
-  const dest = path.join("~/Downloads", file.name);
-  const stream = fs.createWriteStream(dest);
-  const res = await fetch(`${BASE}${file.href}`, {
-    headers: { Authorization: `Bearer ${KEY}` },
-  });
-  await pipeline(res.body, stream);
-  console.log("Downloaded:", dest);
-}
-```
-
-### Proposed: resume-on-restart **\[proposal\]**
-
-Persist the high-water mark and a local manifest of already-downloaded hashes to a small
-SQLite or JSON file. On agent restart, replay missed events since the last persisted
-timestamp. This prevents gaps when the agent is offline briefly.
-
-### Agent subscription presets **\[implemented\]**
-
-`POST/GET/DELETE /api/v1/agent/subscriptions` — save named filter presets per API key.
-Agents register their interests at startup and retrieve them on restart, eliminating
-hardcoded filter config. See API.md §17.
-
----
-
-## 3 — Agent-Triggered Upload
-
-**Goal**: A user asks an AI assistant "upload this file to the media room" and the agent
-does it automatically.
-
-### API **\[implemented\]**
-
-```bash
-curl -X PUT "$BASE/api/v1/upload?roomid=media&name=report.pdf" \
-     -H "Authorization: Bearer $KEY" \
-     --data-binary @report.pdf
-```
-
-The response includes `{ key, href, expires }`.
-
-### Multi-file upload from URL list **\[implemented\]**
-
-`POST /api/v1/batch-upload` — JSON array of `{url, name, roomid}` objects. The server
-fetches each URL with a 100 MB cap and 60-second timeout. Max 20 items per call.
-Returns per-item `ok/error`. See API.md §15.
-
-### Proposed: upload from clipboard / base64 **\[proposal\]**
-
-Accept a `Content-Transfer-Encoding: base64` variant of the PUT endpoint so mobile
-agents or browser extensions can upload without a dedicated multipart form layer.
-
----
-
-## 4 — Metadata Enrichment
-
-**Goal**: An agent adds or updates tags, descriptions, and structured metadata on existing
-files after upload (e.g., OCR-derived text, AI-generated caption, archive index).
-
-### Metadata PATCH API **\[implemented\]**
-
-`PATCH /api/v1/file/:key` accepts:
-
-```json
-{
-  "tags": { "genre": "sci-fi", "language": "en" },
-  "meta": {
-    "description": "A short synopsis …",
-    "ai_caption": "Cover shows a starship emerging from hyperspace.",
-    "ocr_text_preview": "Chapter One: The expedition departs …"
-  }
-}
-```
-
-Scoped API key requirement: `files:write`. See API.md §12.2.
-
-### AI-generated cover images **\[implemented\]**
-
-`POST /api/v1/file/:key/asset/cover` — raw JPEG body (max 5 MB). The server validates
-with sharp, encodes at quality 85, and replaces the existing thumbnail. See API.md §12.3.
-
----
-
-## 5 — Request Workflow Automation
-
-**Goal**: An agent monitors open requests in a room and auto-fulfills them when it can
-find a matching resource.
-
-### How it works today **\[implemented\]**
-
-1. Poll `/api/v1/requests?roomid=<room>` for open requests.
-2. Match request text against the agent's knowledge base or external search index.
-3. Upload the matching file via `PUT /api/v1/upload?roomid=<room>&fulfillsRequest=<key>`.
-4. The server marks the request as fulfilled and links the file to it.
-
-Webhook `request_created` fires for new requests; `request_fulfilled` fires when one is
-resolved — subscribe to both for a complete event log.
-
-### Agent request claiming **\[implemented\]**
-
-`POST /api/v1/requests/:key/claim` — single-agent lock with auto-release TTL (default 5 min).
-`DELETE /api/v1/requests/:key/claim` — release early. Returns `409` if already claimed
-by another agent. See API.md §16.
-
-### Structured request hints **\[implemented\]**
-
-Extend request creation to accept structured fields (beyond free text) that agents can
-match more reliably:
-
-```json
-{
-  "text": "Share the 2023 IPCC climate report",
-  "hints": {
-    "type": "pdf",
-    "keywords": ["IPCC", "climate", "2023"],
-    "max_size_mb": 50
-  }
-}
-```
-
----
-
-## 6 — Room Management
-
-**Goal**: An agent performs moderation or housekeeping tasks in response to triggers.
-
-### Proposed: auto-expire on inactivity **\[proposal\]**
-
-Add an endpoint `POST /api/v1/room/:id/set-expiry` that shortens all file TTLs in a room
-to a given duration when triggered by an agent (e.g., "clear this room in 24 hours").
-
-### Proposed: content policy enforcement **\[proposal\]**
-
-An agent subscribes to `file_uploaded` webhooks, runs the received file metadata through
-an AI content classifier, and calls `DELETE /api/v1/file/:hash` (mod scope) if the
-classifier flags it. The server already supports mod-level deletion via the API; the
-missing piece is an action webhook that includes the full `href` for the agent to
-download and inspect.
-
-### Room summary on snapshot **\[implemented\]**
-
-`GET /api/v1/room/:id/snapshot` returns a compact summary:
-
-```json
-{
-  "roomid": "books",
-  "file_count": 142,
-  "total_bytes": 3200000000,
-  "open_requests": 7,
-  "unique_uploaders": 12,
-  "oldest_expires": "2026-03-15T00:00:00Z"
-}
-```
-
-Useful for agents that generate a human-readable digest of what's in a room.
-
----
-
-## 7 — Conversational File Assistant
-
-**Goal**: A user chats with an AI that can answer questions about files in the room
-("What books were uploaded this week?", "Is there a PDF of the meeting notes?",
-"Download the largest video to my laptop.").
-
-### Building blocks **\[implemented\]**
-
-| Capability            | API surface needed                                               |
-| --------------------- | ---------------------------------------------------------------- |
-| List and search files | `GET /api/v1/files` with `name_contains`, `ext`, `type`, `since` |
-| Read file metadata    | `GET /api/v1/file/:hash`                                         |
-| Download file         | `GET /api/v1/download/:hash` or file `href`                      |
-| Upload file           | `PUT /api/v1/upload`                                             |
-| Fulfill request       | Upload with `fulfillsRequest` query param                        |
-| Post a chat message   | `POST /api/v1/room/:id/chat`                                     |
-
-### Agent chat messages **\[implemented\]**
-
-`POST /api/v1/room/:id/chat` — body: `{ text, nick, replyTo }`. Agents appear in the
-room chat with a distinct `role:"agent"` badge. Enables two-way interaction: user
-requests in chat, agent acts on the API, agent replies with results. See API.md §13.1.
-
----
-
-## 8 — Observability and Audit
-
-**Goal**: An ops agent monitors server health and surfaces anomalies.
-
-### Health check **\[implemented\]**
-
-```bash
-curl http://your-instance/healthz
-# → {"ok":true,"redis":"ok","storage":"ok","uptime_s":3600,...}
-```
-
-### Metrics endpoint **\[implemented\]**
-
-`GET /api/v1/metrics` (`admin:read`) — JSON counters from `lib/observability.js`.
-See API.md §14.1.
-
-### Audit log **\[implemented\]**
-
-`GET /api/v1/audit?since=<iso>&limit=<n>` (`admin:read`) — paginated JSON lines of
-automation API events, newest first. See API.md §14.2.
-
----
-
-## 9 — Integration Recipes
-
-### Recipe: Discord bot
-
-1. Discord bot receives DM "upload this to #media: [URL]"
-2. Bot fetches the URL and streams it to `PUT /api/v1/upload?roomid=media`
-3. Bot replies with the resulting `href`
-
-### Recipe: AI search assistant
-
-1. Index all file names and metadata from `/api/v1/files` into a local vector store
-2. Rebuild the index on every `file_uploaded` or `file_deleted` webhook event
-3. Answer semantic queries ("books about ancient Rome") by retrieving the top-N matches
-   from the vector store and returning their `href` values
-
-### Recipe: periodic backup agent
-
-1. Cron job polls `/api/v1/files?since=<last-run-ts>` each night
-2. Downloads all new files to a cold-storage provider (S3, B2, local NAS)
-3. Records downloaded hashes to avoid re-downloading on the next run
-
-### Recipe: request fulfillment queue
-
-1. Agent subscribes to `request_created` webhook
-2. Parses the request text and queries an external library catalog API
-3. If a matching resource is found, downloads it and re-uploads via
-   `PUT /api/v1/upload?fulfillsRequest=<key>`
-4. If not found, posts a chat message ("Working on it — nothing found yet") and retries
-   on a 30-minute schedule
-
----
-
-## 10 — Implementation Priority Guide
-
-| Use case                         | Complexity | Value  | Status            |
-| -------------------------------- | ---------- | ------ | ----------------- |
-| Polling-based file monitor       | Low        | High   | Implementable now |
-| Webhook-based file monitor       | Low        | High   | Implementable now |
-| Auto-download with filters       | Low        | High   | Implementable now |
-| Agent-triggered upload           | Low        | High   | Implemented       |
-| Request fulfillment automation   | Medium     | High   | Implemented       |
-| Metadata PATCH API               | Medium     | High   | Implemented       |
-| Chat API for agents              | Medium     | Medium | Implemented       |
-| Structured request hints         | Low        | Medium | Implemented       |
-| Filter presets saved server-side | Medium     | Medium | Implemented       |
-| Batch upload from URL list       | Medium     | Medium | Implemented       |
-| Metrics endpoint (JSON)          | Low        | Medium | Implemented       |
-| Audit log API                    | Medium     | Low    | Implemented       |
-| Agent request claiming           | Medium     | Low    | Implemented       |
-| AI-generated thumbnails          | Medium     | Low    | Implemented       |
-| MCP server wrapper               | Medium     | High   | Implemented       |
-| Content policy webhook agent     | High       | Low    | Proposal          |
-
----
-
-## 11 — MCP Integration
-
-See [`MCP.md`](../MCP.md) for the complete design and implementation guide.
-
-In brief: Dicefiles keeps HTTP REST as the core contract and ships
-`scripts/mcp-server.js` using `@modelcontextprotocol/server` 2.x to translate 36
-typed MCP tools into API calls. Clients such as Claude Desktop, Cursor, and
-OpenClaw connect via stdio locally or via stateless Streamable HTTP remotely,
-where MCP 2026-07-28 has no session handshake at all.
-
-The curated tool set includes:
-`list_files`, `get_file`, `get_room_snapshot`, `upload_file_from_urls`,
-`create_request`, `claim_request`, `update_file_metadata`, `post_room_chat`,
-`archive_list_contents`, linked-room management, guest-invite management,
-`server_health`, and more.
-
-```bash
-# Quick start: Claude Desktop integration
-export DICEFILES_BASE_URL=http://localhost:9090
-export DICEFILES_API_KEY=your-key
-node scripts/mcp-server.js  # expose to Claude Desktop via stdio
-```
+These are workflow sketches; use the tool's schema for exact argument fields.
+Configuration requires `room-plugins:write`, execution `room-plugins:run` and
+inspection `room-plugins:read`. Read the preview before authorizing an import.
+A plugin must be installed, invited and enabled before it can execute.
+
+For individual public URLs, `upload_file_from_urls` supports batches of up to
+20 and returns per-item outcomes. Check each result. Retry failed items only
+when their errors permit it; do not repeat successful uploads blindly. There is
+no general shell execution or arbitrary server-code installation through MCP.
+
+## 3. Review a bot suggestion
+
+Request Triage, Collection Curator, Upload Review, Preview Repair and Metadata
+Steward expose typed actions through their latest report. Inspect the report,
+show the proposed effect to the authorized user, then call
+`review_room_plugin_item(roomid,pluginId,reportId,itemId,action)` with its actual
+IDs. Review needs `room-plugins:write`.
+
+A 409 means a stale report, conflicting item or busy bot. Refresh and recompute.
+Do not reuse an old action against a different file. Public report data excludes
+private undo receipts; the plugin retains those itself. Upload Review quarantine
+also requires the owner's saved `allowQuarantine` setting.
+
+## 4. Work on a request honestly
+
+List open requests and claim one before spending time sourcing it. A claim is a
+bounded lease; release it when the task cannot be completed. Respect other
+active claims and the room's request policy.
+
+Uploading a similarly named file does not by itself prove fulfillment. For an
+existing room file, Request Triage can prepare a reviewed association and call
+the typed fulfillment adapter. For an external upload, follow the REST
+request-fulfillment contract when the caller has that authority. Confirm the
+resulting request state before reporting it as fulfilled.
+
+Do not use `release_request` as a substitute for fulfillment or post a success
+message after a failed upload. Human confirmation remains useful when editions,
+languages or file variants are ambiguous.
+
+## 5. Enrich metadata without erasing manual work
+
+Read `get_file` before `update_file_metadata`. Write only missing values that
+the evidence supports. Keep provider IDs and provenance where the documented
+schema accepts them. Skip an empty patch.
+
+Use `download_file` only when content is needed, with a deliberate `maxBytes`.
+Its default is 5 MiB and configurable cap is 20 MiB; inspect metadata first.
+For book extraction and torrent matching, Metadata Steward reuses the existing
+workers. Ordinary videos use Video Information for catalogue search and user
+confirmation. Do not promise a generic plugin catalogue-search method.
+
+## 6. Operate durable work
+
+`queue_room_plugin_job` records identifiers and a configuration fingerprint.
+Inspect attempts and safe errors through `inspect_room_plugin_operations`.
+`update_room_plugin_job` cancels or replays failed/cancelled work. Replay uses
+current settings. Disabled/removed invitations cannot execute; changed settings
+invalidate old queued jobs.
+
+Cancellation is cooperative and cannot undo a completed import or provider
+message. Jobs retry with bounded attempts and Retry-After. Check an external
+destination before replaying a delivery with an uncertain outcome. History and
+idempotency are retained for a bounded period, not forever.
+
+## 7. Run maintenance with a useful budget
+
+- File Integrity rotates checksum checks through the inventory with an I/O cap.
+- Storage Capacity needs an operator-approved metrics connection; it reports aggregates.
+- Backup Verification samples an existing backup into isolated temporary storage.
+- Link Health distinguishes removed, restricted, temporary and rate-limited responses.
+- Access Review proposes invitation/connection cleanup without revoking access.
+- Expiry Concierge warns about files nearing expiry without extending retention.
+
+Preview first. A report covers a bounded window, and a sample restore is not a
+full disaster-recovery test. Storage migration tools are separate explicit
+administrative writes: `plan_storage_migration` defaults to dry run, while
+execution/control requires `admin:storage`. Read the
+[storage guide](./MULTI_VOLUME_STORAGE.md) before moving or draining a volume.
+
+## 8. Plan a room session
+
+Enable Session Organizer, then use `list_room_sessions`, `create_room_session`
+and `update_room_session`. Planning and cancellation need `rooms:write`; listing
+uses `files:read`. Use Unix millisecond times and an IANA display timezone, with
+local preparation links. Updates require the current revision.
+
+Members RSVP through the room UI. Automation sees aggregate counts and cannot
+respond as another person. No external calendar is changed.
+
+## 9. Handle errors and private outputs
+
+MCP failures set `isError` and include structured error information. Report the
+action that failed and a useful recovery step. Preserve retry hints; repair
+invalid configuration rather than looping. Partial batches remain partial.
+
+Passwords and access tokens require explicit owner authorization and sensitive
+scopes before reveal. Do not include them in ordinary summaries, saved memory
+or logs. Grant the smallest scope set for the intended workflow, not every
+available scope as a setup shortcut.
+
+## References
+
+- [REST contract, pagination and scopes](../API.md)
+- [MCP transport and all 57 tools](../MCP.md)
+- [All 27 core plugins](./CORE_PLUGINS.md)
+- [Developer reference](../core/plugins/PLUGIN_API.md) and [cookbook](../core/plugins/PLUGIN_COOKBOOK.md)
+- [Operator connection setup](../core/plugins/COLLECTION_BOTS.md)
+- [Future proposals](./FUTURE_DEVELOPMENT_PLAN.md), kept separate from callable APIs

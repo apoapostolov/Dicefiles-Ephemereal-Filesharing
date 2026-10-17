@@ -141,8 +141,13 @@ delivery is attempted up to three times; a final failure releases the lease so
 a later event replay can try again. Successful deliveries are remembered for
 the configured `pluginSyncLogRetentionDays`.
 Provider Retry-After is respected. Waits beyond the bounded in-process retry
-budget fail for later recovery rather than retrying early. This is not a durable
-outbox, and a crash after remote acceptance can leave an uncertain result.
+budget leave the durable job for later recovery rather than retrying early.
+In 1.4.7, production event delivery uses the shared durable job outbox, stores
+event/item identifiers and reconstructs current room data when it runs. Failed
+jobs can be inspected and replayed with current settings. A crash after remote
+acceptance can still leave an uncertain result; check the destination before
+replaying. The job worker has its own bounded retry policy in addition to the
+short provider-call retry loop. See [jobs and events](./PLUGIN_API.md#9-durable-jobs-and-event-handling).
 
 Scheduled and manual bot runs also expose a bounded last-run record (success,
 time, duration, delivered/uploaded/skipped counts, or a sanitized error)

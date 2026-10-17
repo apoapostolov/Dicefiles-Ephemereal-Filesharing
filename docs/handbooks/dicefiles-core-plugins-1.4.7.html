@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Practical setup and advice for all 27 bundled bots."><title>The core plugin guide | Dicefiles 1.4.7</title>
+<style>
+:root{color-scheme:light dark;--bg:#fafafa;--paper:#fff;--text:#222;--muted:#595959;
+--line:#ddd;--code:#f1f1f1;--link:#215a82;--mark:#e7eef4}
+*{box-sizing:border-box}html{scroll-padding-top:1.5rem}body{margin:0;background:var(--bg);
+color:var(--text);font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+a{color:var(--link);text-underline-offset:.2em}a:hover{text-decoration-thickness:2px}
+a:focus-visible{outline:2px solid currentColor;outline-offset:4px;border-radius:2px}
+.skip{position:absolute;left:1rem;top:-5rem;padding:.6rem;background:var(--paper)}.skip:focus{top:1rem}
+.masthead{padding:2.5rem max(1.5rem,calc((100vw - 1400px)/2));border-bottom:1px solid var(--line)}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.75rem;font-weight:750;color:var(--muted)}
+.masthead h1{font-size:clamp(2rem,4vw,3rem);line-height:1.15;letter-spacing:-.035em;max-width:22ch;margin:.5rem 0 1rem}
+.masthead p{max-width:70ch;color:var(--muted)}.editions{display:flex;flex-wrap:wrap;gap:.5rem 1.3rem;font-size:.9rem}
+.layout{max-width:1400px;margin:auto;display:grid;grid-template-columns:17rem minmax(0,1fr);gap:3rem;padding:2rem 1.5rem 5rem}
+aside{font-size:.83rem;align-self:start;position:sticky;top:1rem;max-height:calc(100vh - 2rem);overflow:auto;padding-right:1rem}
+aside h2{font-size:1rem;margin:.4rem 0}aside ul{padding-left:1.15rem}aside li{margin:.35rem 0}
+aside .toc>ul{padding-left:0;list-style:none}aside .toc>ul>li>ul{border-left:1px solid var(--line);padding-left:.9rem}
+main{min-width:0}article{min-width:0;max-width:84ch;background:var(--paper);padding:1.5rem 2rem 3rem;border:1px solid var(--line);border-radius:.6rem}
+article h1{font-size:2rem;line-height:1.2;letter-spacing:-.025em}article h2{margin-top:2.8rem;padding-top:1rem;border-top:1px solid var(--line);font-size:1.5rem;line-height:1.3}
+article h3{margin-top:2rem;font-size:1.14rem;line-height:1.35}article p,article li{overflow-wrap:anywhere}
+article li{margin:.35rem 0}article section+section{margin-top:5rem;border-top:4px double var(--line);padding-top:2rem}
+pre,code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.85em}
+code{background:var(--code);padding:.12em .3em;border-radius:.2rem}pre{padding:1rem;overflow:auto;border:1px solid var(--line);border-radius:.35rem;background:var(--code);line-height:1.6}
+pre code{padding:0;background:none;font-size:1em}table{display:block;max-width:100%;overflow:auto;border-collapse:collapse;font-size:.89rem;margin:1.4rem 0}
+th,td{padding:.65rem .8rem;text-align:left;vertical-align:top;border:1px solid var(--line);min-width:8rem}th{background:var(--code);font-weight:650}
+blockquote{margin-left:0;padding-left:1rem;border-left:3px solid var(--line);color:var(--muted)}footer{max-width:1400px;margin:auto;padding:1rem 1.5rem 2rem;color:var(--muted);font-size:.82rem}
+@media(prefers-color-scheme:dark){:root{--bg:#181818;--paper:#202020;--text:#ededed;--muted:#b9b9b9;--line:#444;--code:#292929;--link:#a5cdea;--mark:#333}}
+@media(max-width:900px){.layout{grid-template-columns:1fr;gap:1.5rem;padding:1.5rem 1rem}aside{position:static;max-height:none;padding:0}aside details{border:1px solid var(--line);border-radius:.4rem;padding:.75rem}aside .toc{max-height:18rem;overflow:auto}aside details:not([open]) .toc{display:none}article{padding:1rem 1.1rem}article h1{font-size:1.7rem}.masthead{padding:2rem 1.25rem}}
+@media print{:root{color-scheme:light;--bg:#fff;--paper:#fff;--text:#000;--muted:#444;--line:#bbb;--code:#f5f5f5;--link:#000}body{font-size:10pt}.masthead{padding:0}.layout{display:block;padding:0}aside,.editions,.skip{display:none}article{border:0;max-width:none;padding:0}pre{white-space:pre-wrap;overflow-wrap:anywhere}table{display:table;font-size:8pt;width:100%}th,td{min-width:0}h1,h2,h3{break-after:avoid}pre,tr{break-inside:avoid}a{text-decoration:none}footer{padding:1rem 0}}
+</style></head><body><a class="skip" href="#content">Skip to content</a>
+<header class="masthead"><div class="eyebrow">Dicefiles 1.4.7 / Handbooks</div><h1>The core plugin guide</h1>
+<p>Practical setup and advice for all 27 bundled bots. Save this file for offline reading. Use your browser's Find or Print to PDF.</p>
+<nav class="editions" aria-label="Handbook editions"><a href="dicefiles-core-plugins-1.4.7.html">The core plugin guide</a><a href="dicefiles-plugin-developer-1.4.7.html">Plugin developer handbook</a><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/releases/tag/v1.4.7">Release downloads</a></nav></header>
+<div class="layout"><aside aria-label="Table of contents"><details open><summary>Contents</summary><div class="toc">
+<ul>
+<li><a href="#guide-the-dicefiles-core-plugin-guide">The Dicefiles core plugin guide</a><ul>
+<li><a href="#guide-start-with-one-useful-job">Start with one useful job</a><ul>
+<li><a href="#guide-pick-a-starting-set">Pick a starting set</a></li>
+</ul>
+</li>
+<li><a href="#guide-collect-files-and-links">Collect files and links</a><ul>
+<li><a href="#guide-1-meganz-autoshare">1. Mega.nz Autoshare</a></li>
+<li><a href="#guide-2-remote-host-import">2. Remote Host Import</a></li>
+<li><a href="#guide-3-feed-collector">3. Feed Collector</a></li>
+<li><a href="#guide-4-s3-collection">4. S3 Collection</a></li>
+<li><a href="#guide-5-nextcloud-collection">5. Nextcloud Collection</a></li>
+<li><a href="#guide-6-google-drive-collection">6. Google Drive Collection</a></li>
+<li><a href="#guide-7-dropbox-collection">7. Dropbox Collection</a></li>
+<li><a href="#guide-8-onedrive-collection">8. OneDrive Collection</a></li>
+<li><a href="#guide-9-hugging-face-collection">9. Hugging Face Collection</a></li>
+</ul>
+</li>
+<li><a href="#guide-keep-the-outside-community-connected">Keep the outside community connected</a><ul>
+<li><a href="#guide-10-discord-release-publisher">10. Discord Release Publisher</a></li>
+<li><a href="#guide-11-telegram-release-publisher">11. Telegram Release Publisher</a></li>
+</ul>
+</li>
+<li><a href="#guide-help-people-use-the-room">Help people use the room</a><ul>
+<li><a href="#guide-12-welcome-guide">12. Welcome Guide</a></li>
+<li><a href="#guide-13-request-triage">13. Request Triage</a></li>
+<li><a href="#guide-14-request-steward">14. Request Steward</a></li>
+<li><a href="#guide-15-community-digest">15. Community Digest</a></li>
+<li><a href="#guide-16-collection-curator">16. Collection Curator</a></li>
+<li><a href="#guide-17-duplicate-review">17. Duplicate Review</a></li>
+<li><a href="#guide-18-upload-review">18. Upload Review</a></li>
+<li><a href="#guide-19-session-organizer">19. Session Organizer</a></li>
+</ul>
+</li>
+<li><a href="#guide-look-after-the-collection">Look after the collection</a><ul>
+<li><a href="#guide-20-expiry-concierge">20. Expiry Concierge</a></li>
+<li><a href="#guide-21-preview-repair">21. Preview Repair</a></li>
+<li><a href="#guide-22-file-integrity">22. File Integrity</a></li>
+<li><a href="#guide-23-storage-capacity">23. Storage Capacity</a></li>
+<li><a href="#guide-24-backup-verification">24. Backup Verification</a></li>
+<li><a href="#guide-25-link-health">25. Link Health</a></li>
+<li><a href="#guide-26-access-review">26. Access Review</a></li>
+<li><a href="#guide-27-metadata-steward">27. Metadata Steward</a></li>
+</ul>
+</li>
+<li><a href="#guide-when-something-needs-attention">When something needs attention</a></li>
+<li><a href="#guide-read-next">Read next</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></aside>
+<main id="content"><article><section id="guide-document"><h1 id="guide-the-dicefiles-core-plugin-guide">The Dicefiles core plugin guide</h1>
+<p><strong>Dicefiles 1.4.7 · All 27 bundled plugins · For room owners and power users</strong></p>
+<p>Want a room that collects new releases, catches forgotten requests and gives you
+a useful maintenance report? Start here. This guide covers every bot shipped
+with Dicefiles, what to give it, and what to expect when you press Run.</p>
+<p>The bots are included with the server. You still choose which ones to invite.
+An operator may need to approve a connection before a collector can read a
+private library. You can try the report-based bots without connecting another
+service.</p>
+<p>For code, see the <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/PLUGIN_API.md">developer reference</a> and the
+<a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/PLUGIN_COOKBOOK.md">27-plugin cookbook</a>. Portable HTML editions
+are linked from the <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/releases/tag/v1.4.7">1.4.7 release</a>.</p>
+<h2 id="guide-start-with-one-useful-job">Start with one useful job</h2>
+<p>Open <strong>Room Options → Plugins</strong> (the Bots &amp; plugins area), invite a bot and save
+its settings. A room can hold 32 invitations, subject to the shared 8,000-character
+configuration limit. Large URL lists and credentials can use that space quickly.</p>
+<p>For collectors, use <strong>Connection test</strong>, then <strong>Preview</strong>, then <strong>Import</strong>. For
+community and maintenance bots, start with <strong>Preview</strong> and read the activity
+report. <strong>Queue job</strong> gives you work that can survive a service restart; <strong>Run
+now</strong> starts immediately. Refresh activity to see results, retries and review
+buttons.</p>
+<p>Keep <strong>Post summaries to chat</strong> off while trying things. Reports are available
+without chat messages. When you want notices, set the timezone and quiet hours
+first. The common workflow defaults are UTC and 22:00–08:00. Set the scan interval
+to <code>0</code> for manual scans; an event-driven bot can still react to its subscribed
+events.</p>
+<p>Preview can contact a provider and save a report. It does not import files,
+advance import checkpoints, post notices or apply suggested changes. Pressing a
+report's action button is a separate write, even if Preview produced the report.
+Check the suggested file before confirming it.</p>
+<h3 id="guide-pick-a-starting-set">Pick a starting set</h3>
+<table>
+<thead>
+<tr>
+<th>Your room</th>
+<th>A useful first set</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Books, papers or shared research</td>
+<td>Feed Collector, Request Triage, Collection Curator, Expiry Concierge</td>
+</tr>
+<tr>
+<td>A library mirrored from cloud storage</td>
+<td>One matching collector, Duplicate Review, File Integrity</td>
+</tr>
+<tr>
+<td>A Discord or Telegram community</td>
+<td>One publisher, Welcome Guide, Community Digest</td>
+</tr>
+<tr>
+<td>A film or episode collection</td>
+<td>Metadata Steward, Session Organizer, Preview Repair</td>
+</tr>
+<tr>
+<td>A room you operate yourself</td>
+<td>Storage Capacity, Backup Verification, Access Review, Link Health</td>
+</tr>
+</tbody>
+</table>
+<p>Most workflow reports examine the newest 100 files by default, with a maximum
+of 500. Reports display at most 40 rows. File Integrity rotates through older
+files with its own checkpoint. A clean report describes the checked window;
+it does not certify the whole server.</p>
+<h2 id="guide-collect-files-and-links">Collect files and links</h2>
+<p>Collectors copy material into the room, where normal Dicefiles expiry applies.
+Deleting something at the source does not remove the room copy. The seven newer
+collectors track source revisions: a changed source file can create a new room
+copy while the older copy remains available.</p>
+<p>Their shared defaults are 25 items, 256 MiB per file and 1 GiB per scan. They
+scan every 30 minutes after being enabled, except S3, which defaults to 60.
+Mega.nz Autoshare and Remote Host Import default to manual operation, with
+50 files per run and the same byte defaults. Check these settings before Save.</p>
+<p>Use extension filters for a focused collection, such as <code>pdf</code> and <code>epub</code>.
+Filename exclusions are literal, case-insensitive terms. A filter change keeps
+the source checkpoint. Switching the actual source or approved grant creates a
+different source identity.</p>
+<p><a id="guide-mega-folder"></a></p>
+<h3 id="guide-1-meganz-autoshare">1. Mega.nz Autoshare</h3>
+<p><strong>Plugin ID: <code>mega-folder</code></strong></p>
+<p>Give this bot a Mega folder and let it bring new files into your room. It is
+handy for a release folder that you want to check occasionally without clicking
+through every download yourself.</p>
+<p>Set <code>folderUrl</code>; add account <code>email</code> and <code>password</code> only if your source needs
+them. An operator can supply <code>MEGA_PASSWORD</code> instead. <code>namePrefix</code> helps distinguish
+imports, and <code>botName</code> controls their uploader label. Preview first, then run the
+import. <code>pollIntervalMinutes: 0</code> is the default.</p>
+<p>The server needs the optional Mega SDK. If the bot reports that it is unavailable,
+ask the operator to install the supported dependency. Treat a Mega folder URL as
+a secret: its fragment can contain the decryption key. For setup and source
+memory details, see <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/MEGA_FOLDER.md">Mega.nz Autoshare</a>.</p>
+<p><a id="guide-remote-import"></a></p>
+<h3 id="guide-2-remote-host-import">2. Remote Host Import</h3>
+<p><strong>Plugin ID: <code>remote-import</code></strong></p>
+<p>Use this when people give you a handful of supported host links and you want the
+files collected in one place. Put the links in <code>urls</code>, optionally restrict
+<code>providers</code>, and preview the result before importing.</p>
+<p>The adapters cover Mega, Pixeldrain and Gofile. Gofile access needs the provider's
+supported API credentials. MediaFire and 4shared use the optional Plowshare
+bridge, which the operator must explicitly enable and install. A host appearing
+in a provider list does not guarantee that its adapter is ready on this server.</p>
+<p>Keep scans small when collecting from several hosts. Provider limits and retries
+still apply; this bot cannot bypass private files, paid access or provider
+restrictions. See <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/REMOTE_HOST_IMPORTS.md">remote host imports</a>
+for credentials, provider availability and bridge setup.</p>
+<p><a id="guide-feed-collector"></a></p>
+<h3 id="guide-3-feed-collector">3. Feed Collector</h3>
+<p><strong>Plugin ID: <code>feed-collector</code></strong></p>
+<p>Turn an RSS or Atom feed into a room's release shelf. By default it saves links.
+Enable <code>importEnclosures</code> when you also want feed attachments copied into the
+room.</p>
+<p>Set <code>feedUrl</code> and list the exact origins in <code>allowedOrigins</code>. Include the feed
+origin and any separate origins used by its item links or attachments, for
+example <code>https://example.org</code>. An origin is the scheme and host, with a port if
+needed. A path or wildcard is not a substitute.</p>
+<p>The collector remembers feed IDs and uses HTTP cache validators. A title edit
+does not create another copy of the same link. Feeds with more than 500 entries
+need a narrower source. If an attachment is skipped, check its origin, extension
+filter and byte limits before raising the scan budget.</p>
+<p><a id="guide-s3-collection"></a></p>
+<h3 id="guide-4-s3-collection">4. S3 Collection</h3>
+<p><strong>Plugin ID: <code>s3-collection</code></strong></p>
+<p>Collect a release prefix from an S3 or approved S3-compatible bucket. Choose
+<code>connectionId</code>, then set <code>prefix</code> inside the operator's allowed prefixes.</p>
+<p>The operator supplies the bucket, region, optional endpoint and read credentials.
+The bot lists objects and conditionally reads their content. Source revisions
+use ETag, modification time and size. It does not write back to the bucket.</p>
+<p>The default hourly scan is a sensible place to start. If a prefix is rejected,
+ask for a narrower grant that contains your release folder; changing room
+settings cannot expand the operator's permission. See the
+<a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/COLLECTION_BOTS.md#providers">connection setup table</a>.</p>
+<p><a id="guide-nextcloud-collection"></a></p>
+<h3 id="guide-5-nextcloud-collection">5. Nextcloud Collection</h3>
+<p><strong>Plugin ID: <code>nextcloud-collection</code></strong></p>
+<p>Bring files from an approved WebDAV folder into the room. Select <code>connectionId</code>
+and a relative <code>folder</code>. This collector reads direct children only, so put the
+files you want together in that folder.</p>
+<p>The operator supplies the WebDAV root and a read-only app account. ETags identify
+changes. Public-network checks reject private network destinations; a Nextcloud
+instance available only on a LAN needs an operator deployment decision before
+this collector can use it. Nested folders are not recursively mirrored.</p>
+<p><a id="guide-drive-collection"></a></p>
+<h3 id="guide-6-google-drive-collection">6. Google Drive Collection</h3>
+<p><strong>Plugin ID: <code>drive-collection</code></strong></p>
+<p>Pick an approved Drive connection and <code>folderId</code> to collect ordinary binary
+files from that folder. It takes an initial snapshot, then follows Drive changes.
+This is useful for PDFs, archives, images and other files already stored in Drive.</p>
+<p>The operator must grant the folder and provision OAuth credentials, an access
+token or a service account with access. Dicefiles does not provide an OAuth
+consent screen. Native Google Docs, Sheets and Slides are excluded; export them
+to a regular file if you want a room copy. Source removals never delete room files.</p>
+<p><a id="guide-dropbox-collection"></a></p>
+<h3 id="guide-7-dropbox-collection">7. Dropbox Collection</h3>
+<p><strong>Plugin ID: <code>dropbox-collection</code></strong></p>
+<p>Use Dropbox for a source tree that includes subfolders. Set <code>connectionId</code> and
+an approved <code>folder</code>, such as <code>/Community</code>. The bot lists recursively and follows
+Dropbox's continuation cursor and file revisions.</p>
+<p>An empty folder means the app root only when the operator explicitly granted
+that empty path. If Dropbox expires or resets a cursor, the collector reconciles
+the source again and skips known revisions. Raising limits is usually more
+useful than repeatedly forgetting imports on a large tree.</p>
+<p><a id="guide-onedrive-collection"></a></p>
+<h3 id="guide-8-onedrive-collection">8. OneDrive Collection</h3>
+<p><strong>Plugin ID: <code>onedrive-collection</code></strong></p>
+<p>Collect an approved OneDrive folder with <code>connectionId</code> and <code>folderId</code>. The
+connection supplies the drive ID, allowed folders and account credentials. The
+collector follows Microsoft Graph delta changes and can take a new snapshot
+when its delta token expires.</p>
+<p>Folder and download-host checks still apply when Graph returns a download URL.
+If a source becomes unavailable, repair the connection or its folder grant, then
+retry. A missing source item is reported without removing the room copy.</p>
+<p><a id="guide-huggingface-collection"></a></p>
+<h3 id="guide-9-hugging-face-collection">9. Hugging Face Collection</h3>
+<p><strong>Plugin ID: <code>huggingface-collection</code></strong></p>
+<p>Collect a few specific dataset or model files at a reproducible version. Set
+<code>repositoryType</code> to <code>datasets</code> or <code>models</code>, <code>repository</code> to <code>owner/name</code>,
+<code>revision</code> to the full 40-character commit, and <code>files</code> to the exact paths.
+Record the license in <code>license</code> after reading its terms.</p>
+<p>Public sources can work without a connection. Private or gated sources need an
+approved <code>huggingface</code> connection and the account's normal access. A branch name
+such as <code>main</code> is not a pinned commit. Choose individual files and suitable byte
+limits before collecting large model weights.</p>
+<h2 id="guide-keep-the-outside-community-connected">Keep the outside community connected</h2>
+<p>The two publishers send updates to destinations you configure. Their <strong>Test</strong>
+mode sends a real test message. <strong>Digest</strong> sends a real summary. Unlike collector
+Preview, these modes deliberately publish outside Dicefiles.</p>
+<p>Both can announce uploads, optionally include requests, and accept a restricted
+set of authenticated inbound commands. Inbound commands start disabled. Configure
+the destination, allowed users and command list before enabling them.</p>
+<p><a id="guide-discord-release"></a></p>
+<h3 id="guide-10-discord-release-publisher">10. Discord Release Publisher</h3>
+<p><strong>Plugin ID: <code>discord-release</code></strong></p>
+<p>Set <code>webhookUrl</code> and a public <code>baseUrl</code> so Discord members can open shared files.
+Use <code>threadId</code> for a particular thread, and <code>ignoreBotUploads</code> if imported files
+would make the channel too busy. <code>notifyRequests</code> is off by default.</p>
+<p>For inbound slash commands, the operator must configure signed interaction
+handling. Set the application public key, allowed users or roles, and an explicit
+<code>inboundCommands</code> list. Responses are caller-only by default. Start with <code>help</code>,
+<code>status</code> and <code>find</code>; add <code>request</code> or <code>say</code> only when those writes are wanted.</p>
+<p>Queued delivery survives restarts, but an interrupted external request can have
+an uncertain outcome. Check the destination before replaying a failed delivery.
+Full setup is in <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/RELEASE_PUBLISHERS.md">release publishers</a>.</p>
+<p><a id="guide-telegram-release"></a></p>
+<h3 id="guide-11-telegram-release-publisher">11. Telegram Release Publisher</h3>
+<p><strong>Plugin ID: <code>telegram-release</code></strong></p>
+<p>Set <code>chatId</code>, the bot token and public <code>baseUrl</code>. <code>messageThreadId</code> targets a
+forum topic. Give the Telegram bot permission to post in the chosen destination,
+then use Test to confirm that it reaches the right place.</p>
+<p>Inbound commands require <code>inboundEnabled</code>, <code>inboundWebhookSecret</code>, an explicit
+command list and allowed Telegram user IDs. <code>botUsername</code> lets the bot distinguish
+commands addressed to it in a group. Ordinary conversation and other bots'
+commands are ignored. Keep the token in operator environment configuration when
+possible. See <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/RELEASE_PUBLISHERS.md">release publishers</a>.</p>
+<h2 id="guide-help-people-use-the-room">Help people use the room</h2>
+<p>These bots work with room files, requests and metadata. Suggested changes live
+in activity reports, where you can inspect them before applying anything.</p>
+<p><a id="guide-welcome-guide"></a></p>
+<h3 id="guide-12-welcome-guide">12. Welcome Guide</h3>
+<p><strong>Plugin ID: <code>welcome-guide</code></strong></p>
+<p>Give newcomers the room rules, expiry information and a hint to search before
+requesting a file. Add a short <code>welcomeText</code>, preview it, then enable
+<code>postToChat</code> if you want it delivered when members join.</p>
+<p>The default scan interval is zero because joining is the useful trigger. A
+30-day cooldown suppresses repeat welcomes on reconnect; the default daily cap
+is ten. Quiet hours can suppress a greeting. Manual Preview shows the message
+without pretending that a new member joined.</p>
+<p><a id="guide-request-triage"></a></p>
+<h3 id="guide-13-request-triage">13. Request Triage</h3>
+<p><strong>Plugin ID: <code>request-triage</code></strong></p>
+<p>Find files that may already answer open requests. It compares request text with
+file names and existing titles, then shows up to three suggestions per request.
+Open the file and decide whether it is the right edition or item before pressing
+<strong>Fulfill with this file</strong>.</p>
+<p>Matching is based on text overlap. It does not know whether two similarly named
+works are interchangeable. Applying a suggestion checks the current request,
+the selected room file and any active human claim. A stale report needs a refresh.</p>
+<p><a id="guide-request-steward"></a></p>
+<h3 id="guide-14-request-steward">14. Request Steward</h3>
+<p><strong>Plugin ID: <code>request-steward</code></strong></p>
+<p>Review old requests and expired claims before the board becomes hard to use.
+<code>staleDays</code> defaults to seven. The report distinguishes an active claim from an
+expired one so you can follow up with the right context.</p>
+<p>Human claims remain assigned. The bot can release only its own expired claim
+through a review action. Optional chat reminders follow the normal quiet hours
+and daily suppression.</p>
+<p><a id="guide-community-digest"></a></p>
+<h3 id="guide-15-community-digest">15. Community Digest</h3>
+<p><strong>Plugin ID: <code>community-digest</code></strong></p>
+<p>Publish a weekly room roundup of new files, fulfilled requests and collection
+highlights. Set <code>publishDay</code>, <code>publishHour</code> and <code>timezone</code>; the defaults are
+Sunday at 18:00 UTC, checked hourly. Turn on <code>postToChat</code> when the preview reads
+well.</p>
+<p>The watermark advances after a successful post. Hidden files are excluded. Keep
+the scan window large enough for your room's weekly activity; this is a bounded
+roundup, so a busy room can have more new files than the report examines.</p>
+<p><a id="guide-collection-curator"></a></p>
+<h3 id="guide-16-collection-curator">16. Collection Curator</h3>
+<p><strong>Plugin ID: <code>collection-curator</code></strong></p>
+<p>Build collection tags from metadata you already have. <code>groupBy</code> defaults to
+<code>series</code>; you can also choose author, genre, language or file type. Review a
+proposal and press <strong>Add to collection</strong> to fill the missing collection tag.</p>
+<p>Existing manual collection values are preserved. An <strong>Undo curation</strong> action
+lets you reverse the bot's own change while its receipt remains valid. If someone
+edits the file afterward, refresh rather than trying to force an old undo.</p>
+<p><a id="guide-duplicate-review"></a></p>
+<h3 id="guide-17-duplicate-review">17. Duplicate Review</h3>
+<p><strong>Plugin ID: <code>duplicate-review</code></strong></p>
+<p>Find identical content hashes and suspiciously similar titles. Exact copies and
+title-only similarities are described separately; different editions can have
+nearly identical names.</p>
+<p>Mark a candidate <strong>Reviewed</strong> to dismiss that unchanged finding. File deletion
+is still a separate moderation action. The bot does not choose which edition to
+keep or remove files for you.</p>
+<p><a id="guide-upload-review"></a></p>
+<h3 id="guide-18-upload-review">18. Upload Review</h3>
+<p><strong>Plugin ID: <code>upload-review</code></strong></p>
+<p>Flag uploads against rules you choose: <code>maxFileBytes</code>, <code>blockedExtensions</code> and
+<code>blockedTerms</code>. The size default is 1 GiB; extension and term blocklists start
+empty. It also reacts to new-upload events.</p>
+<p>Reports are the default. If you enable <code>allowQuarantine</code>, an owner can press
+<strong>Quarantine</strong> on a flagged item and later <strong>Restore file</strong>. Each action checks
+the file revision. A filename rule is a moderation aid, not a malware scan or a
+proof that content is unsafe.</p>
+<p><a id="guide-session-organizer"></a></p>
+<h3 id="guide-19-session-organizer">19. Session Organizer</h3>
+<p><strong>Plugin ID: <code>session-organizer</code></strong></p>
+<p>Plan a reading group, screening or file-review session from <strong>Sessions</strong> in the
+room menu. Add up to 20 local preparation links. Members can RSVP, and the room
+sees counts rather than an attendee list.</p>
+<p>Owners can plan, cancel and restore sessions. Starts must be within 60 days;
+duration is at most 24 hours. The planning field uses your browser's local clock,
+while the selected IANA timezone controls displayed times. Reminders default to
+60 minutes before the start, checked every 15 minutes, and require <code>postToChat</code>.
+No external calendar is updated.</p>
+<h2 id="guide-look-after-the-collection">Look after the collection</h2>
+<p>Most maintenance bots default to a daily scan. Storage Capacity checks hourly.
+Use reports first, then opt into notices where they help. The two operator-backed
+bots need explicit grants even when the room owner already has broad room access.</p>
+<p><a id="guide-expiry-concierge"></a></p>
+<h3 id="guide-20-expiry-concierge">20. Expiry Concierge</h3>
+<p><strong>Plugin ID: <code>expiry-concierge</code></strong></p>
+<p>Get a chance to save useful files before they expire. <code>withinHours</code> defaults to
+24. <code>valuableOnly</code> starts enabled, selecting files with a collection or series
+tag; disable it to review every expiring file in the scan window.</p>
+<p>The report links to the files and shows expiry times. Optional notices are
+suppressed after the daily bulletin. Download anything you need to keep: this
+bot does not extend retention.</p>
+<p><a id="guide-preview-repair"></a></p>
+<h3 id="guide-21-preview-repair">21. Preview Repair</h3>
+<p><strong>Plugin ID: <code>preview-repair</code></strong></p>
+<p>Find missing previews and queue a reviewed retry through Dicefiles' existing
+preview worker. A missing stored file gets a different explanation, because a
+thumbnail retry cannot restore lost content.</p>
+<p>If retries keep failing, ask the operator to run <code>yarn check:preview-tools</code> and
+install the missing native tools. Repeatedly pressing Retry will not fix an
+unavailable renderer. Existing worker concurrency and attempt limits still apply.</p>
+<p><a id="guide-file-integrity"></a></p>
+<h3 id="guide-22-file-integrity">22. File Integrity</h3>
+<p><strong>Plugin ID: <code>file-integrity</code></strong></p>
+<p>Check stored bytes against the checksum recorded at upload. Each run examines
+up to five files with a shared 32 MiB read budget by default, throttled to
+8 MiB/s. Its saved page cursor moves through the inventory across runs.</p>
+<p>Preview shows which files fit the budget without reading their payload. Large
+files may need a higher <code>maxBytesPerRun</code>, up to 1 GiB. A mismatch is reported for
+operator investigation; no file is repaired or deleted. Keep a verified backup
+before deciding how to replace damaged content.</p>
+<p><a id="guide-storage-capacity"></a></p>
+<h3 id="guide-23-storage-capacity">23. Storage Capacity</h3>
+<p><strong>Plugin ID: <code>storage-capacity</code></strong></p>
+<p>See aggregate used and free storage for operator-approved volumes. Choose a
+<code>maintenance</code> connection granting <code>storage:read</code>. The default alert threshold
+is 85%; an alert clears below 75%, which avoids flapping near one threshold.</p>
+<p>After samples are far enough apart, the report can estimate remaining days from
+observed growth. Treat that estimate as planning help: a large upload can change
+it quickly. The bot does not delete files or expose filesystem paths.</p>
+<p><a id="guide-backup-verification"></a></p>
+<h3 id="guide-24-backup-verification">24. Backup Verification</h3>
+<p><strong>Plugin ID: <code>backup-verification</code></strong></p>
+<p>Check whether an existing backup is recent and whether a few files can be
+restored into a temporary directory. Choose an operator-approved <code>backup</code>
+connection with a directory and manifest. Preview inspects the manifest; Run
+performs sample restores and reads them back to verify size and SHA-256.</p>
+<p>Defaults are a 48-hour freshness limit, two samples and 32 MiB of combined source
+and restored-file reads. This bot does not create backups or restore production
+storage. A successful sample check is useful evidence, but you still need a full
+recovery procedure. The <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/WORKFLOW_BOTS.md#operator-grants">operator recipe</a>
+shows the manifest format.</p>
+<p><a id="guide-link-health"></a></p>
+<h3 id="guide-25-link-health">25. Link Health</h3>
+<p><strong>Plugin ID: <code>link-health</code></strong></p>
+<p>Check a few collected links each day without hammering their hosts. The default
+is ten per scan. Checks use public HTTP destinations with bounded HEAD requests
+and a small GET fallback where needed.</p>
+<p>The report distinguishes removed links, restricted access, temporary trouble and
+rate limits. A 403 does not prove a link is dead. Rate limiting delays further
+checks. Unsupported schemes are left alone, and the bot never removes links.</p>
+<p><a id="guide-access-review"></a></p>
+<h3 id="guide-26-access-review">26. Access Review</h3>
+<p><strong>Plugin ID: <code>access-review</code></strong></p>
+<p>Review old invitations, disabled bots, missing connection credentials and broad
+connection grants. It is a useful occasional check after a room changes hands
+or stops using a provider.</p>
+<p>You get counts and connection labels, not raw invitation tokens or secret keys.
+Use the room's invitation settings or ask the operator to narrow a connection
+grant after reviewing the finding. Nothing is revoked automatically.</p>
+<p><a id="guide-metadata-steward"></a></p>
+<h3 id="guide-27-metadata-steward">27. Metadata Steward</h3>
+<p><strong>Plugin ID: <code>metadata-steward</code></strong></p>
+<p>Find books missing a title or author, unmatched torrent video entries and ordinary
+videos that need catalogue information. Book retries re-read embedded metadata;
+torrent retries reuse the existing movie/episode matching worker.</p>
+<p>For an ordinary video, the report directs you to <strong>Video Information</strong> to search
+and confirm the match. Existing manual fields and confirmed movie choices take
+precedence. This bot helps you finish metadata work; it cannot infer details
+that the source file and configured catalogues do not provide.</p>
+<h2 id="guide-when-something-needs-attention">When something needs attention</h2>
+<table>
+<thead>
+<tr>
+<th>What you see</th>
+<th>What to do next</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Connection missing or unavailable</td>
+<td>Ask the operator to check the connection ID, provider, bot ID and room grant. Save the corrected selection and test again.</td>
+</tr>
+<tr>
+<td>Credentials missing or access denied</td>
+<td>Check the environment reference, token expiry and provider permissions. Restart after operator configuration changes.</td>
+</tr>
+<tr>
+<td>Preview is empty</td>
+<td>Check the source, filters, known revisions and the file window. Try a smaller known source before increasing limits.</td>
+</tr>
+<tr>
+<td>Import stops at a budget</td>
+<td>Let the next scan continue, or raise a limit after checking storage capacity. Completed revisions are skipped.</td>
+</tr>
+<tr>
+<td>Report is truncated</td>
+<td>It contains at most 40 rows. Resolve a focused set and refresh; the displayed rows are not a full inventory export.</td>
+</tr>
+<tr>
+<td>Review returns a conflict</td>
+<td>Refresh activity and scan again. The file, request or report changed since the proposal was made.</td>
+</tr>
+<tr>
+<td>Job keeps retrying</td>
+<td>Read the latest safe error and respect its retry time. Repair credentials or settings before replaying failed work.</td>
+</tr>
+<tr>
+<td>No chat notice</td>
+<td>Check <code>postToChat</code>, timezone, quiet hours, schedule and suppression. A successful report does not always mean a notice was due.</td>
+</tr>
+</tbody>
+</table>
+<p>Cancel active work before changing a source or forgetting imports. Cancellation
+is cooperative: a completed upload or external message remains completed.
+Disabling a bot stops future execution; changing settings invalidates its older
+queued jobs. Private history expires according to its retention.</p>
+<p><strong>Forget imports</strong> clears remembered revisions and the source cursor. Existing
+room provenance still protects current copies; expired imports may return. Use
+it when deliberately reconciling a source, rather than as a routine retry button.</p>
+<h2 id="guide-read-next">Read next</h2>
+<ul>
+<li><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/PLUGIN_API.md">Developer API reference</a>: exact callable contracts and limits.</li>
+<li><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/PLUGIN_COOKBOOK.md">Plugin cookbook</a>: configuration and code patterns from all 27 bots.</li>
+<li><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/COLLECTION_BOTS.md">Collection setup</a>: operator connections and provider requirements.</li>
+<li><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/core/plugins/WORKFLOW_BOTS.md">Community and maintenance setup</a>: review actions, sessions and backup manifests.</li>
+<li><a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/API.md">REST API</a> and <a href="https://github.com/apoapostolov/Dicefiles-Ephemereal-Filesharing/blob/main/MCP.md">MCP guide</a>: manage invited bots from external tools.</li>
+</ul>
+<p>This guide describes the implementation shipped in Dicefiles 1.4.7. Provider
+credentials and live destinations must be checked in your own deployment;
+bundling a connector does not establish access to an external account.</p></section></article></main></div>
+<footer>Dicefiles 1.4.7. Generated from the public Markdown documentation. No scripts, external fonts or network assets.</footer>
+</body></html>
