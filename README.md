@@ -7,7 +7,7 @@
   <p>Host a community room where people can share, find, request, and read files together.</p>
 
   <p>
-    <a href="#readme"><img src="https://img.shields.io/badge/Type-Self-hosted%20app-555" alt="Type: Self-hosted app"></a>
+    <a href="#readme"><img src="https://img.shields.io/badge/Type-Self--hosted%20app-555" alt="Type: Self-hosted app"></a>
     <a href="./package.json"><img src="https://img.shields.io/badge/Language-JavaScript-555" alt="Language: JavaScript"></a>
     <a href="https://github.com/apoapostolov/Hobbyfiles/releases/latest"><img src="https://img.shields.io/github/v/release/apoapostolov/Hobbyfiles" alt="Latest stable release version"></a>
     <a href="https://github.com/apoapostolov/Hobbyfiles/releases/latest"><img src="https://img.shields.io/github/release-date/apoapostolov/Hobbyfiles?display_date=published_at&amp;label=last%20release" alt="Published date of latest stable release"></a>
