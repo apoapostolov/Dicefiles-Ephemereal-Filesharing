@@ -8,6 +8,14 @@ validated torrent video byte ranges (`kind` is `file` or `link`, `index` is the
 original torrent file index). `GET .../subtitle/:id` returns an authorized WebVTT
 track. `GET .../hls.m3u8` prepares the browser-compatible VOD playlist;
 `GET .../segment/:number.ts` converts or reuses a requested six-second section.
+`GET .../progress` reads the current owner's buffering counters without starting
+a download or keeping a session alive. It returns `phase`, `downloadedParts`,
+`totalParts` (verified pieces for the selected video), `bytesPerSecond`, `peers`
+and nullable `etaSeconds`. The ETA estimates the next input buffer, excludes
+conversion time, and remains null until verified payload, connected peers and a
+useful measured speed support a wait within the two-minute preparation limit.
+Poll at most once every two seconds while buffering. No peer addresses or paths
+are returned.
 These routes check source-room membership, passwords, expiry and hidden-file policy
 on each request and use private/no-store caching. Movie catalogue mutations are
 room socket actions, restricted to the uploader, owner or moderator. Background

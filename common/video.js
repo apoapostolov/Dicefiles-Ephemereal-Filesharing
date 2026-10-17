@@ -109,4 +109,27 @@ function fittedPlayerWidth(videoWidth, videoHeight, viewportWidth, viewportHeigh
   return Math.max(160, Math.floor(Math.min(1280, viewportWidth - 24, available * videoWidth / videoHeight + inset)));
 }
 
-module.exports = { WATCH_PREFIX, LONG_VIDEO_SECONDS, durationSeconds, mediaTitle, filenameQuery, watchKey, saveWatch, watchRecords, timeLabel, fittedPlayerWidth };
+function bufferingStatus(progress = {}, bufferedSeconds = 0) {
+  const phase = progress.totalParts > 0 && progress.peers === 0 && !progress.bytesPerSecond ? "Waiting for video peers…" : { connecting: "Finding video peers…", inspecting: "Reading video information…", converting: "Preparing video…" }[progress.phase] || "Buffering video…";
+  const details = [phase];
+  if (progress.totalParts > 0) {
+    details.push(`${progress.downloadedParts.toLocaleString()} / ${progress.totalParts.toLocaleString()} parts`);
+  }
+  else if (bufferedSeconds > 0) {
+    details.push(`${Math.floor(bufferedSeconds)}s buffered`);
+  }
+  if (progress.totalParts > 0 || progress.bytesPerSecond > 0) {
+    const speed = progress.bytesPerSecond || 0;
+    details.push(speed >= 1024 ** 2 ? `${(speed / 1024 ** 2).toFixed(1)} MiB/s` : `${Math.round(speed / 1024)} KiB/s`);
+  }
+  if (progress.etaSeconds > 0) {
+    const seconds = Math.ceil(progress.etaSeconds);
+    details.push(`~${seconds < 60 ? `${seconds}s` : `${Math.ceil(seconds / 60)} min`} to buffer`);
+  }
+  else {
+    details.push(progress.phase === "converting" ? "Preparing playback…" : "Estimating start…");
+  }
+  return details.join(" · ");
+}
+
+module.exports = { WATCH_PREFIX, LONG_VIDEO_SECONDS, durationSeconds, mediaTitle, filenameQuery, watchKey, saveWatch, watchRecords, timeLabel, fittedPlayerWidth, bufferingStatus };

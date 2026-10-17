@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Video buffering shows a centered animated indicator with two-second updates
+  for verified torrent parts, download speed and an estimated buffer wait.
+  The status disappears when playback is ready.
 - Fix torrent startup in WSL when the checkout's dependencies were installed on
   Windows. The TCP-only torrent client no longer loads an unused native WebRTC
   addon, and startup failures now report a clear recovery step.

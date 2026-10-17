@@ -4,7 +4,7 @@ import shaka from "shaka-player";
 import Modal from "./modal";
 import { dom } from "./util";
 import { movieCall, moviePath, movieReference, showMovieInfo } from "./movie";
-import { WATCH_PREFIX, mediaTitle, saveWatch, timeLabel, watchKey, watchRecords, fittedPlayerWidth } from "../common/video";
+import { WATCH_PREFIX, mediaTitle, saveWatch, timeLabel, watchKey, watchRecords, fittedPlayerWidth, bufferingStatus } from "../common/video";
 
 export class MoviePlayer extends Modal {
   constructor(file, reference = movieReference(file), data) {
@@ -12,6 +12,7 @@ export class MoviePlayer extends Modal {
     this.file = file; this.reference = reference; this.data = data; this.closed = false; this.player = null; this.interval = null;
     this.playbackAttempted = false; this.loadFailed = false; this.loading = null;
     this.prepareAbort = null; this.forceCompatible = false;
+    this.progressInterval = null; this.progressAbort = null; this.buffering = false;
     this.closeButton = this.buttons[0];
     this.closeButton.textContent = "×";
     this.closeButton.classList.add("movie-player-close");
@@ -73,7 +74,7 @@ export class MoviePlayer extends Modal {
     }; preferences.appendChild(speed);
     if (document.pictureInPictureEnabled) {
       action("Picture in picture", "▣", () => this.video.requestPictureInPicture().catch(() => {
-        this.feedback.textContent = "Picture in picture is unavailable for this video. Try fullscreen.";
+        this.setFeedback("Picture in picture is unavailable for this video. Try fullscreen.");
       }), viewActions);
     }
     action("Fullscreen", "⛶", () => {
@@ -83,7 +84,7 @@ export class MoviePlayer extends Modal {
       }
       else if (target.requestFullscreen) {
         target.requestFullscreen().catch(() => {
-          this.feedback.textContent = "Fullscreen is unavailable. Expand the browser panel to watch at a larger size.";
+          this.setFeedback("Fullscreen is unavailable. Expand the browser panel to watch at a larger size.");
         });
       }
       else if (this.video.webkitEnterFullscreen) {
@@ -114,17 +115,19 @@ export class MoviePlayer extends Modal {
       this.update(); this.flush();
     });
     this.video.addEventListener("ended", () => {
-      this.flush(); this.feedback.textContent = "Finished watching.";
+      this.flush(); this.setFeedback("Finished watching.");
     });
     this.video.addEventListener("waiting", () => {
-      this.feedback.textContent = "Buffering…";
+      if (!this.loadFailed) {
+        this.startBuffering();
+      }
     });
     this.video.addEventListener("playing", () => {
-      this.feedback.textContent = "";
+      this.setFeedback("");
     });
     this.video.addEventListener("canplay", () => {
-      if (!this.playbackAttempted && !this.loadFailed) {
-        this.feedback.textContent = "Ready. Press Play to start.";
+      if (!this.loadFailed) {
+        this.setFeedback("");
       }
     });
     this.video.addEventListener("error", () => {
@@ -150,6 +153,66 @@ export class MoviePlayer extends Modal {
     });
   }
 
+  setFeedback(message, buffering = false) {
+    this.buffering = buffering;
+    this.feedback.textContent = message;
+    this.feedback.hidden = !message;
+    this.feedback.setAttribute("data-buffering", String(buffering));
+    if (!buffering) {
+      clearInterval(this.progressInterval); this.progressInterval = null;
+      this.progressAbort?.abort(); this.progressAbort = null;
+    }
+    this.fit();
+  }
+
+  startBuffering() {
+    if (this.closed || this.loadFailed) {
+      return;
+    }
+    this.setFeedback(bufferingStatus({ phase: this.reference.index >= 0 ? "connecting" : "buffering" }), true);
+    if (!this.progressInterval) {
+      this.progressInterval = setInterval(() => this.refreshProgress(), 2000);
+    }
+  }
+
+  async refreshProgress() {
+    if (this.closed || !this.buffering || this.progressAbort || document.hidden) {
+      return;
+    }
+    const controller = new AbortController(); this.progressAbort = controller;
+    try {
+      let buffered = 0;
+      for (let i = 0; i < (this.video.buffered?.length || 0); i++) {
+        if (this.video.buffered.start(i) <= this.video.currentTime && this.video.buffered.end(i) >= this.video.currentTime) {
+          buffered = this.video.buffered.end(i) - this.video.currentTime; break;
+        }
+      }
+      let progress = {};
+      if (this.reference.index >= 0) {
+        const response = await fetch(`${moviePath(this.reference)}/progress`, { cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(1800)]) });
+        if (!response.ok) {
+          return;
+        }
+        progress = await response.json();
+      }
+      else {
+        const stats = this.player?.getStats?.();
+        const bytesPerSecond = (stats?.estimatedBandwidth || 0) / 8;
+        const missing = Math.max(0, 2 - buffered) * (stats?.streamBandwidth || 0) / 8;
+        progress = { bytesPerSecond, etaSeconds: bytesPerSecond > 0 && missing > 0 ? missing / bytesPerSecond : null };
+      }
+      if (!this.closed && this.buffering && !controller.signal.aborted) {
+        this.setFeedback(bufferingStatus(progress, buffered), true);
+      }
+    }
+    catch (_) { /* A missed progress sample must never interrupt playback. */ }
+    finally {
+      if (this.progressAbort === controller) {
+        this.progressAbort = null;
+      }
+    }
+  }
+
   async onshown() {
     super.onshown();
     addEventListener("pagehide", this.onPageHide); document.addEventListener("visibilitychange", this.onVisibility);
@@ -162,7 +225,7 @@ export class MoviePlayer extends Modal {
   async prepare() {
     this.prepareAbort?.abort(); this.prepareAbort = new AbortController();
     this.loadFailed = false; this.playButton.disabled = true;
-    this.feedback.textContent = this.reference.index >= 0 ? "Connecting and buffering video…" : "Buffering video…";
+    this.startBuffering();
     try {
       this.data ||= await movieCall(this.reference, "get");
       if (this.closed) {
@@ -190,6 +253,14 @@ export class MoviePlayer extends Modal {
             this.playbackError(event.detail);
           }
         });
+        this.player.addEventListener("buffering", event => {
+          if (event.buffering) {
+            this.startBuffering();
+          }
+          else if (!this.loadFailed) {
+            this.setFeedback("");
+          }
+        });
       }
       if (this.closed) {
         return;
@@ -204,7 +275,7 @@ export class MoviePlayer extends Modal {
       const source = this.reference.index >= 0 ? `${moviePath(this.reference)}/${compatible ? "hls.m3u8" : "stream"}` : this.file.url;
       const mime = compatible || /\.m3u8$/i.test(name) ? "application/x-mpegurl" : /\.webm$/i.test(name) ? "video/webm" : /\.mpd$/i.test(name) ? "application/dash+xml" : /\.mkv$/i.test(name) ? "video/x-matroska" : /\.avi$/i.test(name) ? "video/x-msvideo" : /\.(ts|m2ts)$/i.test(name) ? "video/mp2t" : "video/mp4";
       if (compatible) {
-        this.feedback.textContent = "Preparing video for your browser…";
+        this.setFeedback("Preparing video for your browser…", true);
         const response = await fetch(source, { signal: this.prepareAbort.signal, cache: "no-store" });
         if (!response.ok) {
           const detail = await response.json().catch(() => ({}));
@@ -229,7 +300,7 @@ export class MoviePlayer extends Modal {
           this.tracks.push(track); this.captions.appendChild(dom("option", { text: subtitle.label, attrs: { value: track.id } }));
         }
         catch (_) {
-          this.feedback.textContent = "A subtitle could not be loaded. Reopen video details and upload it again.";
+          this.setFeedback("A subtitle could not be loaded. Reopen video details and upload it again.");
         }
       }
       clearInterval(this.interval);
@@ -239,7 +310,9 @@ export class MoviePlayer extends Modal {
         }
       }, 5000);
       this.loadFailed = false;
-      this.feedback.textContent = start ? `Ready at ${timeLabel(start)}. Press Play to continue.` : "Ready. Press Play to start.";
+      if (this.buffering) {
+        this.setFeedback("");
+      }
       this.playButton.focus(); this.update();
       this.fit();
     }
@@ -266,7 +339,7 @@ export class MoviePlayer extends Modal {
       // Codes only: provider URLs, room IDs and response bodies stay private.
       console.warn(`Video playback unavailable (code ${error.code}, category ${error.category || 0})`);
     }
-    this.feedback.textContent = error?.userMessage || (!this.playbackAttempted ? "Video preparation did not finish. Press Play to retry, or download the video to watch locally." : this.reference.index >= 0 ? "Playback stopped. Peers may be unavailable or the format may be unsupported. Press Play to retry, or download the video to watch locally." : "Playback stopped. Press Play to retry, or download the video and open it in a compatible player.");
+    this.setFeedback(error?.userMessage || (!this.playbackAttempted ? "Video preparation did not finish. Press Play to retry, or download the video to watch locally." : this.reference.index >= 0 ? "Playback stopped. Peers may be unavailable or the format may be unsupported. Press Play to retry, or download the video to watch locally." : "Playback stopped. Press Play to retry, or download the video and open it in a compatible player."));
   }
 
   async toggle() {
@@ -283,7 +356,7 @@ export class MoviePlayer extends Modal {
       }
       await this.video.play().catch(error => {
         if (error?.name === "NotAllowedError") {
-          this.feedback.textContent = "Your browser paused playback. Press Play again to start.";
+          this.setFeedback("Your browser paused playback. Press Play again to start.");
         }
         else if (error?.name !== "AbortError") {
           this.playbackError(error);
@@ -320,6 +393,9 @@ export class MoviePlayer extends Modal {
       const padding = getComputedStyle(this.body);
       const inset = parseFloat(padding.paddingLeft) + parseFloat(padding.paddingRight) + 2;
       const outerHeight = el => {
+        if (el.hidden) {
+          return 0;
+        }
         const style = getComputedStyle(el);
         return el.offsetHeight + parseFloat(style.marginTop || 0) + parseFloat(style.marginBottom || 0);
       };
@@ -340,6 +416,7 @@ export class MoviePlayer extends Modal {
 
   onhidden() {
     this.prepareAbort?.abort();
+    clearInterval(this.progressInterval); this.progressAbort?.abort(); this.buffering = false;
     this.flush(); this.closed = true; clearInterval(this.interval);
     if (this.fitFrame !== null) {
       cancelAnimationFrame(this.fitFrame);

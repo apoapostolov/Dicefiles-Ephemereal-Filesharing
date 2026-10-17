@@ -184,6 +184,13 @@ verify the installed client starts; this performs no public peer discovery.
 The integration suite additionally transfers a synthetic byte range between
 two local clients using the production piece store.
 
+While buffering, the player refreshes verified torrent part counts and download
+speed every two seconds, with an animated indicator that respects reduced motion.
+The approximate wait covers the next input buffer, not downloading the entire
+movie; conversion and changing peer availability can add time. Until a useful
+speed is available, the player says it is estimating. The line disappears when
+the video is ready, and polling stops on readiness, errors and closing the player.
+
 
 ### Season and complete-series packs
 

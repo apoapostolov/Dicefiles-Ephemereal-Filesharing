@@ -130,7 +130,7 @@ test("opening buffers immediately without autoplay and places the close button i
   expect(player.player.source).toBe("/video.mp4");
   expect(player.video.paused).toBe(true);
   expect(player.playbackAttempted).toBe(false);
-  expect(player.feedback.textContent).toBe("Ready. Press Play to start.");
+  expect(player.feedback.textContent).toBe(""); expect(player.feedback.hidden).toBe(true);
   player.onhidden();
 });
 
@@ -141,7 +141,7 @@ test("empty native errors and recoverable Shaka retries do not report playback f
   player.video.dispatchEvent(new Event("error"));
   player.player.listeners.error({ detail: { severity: 1, code: 1002 } });
   expect(player.loadFailed).toBe(false);
-  expect(player.feedback.textContent).toBe("Ready. Press Play to start.");
+  expect(player.feedback.textContent).toBe("");
   player.onhidden();
 });
 
@@ -181,6 +181,44 @@ test("torrent preparation presents the server's recovery message and retries", a
   expect(player.feedback.textContent).toContain("Ask the operator to enable them");
   await player.toggle(); expect(player.loadFailed).toBe(false); expect(player.video.paused).toBe(false);
   player.onhidden();
+});
+
+test("buffering refreshes real counters every two seconds and hides status when ready", async () => {
+  const { MoviePlayer, context } = fixture();
+  const player = new MoviePlayer({ name: "Synthetic.mkv" }, { kind: "file", key: "synthetic", index: 0 }, { name: "Synthetic.mkv" });
+  await player.onshown();
+  context.fetch.mockClear();
+  context.fetch.mockResolvedValue(new Response(JSON.stringify({ phase: "buffering", downloadedParts: 7, totalParts: 99, bytesPerSecond: 1048576, etaSeconds: 4 })));
+  player.video.dispatchEvent(new Event("waiting"));
+  expect(player.feedback.hidden).toBe(false); expect(player.feedback.attrs["data-buffering"]).toBe("true");
+  await jest.advanceTimersByTimeAsync(1999); expect(context.fetch).not.toHaveBeenCalled();
+  await jest.advanceTimersByTimeAsync(1);
+  expect(context.fetch).toHaveBeenCalledTimes(1); expect(context.fetch.mock.calls[0][0]).toContain("/progress");
+  expect(player.feedback.textContent).toContain("7 / 99 parts · 1.0 MiB/s · ~4s to buffer");
+  player.video.dispatchEvent(new Event("canplay"));
+  expect(player.feedback.textContent).toBe(""); expect(player.feedback.hidden).toBe(true);
+  await jest.advanceTimersByTimeAsync(4000); expect(context.fetch).toHaveBeenCalledTimes(1);
+  player.onhidden();
+});
+
+test("closing aborts an in-flight sample and late progress cannot replace a playback error", async () => {
+  const { MoviePlayer, context } = fixture();
+  const player = new MoviePlayer({ name: "Synthetic.mkv" }, { kind: "file", key: "synthetic", index: 0 }, { name: "Synthetic.mkv" });
+  await player.onshown();
+  let deliver;
+  context.fetch.mockImplementation(() => new Promise(resolve => deliver = resolve));
+  player.video.dispatchEvent(new Event("waiting"));
+  await jest.advanceTimersByTimeAsync(2000);
+  const {signal} = context.fetch.mock.calls.at(-1)[1];
+  player.playbackError(new Error("synthetic"));
+  expect(signal.aborted).toBe(true);
+  deliver(new Response(JSON.stringify({ downloadedParts: 9, totalParts: 99 })));
+  await jest.advanceTimersByTimeAsync(0);
+  expect(player.feedback.textContent).toContain("Video preparation did not finish");
+  expect(player.feedback.attrs["data-buffering"]).toBe("false");
+  player.onhidden();
+  await jest.advanceTimersByTimeAsync(4000);
+  expect(context.fetch).toHaveBeenCalledTimes(2);
 });
 
 test.each([[1280, 720, 1920, 1080], [390, 844, 1080, 1920], [740, 360, 1920, 1080]])("player fits its frame and controls inside %i × %i", (width, height, videoWidth, videoHeight) => {

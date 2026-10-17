@@ -23,7 +23,7 @@ test("separate HTTP workers share one authenticated torrent relay and retain byt
   };
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "hobbyfiles-stream-relay-test-"));
   const payload = Buffer.alloc(100, 7);
-  const session = { dir, active: 0, touched: Date.now(), torrent: { name: "Example", files: [{ name: "video.mp4", path: "Example/video.mp4", length: payload.length, createReadStream: ({ start, end }) => Readable.from([payload.subarray(start, end + 1)]) }] } };
+  const session = { dir, active: 0, touched: Date.now(), torrent: { name: "Example", pieceLength: 100, bitfield: { get: () => true }, downloadSpeed: 1024, numPeers: 2, files: [{ name: "video.mp4", path: "Example/video.mp4", offset: 0, length: payload.length, createReadStream: ({ start, end }) => Readable.from([payload.subarray(start, end + 1)]) }] } };
   const createSession = jest.fn(async () => session);
   const source = fs.readFileSync(path.join(__dirname, "../../lib/media/torrent-stream.js"), "utf8").replace(/async function createSession\(torrent, item\) \{[\s\S]*?(?=async function getSession\()/, "const createSession = sessionFactory;\n");
   const load = () => {
@@ -50,17 +50,24 @@ test("separate HTTP workers share one authenticated torrent relay and retain byt
       res.statusCode = code; return res;
     };
     res.json = value => res.end(JSON.stringify(value));
-    workers[requestNumber++ % 2].serveTorrent(req, res, { torrent, item: {} }, 0).catch(error => res.destroy(error));
+    workers[requestNumber++ % 2].serveTorrent(req, res, { torrent, item: {} }, 0, req.url === "/progress" ? "progress" : "").catch(error => res.destroy(error));
   });
   try {
     await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
     const url = `http://127.0.0.1:${server.address().port}/`;
+    const cold = await fetch(`${url}progress`);
+    expect((await cold.json()).phase).toBe("connecting");
+    expect(createSession).not.toHaveBeenCalled();
     const responses = await Promise.all(Array.from({ length: 4 }, () => fetch(url, { headers: { Range: "bytes=10-19" } })));
     for (const response of responses) {
       expect(response.status).toBe(206); expect(response.headers.get("content-range")).toBe("bytes 10-19/100");
       expect(Buffer.from(await response.arrayBuffer())).toEqual(payload.subarray(10, 20));
     }
     expect(createSession).toHaveBeenCalledTimes(1);
+    const {touched} = session;
+    const progress = await fetch(`${url}progress`);
+    expect(await progress.json()).toEqual({ phase: "buffering", downloadedParts: 1, totalParts: 1, bytesPerSecond: 1024, peers: 2, etaSeconds: null });
+    expect(session.touched).toBe(touched); expect(createSession).toHaveBeenCalledTimes(1);
     const head = await fetch(url, { method: "HEAD", headers: { Range: "bytes=-5" } });
     expect(head.status).toBe(206); expect(head.headers.get("content-length")).toBe("5");
     const relay = JSON.parse([...records.values()][0]);
@@ -70,6 +77,14 @@ test("separate HTTP workers share one authenticated torrent relay and retain byt
       }); request.once("error", reject);
     });
     expect(denied).toBe(403);
+    const registryKey = [...records.keys()][0];
+    await session.onClose();
+    // An abruptly stopped owner may leave a socket path until its TTL expires.
+    fs.writeFileSync(relay.socket, "stale");
+    records.set(registryKey, JSON.stringify(relay));
+    const stale = await fetch(`${url}progress`);
+    expect(stale.status).toBe(200); expect((await stale.json()).phase).toBe("connecting");
+    expect(createSession).toHaveBeenCalledTimes(1);
   }
   finally {
     server.closeAllConnections(); await new Promise(resolve => server.close(resolve));
