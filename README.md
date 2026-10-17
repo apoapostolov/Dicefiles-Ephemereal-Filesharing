@@ -293,6 +293,8 @@ access. Permissions are split into scopes, rate limited, and audited.
 The protected operator dashboard reports capacity, uptime, traffic, requests,
 and service health without exposing filesystem paths or secrets.
 
+![The operator health page showing service status and the Drive horizon capacity dashboard](images/hobbyfiles-status-dashboard.png)
+
 ## Development
 
 ```bash
