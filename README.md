@@ -4,7 +4,7 @@
 
   <h1>Hobbyfiles</h1>
 
-  <p>Host a community room where people can share, find, request, and read files together.</p>
+  <p>A place for hobby groups to share files, find useful things, and talk about them.</p>
 
   <p>
     <a href="#readme"><img src="https://img.shields.io/badge/Type-Self--hosted%20app-555" alt="Type: Self-hosted app"></a>
@@ -21,57 +21,48 @@
       alt="Hobbyfiles: ephemeral file sharing for hobby communities"></a>
 </div>
 
-Hobbyfiles is built for collections people actively browse and discuss: RPG
-books and maps, board games, STL models, comics, fiction, and other hobby media.
-Each room combines live chat, temporary file sharing, requests, readers,
-moderation, and optional automation without feeling like a generic cloud-drive
-dashboard. You host it; there is no public Hobbyfiles service.
+Hobbyfiles gives hobby groups a room to share files and talk about them. Use it
+for RPG books and maps, board-game files, 3D prints, comics, fiction, and other
+collections worth browsing together. Each room brings chat, temporary uploads,
+requests, file readers, moderation, and optional automation together. You run
+the server yourself; there is no public Hobbyfiles service.
 
 ## What's New Since 1.4.6
 
-Version 1.4.7 expands Hobbyfiles from ephemeral room sharing into a flexible
-collection workspace. It adds 27 built-in bots for approved feed and cloud
-imports, community workflows, and routine maintenance. Plugin API v2 brings
-scoped capabilities, durable jobs, reviewed actions, reports, and activity
-history. Owners can monitor bot runs and recover queued work; collectors stay
-opt-in and use explicit provider grants.
+Version 1.4.7 adds 27 built-in bots for approved feed and cloud imports,
+community work, and routine maintenance. Plugin API v2 gives them scoped
+permissions, durable jobs, review steps, reports, and activity history. Room
+owners can see what bots have done and recover queued work. Collection bots are
+opt-in and need an explicit connection to each provider.
 
-Movie and TV torrents now support searchable contents, relaxed peer checks,
-metadata matching, streaming, subtitles, and resume progress. Recognized files
-show readable movie or episode names, with season packs checked against catalogue
-coverage. The release also adds 34 themes, compact phone and tablet controls,
-57 scoped MCP tools, and multi-architecture GHCR container builds.
+Movie and TV torrents now show searchable contents, peer counts, matched titles,
+subtitles, and watch progress. Recognized files use readable movie or episode
+names, and season packs are checked against episode coverage. This release also
+adds 34 themes, smaller phone and tablet controls, 57 scoped MCP tools, and
+GHCR images for multiple processor types.
 
-Newer file previews include a Babylon.js-powered 3D viewer for STL and other
-mesh formats, plus in-archive previews for documents, comics, images, videos,
-and linked model assets. See [What You Can Do](#what-you-can-do) and the
-[changelog](CHANGELOG.md). Operators should review the
-[upgrade notes](CHANGELOG.md#operator-notes) and configure provider connections
-before enabling collectors.
+You can also preview documents, comics, images, videos, and 3D models inside
+archives. The 3D viewer loads related model files from the archive too. See
+[What You Can Do](#what-you-can-do) for an overview, or browse the
+[changelog](CHANGELOG.md) for the full list. If you run a server, read the
+[upgrade notes](CHANGELOG.md#operator-notes) and set up provider connections
+before turning on collection bots.
 
 ## What You Can Do
 
-- **Share around a live conversation.** Combine chat, uploads, inline media, Giphy, moderation, and configurable retention in one room.
-- **Browse instead of digging through filenames.** Switch between compact lists and galleries with generated covers, filters, search, tags, and remembered views.
-- **Read without downloading first.** Open PDF, ePub, MOBI/AZW, and CBZ/CBR/CB7 comics in the room with progress and keyboard navigation.
-- **Preview files inside archives.** Browse ZIP, RAR, 7Z, TAR, multipart archives, and comics. Open supported PDFs, ePubs, comics, images, videos, and 3D models in the preview dialog before extracting them.
-- **Ask the community for missing material.** Post requests, attach reference links or images, and let an upload fulfill the request directly.
-- **Join libraries without copying them.** Link approved rooms locally or across trusted independent hosts while the source keeps control.
-- **Protect private communities.** Use expiring guest invites, optional rotating room passwords, consent boundaries, and role-based moderation.
-- **Connect tools and room bots.** Use scoped REST, webhooks, 57 MCP tools,
-  and bounded automation for imports, releases, requests, and commands.
-- **Grow beyond one drive.** Add several volumes, set free-space floors,
-  monitor health, and keep legacy content where it already lives.
-- **Choose your workspace colors.** Pick from 34 persistent themes, including
-  26 dark palettes, using Appearance.
-- **Explore torrents.** Import magnets and `.torrent` files, browse searchable
-  contents and artwork, check reported availability, and stream supported videos.
-- **Watch movies and episodes.** Resume long videos, match clear torrent titles automatically or choose a catalogue result,
-  browse artwork and cast, and add subtitles in your language.
-- **Inspect and prepare 3D prints in the browser.** The integrated Babylon.js
-  viewer opens STL, 3MF, OBJ, glTF/GLB, PLY, FBX, and USD models. Open them
-  directly from a room or inside a ZIP archive; linked geometry, materials,
-  buffers, and textures are loaded from the archive so the model stays intact.
+- **Share and chat in one room.** Post messages, upload files, share images and GIFs, and let moderators manage the room and its file-retention rules.
+- **Find files by browsing.** Switch between a compact list and a gallery, then use covers, search, filters, and tags to narrow the collection.
+- **Read in the room.** Open PDFs, ePubs, MOBI/AZW books, and CBZ/CBR/CB7 comics with reading progress and keyboard controls.
+- **Look inside archives.** Browse ZIP, RAR, 7Z, TAR, multipart archives, and comics. Preview supported documents, comics, images, videos, and 3D models without unpacking everything first.
+- **Request what’s missing.** Post a request, add a link or image for context, and let someone’s upload fill it.
+- **Bring in files from other rooms.** Link rooms on the same server or on a trusted Hobbyfiles server. Filter what appears, while the source room keeps control of its files.
+- **Run a private community.** Use expiring guest invites, rotating room passwords, and moderator roles to manage access.
+- **Automate routine work.** Connect bots and other tools through the REST API, webhooks, and 57 scoped MCP tools.
+- **Use more than one drive.** Add storage volumes, keep an eye on free space, and leave existing files where they are.
+- **Pick a look that suits the room.** Choose from 34 themes, including 26 dark themes, in Appearance.
+- **Browse torrents.** Add magnet links or `.torrent` files, search their contents, check reported peer counts, and stream supported videos.
+- **Follow a movie or episode.** Match torrent files to catalogue entries, browse artwork and cast, add subtitles, and resume long videos where you left off.
+- **Inspect 3D models in your browser.** Open STL, 3MF, OBJ, glTF/GLB, PLY, FBX, and USD files in the Babylon.js viewer, including models inside ZIP archives with their linked geometry, materials, buffers, and textures.
 
 ![The Indie Adventurer room with community chat beside a gallery of RPG books, archives, maps, and a matched torrent](images/hobbyfiles-room-gallery.png)
 
@@ -92,50 +83,48 @@ server-generated previews and formats such as RAR/7Z extraction.
 
 ![The Witcher comic open to an illustrated interior page in Webtoon mode](images/hobbyfiles-comic-reader.png)
 
-The archive viewer opens supported files in the same preview dialog used for
-room files, so members can read a PDF, flip through a comic, inspect an image,
-or launch a 3D model without extracting it first. Linked model assets are
-resolved from the archive and cached with the preview. The action column stays
-aligned alongside each file's size:
+Open a file inside an archive just as you would open one in the room. Read a
+PDF, browse a comic, view an image, or launch a 3D model without unpacking the
+archive first. The viewer also finds and caches the model's related files, such
+as textures and materials. Each file's View action stays lined up in its own
+column:
 
 ![A 3D-printing ZIP archive with aligned View and 3D View actions beside its files](images/hobbyfiles-archive-browser.png)
 
-Open STL, 3MF, OBJ, glTF/GLB, PLY, FBX, and USD models right in the browser.
-Orbit, pan, and zoom to inspect a print before downloading it. Models can open
-directly from a room or from inside a ZIP; the viewer resolves linked geometry,
-materials, buffers, and textures from the archive so the model comes through
-intact.
+Open STL, 3MF, OBJ, glTF/GLB, PLY, FBX, and USD models in your browser. Orbit,
+pan, and zoom to inspect a print before downloading it. You can open a model
+from a room or from a ZIP archive; the viewer loads its linked geometry,
+materials, buffers, and textures so it looks as intended.
 
 ![An STL miniature rendered in the in-browser 3D model viewer](images/hobbyfiles-3d-model-viewer.png)
 
 ## Rooms Made for Communities
 
-Room owners can control visibility, retention, requests, deep links, linked
-libraries, plugins, invitations, and access without leaving the room. Members
-can quickly switch to files added since their last visit or download All, New,
-or Since Last Visit through a resumable queue.
+Room owners can manage visibility, file retention, requests, links, plugins,
+invites, and access from the room. Members can find files added since their last
+visit or download everything, new files, or just recent additions through a
+queue that can resume if interrupted.
 
-The optional public directory exposes only rooms that opt in. Profiles collect
-activity, contribution statistics, and achievement tracks for uploads,
-downloads, and fulfilled requests.
+The public directory lists only rooms that choose to appear there. Profiles
+show community activity and contributions, including uploads, downloads, and
+fulfilled requests.
 
-**Linked rooms:** Say one Hobbyfiles server has a Pathfinder community and a
-Foundry module-sharing community, each with its own room. The Pathfinder room
-can link to the Foundry room after it opts in, then filter for “PF2E” in the
-filename. Matching modules show up in Pathfinder’s file list beside its own
-uploads, labeled with the Foundry room as their source. The files stay in their
-original room: people can find and use them from Pathfinder without uploading a
-second copy, and the source community keeps control of access.
+**Linked rooms:** Imagine one Hobbyfiles server with two communities: one for
+Pathfinder and another for sharing Foundry modules. Each has its own room. If
+the Foundry room opts in, the Pathfinder room can link to it and filter for
+“PF2E” in filenames. Matching modules then appear beside Pathfinder's own files,
+with a label showing they came from the Foundry room. The files remain in the
+Foundry room, so there's no need to upload a second copy and that community
+keeps control of access.
 
-**Federated servers:** The same setup works when the communities are on
-different Hobbyfiles servers. Their admins establish a trusted federation
-between the servers, then link only the rooms they choose. The source server
-and room must allow the connection, and the destination still picks what to
-show with its filters. That way a Pathfinder room can surface just the relevant
-Foundry modules without opening up the other server’s rooms or copying its
-files.
+**Federated servers:** The communities can also live on different Hobbyfiles
+servers. Their admins first set up a trusted federation, then link the rooms
+they want to share. The source server and room must allow the link, and the
+receiving room chooses what to show with its filters. A Pathfinder community
+can surface the Foundry modules it needs without opening access to every room
+on the other server or copying the files.
 
-Room owners manage room behavior, access, and automation in one place:
+Room settings, access, and plugins are all managed from the room:
 
 ![General room options for the Indie Adventurer community](images/hobbyfiles-room-options.png)
 
@@ -147,14 +136,15 @@ Room owners manage room behavior, access, and automation in one place:
 
 ## Torrent and Video Support
 
-Magnet links and torrent files expose searchable contents, tracker status,
-availability estimates, and matched movie or episode details. Movie and TV
-season packs can be streamed when peers and codecs allow it.
+Add a magnet link or torrent file to see its contents, tracker status, reported
+peer counts, and any matching movie or episode details. You can stream movies
+and TV season packs when peers are available and the video format is supported.
 
 ![Torrent details showing a matched movie, artwork, content size, file count, and peer estimates](images/hobbyfiles-torrent-details.png)
 
-Opening a supported video starts buffering immediately. Long videos keep their
-resume position and expose playback and subtitle controls:
+The player starts buffering as soon as you open a supported video. For longer
+videos, Hobbyfiles saves your place so you can resume later. Playback and
+subtitle controls are built in:
 
 ![A matched movie torrent opened in the video player while its stream buffers](images/hobbyfiles-torrent-player-buffering.png)
 
@@ -162,9 +152,9 @@ resume position and expose playback and subtitle controls:
 
 ## Quick Start
 
-Requirements: Node.js 22.13+ or 24+, Yarn 1.x, Redis, and a Linux, macOS, WSL, or
-Windows host. Yarn is the supported package manager; use the committed
-`yarn.lock`.
+To run Hobbyfiles from source, you'll need Node.js 22.13+ or 24+, Yarn 1.x,
+Redis, and a Linux, macOS, WSL, or Windows host. Use Yarn to install packages;
+the committed `yarn.lock` keeps dependency versions consistent.
 
 ```bash
 git clone https://github.com/apoapostolov/Hobbyfiles.git
@@ -173,23 +163,25 @@ yarn install --production=false
 cp .env.example .env
 ```
 
-Edit `.env` before the first start: set a unique random `HOBBYFILES_SECRET`
-and `HTTP_PORT=8080`. Generate a secret with `openssl rand -hex 32`.
-Then run `yarn start` (which builds assets before starting). Open
-`http://127.0.0.1:8080`. See [environment configuration](docs/ENVIRONMENT.md)
-for ordered flags/keys and precedence. Advanced settings remain in strict JSON
-`.config.json`; the annotated `.config.json.example` requires removing its comments.
+Before the first start, edit `.env` and set a unique random
+`HOBBYFILES_SECRET` and `HTTP_PORT=8080`. Generate the secret with
+`openssl rand -hex 32`, then run `yarn start`; this builds the assets and starts
+the app. Open `http://127.0.0.1:8080` in your browser. The
+[environment guide](docs/ENVIRONMENT.md) explains the available flags, keys,
+and which values take priority. Advanced settings go in `.config.json`, which
+must be strict JSON. The example file includes comments, so remove them before
+using it as `.config.json`.
 
-On Ubuntu, Debian, or WSL, `yarn setup:ubuntu` installs dependencies, checks the
-native preview stack, and builds the client. On other systems, install ExifTool,
-Ghostscript, Poppler, FFmpeg, and 7-Zip for the broadest
-preview and archive support; then run `yarn check:preview-tools`.
-Linux sandboxing also needs firejail, and RAR extraction needs unrar. Debian
-installations may need to enable non-free repositories for unrar.
+On Ubuntu, Debian, or WSL, run `yarn setup:ubuntu` to install dependencies,
+check the preview tools, and build the client. On other systems, install
+ExifTool, Ghostscript, Poppler, FFmpeg, and 7-Zip for the widest preview and
+archive support, then run `yarn check:preview-tools`. Linux sandboxing also
+needs firejail. RAR extraction needs unrar; on Debian, you may need to enable
+the non-free repositories to install it.
 
-Build with development dependencies installed, even when `NODE_ENV=production`.
-The webpack toolchain is in `devDependencies`; a production-only install is
-appropriate after assets have been built.
+Keep development dependencies installed when building, even if
+`NODE_ENV=production`: the build uses webpack from `devDependencies`. You can
+use a production-only install after the assets have been built.
 
 Verify the live service:
 
@@ -197,14 +189,14 @@ Verify the live service:
 curl -s http://127.0.0.1:8080/healthz
 ```
 
-Production deployments should place Hobbyfiles behind an HTTPS reverse proxy.
-Never commit `.config.json`, API keys, room credentials, federation private
-keys, or generated capability URLs.
+For a production server, put Hobbyfiles behind an HTTPS reverse proxy. Keep
+`.config.json`, API keys, room credentials, federation private keys, and
+generated capability URLs out of Git.
 
 ## Docker: build and run
 
-For a new installation, copy this into `compose.yaml` to run the published
-Hobbyfiles 1.4.7 image with Docker Compose:
+For a new installation, save this as `compose.yaml`. It runs Hobbyfiles 1.4.7
+and Redis with Docker Compose:
 
 ```yaml
 services:
@@ -254,8 +246,8 @@ volumes:
   redis-data:
 ```
 
-Create a `.env` file beside `compose.yaml`. Generate a private secret with
-`openssl rand -hex 32`, then put the generated value here:
+Create a `.env` file beside `compose.yaml`. Generate a secret with
+`openssl rand -hex 32` and paste it into `HOBBYFILES_SECRET`:
 
 ```dotenv
 HOBBYFILES_SECRET=paste-generated-value-here
@@ -270,21 +262,22 @@ docker compose ps
 curl -fsS http://127.0.0.1:8080/healthz
 ```
 
-Docker Desktop shows the **Hobbyfiles** project in Containers. The app listens
-on loopback port 8080. To expose it beyond this computer, put it behind an HTTPS
-reverse proxy as described in the [Docker guide](docs/DOCKER.md).
-For an existing Docker installation, keep its current Compose project and
-follow the guide's upgrade steps so its volumes remain attached.
+Once it starts, you'll see the **Hobbyfiles** project under Containers in
+Docker Desktop. The app listens on port 8080 on this computer. To make it
+available from elsewhere, put it behind an HTTPS reverse proxy as described in
+the [Docker guide](docs/DOCKER.md). If you're upgrading an existing Docker
+installation, follow the guide's steps so your current volumes stay connected.
 
-To build from the repository instead, use Docker Engine with Compose or Docker
-Desktop in Linux-container mode:
+To build your own image from the repository, use Docker Engine with Compose or
+Docker Desktop in Linux-container mode:
 
 ```bash
 docker build -t hobbyfiles:local .
 cp .env.docker.example .env.docker
 ```
 
-Set a unique random `HOBBYFILES_SECRET` in `.env.docker`, then start the stack:
+Set a unique random `HOBBYFILES_SECRET` in `.env.docker`, then start the
+services:
 
 ```bash
 docker compose --env-file .env.docker up -d --no-build
@@ -292,21 +285,20 @@ docker compose --env-file .env.docker ps
 curl -fsS http://127.0.0.1:8080/healthz
 ```
 
-For a newer published build, change the `image` line in the Compose example to
-`ghcr.io/apoapostolov/hobbyfiles:TAG` using a tag that has been published to
-GHCR.
+To use a newer published build, update the Compose `image` line to a tag that
+exists in GHCR, such as `ghcr.io/apoapostolov/hobbyfiles:TAG`.
 
-The [Docker guide](docs/DOCKER.md) covers the complete recipe, GHCR publication,
-configuration, backups, upgrades and preview sandbox limitations. The default
-container disables external file tools until a dedicated sandbox policy is
-validated. Browser readers and image previews remain available. Do not use
-privileged containers to bypass this limitation.
+The [Docker guide](docs/DOCKER.md) has the full build recipe and covers GHCR,
+configuration, backups, upgrades, and preview limitations. By default, the
+container turns off external file tools; browser readers and image previews
+still work. Don't run the container in privileged mode to turn those tools
+back on.
 
 ## Automation and Operations
 
-The REST API and MCP server cover room discovery, uploads, metadata, requests,
+Use the REST API and MCP server to work with rooms, uploads, metadata, requests,
 archives, links, guest invites, federation, bots, storage, and protected-room
-access. Permissions are split into scopes, rate limited, and audited.
+access. Access is controlled by scopes, with rate limits and audit records.
 
 - [REST API reference](./API.md)
 - [MCP setup and 57-tool reference](./MCP.md)
@@ -326,8 +318,8 @@ access. Permissions are split into scopes, rate limited, and audited.
 - [Movies, streaming and subtitles](./docs/MOVIES.md)
 - [Security policy](./SECURITY.md)
 
-The protected operator dashboard reports capacity, uptime, traffic, requests,
-and service health without exposing filesystem paths or secrets.
+The operator dashboard shows capacity, uptime, traffic, requests, and service
+health. It doesn't expose filesystem paths or secrets.
 
 ![The operator health page showing service status and the Drive horizon capacity dashboard](images/hobbyfiles-status-dashboard-hobbyfiles.png)
 
@@ -339,9 +331,11 @@ yarn test
 yarn prestart
 ```
 
-Contributor workflow and release checks live in [`dev/README.md`](./dev/README.md).
-The complete documentation index is [`docs/README.md`](./docs/README.md).
+If you'd like to contribute, the [development guide](./dev/README.md) covers the
+workflow and release checks. For everything else, start with the
+[documentation index](./docs/README.md).
 
-Hobbyfiles is licensed under MIT. It began as a fork of Kregfile, based on the
-Volafile file-sharing service, and now includes substantial new community,
-reading, automation, storage, and federation systems.
+Hobbyfiles is licensed under MIT. It started as a fork of Kregfile, which is
+based on the Volafile file-sharing service. Since then, Hobbyfiles has grown to
+include community tools, built-in readers, automation, extra storage options,
+and federation.
