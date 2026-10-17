@@ -59,9 +59,11 @@ test("wide toolbars stay on one line and phones use three deliberate rows", () =
 test("Continue reading has a separate dismiss button and token-based neutral surfaces", () => {
   const template = fs.readFileSync(path.join(root, "views/room.ejs"), "utf8");
   expect(template).toContain("id=\"continuity-resume-card\"");
-  expect(template).toContain("id=\"continuity-resume-dismiss\"");
-  expect(template).not.toContain("id=\"continuity-resume\" class=\"hidden\"");
+  expect(template).toContain("aria-label=\"Continue reading\"");
+  expect(template).not.toContain("id=\"continuity-resume\"");
   const css = fs.readFileSync(path.join(root, "entries/css/files.css"), "utf8");
+  expect(css).toContain("#continuity-resume-card::-webkit-scrollbar { display: none; }");
+  expect(css).toContain("scrollbar-width: none");
   expect(css).toContain("background: var(--panel-bg)");
   expect(css).not.toContain("rgba(22, 25, 30");
   expect(css).not.toContain("rgba(87, 196, 255");

@@ -275,11 +275,28 @@ const BOOK_VP = 40;
  * Page N is revealed by: scroller.style.transform = translateX(−N · pageWidth).
  * Total pages: measured from a sentinel span appended at the end of scroller.
  */
-function bookColors() {
-  // Book pages use a stable paper palette, independent of the surrounding
-  // room theme. Epubs often carry their own background colors, so inheriting
-  // a dark application palette can leave their text unreadable on white pages.
-  return ["#ffffff", "#222222", "#245b9f"];
+function bookColors(mode) {
+  // Keep book page colors under reader control instead of inheriting the room
+  // theme or publisher colors that can make text unreadable.
+  const palettes = {
+    white: ["#ffffff", "#222222", "#245b9f"],
+    dark: ["#191919", "#e7e3da", "#9ec5ff"],
+    sepia: ["#f4ecd8", "#43372a", "#8b5e34"],
+  };
+  return palettes[mode] || palettes.white;
+}
+
+function applyBookColors(root, mode) {
+  if (!root) {
+    return false;
+  }
+  bookColors(mode).forEach((value, index) => {
+    root.style.setProperty(
+      ["--book-bg", "--book-fg", "--book-link"][index],
+      value,
+    );
+  });
+  return true;
 }
 
 function buildSrcdoc(html, cssUrls, pageWidth, pageHeight, opts) {
@@ -291,6 +308,7 @@ function buildSrcdoc(html, cssUrls, pageWidth, pageHeight, opts) {
   const fontFamily = FONT_FAMILIES[o.fontFamily] || FONT_FAMILIES.georgia;
   const fontSize = `${o.fontSize || 1.05}em`;
   const lineHeight = o.lineSpacing || 1.75;
+  const [bookBg, bookFg, bookLink] = bookColors(o.colorMode);
   const linkTags = cssUrls.
     map(h => `<link rel="stylesheet" href="${h}">`).
     join("\n");
@@ -322,7 +340,7 @@ function buildSrcdoc(html, cssUrls, pageWidth, pageHeight, opts) {
 <html lang="en"><head><meta charset="utf-8">
 ${linkTags}
 <style>
-  :root { --book-bg: ${bookColors()[0]}; --book-fg: ${bookColors()[1]}; --book-link: ${bookColors()[2]}; }
+  :root { --book-bg: ${bookBg}; --book-fg: ${bookFg}; --book-link: ${bookLink}; }
   html, body {
     margin: 0; padding: 0;
     width: ${pageWidth}px;
@@ -398,10 +416,10 @@ class BookReader {
     this._opts = null; // reader typography options (set in open())
     this.onPageChange = null; // callback(chapterIdx) — set by Reader
     this._syncTheme = () => {
-      const root = this._iframe?.contentDocument?.documentElement;
-      if (root) {
-        bookColors().forEach((value, index) => root.style.setProperty(["--book-bg", "--book-fg", "--book-link"][index], value));
-      }
+      applyBookColors(
+        this._iframe?.contentDocument?.documentElement,
+        this._opts?.colorMode,
+      );
     };
     addEventListener("dicefiles:theme", this._syncTheme);
   }
@@ -860,6 +878,16 @@ class BookReader {
    */
   applyOpts(newOpts) {
     this._opts = { ...this._opts, ...newOpts };
+    if (
+      newOpts &&
+      Object.keys(newOpts).length === 1 &&
+      Object.prototype.hasOwnProperty.call(newOpts, "colorMode")
+    ) {
+      const root = this._iframe?.contentDocument?.documentElement;
+      if (applyBookColors(root, this._opts.colorMode)) {
+        return;
+      }
+    }
     // Recompute page dimensions before re-rendering.
     this._computePageSize();
     // Font size / margin changes alter the number of pages per chapter, so the

@@ -463,26 +463,28 @@ export default class File extends BaseFile {
     this.el.classList.remove("hidden-file");
     this.tagsEl.textContent = "";
     this.el.classList.toggle("torrent-entry", !!this.meta?.torrent);
+    this.modelViewEl?.remove();
+    this.modelViewEl = null;
     if (this.meta?.torrent) {
       this.tagsEl.appendChild(torrentAvailability(this.meta.torrent, () => registry.roomie.showModal(new TorrentMetadataModal(this.meta.torrent, this.name, this.url, { kind: "file", key: this.key })).catch(() => {})));
     }
     if (!this.isRequest && isSupportedModelName(this.name)) {
-      const modelButton = dom("button", {
+      this.modelViewEl = dom("button", {
         classes: ["model-view-button"],
         attrs: {
           "type": "button",
           "title": "View 3D model",
           "aria-label": `View 3D model: ${this.name}`,
         },
-        text: "3D",
+        text: "3D View",
       });
-      modelButton.addEventListener("click", e => {
+      this.modelViewEl.addEventListener("click", e => {
         nukeEvent(e);
         import("./modelviewer").
           then(({ openModelViewer }) => openModelViewer({ name: this.name, url: this.url })).
           catch(error => console.error("Could not open 3D model viewer:", error));
       });
-      this.tagsEl.appendChild(modelButton);
+      this.el.insertBefore(this.modelViewEl, this.linkEl);
     }
     if (this.type === "video" && (!durationSeconds(this.meta.durationSeconds || this.meta.duration) || durationSeconds(this.meta.durationSeconds || this.meta.duration) > 600)) {
       const info = dom("button", { classes: ["movie-info-button"], attrs: { "type": "button", "aria-label": `Video information for ${this.name}`, "title": "Video information and subtitles" }, text: "ⓘ" });

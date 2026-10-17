@@ -18,6 +18,17 @@ import { dom, nukeEvent, toPrettySize } from "../util";
 import DownloadBatchModal from "./downloadmodal";
 import { isSupportedModelName } from "./model-formats";
 
+const ARCHIVE_VIEW_EXTS = new Set([
+  ".pdf", ".epub", ".cbz", ".cbr", ".cbt",
+  ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".avif", ".svg",
+  ".mp4", ".m4v", ".webm", ".mov", ".ogv", ".mp3", ".m4a", ".ogg", ".wav",
+]);
+
+function isArchiveViewableEntry(filePath) {
+  const dot = filePath.lastIndexOf(".");
+  return dot >= 0 && ARCHIVE_VIEW_EXTS.has(filePath.slice(dot).toLowerCase());
+}
+
 // Extensions that can be inline-previewed on hover
 const IMAGE_EXTS = new Set([
   ".jpg",
@@ -645,6 +656,7 @@ export default class ArchiveModal extends Modal {
         text: emptyText,
       });
       this._fileListEl.appendChild(empty);
+      this._syncSizeColumnWidth();
       this._updateFileInfo();
       this._updateDownloadBtn();
       return;
@@ -671,14 +683,7 @@ export default class ArchiveModal extends Modal {
         attrs: { title: entry.path },
       });
       name.addEventListener("click", () => cb.click());
-
-      const pathEl = dom("span", {
-        classes: ["av-file-path"],
-        text: entry.path.includes("/") ?
-          entry.path.slice(0, entry.path.lastIndexOf("/")) :
-          "",
-        attrs: { title: entry.path },
-      });
+      const actionCell = dom("div", { classes: ["av-file-actions"] });
 
       const size = dom("span", {
         classes: ["av-file-size"],
@@ -688,9 +693,8 @@ export default class ArchiveModal extends Modal {
       row.classList.toggle("is-checked", !!this._fileChecked.get(entry.path));
       row.appendChild(cb);
       row.appendChild(name);
-      row.appendChild(pathEl);
-      row.appendChild(size);
       if (isSupportedModelName(entry.path)) {
+        row.classList.add("av-has-model-view");
         const modelButton = dom("button", {
           classes: ["av-view-model"],
           attrs: {
@@ -698,7 +702,7 @@ export default class ArchiveModal extends Modal {
             "title": "View 3D model",
             "aria-label": `View 3D model: ${entry.path}`,
           },
-          text: "3D",
+          text: "3D View",
         });
         modelButton.addEventListener("click", e => {
           nukeEvent(e);
@@ -710,8 +714,33 @@ export default class ArchiveModal extends Modal {
             })).
             catch(error => console.error("Could not open 3D model viewer:", error));
         });
-        row.appendChild(modelButton);
+        actionCell.appendChild(modelButton);
       }
+      else if (isArchiveViewableEntry(entry.path)) {
+        row.classList.add("av-has-content-view");
+        const viewButton = dom("button", {
+          classes: ["av-view-model", "av-view-content"],
+          attrs: {
+            "type": "button",
+            "title": `View ${entry.path}`,
+            "aria-label": `View ${entry.path}`,
+          },
+          text: "View",
+        });
+        viewButton.addEventListener("click", e => {
+          nukeEvent(e);
+          import("./archive-file-viewer").
+            then(({ openArchiveFileViewer }) => openArchiveFileViewer({
+              name: entry.path,
+              archiveKey: this.archiveKey,
+              archivePath: entry.path,
+            })).
+            catch(error => console.error("Could not open archive file viewer:", error));
+        });
+        actionCell.appendChild(viewButton);
+      }
+      row.appendChild(actionCell);
+      row.appendChild(size);
 
       // Image preview on hover
       if (isImageEntry(entry.path) && this._imgPopupEl) {
@@ -736,8 +765,35 @@ export default class ArchiveModal extends Modal {
       this._fileListEl.appendChild(row);
     }
 
+    this._syncSizeColumnWidth();
     this._updateFileInfo();
     this._updateDownloadBtn();
+  }
+
+  _syncSizeColumnWidth() {
+    const sizeLabels = this._fileListEl.querySelectorAll(".av-file-size");
+    const measureContext = document.createElement("canvas").getContext("2d");
+    if (!measureContext || !sizeLabels.length) {
+      this._fileListEl.style.removeProperty("--archive-size-width");
+      return;
+    }
+
+    let widestSize = 0;
+    for (const label of sizeLabels) {
+      const style = window.getComputedStyle(label);
+      measureContext.font = style.font;
+      const horizontalSpace =
+        parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) +
+        parseFloat(style.borderLeftWidth) + parseFloat(style.borderRightWidth);
+      widestSize = Math.max(
+        widestSize,
+        measureContext.measureText(label.textContent).width + horizontalSpace,
+      );
+    }
+    this._fileListEl.style.setProperty(
+      "--archive-size-width",
+      `${Math.ceil(widestSize) + 1}px`,
+    );
   }
 
   // ── Selection counters ──────────────────────────────────────────────────────

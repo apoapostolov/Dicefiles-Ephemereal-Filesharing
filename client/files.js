@@ -135,6 +135,7 @@ export default new (class Files extends EventEmitter {
     this.knownLinkedRooms = null;
     this.continuityDigest = null;
     this.resumeEntries = [];
+    this._renderedResumeKeys = "";
     this._continuityRefreshVersion = 0;
     this.continuityEl = document.querySelector("#continuity");
     this.watchContinuityEl = dom("div", { attrs: { id: "watch-continuity" } });
@@ -147,11 +148,6 @@ export default new (class Files extends EventEmitter {
     }
     this.dismissedResumeKeys = new Set();
     this.continuityResumeCardEl = document.querySelector("#continuity-resume-card");
-    this.continuityDismissEl = document.querySelector("#continuity-resume-dismiss");
-    this.continuityResumeEl = document.querySelector("#continuity-resume");
-    this.continuityResumeNameEl = document.querySelector(
-      "#continuity-resume-name",
-    );
     this.continuityDigestToggleEl = document.querySelector(
       "#continuity-digest-toggle",
     );
@@ -358,13 +354,10 @@ export default new (class Files extends EventEmitter {
         true,
       );
     }
-    this.continuityDismissEl?.addEventListener("click", () => this.dismissResumeReading());
-    if (this.continuityResumeEl) {
-      this.continuityResumeEl.addEventListener(
-        "click",
-        this.resumeReading.bind(this),
-      );
-    }
+    this.continuityResumeCardEl?.addEventListener(
+      "click",
+      this.onResumeCardClick.bind(this),
+    );
     if (this.continuityDigestToggleEl) {
       this.continuityDigestToggleEl.addEventListener(
         "click",
@@ -702,7 +695,7 @@ export default new (class Files extends EventEmitter {
       resumeEntries = buildResumeEntries(
         this.files,
         listProgressRecords(localStorage, new Set(this.filemap.keys())).filter(record => !this.dismissedResumeKeys.has(record.fileKey)),
-        3,
+        10,
       );
     }
     catch (ex) {
@@ -716,10 +709,10 @@ export default new (class Files extends EventEmitter {
     this.continuityDigest = digest;
     this.resumeEntries = resumeEntries;
 
-    const resume = this.resumeEntries[0];
+    const hasResumeEntries = this.resumeEntries.length > 0;
     const newCount = this.continuityDigest.total;
     const downloadCount = this.continuityDownloadable.length;
-    this.continuityResumeCardEl.classList.toggle("hidden", !resume);
+    this.continuityResumeCardEl.classList.toggle("hidden", !hasResumeEntries);
     this.continuityDigestControlEl.classList.toggle("hidden", !newCount);
     this.continuityMarkSeenEl.classList.toggle("hidden", !newCount);
     this.continuityDownloadAllEl.disabled = downloadCount === 0;
@@ -732,11 +725,7 @@ export default new (class Files extends EventEmitter {
       "aria-label",
       this.continuityDownloadAllEl.title,
     );
-    if (resume) {
-      this.continuityResumeNameEl.textContent = resume.file.name;
-      this.continuityResumeEl.title = `Resume ${resume.file.name}`;
-      this.continuityDismissEl.setAttribute("aria-label", `Dismiss ${resume.file.name} from Continue reading`);
-    }
+    this.renderResumeEntries();
     if (newCount) {
       this.continuityDigestCountEl.textContent = `${newCount} new ${
         newCount === 1 ? "upload" : "uploads"
@@ -749,11 +738,76 @@ export default new (class Files extends EventEmitter {
 
     this.renderContinuityDigest();
     const watching = renderWatchContinuity(this.watchContinuityEl, this.files, registry.links?.links || []);
-    const visible = !!resume || newCount > 0 || watching;
+    const visible = hasResumeEntries || newCount > 0 || watching;
     this.continuityEl.classList.toggle("hidden", !visible);
     const filelist = this.continuityEl.closest("#filelist");
     if (filelist) {
       filelist.classList.toggle("continuity-visible", visible);
+    }
+  }
+
+  renderResumeEntries() {
+    if (!this.continuityResumeCardEl) {
+      return;
+    }
+    const entryKeys = this.resumeEntries.map(entry => entry.file.key);
+    const renderKey = entryKeys.join("\u0000");
+    if (renderKey === this._renderedResumeKeys) {
+      return;
+    }
+    this._renderedResumeKeys = renderKey;
+
+    const { scrollLeft } = this.continuityResumeCardEl;
+    const cards = this.resumeEntries.map(({ file }) => {
+      const card = dom("div", { classes: ["continuity-resume-card"] });
+      const resume = dom("button", {
+        attrs: {
+          "type": "button",
+          "title": `Resume ${file.name}`,
+          "aria-label": `Continue reading ${file.name}`,
+          "data-resume-file": file.key,
+        },
+        classes: ["continuity-resume"],
+      });
+      resume.append(
+        dom("span", {
+          classes: ["continuity-kicker"],
+          text: "Continue reading",
+        }),
+        dom("span", {
+          classes: ["continuity-resume-name"],
+          text: file.name,
+        }),
+      );
+      const dismiss = dom("button", {
+        attrs: {
+          "type": "button",
+          "title": `Dismiss ${file.name} from Continue reading`,
+          "aria-label": `Dismiss ${file.name} from Continue reading`,
+          "data-resume-dismiss": file.key,
+        },
+        classes: ["continuity-resume-dismiss"],
+      });
+      dismiss.appendChild(dom("span", {
+        attrs: { "aria-hidden": "true" },
+        text: "×",
+      }));
+      card.append(resume, dismiss);
+      return card;
+    });
+    this.continuityResumeCardEl.replaceChildren(...cards);
+    this.continuityResumeCardEl.scrollLeft = scrollLeft;
+  }
+
+  onResumeCardClick(e) {
+    const dismiss = e.target.closest?.("[data-resume-dismiss]");
+    if (dismiss && this.continuityResumeCardEl.contains(dismiss)) {
+      this.dismissResumeReading(dismiss.dataset.resumeDismiss);
+      return;
+    }
+    const resume = e.target.closest?.("[data-resume-file]");
+    if (resume && this.continuityResumeCardEl.contains(resume)) {
+      this.resumeReading(resume.dataset.resumeFile);
     }
   }
 
@@ -849,23 +903,33 @@ export default new (class Files extends EventEmitter {
     );
   }
 
-  async dismissResumeReading() {
-    const entry = this.resumeEntries[0];
+  async dismissResumeReading(fileKey) {
+    const entry = this.resumeEntries.find(
+      candidate => candidate.file.key === fileKey,
+    );
     if (!entry?.file) {
       return;
     }
+    const entryIndex = this.resumeEntries.indexOf(entry);
+    const focusKey =
+      this.resumeEntries[entryIndex + 1]?.file.key ||
+      this.resumeEntries[entryIndex - 1]?.file.key;
     this.dismissedResumeKeys.add(entry.file.key);
     try {
       dismissProgressRecord(localStorage, entry.file.key);
     }
     catch (_) { /* Session dismissal still works without storage. */ }
     await this.refreshContinuity();
-    const next = this.resumeEntries.length ? this.continuityDismissEl : this.filter;
+    const next = Array.from(
+      this.continuityResumeCardEl?.querySelectorAll("[data-resume-file]") || [],
+    ).find(button => button.dataset.resumeFile === focusKey) || this.filter;
     next?.focus({ preventScroll: true });
   }
 
-  async resumeReading() {
-    const entry = this.resumeEntries[0];
+  async resumeReading(fileKey) {
+    const entry = this.resumeEntries.find(
+      candidate => candidate.file.key === fileKey,
+    );
     if (!entry || !entry.file) {
       return;
     }
@@ -2655,32 +2719,32 @@ export default new (class Files extends EventEmitter {
 
   select(file, e) {
     const { metaKey: meta, ctrlKey: ctrl, shiftKey: shift } = e;
-    // Windows style of engagement
-    if (shift) {
+    if (ctrl || meta) {
       const { visible } = this;
-      let startIdx;
-      if (!this.selectionStart) {
-        [this.selectionStart] = visible;
-        startIdx = 0;
+      const endIdx = visible.indexOf(file);
+      if (endIdx < 0) {
+        return;
       }
-      else {
-        startIdx = visible.indexOf(this.selectionStart);
-        if (startIdx < 0) {
-          [this.selectionStart] = visible;
-          startIdx = 0;
-        }
+
+      let startIdx = visible.indexOf(this.selectionStart);
+      if (startIdx < 0) {
+        // A missing or filtered-out anchor must never expand to the whole list.
+        this.selectionStart = file;
+        startIdx = endIdx;
       }
-      let endIdx = visible.indexOf(file);
-      if (startIdx > endIdx) {
-        [startIdx, endIdx] = [endIdx, startIdx];
-      }
+      const rangeStart = Math.min(startIdx, endIdx);
+      const rangeEnd = Math.max(startIdx, endIdx);
       this._clearSelection();
-      visible.
-        slice(startIdx, endIdx + 1).
-        forEach(e => e.el.classList.add("selected"));
+      visible.slice(rangeStart, rangeEnd + 1).
+        forEach(item => item.el.classList.add("selected"));
     }
-    else if (ctrl || meta) {
+    else if (shift) {
+      // Shift-click toggles just this file; it does not create a range.
+      const { visible } = this;
       file.el.classList.toggle("selected");
+      if (visible.includes(file) && !visible.includes(this.selectionStart)) {
+        this.selectionStart = file;
+      }
     }
     else {
       const already = file.el.classList.contains("selected");

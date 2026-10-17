@@ -302,13 +302,12 @@
       aria-label="Continue and discover room activity"
     >
       <div id="continuity-actions">
-        <div id="continuity-resume-card" class="hidden">
-          <button id="continuity-resume" type="button">
-            <span class="continuity-kicker">Continue reading</span>
-            <span id="continuity-resume-name"></span>
-          </button>
-          <button id="continuity-resume-dismiss" type="button" aria-label="Dismiss from Continue reading" title="Dismiss from Continue reading"><span aria-hidden="true">×</span></button>
-        </div>
+        <div
+          id="continuity-resume-card"
+          class="continuity-resume-list hidden"
+          role="group"
+          aria-label="Continue reading"
+        ></div>
         <div id="continuity-digest-control" class="hidden">
           <button
             id="continuity-digest-toggle"
@@ -495,6 +494,28 @@
           </button>
           <button class="rom-choice-btn" data-margin="72" title="Wide">
             Wide
+          </button>
+        </div>
+      </div>
+      <div class="rom-section">
+        <div class="rom-label">Page color</div>
+        <div
+          class="rom-row rom-choices rom-color-modes"
+          id="rom-color-row"
+          role="group"
+          aria-label="Page color mode"
+        >
+          <button class="rom-choice-btn rom-mode-btn" data-color-mode="white" aria-pressed="false">
+            <span class="rom-mode-swatch rom-mode-white" aria-hidden="true"></span>
+            White
+          </button>
+          <button class="rom-choice-btn rom-mode-btn" data-color-mode="dark" aria-pressed="false">
+            <span class="rom-mode-swatch rom-mode-dark" aria-hidden="true"></span>
+            Dark
+          </button>
+          <button class="rom-choice-btn rom-mode-btn" data-color-mode="sepia" aria-pressed="false">
+            <span class="rom-mode-swatch rom-mode-sepia" aria-hidden="true"></span>
+            Sepia
           </button>
         </div>
       </div>

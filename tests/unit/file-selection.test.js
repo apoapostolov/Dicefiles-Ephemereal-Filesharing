@@ -4,6 +4,53 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 
+function selectionFixture() {
+  const source = fs.readFileSync(path.join(__dirname, "../../client/files.js"), "utf8");
+  const method = source.match(/ {2}select\(file, e\) \{[\s\S]*?\n {2}\}/)?.[0];
+  if (!method) {
+    throw new Error("Could not find the file selection method");
+  }
+  const select = vm.compileFunction(`return ({${method}}).select;`, [])();
+  const files = Array.from({ length: 5 }, (_, index) => {
+    const selected = new Set();
+    return {
+      name: `file-${index}`,
+      el: {
+        classList: {
+          add: name => {
+            selected.add(name);
+          },
+          remove: name => {
+            selected.delete(name);
+          },
+          contains: name => {
+            return selected.has(name);
+          },
+          toggle: name => {
+            return selected.has(name) ? selected.delete(name) : selected.add(name);
+          },
+        },
+      },
+    };
+  });
+  const owner = {
+    files,
+    selectionStart: null,
+    get visible() {
+      return this.files;
+    },
+    get selection() {
+      return this.files.filter(file => file.el.classList.contains("selected"));
+    },
+    _clearSelection() {
+      this.selection.forEach(file => file.el.classList.remove("selected"));
+    },
+    select,
+  };
+  const click = (file, modifiers = {}) => owner.select(file, modifiers);
+  return { owner, files, click };
+}
+
 function fixture(role = "owner") {
   const source = fs.readFileSync(path.join(__dirname, "../../client/files/file.js"), "utf8").replace(/^import .*;$/gm, "").replace("export default class File", "class File");
   const document = { body: { classList: { contains: name => name === role } } };
@@ -62,4 +109,40 @@ test("selection permissions stay unchanged and ordinary guest icon clicks still 
   file.onselectionclick(modified); expect(modified.preventDefault).not.toHaveBeenCalled();
   expect(file.owner.select).not.toHaveBeenCalled();
   file.oniconclick(event()); expect(file.download).toHaveBeenCalledTimes(1);
+});
+
+test("Ctrl/Command click selects only the inclusive range from the first selected file", () => {
+  const { owner, files, click } = selectionFixture();
+  click(files[1], {});
+  click(files[3], { ctrlKey: true });
+  expect(owner.selection).toEqual(files.slice(1, 4));
+  click(files[0], { metaKey: true });
+  expect(owner.selection).toEqual(files.slice(0, 2));
+});
+
+test("Ctrl/Command click without a visible anchor selects only the clicked file", () => {
+  const { owner, files, click } = selectionFixture();
+  click(files[2], { ctrlKey: true });
+  expect(owner.selection).toEqual([files[2]]);
+  expect(owner.selectionStart).toBe(files[2]);
+});
+
+test("Ctrl/Command click with a filtered-out anchor does not select the visible list", () => {
+  const { owner, files, click } = selectionFixture();
+  owner.selectionStart = files[0];
+  owner.files = files.slice(1);
+  click(files[3], { ctrlKey: true });
+  expect(owner.selection).toEqual([files[3]]);
+  expect(owner.selectionStart).toBe(files[3]);
+});
+
+test("Shift-click toggles individual files without changing an existing anchor", () => {
+  const { owner, files, click } = selectionFixture();
+  click(files[1], {});
+  const anchor = owner.selectionStart;
+  click(files[3], { shiftKey: true });
+  expect(owner.selection).toEqual([files[1], files[3]]);
+  expect(owner.selectionStart).toBe(anchor);
+  click(files[1], { shiftKey: true });
+  expect(owner.selection).toEqual([files[3]]);
 });

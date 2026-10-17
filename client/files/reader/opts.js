@@ -23,6 +23,7 @@ export const READER_OPTS_DEFAULTS = {
   fontSize: 1.05,
   lineSpacing: 1.75,
   margin: 56,
+  colorMode: "white",
 };
 
 export const FONT_FAMILIES = {
@@ -38,7 +39,11 @@ export function loadReaderOpts() {
     const raw = localStorage.getItem(READER_OPTS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return { ...READER_OPTS_DEFAULTS, ...parsed };
+      const options = { ...READER_OPTS_DEFAULTS, ...parsed };
+      if (!["white", "dark", "sepia"].includes(options.colorMode)) {
+        options.colorMode = READER_OPTS_DEFAULTS.colorMode;
+      }
+      return options;
     }
   }
   catch (_) {

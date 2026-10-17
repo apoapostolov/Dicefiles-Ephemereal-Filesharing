@@ -173,6 +173,21 @@ describe("room continuity and discovery", () => {
     expect(result.map(entry => entry.file.key)).toEqual(["b", "a"]);
   });
 
+  test("keeps the ten most recently read live files for Continue reading", () => {
+    const files = Array.from({ length: 12 }, (_, index) =>
+      file(`file-${index}`, 1, { getReadableType: () => "pdf" }),
+    );
+    const progress = files.map((item, index) => ({
+      fileKey: item.key,
+      page: 1,
+      updatedAt: index + 1,
+    }));
+    const result = buildResumeEntries(files, progress);
+    expect(result).toHaveLength(10);
+    expect(result[0].file.key).toBe("file-11");
+    expect(result.at(-1).file.key).toBe("file-2");
+  });
+
   test("dismissed cards are excluded without erasing reader progress", () => {
     const result = buildResumeEntries([file("hidden", 1), file("shown", 1)], [
       { fileKey: "hidden", page: 7, updatedAt: 20, resumeDismissed: true },

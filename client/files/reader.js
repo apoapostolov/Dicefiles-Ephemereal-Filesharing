@@ -281,6 +281,16 @@ export default class Reader {
           });
         });
 
+      // EPUB page color mode
+      this.readerOptsModalEl.
+        querySelectorAll("#rom-color-row .rom-choice-btn").
+        forEach(btn => {
+          btn.addEventListener("click", () => {
+            this._applyReaderOpt({ colorMode: btn.dataset.colorMode });
+            this._updateOptsUI();
+          });
+        });
+
       // Close modal when clicking outside
       document.addEventListener("click", e => {
         if (
@@ -513,9 +523,9 @@ export default class Reader {
     const current = loadReaderOpts();
     const updated = { ...current, ...patch };
     saveReaderOpts(updated);
-    // If a book is open, re-render with new opts
+    // If a book is open, apply the changed options immediately.
     if (this._renderer && this._renderer.applyOpts) {
-      this._renderer.applyOpts(updated);
+      this._renderer.applyOpts(patch);
     }
   }
 
@@ -555,6 +565,15 @@ export default class Reader {
           "active",
           parseInt(btn.dataset.margin, 10) === opts.margin,
         );
+      });
+
+    // Page color mode
+    this.readerOptsModalEl.
+      querySelectorAll("#rom-color-row .rom-choice-btn").
+      forEach(btn => {
+        const isActive = btn.dataset.colorMode === opts.colorMode;
+        btn.classList.toggle("active", isActive);
+        btn.setAttribute("aria-pressed", String(isActive));
       });
   }
 

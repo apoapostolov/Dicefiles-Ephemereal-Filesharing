@@ -84,10 +84,21 @@
   text-align: left;
 }
 
+@media (hover: hover) {
+  #continuity-actions button:hover {
+    background: var(--accent-soft);
+    border-color: transparent;
+  }
+}
+
 #continuity-actions button:hover,
+#continuity-actions button:focus {
+  box-shadow: none;
+}
+
 #continuity-actions button:focus-visible {
-  background: var(--surface-2);
-  border-color: var(--control-border-hover);
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 #continuity-resume-card,
@@ -96,7 +107,7 @@
   min-width: 0;
 }
 
-#continuity-resume,
+.continuity-resume,
 #continuity-digest-toggle {
   display: flex;
   flex-direction: column;
@@ -153,11 +164,14 @@
   background: transparent;
 }
 
-#continuity-resume-name,
+.continuity-resume-name,
 #continuity-digest-count {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
   font-size: 0.82rem;
   font-weight: 600;
 }
@@ -1380,20 +1394,49 @@ body.links-mode #dropminder {
   letter-spacing: 0.01em;
 }
 
-#continuity-resume-card { position: relative; min-width: 0; }
+#continuity-actions {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+#continuity-actions::-webkit-scrollbar { display: none; }
+#continuity-resume-card {
+  align-items: stretch;
+  display: flex;
+  flex: 1 1 18rem;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+#continuity-resume-card::-webkit-scrollbar { display: none; }
 #continuity-resume-card[hidden], #continuity-resume-card.hidden { display: none; }
-#continuity-actions #continuity-resume { width: 100%; height: 100%; padding-right: 2rem; }
-#continuity-actions #continuity-resume-dismiss {
+.continuity-resume-card { flex: 0 0 clamp(11rem, 24vw, 18rem); min-width: 0; position: relative; }
+#continuity-actions .continuity-resume {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  padding-right: 2rem;
+}
+#continuity-actions .continuity-resume-dismiss {
   position: absolute; inset-block-start: 0; inset-inline-end: 0;
   width: 28px; height: 28px; padding: 0; margin: 0;
   display: grid; place-items: center; border: 0; background: transparent;
   color: var(--dark-fg); font-size: 1rem; line-height: 1;
 }
-#continuity-actions #continuity-resume-dismiss:hover { color: var(--text-fg); background: var(--surface-2); }
-#continuity-actions #continuity-resume-dismiss:focus-visible { outline: 2px solid var(--text-fg); outline-offset: -2px; }
+#continuity-actions .continuity-resume-dismiss:hover { color: var(--text-fg); background: var(--surface-2); }
+#continuity-actions .continuity-resume-dismiss:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 @media (pointer: coarse) {
-  #continuity-actions #continuity-resume-dismiss { width: 44px; height: 44px; }
-  #continuity-actions #continuity-resume { padding-right: 44px; min-height: 44px; }
+  #continuity-actions .continuity-resume-dismiss { width: 44px; height: 44px; }
+  #continuity-actions .continuity-resume { padding-right: 44px; min-height: 44px; }
+}
+
+@media (max-width: 650px) {
+  #continuity-actions { flex-wrap: wrap; }
+  #continuity-resume-card { flex: 1 1 100%; }
 }
 
 /* Keep the filename useful on phones; compact metadata stays at the right. */

@@ -112,8 +112,8 @@ class PDFReader {
     dbg("PDF loaded, pages =", this.totalPages);
     dbgShow(this.container, `PDF loaded: ${this.totalPages} pages`);
 
-    // Auto-compute scale so pages fill the container width exactly,
-    // avoiding any CSS scaling that can cause blank-canvas issues.
+    // PDFs open at 80% of the reader width so portrait pages are comfortably
+    // readable while remaining centered with room around the page.
     const containerWidth = this.container.clientWidth;
     dbg(
       "container.clientWidth =",
@@ -129,19 +129,12 @@ class PDFReader {
     if (containerWidth > 0) {
       const firstPage = await this.pdfDoc.getPage(1);
       const naturalViewport = firstPage.getViewport({ scale: 1 });
-      // A5 aspect ratio (148 × 210 mm, w:h = 148/210).
-      // Compute the page display width constrained by BOTH container width AND height
-      // (so one full page fits in the viewport without scrolling = book-like view).
-      const A5_W_TO_H = 148 / 210;
-      const containerHeight = this.container.clientHeight;
-      const maxByWidth = containerWidth - 32;
-      const maxByHeight = Math.floor((containerHeight - 24) * A5_W_TO_H);
-      const pageDisplayW = Math.max(200, Math.min(maxByWidth, maxByHeight));
+      const pageDisplayW = Math.max(1, Math.floor(containerWidth * 0.8));
       this.scale = pageDisplayW / naturalViewport.width;
       // Pre-compute placeholder height so IntersectionObserver thresholds are accurate
       this._pageHeight = Math.ceil(naturalViewport.height * this.scale);
       dbg(
-        "auto scale (A5) =",
+        "auto scale (80% reader width) =",
         this.scale,
         "natural page width =",
         naturalViewport.width,
@@ -152,7 +145,7 @@ class PDFReader {
       );
       dbgShow(
         this.container,
-        `Scale (A5): ${this.scale.toFixed(3)} (displayW=${pageDisplayW}px, h=${this._pageHeight}px)`,
+        `Scale (80% reader width): ${this.scale.toFixed(3)} (displayW=${pageDisplayW}px, h=${this._pageHeight}px)`,
       );
     }
     else {

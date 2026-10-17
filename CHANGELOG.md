@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Open supported files inside ZIP archives in the archive dialog, including
+  images, PDFs, ePubs, comics, video, and audio. Nested comic pages can be read
+  there, and previewed files can be downloaded from the viewer.
+- Archive file actions and size labels now share fixed, list-wide columns, so
+  different file sizes no longer shift the View buttons between rows.
+- Continue Reading can show and dismiss up to ten files. PDF pages open at a
+  readable width, and ePub settings offer white, dark, and sepia page colors.
+- Ctrl/Command-click selects a range of files while Shift-click toggles one
+  file; 3D View buttons sit beside model names in the file list.
 - Add an in-browser Babylon.js model viewer for STL, 3MF geometry, colors and
   textures, OBJ, glTF/GLB, PLY splats, FBX, and USD files. ZIP-contained model
   buffers, materials, and textures load from a temporary browser cache. Model
