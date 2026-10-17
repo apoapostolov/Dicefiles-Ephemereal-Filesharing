@@ -4,7 +4,7 @@ This reference is written for developers who want to connect AI clients (Claude 
 Cursor, Continue, OpenClaw, AutoGen) to a Hobbyfiles instance via the
 [Model Context Protocol](https://modelcontextprotocol.io). It covers setup, all 57
 exposed tools, security configuration, and worked multi-step workflows.
-This is the Hobbyfiles 1.4.7 tool set. For room bots, see the
+This is the Hobbyfiles 1.5.0 tool set. For room bots, see the
 [power-user guide](docs/CORE_PLUGINS.md); for server extensions, use the
 [Plugin API v2 reference](core/plugins/PLUGIN_API.md) and
 [27-plugin cookbook](core/plugins/PLUGIN_COOKBOOK.md). The context API version
@@ -1116,7 +1116,7 @@ await mcp.call("post_room_chat", {
 
 _See also: [API.md](API.md) for the underlying REST API reference._
 
-## Maintenance additions (1.4.7)
+## Maintenance additions (1.5.0)
 
 HTTP remains stateless: each request receives a fresh SDK server with its caller's
 tool catalog. Stateful room data stays in Redis. Stdio uses the configured upstream

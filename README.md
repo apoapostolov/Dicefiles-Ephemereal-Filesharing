@@ -27,22 +27,22 @@ collections worth browsing together. Each room brings chat, temporary uploads,
 requests, file readers, moderation, and optional automation together. You run
 the server yourself; there is no public Hobbyfiles service.
 
-## What's New Since 1.4.6
+## New in Hobbyfiles 1.5.0
 
-Version 1.4.7 adds 27 built-in bots for approved feed and cloud imports,
-community work, and routine maintenance. Plugin API v2 gives them scoped
-permissions, durable jobs, review steps, reports, and activity history. Room
-owners can see what bots have done and recover queued work. Collection bots are
-opt-in and need an explicit connection to each provider.
+Read books and comics, inspect 3D printing models, and watch movie or TV torrents
+without leaving your room. ZIP previews can open documents, comics, images,
+videos and models together with their linked textures. Continue Reading keeps
+up to ten books handy, while Continue Watching remembers video timestamps.
 
 Movie and TV torrents now show searchable contents, peer counts, matched titles,
-subtitles, and watch progress. Recognized files use readable movie or episode
-names, and season packs are checked against episode coverage. This release also
-adds 34 themes, smaller phone and tablet controls, 57 scoped MCP tools, and
-GHCR images for multiple processor types.
+subtitles, and watch progress. Watch opens the largest movie video or the first
+unfinished episode in a season pack, skipping episodes watched to 90%. Streams
+start automatically when ready. The interface includes 34 themes and compact
+phone and tablet controls.
 
-You can also preview documents, comics, images, videos, and 3D models inside
-archives. The 3D viewer loads related model files from the archive too. See
+For room owners, 27 opt-in bots collect approved feeds and cloud files, help
+manage the community, and handle maintenance. Plugin API v2, 57 scoped MCP tools
+and Linux amd64/arm64 GHCR images support automation and self-hosting. See
 [What You Can Do](#what-you-can-do) for an overview, or browse the
 [changelog](CHANGELOG.md) for the full list. If you run a server, read the
 [upgrade notes](CHANGELOG.md#operator-notes) and set up provider connections
@@ -199,13 +199,13 @@ generated capability URLs out of Git.
 
 ## Docker: build and run
 
-For a new installation, save this as `compose.yaml`. It runs Hobbyfiles 1.4.7
+For a new installation, save this as `compose.yaml`. It runs Hobbyfiles 1.5.0
 and Redis with Docker Compose:
 
 ```yaml
 services:
   hobbyfiles:
-    image: ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing:1.4.7
+    image: ghcr.io/apoapostolov/hobbyfiles:1.5.0
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -311,7 +311,7 @@ access. Access is controlled by scopes, with rate limits and audit records.
 - [Core plugin power-user guide](./docs/CORE_PLUGINS.md) — practical setup for all 27 bundled bots
 - [Plugin API v2 reference](./core/plugins/PLUGIN_API.md) — callable contracts, complete modules and limits
 - [27-plugin developer cookbook](./core/plugins/PLUGIN_COOKBOOK.md) — configuration recipes and implementation patterns
-- [Offline power-user handbook](./docs/handbooks/hobbyfiles-core-plugins-1.4.7.html) and [developer handbook](./docs/handbooks/hobbyfiles-plugin-developer-1.4.7.html) — self-contained HTML; also attached to the [1.4.7 release](https://github.com/apoapostolov/Hobbyfiles/releases/tag/v1.4.7)
+- [Offline power-user handbook](./docs/handbooks/hobbyfiles-core-plugins-1.5.0.html) and [developer handbook](./docs/handbooks/hobbyfiles-plugin-developer-1.5.0.html) — self-contained HTML; also attached to the [1.5.0 release](https://github.com/apoapostolov/Hobbyfiles/releases/tag/v1.5.0)
 - [Collection bots: provider setup and recovery](./core/plugins/COLLECTION_BOTS.md)
 - [Community and maintenance bots: reviews, sessions and operator grants](./core/plugins/WORKFLOW_BOTS.md)
 - [Bots audit and ordered development checklist](./docs/BOTS_AND_PLUGINS.md)

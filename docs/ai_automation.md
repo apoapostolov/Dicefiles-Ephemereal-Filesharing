@@ -1,4 +1,4 @@
-# Automation workflows for Hobbyfiles 1.4.7
+# Automation workflows for Hobbyfiles 1.5.0
 
 Hobbyfiles exposes a scoped REST API, 57 MCP tools and 27 opt-in core plugins.
 Use MCP for an agent that needs typed tools. Use REST for an external service.

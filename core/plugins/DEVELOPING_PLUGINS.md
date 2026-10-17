@@ -11,7 +11,7 @@ Audience: operators and developers who already run a self-hosted Hobbyfiles inst
 
 ## Current runtime contract
 
-Hobbyfiles 1.4.7 ships 27 core plugins and the additive in-process context API 2.
+Hobbyfiles 1.5.0 ships 27 core plugins and the additive in-process context API 2.
 Start with the [API reference](./PLUGIN_API.md) for exact signatures and limits,
 or the [27-plugin cookbook](./PLUGIN_COOKBOOK.md) for configuration and code.
 The [power-user guide](../../docs/CORE_PLUGINS.md) covers owner workflows.
@@ -24,7 +24,7 @@ across workers, bounded last-run status is retained, and room bots have scoped
 REST/MCP administration. Discord and Telegram release publishers are the
 reference outbound and authenticated-inbound implementations.
 
-The released 1.4.7 implementation includes
+The released 1.5.0 implementation includes
 [Plugin API v2](./PLUGIN_API.md): private durable checkpoints, room inventory,
 individual file reads, paginated search, text/binary HTTP and cooperative
 cancellation. The [audit and ordered bot plan](../../docs/BOTS_AND_PLUGINS.md) describes

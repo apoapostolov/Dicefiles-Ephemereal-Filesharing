@@ -1,9 +1,9 @@
 # Hobbyfiles plugin developer reference
 
-**Product release: 1.4.7 · In-process context API: 2 · Runtime: Node.js `^22.13.0 || >=24`**
+**Product release: 1.5.0 · In-process context API: 2 · Runtime: Node.js `^22.13.0 || >=24`**
 
 Build trusted server plugins that collect files, help a community and maintain
-its library. This reference documents callable interfaces in 1.4.7. The
+its library. This reference documents callable interfaces in 1.5.0. The
 [cookbook](./PLUGIN_COOKBOOK.md) gives configuration recipes and implementation
 patterns drawn from all 27 core plugins. The [power-user guide](../../docs/CORE_PLUGINS.md)
 explains their room-facing behavior.

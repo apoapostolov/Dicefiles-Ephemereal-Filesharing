@@ -143,7 +143,7 @@ a later event replay can try again. Successful deliveries are remembered for
 the configured `pluginSyncLogRetentionDays`.
 Provider Retry-After is respected. Waits beyond the bounded in-process retry
 budget leave the durable job for later recovery rather than retrying early.
-In 1.4.7, production event delivery uses the shared durable job outbox, stores
+In 1.5.0, production event delivery uses the shared durable job outbox, stores
 event/item identifiers and reconstructs current room data when it runs. Failed
 jobs can be inspected and replayed with current settings. A crash after remote
 acceptance can still leave an uncertain result; check the destination before

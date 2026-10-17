@@ -47,23 +47,17 @@ docker compose --env-file .env.docker pull
 docker compose --env-file .env.docker up -d --no-build
 ```
 
-The final Dicefiles release image is available at
-`ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing:1.4.7`, built from release
-commit `90de9bb` for Linux AMD64 and ARM64. GitHub redirects the source repository
-to Hobbyfiles, but GHCR keeps the published package path stable. New publications
-from the renamed repository use `ghcr.io/apoapostolov/hobbyfiles`.
-Pin the existing multi-architecture manifest for reproducible use:
+The 1.5.0 release image uses the Hobbyfiles package name and supports Linux
+AMD64 and ARM64:
 
 ```text
-ghcr.io/apoapostolov/dicefiles-ephemereal-filesharing@sha256:ea96e0dc808a128ea6799cefaa1857d1929b4fb957ce68dd1f7493c175b3dd22
+ghcr.io/apoapostolov/hobbyfiles:1.5.0
 ```
 
-The [1.4.7 publication run](https://github.com/apoapostolov/Hobbyfiles/actions/runs/38949345610)
-includes SBOM and provenance. Its matching source and portable plugin handbooks
-are available on the [release page](https://github.com/apoapostolov/Hobbyfiles/releases/tag/v1.4.7).
-The moving `:preview` channel is for development builds; its earlier October 16
-image predates the released plugin/TV-pack work. Do not select it as an upgrade
-from 1.4.7 merely because it is called preview.
+Publication includes SBOM and provenance. The matching source and portable
+plugin handbooks are on the [release page](https://github.com/apoapostolov/Hobbyfiles/releases/tag/v1.5.0).
+Use its immutable image digest when reproducible deployment matters. The moving
+`:preview` channel is for development builds and is not an upgrade recommendation.
 
 For a private package, authenticate with a classic GitHub token that has
 `read:packages`, using `docker login ghcr.io -u YOUR_USER --password-stdin`.

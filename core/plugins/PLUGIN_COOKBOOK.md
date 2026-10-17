@@ -1,6 +1,6 @@
 # Plugin cookbook: 27 examples from the core
 
-**Hobbyfiles 1.4.7 · Plugin context API 2**
+**Hobbyfiles 1.5.0 · Plugin context API 2**
 
 Use these recipes with the [developer reference](./PLUGIN_API.md). Each example
 names a real bundled module and its extension pattern. Configuration objects

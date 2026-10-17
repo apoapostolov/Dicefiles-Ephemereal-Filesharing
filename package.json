@@ -1,6 +1,6 @@
 {
   "name": "hobbyfiles",
-  "version": "1.4.7",
+  "version": "1.5.0",
   "description": "Ephemereal Filesharing for Hobby Communities",
   "main": "server.js",
   "author": "RealDolos <dolos@cock.li>",

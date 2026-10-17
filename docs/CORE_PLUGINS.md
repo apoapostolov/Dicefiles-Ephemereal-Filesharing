@@ -1,6 +1,6 @@
 # The Hobbyfiles core plugin guide
 
-**Hobbyfiles 1.4.7 · All 27 bundled plugins · For room owners and power users**
+**Hobbyfiles 1.5.0 · All 27 bundled plugins · For room owners and power users**
 
 Want a room that collects new releases, catches forgotten requests and gives you
 a useful maintenance report? Start here. This guide covers every bot shipped
@@ -13,7 +13,7 @@ service.
 
 For code, see the [developer reference](../core/plugins/PLUGIN_API.md) and the
 [27-plugin cookbook](../core/plugins/PLUGIN_COOKBOOK.md). Portable HTML editions
-are linked from the [1.4.7 release](https://github.com/apoapostolov/Hobbyfiles/releases/tag/v1.4.7).
+are linked from the [1.5.0 release](https://github.com/apoapostolov/Hobbyfiles/releases/tag/v1.5.0).
 
 ## Start with one useful job
 
@@ -518,6 +518,6 @@ it when deliberately reconciling a source, rather than as a routine retry button
 - [Community and maintenance setup](../core/plugins/WORKFLOW_BOTS.md): review actions, sessions and backup manifests.
 - [REST API](../API.md) and [MCP guide](../MCP.md): manage invited bots from external tools.
 
-This guide describes the implementation shipped in Hobbyfiles 1.4.7. Provider
+This guide describes the implementation shipped in Hobbyfiles 1.5.0. Provider
 credentials and live destinations must be checked in your own deployment;
 bundling a connector does not establish access to an external account.

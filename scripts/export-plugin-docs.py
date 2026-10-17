@@ -16,6 +16,7 @@ except ImportError as exc:
 
 
 ROOT = Path(__file__).resolve().parents[1]
+VERSION = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))["version"]
 REPOSITORY = "https://github.com/apoapostolov/Hobbyfiles"
 CSS = """
 :root{color-scheme:light dark;--bg:#fafafa;--paper:#fff;--text:#222;--muted:#595959;
@@ -65,7 +66,7 @@ def render_part(source: Path, prefix: str, included: dict[Path, str]) -> tuple[s
                 destination = "#" + included[path] + (parsed.fragment or "document")
             else:
                 relative = path.relative_to(ROOT).as_posix()
-                ref = "v1.4.7" if relative.startswith("lib/") else "main"
+                ref = f"v{VERSION}"
                 destination = f"{REPOSITORY}/blob/{ref}/{quote(relative, safe='/')}"
                 if parsed.fragment:
                     destination += "#" + parsed.fragment
@@ -78,9 +79,9 @@ def render_part(source: Path, prefix: str, included: dict[Path, str]) -> tuple[s
 
 
 def main() -> None:
-    version = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))["version"]
-    if version != "1.4.7":
-        raise SystemExit("Review source version labels and release links before exporting another release.")
+    version = VERSION
+    if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
+        raise SystemExit("Handbook exports require a stable product release version.")
     output = ROOT / "docs" / "handbooks"
     output.mkdir(parents=True, exist_ok=True)
     editions = [

@@ -40,7 +40,7 @@ endpoints with required scopes. The manifest returns:
 {
   "ok": true,
   "service": "Hobbyfiles",
-  "version": "1.4.7",
+  "version": "1.5.0",
   "baseUrl": "/api/v1",
   "endpoints": [
     { "path": "/api/v1/files", "scope": "files:read" },
@@ -1463,7 +1463,7 @@ See `MCP.md` for the full specification, security model, and deployment guide.
 ## 20. Core endpoint matrix (introduced through v1.4.4)
 
 The version column records introduction, not the current product version.
-The 1.4.7 additions below document bounded reads, provider inspection, storage
+The 1.5.0 additions below document bounded reads, provider inspection, storage
 migrations, cohort credentials, durable bot jobs, review actions and sessions.
 
 | Method   | Path                                | Scope            | Session Required | Version |
@@ -1945,7 +1945,7 @@ service must also receive the explicit `room-access:bypass` scope before it may
 list, post, upload, or mutate protected-room content. Keep bypass off
 general-purpose and monitoring keys.
 
-## 1.4.7 maintenance APIs
+## 1.5.0 maintenance APIs
 
 ### Bounded results
 
@@ -2015,7 +2015,7 @@ cannot undo completed remote side effects. See
 [Plugin API](core/plugins/PLUGIN_API.md) for in-process contracts.
 
 
-### Reviewed bot actions and room sessions (1.4.7)
+### Reviewed bot actions and room sessions (1.5.0)
 
 POST /api/v1/rooms/:id/plugins/:pluginId/review requires room-plugins:write.
 Supply {reportId,itemId,action} from the latest operations report. The enabled

@@ -18,7 +18,7 @@ organised into rooms. Each room has uploads (files), requests (unfulfilled asks 
 participants), and a chat channel. Rooms are identified by a short alphanumeric
 `roomid`.
 
-Hobbyfiles 1.4.7 exposes 57 MCP tools. All network calls go through the tools; never
+Hobbyfiles 1.5.0 exposes 57 MCP tools. All network calls go through the tools; never
 construct raw HTTP requests.
 
 ---

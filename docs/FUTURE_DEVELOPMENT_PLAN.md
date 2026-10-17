@@ -9,16 +9,16 @@ Working backlog of product ideas that fit self-hosted room chat + ephemeral file
 
 Plugin docs: `core/plugins/`. Formerly `feature_creep_proposal.md`.
 
-**Last updated:** 2026-10-17 — v1.4.7 is released. The maintenance round and
+**Last updated:** 2026-10-17 — v1.5.0 is released. The maintenance round and
 remaining priorities are recorded in [the October audit](./AUDIT_2026-10-14.md).
 The requested remaining maintenance and expansion work is implemented below;
 deployment-specific acceptance is tracked separately from implementation.
 
 ---
 
-## Ordered follow-up implementation (shipped in 1.4.7)
+## Ordered follow-up implementation (shipped in 1.5.0)
 
-### Movie and television support (shipped in 1.4.7)
+### Movie and television support (shipped in 1.5.0)
 
 Follow-up fixes: unresolved magnets also obtain tracker peers, with bounded
 metadata-only exchanges and clearer failure states; availability pills use
@@ -79,7 +79,7 @@ relevant checks, documentation and the changelog; unfinished acceptance is expli
    drop collection are checked; operating-system drag acceptance remains manual
    because the in-app browser does not automate file drag events.
 
-## User-focused torrent and mobile follow-up (shipped in 1.4.7)
+## User-focused torrent and mobile follow-up (shipped in 1.5.0)
 
 1. [x] Research metadata discovery and implement bounded public peer metadata,
    tracker availability checks, caching and a useful contents-focused torrent view.
@@ -92,7 +92,7 @@ relevant checks, documentation and the changelog; unfinished acceptance is expli
    pull and non-root Compose startup/health. See the audit and Docker guide for
    the validated digest and deployment-specific acceptance limits.
 
-## Maintenance round (shipped in 1.4.7)
+## Maintenance round (shipped in 1.5.0)
 
 - [x] Fix MCP URL-upload bodies, bounded downloads, error reporting, and retry hints
 - [x] Retain stateless HTTP and update MCP SDK v2; add remote token/host controls
@@ -123,12 +123,12 @@ relevant checks, documentation and the changelog; unfinished acceptance is expli
 Detailed contract, security model, phases, and acceptance tests:
 [Multi-host remote imports](./MULTI_HOST_REMOTE_IMPORTS.md).
 
-- [x] Versioned provider contract and guarded outbound request layer (shipped in 1.4.7)
-- [x] Mega.nz and Pixeldrain use the versioned registry, bounded metadata and streamed downloads; fixture regressions pass (shipped in 1.4.7)
+- [x] Versioned provider contract and guarded outbound request layer (shipped in 1.5.0)
+- [x] Mega.nz and Pixeldrain use the versioned registry, bounded metadata and streamed downloads; fixture regressions pass (shipped in 1.5.0)
 - [x] Native Gofile adapter with recursive/paginated and protected-folder support; real-provider acceptance remains below
-- [x] Fair multi-source scheduling, provider backoff, circuit breaking, and structured run summaries (shipped in 1.4.7)
-- [x] Provider status and source validation in REST/MCP; Room Options shows provider capabilities and availability (shipped in 1.4.7)
-- [x] Disabled-by-default Plowshare bridge, MediaFire/4shared allowlisting, fixed argv and guarded egress (shipped in 1.4.7)
+- [x] Fair multi-source scheduling, provider backoff, circuit breaking, and structured run summaries (shipped in 1.5.0)
+- [x] Provider status and source validation in REST/MCP; Room Options shows provider capabilities and availability (shipped in 1.5.0)
+- [x] Disabled-by-default Plowshare bridge, MediaFire/4shared allowlisting, fixed argv and guarded egress (shipped in 1.5.0)
 - [x] Upgrade, security audit, fixture regressions, full suite, production build and stable-service acceptance
 - [ ] Live provider smoke with operator-owned examples and configured credentials
 
@@ -181,9 +181,9 @@ not silently expand the scope of v1.4.4.
 - [x] Deep links with intent (`filter` / `sort` / `request` / file open) — room option — **v1.4.2**
 - [x] Resume strip + “what’s new since last visit” productization — **v1.4.3**
 - [x] Multi-volume storage with balanced and threshold-based placement —
-  **v1.4.5 core**; manual drain/rebalance is implemented in the 1.4.7 release
+  **v1.4.5 core**; manual drain/rebalance is implemented in the 1.5.0 release
 - [x] Password-protected rooms with rotating shared community credentials —
-  **v1.4.5 core**; cohort/personal credentials are implemented in the 1.4.7 release
+  **v1.4.5 core**; cohort/personal credentials are implemented in the 1.5.0 release
 - [x] Request board polish — **v1.4.2** first-class board + filters + segmented toolbar pill
 - [x] Guest invite links (single-use / max X / max Y hours) — Room Options → **Invites** — **v1.4.2**
 - [x] Privacy-safe operator dashboard beyond `/healthz`, protected by a generated capability link by default — **v1.4.3**
@@ -192,7 +192,7 @@ not silently expand the scope of v1.4.4.
   Redis, configurable retention) — **v1.4.3**, strengthened in **v1.4.4**
 - [x] Multi-host remote import — shared downloader registry plus Mega.nz and
   Pixeldrain are shipped; Gofile and a hardened, disabled-by-default
-  Plowshare bridge for MediaFire/4shared are implemented in the 1.4.7 release — [implementation contract](./MULTI_HOST_REMOTE_IMPORTS.md)
+  Plowshare bridge for MediaFire/4shared are implemented in the 1.5.0 release — [implementation contract](./MULTI_HOST_REMOTE_IMPORTS.md)
 - [x] Plugin import safety: per-file/per-run caps and cross-worker run leases
 - [x] Plugin dedupe upgrade: stable provider identity plus existing-room
   content-hash check
@@ -304,12 +304,12 @@ separates implemented adapters from proposed grants and actions.
 
 - [x] Import filters/previews, publisher digests/file queries/request notices,
   scoped file inventory and lookups, bounded HTTP text/binary responses,
-  private Redis checkpoints with versions, expiry and quotas (shipped in 1.4.7).
+  private Redis checkpoints with versions, expiry and quotas (shipped in 1.5.0).
 - [x] Scheduling/invitation fixes, active lease renewal, atomic lease completion,
-  secret redaction, HTTP body timeouts and buffered import caps (shipped in 1.4.7).
+  secret redaction, HTTP body timeouts and buffered import caps (shipped in 1.5.0).
 - [x] Remove original proposals 2, 3, 9, 10 and 12–16; retain 17 onward.
 - [x] Finish follow-up plugin regression checks, lint, build, stable health and
-  disabled-bot settings acceptance (shipped in 1.4.7).
+  disabled-bot settings acceptance (shipped in 1.5.0).
 - [x] Implement shared jobs, credential references and safe link/revision ingest.
 - [x] Develop retained collectors in order: #1, #4, #5, #6, #7, #8, #11.
 - [x] Implement retained community #17–24 and maintenance #25–32 useful minimums,
@@ -336,15 +336,15 @@ Setup: [collectors](../core/plugins/COLLECTION_BOTS.md),
 | ~~Cross-worker poll timers~~ | **Shipped v1.4.4:** workers may schedule, but one lease-holder runs each bucket | Consider a dedicated runner only if scale requires it |
 | **megajs unavailable** | Yarn installs the optional dependency normally, but an intentionally skipped optional install disables live sync | Add Plugins-tab/health diagnostics using existing catalog availability |
 
-### Multi-host remote import (expanded in the 1.4.7 release)
+### Multi-host remote import (expanded in the 1.5.0 release)
 
 Design: **`core/plugins/REMOTE_HOST_IMPORTS.md`**.
 
 - [x] Shared **`RemoteDownloaderRegistry`** (`canHandle` / `listFolder`) —
   Mega.nz and Pixeldrain providers
 - [x] **`remote-import` plugin** — multi-URL list, caps, streamed ingest
-- [x] Pixeldrain shipped; Gofile implemented in the 1.4.7 release
-- [x] Disabled-by-default MediaFire / 4shared Plowshare bridge implemented (shipped in 1.4.7)
+- [x] Pixeldrain shipped; Gofile implemented in the 1.5.0 release
+- [x] Disabled-by-default MediaFire / 4shared Plowshare bridge implemented (shipped in 1.5.0)
 - [x] Reuse **durable sync log** for all import plugins (same retention config)
 - [ ] Non-goals: untrusted scraper marketplace; Playwright captcha farms; yt-dlp as file-locker core
 
@@ -553,8 +553,7 @@ Room-level: destination still needs an explicit link row (no automatic mesh of a
 | **v1.4.3** | Since Your Last Visit continuity, protected status dashboard, Discord/Telegram release publishers, linked-room and guest-invite automation, 20-tool MCP |
 | **v1.4.4** | Complete trusted-host federation operations, 30-tool MCP, scoped room-bot automation, streamed multi-host imports, import caps/leases/run status, authenticated Discord/Telegram commands |
 | **v1.4.5** | Rotating shared room passwords, period-bound access grants, multi-volume placement and reservations, storage/access REST and 36-tool MCP administration |
-| **v1.4.6** | Bounded uploads/downloads, stateless MCP HTTP, archive and preview hardening |
-| **v1.4.7** | 27 core bots, context API 2, durable jobs and reviews, 57 MCP tools, OAuth caller isolation, storage migrations, cohort access, media playback and TV packs |
+| **v1.5.0** | Readers and in-archive previews, 3D printing viewer, torrent streaming and TV packs, watch history, 34 themes, 27 core bots, Plugin API 2, 57 scoped stateless MCP tools, guarded transfers, storage migrations, cohort access, and multi-architecture containers |
 
 ### Still open (product)
 

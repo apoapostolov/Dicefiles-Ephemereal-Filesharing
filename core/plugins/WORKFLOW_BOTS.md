@@ -1,6 +1,6 @@
 # Community and maintenance bots
 
-**Hobbyfiles 1.4.7.** For an introduction to every bundled bot, read the
+**Hobbyfiles 1.5.0.** For an introduction to every bundled bot, read the
 [power-user guide](../../docs/CORE_PLUGINS.md). Developers can use the
 [API reference](./PLUGIN_API.md) and [27-plugin cookbook](./PLUGIN_COOKBOOK.md).
 

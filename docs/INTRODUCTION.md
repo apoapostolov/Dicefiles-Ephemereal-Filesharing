@@ -82,7 +82,7 @@ See the main [README](../README.md) for complete installation and setup instruct
 
 ### Automation and core plugins
 
-Hobbyfiles 1.4.7 includes 27 opt-in room bots for cloud/feed collection, community
+Hobbyfiles 1.5.0 includes 27 opt-in room bots for cloud/feed collection, community
 workflows and maintenance. Start with the [power-user plugin guide](./CORE_PLUGINS.md).
 Owners can preview reports, queue durable jobs and review suggested changes.
 Operator-approved connections keep provider credentials out of room forms.

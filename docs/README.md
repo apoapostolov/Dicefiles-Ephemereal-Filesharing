@@ -12,7 +12,7 @@ operator instructions live under `../core/plugins/`.
 - **Use room bots:** [power-user guide](./CORE_PLUGINS.md), then provider setup as needed.
 - **Build a plugin:** [API reference](../core/plugins/PLUGIN_API.md), [cookbook](../core/plugins/PLUGIN_COOKBOOK.md), then [event/installation guide](../core/plugins/DEVELOPING_PLUGINS.md).
 - **Connect an agent:** [MCP setup and all 57 tools](../MCP.md), then [automation workflows](./ai_automation.md).
-- **Read offline:** [power-user HTML](./handbooks/hobbyfiles-core-plugins-1.4.7.html) or [developer HTML](./handbooks/hobbyfiles-plugin-developer-1.4.7.html). Download editions from [release 1.4.7](https://github.com/apoapostolov/Hobbyfiles/releases/tag/v1.4.7).
+- **Read offline:** [power-user HTML](./handbooks/hobbyfiles-core-plugins-1.5.0.html) or [developer HTML](./handbooks/hobbyfiles-plugin-developer-1.5.0.html). Download editions from [release 1.5.0](https://github.com/apoapostolov/Hobbyfiles/releases/tag/v1.5.0).
 
 ## Reference index
 

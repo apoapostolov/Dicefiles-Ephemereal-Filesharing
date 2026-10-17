@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Practical setup and advice for all 27 bundled bots."><title>The core plugin guide | Hobbyfiles 1.4.7</title>
+<meta name="description" content="Practical setup and advice for all 27 bundled bots."><title>The core plugin guide | Hobbyfiles 1.5.0</title>
 <style>
 :root{color-scheme:light dark;--bg:#fafafa;--paper:#fff;--text:#222;--muted:#595959;
 --line:#ddd;--code:#f1f1f1;--link:#215a82;--mark:#e7eef4}
@@ -30,9 +30,9 @@ blockquote{margin-left:0;padding-left:1rem;border-left:3px solid var(--line);col
 @media(max-width:900px){.layout{grid-template-columns:1fr;gap:1.5rem;padding:1.5rem 1rem}aside{position:static;max-height:none;padding:0}aside details{border:1px solid var(--line);border-radius:.4rem;padding:.75rem}aside .toc{max-height:18rem;overflow:auto}aside details:not([open]) .toc{display:none}article{padding:1rem 1.1rem}article h1{font-size:1.7rem}.masthead{padding:2rem 1.25rem}}
 @media print{:root{color-scheme:light;--bg:#fff;--paper:#fff;--text:#000;--muted:#444;--line:#bbb;--code:#f5f5f5;--link:#000}body{font-size:10pt}.masthead{padding:0}.layout{display:block;padding:0}aside,.editions,.skip{display:none}article{border:0;max-width:none;padding:0}pre{white-space:pre-wrap;overflow-wrap:anywhere}table{display:table;font-size:8pt;width:100%}th,td{min-width:0}h1,h2,h3{break-after:avoid}pre,tr{break-inside:avoid}a{text-decoration:none}footer{padding:1rem 0}}
 </style></head><body><a class="skip" href="#content">Skip to content</a>
-<header class="masthead"><div class="eyebrow">Hobbyfiles 1.4.7 / Handbooks</div><h1>The core plugin guide</h1>
+<header class="masthead"><div class="eyebrow">Hobbyfiles 1.5.0 / Handbooks</div><h1>The core plugin guide</h1>
 <p>Practical setup and advice for all 27 bundled bots. Save this file for offline reading. Use your browser's Find or Print to PDF.</p>
-<nav class="editions" aria-label="Handbook editions"><a href="hobbyfiles-core-plugins-1.4.7.html">The core plugin guide</a><a href="hobbyfiles-plugin-developer-1.4.7.html">Plugin developer handbook</a><a href="https://github.com/apoapostolov/Hobbyfiles/releases/tag/v1.4.7">Release downloads</a></nav></header>
+<nav class="editions" aria-label="Handbook editions"><a href="hobbyfiles-core-plugins-1.5.0.html">The core plugin guide</a><a href="hobbyfiles-plugin-developer-1.5.0.html">Plugin developer handbook</a><a href="https://github.com/apoapostolov/Hobbyfiles/releases/tag/v1.5.0">Release downloads</a></nav></header>
 <div class="layout"><aside aria-label="Table of contents"><details open><summary>Contents</summary><div class="toc">
 <ul>
 <li><a href="#guide-the-hobbyfiles-core-plugin-guide">The Hobbyfiles core plugin guide</a><ul>
@@ -87,7 +87,7 @@ blockquote{margin-left:0;padding-left:1rem;border-left:3px solid var(--line);col
 </div>
 </details></aside>
 <main id="content"><article><section id="guide-document"><h1 id="guide-the-hobbyfiles-core-plugin-guide">The Hobbyfiles core plugin guide</h1>
-<p><strong>Hobbyfiles 1.4.7 · All 27 bundled plugins · For room owners and power users</strong></p>
+<p><strong>Hobbyfiles 1.5.0 · All 27 bundled plugins · For room owners and power users</strong></p>
 <p>Want a room that collects new releases, catches forgotten requests and gives you
 a useful maintenance report? Start here. This guide covers every bot shipped
 with Hobbyfiles, what to give it, and what to expect when you press Run.</p>
@@ -95,9 +95,9 @@ with Hobbyfiles, what to give it, and what to expect when you press Run.</p>
 An operator may need to approve a connection before a collector can read a
 private library. You can try the report-based bots without connecting another
 service.</p>
-<p>For code, see the <a href="https://github.com/apoapostolov/Hobbyfiles/blob/main/core/plugins/PLUGIN_API.md">developer reference</a> and the
-<a href="https://github.com/apoapostolov/Hobbyfiles/blob/main/core/plugins/PLUGIN_COOKBOOK.md">27-plugin cookbook</a>. Portable HTML editions
-are linked from the <a href="https://github.com/apoapostolov/Hobbyfiles/releases/tag/v1.4.7">1.4.7 release</a>.</p>
+<p>For code, see the <a href="https://github.com/apoapostolov/Hobbyfiles/blob/v1.5.0/core/plugins/PLUGIN_API.md">developer reference</a> and the
+<a href="https://github.com/apoapostolov/Hobbyfiles/blob/v1.5.0/core/plugins/PLUGIN_COOKBOOK.md">27-plugin cookbook</a>. Portable HTML editions
+are linked from the <a href="https://github.com/apoapostolov/Hobbyfiles/releases/tag/v1.5.0">1.5.0 release</a>.</p>
 <h2 id="guide-start-with-one-useful-job">Start with one useful job</h2>
 <p>Open <strong>Room Options → Plugins</strong> (the Bots &amp; plugins area), invite a bot and save
 its settings. A room can hold 32 invitations, subject to the shared 8,000-character
@@ -177,7 +177,7 @@ import. <code>pollIntervalMinutes: 0</code> is the default.</p>
 <p>The server needs the optional Mega SDK. If the bot reports that it is unavailable,
 ask the operator to install the supported dependency. Treat a Mega folder URL as
 a secret: its fragment can contain the decryption key. For setup and source
-memory details, see <a href="https://github.com/apoapostolov/Hobbyfiles/blob/main/core/plugins/MEGA_FOLDER.md">Mega.nz Autoshare</a>.</p>
+memory details, see <a href="https://github.com/apoapostolov/Hobbyfiles/blob/v1.5.0/core/plugins/MEGA_FOLDER.md">Mega.nz Autoshare</a>.</p>
 <p><a id="guide-remote-import"></a></p>
 <h3 id="guide-2-remote-host-import">2. Remote Host Import</h3>
 <p><strong>Plugin ID: <code>remote-import</code></strong></p>
@@ -190,7 +190,7 @@ bridge, which the operator must explicitly enable and install. A host appearing
 in a provider list does not guarantee that its adapter is ready on this server.</p>
 <p>Keep scans small when collecting from several hosts. Provider limits and retries
 still apply; this bot cannot bypass private files, paid access or provider
-restrictions. See <a href="https://github.com/apoapostolov/Hobbyfiles/blob/main/core/plugins/REMOTE_HOST_IMPORTS.md">remote host imports</a>
+restrictions. See <a href="https://github.com/apoapostolov/Hobbyfiles/blob/v1.5.0/core/plugins/REMOTE_HOST_IMPORTS.md">remote host imports</a>
 for credentials, provider availability and bridge setup.</p>
 <p><a id="guide-feed-collector"></a></p>
 <h3 id="guide-3-feed-collector">3. Feed Collector</h3>
@@ -217,7 +217,7 @@ use ETag, modification time and size. It does not write back to the bucket.</p>
 <p>The default hourly scan is a sensible place to start. If a prefix is rejected,
 ask for a narrower grant that contains your release folder; changing room
 settings cannot expand the operator's permission. See the
-<a href="https://github.com/apoapostolov/Hobbyfiles/blob/main/core/plugins/COLLECTION_BOTS.md#providers">connection setup table</a>.</p>
+<a href="https://github.com/apoapostolov/Hobbyfiles/blob/v1.5.0/core/plugins/COLLECTION_BOTS.md#providers">connection setup table</a>.</p>
 <p><a id="guide-nextcloud-collection"></a></p>
 <h3 id="guide-5-nextcloud-collection">5. Nextcloud Collection</h3>
 <p><strong>Plugin ID: <code>nextcloud-collection</code></strong></p>
@@ -288,7 +288,7 @@ handling. Set the application public key, allowed users or roles, and an explici
 <code>status</code> and <code>find</code>; add <code>request</code> or <code>say</code> only when those writes are wanted.</p>
 <p>Queued delivery survives restarts, but an interrupted external request can have
 an uncertain outcome. Check the destination before replaying a failed delivery.
-Full setup is in <a href="https://github.com/apoapostolov/Hobbyfiles/blob/main/core/plugins/RELEASE_PUBLISHERS.md">release publishers</a>.</p>
+Full setup is in <a href="https://github.com/apoapostolov/Hobbyfiles/blob/v1.5.0/core/plugins/RELEASE_PUBLISHERS.md">release publishers</a>.</p>
 <p><a id="guide-telegram-release"></a></p>
 <h3 id="guide-11-telegram-release-publisher">11. Telegram Release Publisher</h3>
 <p><strong>Plugin ID: <code>telegram-release</code></strong></p>
@@ -299,7 +299,7 @@ then use Test to confirm that it reaches the right place.</p>
 command list and allowed Telegram user IDs. <code>botUsername</code> lets the bot distinguish
 commands addressed to it in a group. Ordinary conversation and other bots'
 commands are ignored. Keep the token in operator environment configuration when
-possible. See <a href="https://github.com/apoapostolov/Hobbyfiles/blob/main/core/plugins/RELEASE_PUBLISHERS.md">release publishers</a>.</p>
+possible. See <a href="https://github.com/apoapostolov/Hobbyfiles/blob/v1.5.0/core/plugins/RELEASE_PUBLISHERS.md">release publishers</a>.</p>
 <h2 id="guide-help-people-use-the-room">Help people use the room</h2>
 <p>These bots work with room files, requests and metadata. Suggested changes live
 in activity reports, where you can inspect them before applying anything.</p>
@@ -432,7 +432,7 @@ performs sample restores and reads them back to verify size and SHA-256.</p>
 <p>Defaults are a 48-hour freshness limit, two samples and 32 MiB of combined source
 and restored-file reads. This bot does not create backups or restore production
 storage. A successful sample check is useful evidence, but you still need a full
-recovery procedure. The <a href="https://github.com/apoapostolov/Hobbyfiles/blob/main/core/plugins/WORKFLOW_BOTS.md#operator-grants">operator recipe</a>
+recovery procedure. The <a href="https://github.com/apoapostolov/Hobbyfiles/blob/v1.5.0/core/plugins/WORKFLOW_BOTS.md#operator-grants">operator recipe</a>
 shows the manifest format.</p>
 <p><a id="guide-link-health"></a></p>
 <h3 id="guide-25-link-health">25. Link Health</h3>
@@ -514,14 +514,14 @@ room provenance still protects current copies; expired imports may return. Use
 it when deliberately reconciling a source, rather than as a routine retry button.</p>
 <h2 id="guide-read-next">Read next</h2>
 <ul>
-<li><a href="https://github.com/apoapostolov/Hobbyfiles/blob/main/core/plugins/PLUGIN_API.md">Developer API reference</a>: exact callable contracts and limits.</li>
-<li><a href="https://github.com/apoapostolov/Hobbyfiles/blob/main/core/plugins/PLUGIN_COOKBOOK.md">Plugin cookbook</a>: configuration and code patterns from all 27 bots.</li>
-<li><a href="https://github.com/apoapostolov/Hobbyfiles/blob/main/core/plugins/COLLECTION_BOTS.md">Collection setup</a>: operator connections and provider requirements.</li>
-<li><a href="https://github.com/apoapostolov/Hobbyfiles/blob/main/core/plugins/WORKFLOW_BOTS.md">Community and maintenance setup</a>: review actions, sessions and backup manifests.</li>
-<li><a href="https://github.com/apoapostolov/Hobbyfiles/blob/main/API.md">REST API</a> and <a href="https://github.com/apoapostolov/Hobbyfiles/blob/main/MCP.md">MCP guide</a>: manage invited bots from external tools.</li>
+<li><a href="https://github.com/apoapostolov/Hobbyfiles/blob/v1.5.0/core/plugins/PLUGIN_API.md">Developer API reference</a>: exact callable contracts and limits.</li>
+<li><a href="https://github.com/apoapostolov/Hobbyfiles/blob/v1.5.0/core/plugins/PLUGIN_COOKBOOK.md">Plugin cookbook</a>: configuration and code patterns from all 27 bots.</li>
+<li><a href="https://github.com/apoapostolov/Hobbyfiles/blob/v1.5.0/core/plugins/COLLECTION_BOTS.md">Collection setup</a>: operator connections and provider requirements.</li>
+<li><a href="https://github.com/apoapostolov/Hobbyfiles/blob/v1.5.0/core/plugins/WORKFLOW_BOTS.md">Community and maintenance setup</a>: review actions, sessions and backup manifests.</li>
+<li><a href="https://github.com/apoapostolov/Hobbyfiles/blob/v1.5.0/API.md">REST API</a> and <a href="https://github.com/apoapostolov/Hobbyfiles/blob/v1.5.0/MCP.md">MCP guide</a>: manage invited bots from external tools.</li>
 </ul>
-<p>This guide describes the implementation shipped in Hobbyfiles 1.4.7. Provider
+<p>This guide describes the implementation shipped in Hobbyfiles 1.5.0. Provider
 credentials and live destinations must be checked in your own deployment;
 bundling a connector does not establish access to an external account.</p></section></article></main></div>
-<footer>Hobbyfiles 1.4.7. Generated from the public Markdown documentation. No scripts, external fonts or network assets.</footer>
+<footer>Hobbyfiles 1.5.0. Generated from the public Markdown documentation. No scripts, external fonts or network assets.</footer>
 </body></html>

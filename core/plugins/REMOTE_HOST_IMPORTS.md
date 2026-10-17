@@ -1,6 +1,6 @@
 # Remote host imports: implemented adapters and expansion
 
-Hobbyfiles 1.4.7 provides approved adapters beyond Mega.nz. This document combines
+Hobbyfiles 1.5.0 provides approved adapters beyond Mega.nz. This document combines
 the implemented remote-host contract with historical research and explicit future
 provider proposals. For current usage, start with the
 [power-user guide](../../docs/CORE_PLUGINS.md) and

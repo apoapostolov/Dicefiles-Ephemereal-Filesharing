@@ -1,6 +1,6 @@
 # Multi-host remote imports
 
-**Status:** Shipped in 1.4.7; live provider acceptance remains deployment-specific.
+**Status:** Shipped in 1.5.0; live provider acceptance remains deployment-specific.
 **Audience:** Maintainers, plugin authors, and self-hosting operators
 **Existing foundation:** Mega.nz, Pixeldrain, the shared downloader registry,
 the Remote Host Import room bot, streamed ingestion, run leases, and durable
@@ -8,7 +8,7 @@ deduplication are already shipped.
 
 ## 1. Outcome
 
-Hobbyfiles 1.4.7 extends the remote-import foundation with these implemented pieces:
+Hobbyfiles 1.5.0 extends the remote-import foundation with these implemented pieces:
 
 1. Ship a first-party **Gofile** adapter using Gofile's official REST API.
 2. Harden the downloader contract so providers expose capabilities, stable
@@ -26,7 +26,7 @@ controls.
 
 ## 2. Release scope
 
-### Required for 1.4.6
+### Required for 1.5.0
 
 - Gofile public share codes and authenticated folder imports through the official Premium API.
 - Password-protected Gofile folder support when the operator supplies the
@@ -400,7 +400,7 @@ matcher. The matcher must never be `*` or arbitrary suffix matching.
 
 ## 10. Scheduling and fairness
 
-Remote imports continue to use a cross-worker run lease. Version 1.4.6 adds:
+Remote imports continue to use a cross-worker run lease. Version 1.5.0 adds:
 
 - one active run per room/plugin configuration;
 - configurable global and per-provider concurrency;
@@ -455,7 +455,7 @@ Existing configuration remains valid:
 }
 ```
 
-Version 1.4.6 only adds provider ids and optional settings:
+Version 1.5.0 only adds provider ids and optional settings:
 
 ```json
 {
@@ -640,7 +640,7 @@ Use fake executables in a temporary directory to verify:
   download flows.
 - Update setup, plugin, API, MCP, changelog, and troubleshooting docs.
 
-## 17. 1.4.6 acceptance checklist
+## 17. 1.5.0 acceptance checklist
 
 - [ ] Mega.nz and Pixeldrain retain existing behavior.
 - [ ] Gofile public, authenticated, nested, and password-protected folders pass.

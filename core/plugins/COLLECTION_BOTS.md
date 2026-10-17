@@ -1,6 +1,6 @@
 # Collection bots
 
-**Hobbyfiles 1.4.7.** See the [power-user guide](../../docs/CORE_PLUGINS.md) for
+**Hobbyfiles 1.5.0.** See the [power-user guide](../../docs/CORE_PLUGINS.md) for
 practical examples, or the [developer cookbook](./PLUGIN_COOKBOOK.md) to extend
 a provider. This page covers operator grants and recovery.
 
