@@ -361,7 +361,7 @@ credentials and large operator settings.</p>
 <td>Operator-configured external origin; it can be empty</td>
 </tr>
 <tr>
-<td><code>dicefiles</code></td>
+<td><code>hobbyfiles</code></td>
 <td>Typed room reads and actions, sections 4–5</td>
 </tr>
 <tr>
@@ -1338,7 +1338,7 @@ only after the owner reviews the composed welcome text.</p>
 Only the review handler calls <code>fulfillRequest</code>. Similarity scores help ranking;
 they are not evidence that a file satisfies the request.</p>
 <pre><code class="language-js">async function applyRequestSuggestion(ctx, data) {
-  await ctx.dicefiles.fulfillRequest({
+  await ctx.hobbyfiles.fulfillRequest({
     key: data.key, fileKey: data.fileKey, expectedRevision: data.expectedRevision,
   });
   return { detail: &quot;Request fulfilled with the reviewed file.&quot; };
