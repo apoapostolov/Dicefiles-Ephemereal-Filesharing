@@ -115,6 +115,10 @@ libraries, plugins, invitations, and access without leaving the room. Members
 can quickly switch to files added since their last visit or download All, New,
 or Since Last Visit through a resumable queue.
 
+The optional public directory exposes only rooms that opt in. Profiles collect
+activity, contribution statistics, and achievement tracks for uploads,
+downloads, and fulfilled requests.
+
 **Linked rooms:** Say one Hobbyfiles server has a Pathfinder community and a
 Foundry module-sharing community, each with its own room. The Pathfinder room
 can link to the Foundry room after it opts in, then filter for “PF2E” in the
@@ -130,10 +134,6 @@ and room must allow the connection, and the destination still picks what to
 show with its filters. That way a Pathfinder room can surface just the relevant
 Foundry modules without opening up the other server’s rooms or copying its
 files.
-
-The optional public directory exposes only rooms that opt in. Profiles collect
-activity, contribution statistics, and achievement tracks for uploads,
-downloads, and fulfilled requests.
 
 Room owners manage room behavior, access, and automation in one place:
 
