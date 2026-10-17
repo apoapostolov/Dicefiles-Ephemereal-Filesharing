@@ -237,9 +237,12 @@ test("room.ejs renders without error", async () => {
   expect(html).toContain("id=\"roomopts-rule-user\"");
   expect(html).toContain("Rule syntax");
   expect(html).toContain("ask an AI to convert your");
-  // Continuity/discovery chrome
+  // Continuity/discovery chrome. Resume cards are filled in by the client.
   expect(html).toContain("id=\"continuity\"");
-  expect(html).toContain("id=\"continuity-resume\"");
+  expect(html).toContain("id=\"continuity-resume-card\"");
+  expect(html).toContain("class=\"continuity-resume-list hidden\"");
+  expect(html).toContain("aria-label=\"Continue reading\"");
+  expect(html).not.toContain("id=\"continuity-resume\"");
   expect(html).toContain("id=\"continuity-digest-control\"");
   expect(html).toContain("id=\"continuity-digest-toggle\"");
   expect(html).toMatch(

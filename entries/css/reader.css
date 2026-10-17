@@ -782,9 +782,9 @@ body.focus-reading #reader-content:has(.reader-book-iframe) {
   border-radius: 50%;
 }
 
-.rom-mode-white { background: #fff; border-color: #8b8b8b; }
-.rom-mode-dark { background: #191919; border-color: #777; }
-.rom-mode-sepia { background: #f4ecd8; border-color: #9b8767; }
+.rom-mode-white { background: var(--theme-reader-page-white); border-color: var(--theme-reader-page-white-edge); }
+.rom-mode-dark { background: var(--theme-reader-page-dark); border-color: var(--theme-reader-page-dark-edge); }
+.rom-mode-sepia { background: var(--theme-reader-page-sepia); border-color: var(--theme-reader-page-sepia-edge); }
 
 #reader-close { border: 0; background: transparent; }
 #reader-close:focus-visible { outline: 2px solid var(--text-fg); outline-offset: -2px; }

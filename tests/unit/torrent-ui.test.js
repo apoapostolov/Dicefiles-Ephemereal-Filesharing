@@ -172,12 +172,14 @@ test("torrent and magnet rows omit redundant title pills while other files retai
   const { dom } = fixture();
   const source = fs.readFileSync(path.join(__dirname, "../../client/files/file.js"), "utf8");
   const method = source.split("  setupTags() {")[1].split("\n  getTypeLabel() {")[0];
+  const modelSource = fs.readFileSync(path.join(__dirname, "../../client/files/model-formats.js"), "utf8").replace("export function", "function");
+  const isSupportedModelName = vm.compileFunction(`${modelSource}\nreturn isSupportedModelName;`)();
   const tagDom = (...args) => {
     const el = dom(...args); el.dataset = {}; return el;
   };
-  const setup = vm.compileFunction(`return function() {${method}`, ["dom", "sort", "torrentAvailability", "registry"])(tagDom, rows => rows, () => dom("button", { classes: ["torrent-availability"] }), {});
+  const setup = vm.compileFunction(`return function() {${method}`, ["dom", "sort", "torrentAvailability", "registry", "isSupportedModelName"])(tagDom, rows => rows, () => dom("button", { classes: ["torrent-availability"] }), {}, isSupportedModelName);
   const render = meta => {
-    const file = { meta, type: "file", tagsMap: new Map([["title", "Duplicate name"]]), tagsEl: dom("span"), el: { classList: { remove: jest.fn(), toggle: jest.fn() } }, isBookLike: () => false, isArchiveFile: () => false, getTagLabel: tag => tag };
+    const file = { meta, name: "notes.txt", type: "file", tagsMap: new Map([["title", "Duplicate name"]]), tagsEl: dom("span"), el: { classList: { remove: jest.fn(), toggle: jest.fn() }, insertBefore: jest.fn() }, isBookLike: () => false, isArchiveFile: () => false, getTagLabel: tag => tag };
     setup.call(file); return file.tagsEl.children;
   };
   expect(render({ torrent: { kind: "magnet" } }).some(tag => tag.classes.includes("tag-title"))).toBe(false);
