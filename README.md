@@ -63,7 +63,9 @@ before enabling collectors. See the full [changelog](CHANGELOG.md).
   FBX, and USD models in the browser. ZIP-contained glTF/GLB, OBJ, and 3MF
   previews load linked buffers, materials, and textures from their archives.
 
-![Campaign chat and a shared map beside the gallery filtered to the illustrated STRIGA rulebook](images/hobbyfiles-room-gallery.png)
+![The Indie Adventurer room with community chat beside a gallery of RPG books, archives, maps, and a matched torrent](images/hobbyfiles-room-gallery.png)
+
+![An STL miniature rendered in the in-browser 3D model viewer](images/hobbyfiles-3d-model-viewer.png)
 
 ## Rooms Made for Communities
 
@@ -76,7 +78,15 @@ The optional public directory exposes only rooms that opt in. Profiles collect
 activity, contribution statistics, and achievement tracks for uploads,
 downloads, and fulfilled requests.
 
-![An RPG map preview with image dimensions, tags, and file details](images/hobbyfiles-map-viewer.png)
+Room owners manage room behavior, access, and automation in one place:
+
+![General room options for the Indie Adventurer community](images/hobbyfiles-room-options.png)
+
+![Room access settings for password rotation and shared credentials](images/hobbyfiles-room-access.png)
+
+![The room plugin picker with collection, community, and publishing bots](images/hobbyfiles-room-plugins.png)
+
+![A full-size dungeon map opened in the room's image preview](images/hobbyfiles-map-viewer.png)
 
 ## Built-in Readers
 
@@ -88,15 +98,16 @@ downloads, and fulfilled requests.
 PDF, ePub, and MOBI reading runs in the browser. Native tools are used only for
 server-generated previews and formats such as RAR/7Z extraction.
 
-![The in-room PDF reader showing the illustrated STRIGA rulebook cover](images/hobbyfiles-pdf-reader.png)
+![The PDF reader open to an illustrated page in Designers & Dragons: Origins](images/hobbyfiles-pdf-reader.png)
 
-![An open ePub reader showing a readable page from the Lancer core book](images/hobbyfiles-epub-reader.png)
+![The ePub reader with its dark page color and typography controls open](images/hobbyfiles-epub-reader.png)
 
-![The comic reader scrolled to an illustrated interior page](images/hobbyfiles-comic-reader.png)
+![The Witcher comic open to an illustrated interior page in Webtoon mode](images/hobbyfiles-comic-reader.png)
 
-The same room also previews archive contents before extraction:
+The same room lets members browse an archive and open supported files before
+extracting them. The action column stays aligned alongside each file's size:
 
-![Archive browser showing the contents of a 3D-printing STL archive](images/hobbyfiles-archive-browser.png)
+![A 3D-printing ZIP archive with aligned View and 3D View actions beside its files](images/hobbyfiles-archive-browser.png)
 
 ## Torrent and Video Support
 
@@ -104,7 +115,14 @@ Magnet links and torrent files expose searchable contents, tracker status,
 availability estimates, and matched movie or episode details. Movie and TV
 season packs can be streamed when peers and codecs allow it.
 
-![Torrent details for a matched TV season pack, including episodes, tracker status, and availability](images/hobbyfiles-torrent-details.png)
+![Torrent details showing a matched movie, artwork, content size, file count, and peer estimates](images/hobbyfiles-torrent-details.png)
+
+Opening a supported video starts buffering immediately. Long videos keep their
+resume position and expose playback and subtitle controls:
+
+![A matched movie torrent opened in the video player while its stream buffers](images/hobbyfiles-torrent-player-buffering.png)
+
+![A long video ready to resume at 22:09 with playback and subtitle controls](images/hobbyfiles-video-player-ready.png)
 
 ## Quick Start
 
