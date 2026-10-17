@@ -6,13 +6,15 @@ import { dom, toPrettySize } from "./util";
 import { fileKind, presentTorrent, availabilityView, featuredMovie } from "../common/torrent-presentation";
 import { userError } from "../common/user-error";
 import { openMoviePlayer, showMovieInfo } from "./movie";
-import { mediaFileTitle } from "../common/torrent-media";
+import { mediaFileTitle, torrentWatchTarget } from "../common/torrent-media";
+import { watchRecords } from "../common/video";
 
 export class TorrentMetadataModal extends Modal {
   constructor(torrent, name, downloadUrl, reference) {
     super("torrent", "Torrent", { text: "Close", cancel: true });
     this.torrent = torrent; this.name = name; this.downloadUrl = downloadUrl; this.reference = reference;
     this.closed = false; this.loading = false;
+    this.onWatchProgress = () => this.updateWatchAction();
     this.cinema = null;
     this.cinemaSignature = JSON.stringify(this.cinemaRecords());
     this.onData = () => {
@@ -28,6 +30,7 @@ export class TorrentMetadataModal extends Modal {
   onshown() {
     super.onshown();
     registry.files?.on?.("files-changed", this.onData); registry.links?.on?.("links-changed", this.onData);
+    addEventListener("dicefiles:watch-progress", this.onWatchProgress); addEventListener("storage", this.onWatchProgress);
     if (this.reference) {
       this.refresh(false);
     }
@@ -36,11 +39,35 @@ export class TorrentMetadataModal extends Modal {
   onhidden() {
     this.closed = true;
     registry.files?.removeListener?.("files-changed", this.onData); registry.links?.removeListener?.("links-changed", this.onData);
+    removeEventListener("dicefiles:watch-progress", this.onWatchProgress); removeEventListener("storage", this.onWatchProgress);
   }
 
   cinemaRecords() {
     const item = this.reference?.kind === "file" ? registry.files?.filemap?.get(this.reference.key) : registry.links?.linkmap?.get(this.reference?.key);
     return this.cinema || item?.meta?.cinema || {};
+  }
+
+  watchTarget() {
+    let history = [];
+    try {
+      history = watchRecords(localStorage);
+    }
+    catch (_) { /* Playback still works when browser storage is unavailable. */ }
+    return torrentWatchTarget(this.torrent, this.cinemaRecords(), this.reference, history);
+  }
+
+  updateWatchAction() {
+    if (!this.watchButton || this.closed) {
+      return;
+    }
+    const target = this.watchTarget();
+    this.watchButton.hidden = !target;
+    if (target) {
+      const title = mediaFileTitle(this.cinemaRecords()[target.index]?.movie, target.file.path.split("/").pop());
+      this.watchButton.textContent = target.replay ? "▶ Watch again" : "▶ Watch";
+      this.watchButton.setAttribute("title", `${target.replay ? "All episodes watched. Replay" : "Watch"} ${title}`);
+      this.watchButton.setAttribute("aria-label", `${target.replay ? "Watch again:" : "Watch"} ${title}`);
+    }
   }
 
   async refresh(force) {
@@ -131,6 +158,26 @@ export class TorrentMetadataModal extends Modal {
     if (this.downloadUrl) {
       actions.appendChild(dom("a", { classes: ["torrent-action"], text: /\.torrent$/i.test(this.name) ? "Download .torrent" : "Save link", attrs: { href: this.downloadUrl, download: this.name } }));
     }
+    this.watchButton = dom("button", { classes: ["torrent-action", "torrent-action-primary", "torrent-watch-action"], text: "▶ Watch", attrs: { type: "button" } });
+    this.watchButton.onclick = async () => {
+      const target = this.watchTarget();
+      if (!target) {
+        this.updateWatchAction(); return;
+      }
+      const button = this.watchButton; button.disabled = true;
+      try {
+        await openMoviePlayer({ name: target.file.path.split("/").pop(), key: this.reference.key, meta: { torrent: this.torrent, cinema: this.cinemaRecords() } }, { ...this.reference, index: target.index });
+      }
+      catch (error) {
+        if (error && !this.closed) {
+          this.feedback.textContent = userError(error);
+        }
+      }
+      finally {
+        button.disabled = false; this.updateWatchAction();
+      }
+    };
+    actions.appendChild(this.watchButton); this.updateWatchAction();
     intro.appendChild(actions); hero.append(artwork, intro); this.body.appendChild(hero);
     if (movie?.attribution) {
       this.body.appendChild(dom("p", { classes: ["movie-attribution"], text: movie.attribution }));

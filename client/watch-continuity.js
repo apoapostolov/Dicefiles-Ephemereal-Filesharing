@@ -2,7 +2,7 @@
 
 import { dom } from "./util";
 import { openMoviePlayer } from "./movie";
-import { WATCH_PREFIX, mediaTitle, timeLabel, watchRecords } from "../common/video";
+import { WATCH_PREFIX, mediaTitle, timeLabel, watchRecords, watchCompleted, episodeIdentity } from "../common/video";
 
 export function renderWatchContinuity(container, files, links = []) {
   container.replaceChildren();
@@ -15,12 +15,16 @@ export function renderWatchContinuity(container, files, links = []) {
   }
   let count = 0;
   for (const progress of watchRecords(storage)) {
-    if (progress.completed || progress.dismissed || progress.position < 1) {
+    if (progress.dismissed || progress.position < 1) {
       continue;
     }
     const [kind, key, rawIndex] = progress.key.split(":"); const index = Number(rawIndex);
     const file = (kind === "file" ? files : links).find(file => (file.key || file.id) === key && !file.expired);
     if (!file || !Number.isInteger(index)) {
+      continue;
+    }
+    const episode = !!episodeIdentity(index >= 0 ? file.meta?.torrent?.files?.[index]?.path : file.name, file.meta?.cinema?.[index]?.movie, file.meta?.torrent?.name);
+    if (watchCompleted(progress, episode)) {
       continue;
     }
     const title = mediaTitle(file.meta?.cinema?.[index]?.movie, index >= 0 ? file.meta?.torrent?.files?.[index]?.path || file.name : file.name);

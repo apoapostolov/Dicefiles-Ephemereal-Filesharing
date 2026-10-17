@@ -52,13 +52,33 @@ function watchKey(reference, index = -1) {
   return `${reference.kind}:${reference.key}:${index}`;
 }
 
-function saveWatch(storage, key, position, duration, now = Date.now()) {
-  if (!key || !Number.isFinite(duration) || duration <= LONG_VIDEO_SECONDS || !Number.isFinite(position) || position < 0) {
+function episodeIdentity(name, movie, context = "") {
+  if (movie?.kind === "movie") {
+    return null;
+  }
+  const parsed = filenameQuery(name, context);
+  const season = movie?.season ?? parsed.season; const episode = movie?.episode ?? parsed.episode;
+  return Number.isInteger(season) && season >= 0 && Number.isInteger(episode) && episode > 0 ? { season, episode } : null;
+}
+
+function watchCompleted(record, episode = false) {
+  return !!record && (record.completed === true || (episode || record.episode === true) && Number.isFinite(record.position) && Number.isFinite(record.duration) && record.duration > 0 && record.position >= record.duration * 0.9);
+}
+
+function saveWatch(storage, key, position, duration, now = Date.now(), episode = false) {
+  if (!key || !Number.isFinite(duration) || duration <= 0 || duration <= LONG_VIDEO_SECONDS && !episode || !Number.isFinite(position) || position < 0) {
     return false;
   }
   try {
-    const completed = position >= duration - Math.min(30, duration * 0.02);
-    storage.setItem(WATCH_PREFIX + key, JSON.stringify({ position: Math.min(position, duration), duration, updatedAt: now, completed }));
+    let previous;
+    if (episode) {
+      try {
+        previous = JSON.parse(storage.getItem(WATCH_PREFIX + key));
+      }
+      catch (_) { /* A damaged old record cannot prevent a fresh save. */ }
+    }
+    const completed = episode ? watchCompleted(previous, true) || position >= duration * 0.9 : position >= duration - Math.min(30, duration * 0.02);
+    storage.setItem(WATCH_PREFIX + key, JSON.stringify({ position: Math.min(position, duration), duration, updatedAt: now, completed, ...(episode ? { episode: true } : {}) }));
     return true;
   }
   catch (_) {
@@ -77,10 +97,10 @@ function watchRecords(storage, now = Date.now()) {
       }
       try {
         const record = JSON.parse(storage.getItem(key));
-        if (!Number.isFinite(record?.updatedAt) || now - record.updatedAt > 180 * 86400000 || !Number.isFinite(record.position) || !Number.isFinite(record.duration) || record.duration <= LONG_VIDEO_SECONDS) {
+        if (!Number.isFinite(record?.updatedAt) || now - record.updatedAt > 180 * 86400000 || !Number.isFinite(record.position) || record.position < 0 || !Number.isFinite(record.duration) || record.duration <= 0 || record.duration <= LONG_VIDEO_SECONDS && record.episode !== true) {
           remove.push(key); continue;
         }
-        records.push({ ...record, key: key.slice(WATCH_PREFIX.length) });
+        records.push({ ...record, completed: watchCompleted(record), key: key.slice(WATCH_PREFIX.length) });
       }
       catch (_) {
         remove.push(key);
@@ -132,4 +152,4 @@ function bufferingStatus(progress = {}, bufferedSeconds = 0) {
   return details.join(" · ");
 }
 
-module.exports = { WATCH_PREFIX, LONG_VIDEO_SECONDS, durationSeconds, mediaTitle, filenameQuery, watchKey, saveWatch, watchRecords, timeLabel, fittedPlayerWidth, bufferingStatus };
+module.exports = { WATCH_PREFIX, LONG_VIDEO_SECONDS, durationSeconds, mediaTitle, filenameQuery, episodeIdentity, watchCompleted, watchKey, saveWatch, watchRecords, timeLabel, fittedPlayerWidth, bufferingStatus };

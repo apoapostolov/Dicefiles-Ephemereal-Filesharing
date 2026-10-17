@@ -4,7 +4,7 @@ import shaka from "shaka-player";
 import Modal from "./modal";
 import { dom } from "./util";
 import { movieCall, moviePath, movieReference, showMovieInfo } from "./movie";
-import { WATCH_PREFIX, mediaTitle, saveWatch, timeLabel, watchKey, watchRecords, fittedPlayerWidth, bufferingStatus } from "../common/video";
+import { WATCH_PREFIX, mediaTitle, saveWatch, timeLabel, watchKey, watchRecords, fittedPlayerWidth, bufferingStatus, episodeIdentity, watchCompleted } from "../common/video";
 
 export class MoviePlayer extends Modal {
   constructor(file, reference = movieReference(file), data) {
@@ -268,7 +268,8 @@ export class MoviePlayer extends Modal {
       const retryParameters = { maxAttempts: 2, timeout: 150000, stallTimeout: 120000, connectionTimeout: 60000 };
       this.player.configure({ streaming: { bufferingGoal: 18, rebufferingGoal: 2, bufferBehind: 20, loadTimeout: this.reference.index >= 0 ? 150 : 30, retryParameters }, manifest: { retryParameters } });
       const saved = watchRecords(localStorage).find(record => record.key === this.key);
-      const start = saved && !saved.completed ? saved.position : 0;
+      this.episode = !!episodeIdentity(this.data.name || this.file.name, this.data.movie, this.file.meta?.torrent?.name);
+      const start = saved && !watchCompleted(saved, this.episode) ? saved.position : 0;
       const name = this.data.name || this.file.name;
       const compatible = this.reference.index >= 0 && (this.forceCompatible || /\.(mkv|avi|mov|ts|m2ts)$/i.test(name));
       this.usingCompatible = compatible;
@@ -409,7 +410,7 @@ export class MoviePlayer extends Modal {
   }
 
   flush() {
-    if (saveWatch(localStorage, this.key, this.video.currentTime, this.video.duration)) {
+    if (saveWatch(localStorage, this.key, this.video.currentTime, this.video.duration, Date.now(), this.episode)) {
       dispatchEvent(new CustomEvent("dicefiles:watch-progress", { detail: { key: this.key } }));
     }
   }

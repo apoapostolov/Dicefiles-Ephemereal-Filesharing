@@ -1,6 +1,6 @@
 "use strict";
 
-const { filenameQuery, mediaTitle } = require("./video");
+const { filenameQuery, mediaTitle, episodeIdentity, watchKey, watchCompleted } = require("./video");
 
 const VIDEO = /\.(mp4|mkv|avi|mov|webm|m4v|mpeg|mpg|ts|m2ts)$/i;
 const normalize = value => String(value || "").normalize("NFKD").replace(/\p{M}/gu, "").toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
@@ -101,4 +101,24 @@ function torrentMedia(torrent, cinema = {}, fallback = "Torrent") {
   return null;
 }
 
-module.exports = { mediaFileTitle, torrentContentsSize, episodePack, torrentMedia };
+function torrentWatchTarget(torrent, cinema, reference, records = []) {
+  if (!reference) {
+    return null;
+  }
+  const history = new Map(records.map(record => [record.key, record]));
+  const videos = (torrent.files || []).map((file, index) => ({ file, index, episode: episodeIdentity(file.path, cinema[index]?.movie, torrent.name), progress: history.get(watchKey(reference, index)) })).filter(row => VIDEO.test(row.file.path || "") && row.file.size > 0 && !extra(row.file.path));
+  if (!videos.length) {
+    return null;
+  }
+  if (episodePack(torrent, cinema)) {
+    videos.sort((a, b) => (a.episode.season === 0) - (b.episode.season === 0) || a.episode.season - b.episode.season || a.episode.episode - b.episode.episode || b.file.size - a.file.size || a.index - b.index);
+    const identity = row => `${row.episode.season}:${row.episode.episode}`;
+    const watched = new Set(videos.filter(row => watchCompleted(row.progress, true)).map(identity));
+    const next = videos.find(row => !watched.has(identity(row)));
+    return { ...(next || videos[0]), replay: !next };
+  }
+  videos.sort((a, b) => b.file.size - a.file.size || a.index - b.index);
+  return { ...videos[0], replay: false };
+}
+
+module.exports = { mediaFileTitle, torrentContentsSize, episodePack, torrentMedia, torrentWatchTarget };

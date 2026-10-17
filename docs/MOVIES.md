@@ -191,6 +191,15 @@ movie; conversion and changing peer availability can add time. Until a useful
 speed is available, the player says it is estimating. The line disappears when
 the video is ready, and polling stops on readiness, errors and closing the player.
 
+The torrent dialog's Watch button chooses the largest main video for a movie,
+excluding samples, trailers and extras. For a recognized season or series pack,
+it chooses the earliest unwatched season/episode, with specials after regular
+seasons. A partly watched episode resumes its saved timestamp. Episodes count as
+watched at 90% and stay watched when replayed; older saved timestamps also count.
+Short recognized episodes can save progress too. Completed episodes leave Continue
+Watching. When every episode is watched, Watch again opens the first episode.
+History stays in this browser, with the existing 180-day/1,000-record limit.
+
 
 ### Season and complete-series packs
 

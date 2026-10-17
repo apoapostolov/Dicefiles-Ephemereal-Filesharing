@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Torrent dialogs offer a right-aligned Watch action: play the largest movie
+  video or resume the earliest unwatched TV episode across season packs.
+  Episodes count as watched at 90%, including in Continue Watching.
 - Video buffering shows a centered animated indicator with two-second updates
   for verified torrent parts, download speed and an estimated buffer wait.
   The status disappears when playback is ready.

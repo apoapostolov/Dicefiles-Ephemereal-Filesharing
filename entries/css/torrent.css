@@ -22,6 +22,7 @@
 .torrent-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.9rem; padding: 0; }
 .modal-torrent .torrent-action { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 38px; padding: 0.5rem 0.75rem; margin: 0; border: 1px solid var(--hairline); border-radius: 6px; background: var(--surface-1); color: var(--text-fg); text-decoration: none; font: inherit; font-size: 0.78rem; cursor: pointer; }
 .modal-torrent .torrent-action-primary { background: var(--accent-soft); border-color: var(--control-border-hover); font-weight: 600; }
+.modal-torrent .torrent-watch-action { margin-inline-start: auto; flex-shrink: 0; }
 .modal-torrent .torrent-action:hover { background: var(--surface-3); }
 .modal-torrent .torrent-action:disabled { opacity: 0.5; cursor: progress; }
 .modal-torrent .torrent-action[hidden] { display: none; }

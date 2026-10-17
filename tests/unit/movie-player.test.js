@@ -107,6 +107,17 @@ test("opening a video resumes stored position and short videos never create watc
   player.onhidden(); expect(localStorage.setItem).not.toHaveBeenCalled();
 });
 
+test("episodes already 90% watched replay from the start and stay watched after replay saves", async () => {
+  const { MoviePlayer, localStorage } = fixture();
+  videoHelpers.saveWatch(localStorage, "file:synthetic:-1", 600, 660);
+  const player = new MoviePlayer({ name: "Show.S01E01.mp4", url: "/episode.mp4" }, undefined, { name: "Show.S01E01.mp4" });
+  await player.onshown();
+  expect(player.video.currentTime).toBe(0);
+  player.video.currentTime = 20; player.flush();
+  expect(videoHelpers.watchRecords(localStorage)[0]).toMatchObject({ episode: true, completed: true });
+  player.onhidden();
+});
+
 test("compact player groups fill transport, preference and view rows consistently", () => {
   const { MoviePlayer } = fixture();
   const player = new MoviePlayer({ name: "Synthetic.mp4" });
