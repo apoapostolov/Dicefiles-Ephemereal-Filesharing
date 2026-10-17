@@ -110,12 +110,12 @@ show community activity and contributions, including uploads, downloads, and
 fulfilled requests.
 
 **Linked rooms:** Imagine one Hobbyfiles server with two communities: one for
-Pathfinder and another for sharing Foundry modules. Each has its own room. If
-the Foundry room opts in, the Pathfinder room can link to it and filter for
+Pathfinder and another for sharing Foundry VTT modules. Each has its own room. If
+the Foundry VTT room opts in, the Pathfinder room can link to it and filter for
 “PF2E” in filenames. Matching modules then appear beside Pathfinder's own files,
-with a label showing they came from the Foundry room. The files remain in the
-Foundry room, so there's no need to upload a second copy and that community
-keeps control of access.
+with a label showing they came from the Foundry VTT room. The files remain in
+the Foundry VTT room, so there's no need to upload a second copy and that
+community keeps control of access.
 
 **Federated servers:** The communities can also live on different Hobbyfiles
 servers. Their admins first set up a trusted federation, then link the rooms
