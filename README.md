@@ -115,13 +115,13 @@ libraries, plugins, invitations, and access without leaving the room. Members
 can quickly switch to files added since their last visit or download All, New,
 or Since Last Visit through a resumable queue.
 
-Say one Hobbyfiles server has a Pathfinder community and a Foundry module-sharing
-community, each with its own room. The Pathfinder room can link to the Foundry
-room after it opts in, then use a filter such as “PF2E” in the filename. Matching
-modules show up in Pathfinder’s file list beside its own uploads, with a label
-that points back to the Foundry room. The files stay in their original room:
-people can find and use them from Pathfinder without uploading a second copy,
-and the source community keeps control of access.
+**Linked rooms:** Say one Hobbyfiles server has a Pathfinder community and a
+Foundry module-sharing community, each with its own room. The Pathfinder room
+can link to the Foundry room after it opts in, then filter for “PF2E” in the
+filename. Matching modules show up in Pathfinder’s file list beside its own
+uploads, labeled with the Foundry room as their source. The files stay in their
+original room: people can find and use them from Pathfinder without uploading a
+second copy, and the source community keeps control of access.
 
 The same setup works when the communities are on different Hobbyfiles servers.
 Their admins establish a trusted federation between the servers, then link only
