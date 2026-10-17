@@ -27,18 +27,27 @@ Each room combines live chat, temporary file sharing, requests, readers,
 moderation, and optional automation without feeling like a generic cloud-drive
 dashboard. You host it; there is no public Hobbyfiles service.
 
-## What's New in 1.4.7
+## What's New Since 1.4.6
 
-Rooms can collect from approved feeds and cloud folders, review uploads and
-requests, and plan sessions with private RSVPs. The catalog now includes 27
-built-in bots with durable jobs and activity reports. Movie and TV torrents
-gain streaming playback, subtitles, remembered progress, readable episode names
-and verified season-pack coverage.
+Version 1.4.7 expands Hobbyfiles from ephemeral room sharing into a flexible
+collection workspace. It adds 27 built-in bots for approved feed and cloud
+imports, community workflows, and routine maintenance. Plugin API v2 brings
+scoped capabilities, durable jobs, reviewed actions, reports, and activity
+history. Owners can monitor bot runs and recover queued work; collectors stay
+opt-in and use explicit provider grants.
 
-This release also adds 34 themes, compact phone and tablet controls, 57 scoped
-MCP tools, and container deployment through GHCR. Operators should review the
+Movie and TV torrents now support searchable contents, relaxed peer checks,
+metadata matching, streaming, subtitles, and resume progress. Recognized files
+show readable movie or episode names, with season packs checked against catalogue
+coverage. The release also adds 34 themes, compact phone and tablet controls,
+57 scoped MCP tools, and multi-architecture GHCR container builds.
+
+Newer file previews include a Babylon.js-powered 3D viewer for STL and other
+mesh formats, plus in-archive previews for documents, comics, images, videos,
+and linked model assets. See [What You Can Do](#what-you-can-do) and the
+[changelog](CHANGELOG.md). Operators should review the
 [upgrade notes](CHANGELOG.md#operator-notes) and configure provider connections
-before enabling collectors. See the full [changelog](CHANGELOG.md).
+before enabling collectors.
 
 ## What You Can Do
 
