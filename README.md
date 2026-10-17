@@ -45,7 +45,7 @@ before enabling collectors. See the full [changelog](CHANGELOG.md).
 - **Share around a live conversation.** Combine chat, uploads, inline media, Giphy, moderation, and configurable retention in one room.
 - **Browse instead of digging through filenames.** Switch between compact lists and galleries with generated covers, filters, search, tags, and remembered views.
 - **Read without downloading first.** Open PDF, ePub, MOBI/AZW, and CBZ/CBR/CB7 comics in the room with progress and keyboard navigation.
-- **Look inside archives.** Browse ZIP, RAR, 7Z, TAR, multipart archives, and comics, then extract only the entry you need.
+- **Preview files inside archives.** Browse ZIP, RAR, 7Z, TAR, multipart archives, and comics. Open supported PDFs, ePubs, comics, images, videos, and 3D models in the preview dialog before extracting them.
 - **Ask the community for missing material.** Post requests, attach reference links or images, and let an upload fulfill the request directly.
 - **Join libraries without copying them.** Link approved rooms locally or across trusted independent hosts while the source keeps control.
 - **Protect private communities.** Use expiring guest invites, optional rotating room passwords, consent boundaries, and role-based moderation.
@@ -59,9 +59,10 @@ before enabling collectors. See the full [changelog](CHANGELOG.md).
   contents and artwork, check reported availability, and stream supported videos.
 - **Watch movies and episodes.** Resume long videos, match clear torrent titles automatically or choose a catalogue result,
   browse artwork and cast, and add subtitles in your language.
-- **Preview 3D print and mesh files.** Open STL, 3MF, OBJ, glTF/GLB, PLY,
-  FBX, and USD models in the browser. ZIP-contained glTF/GLB, OBJ, and 3MF
-  previews load linked buffers, materials, and textures from their archives.
+- **Inspect and prepare 3D prints in the browser.** The integrated Babylon.js
+  viewer opens STL, 3MF, OBJ, glTF/GLB, PLY, FBX, and USD models. Open them
+  directly from a room or inside a ZIP archive; linked geometry, materials,
+  buffers, and textures are loaded from the archive so the model stays intact.
 
 ![The Indie Adventurer room with community chat beside a gallery of RPG books, archives, maps, and a matched torrent](images/hobbyfiles-room-gallery.png)
 
@@ -104,8 +105,11 @@ server-generated previews and formats such as RAR/7Z extraction.
 
 ![The Witcher comic open to an illustrated interior page in Webtoon mode](images/hobbyfiles-comic-reader.png)
 
-The same room lets members browse an archive and open supported files before
-extracting them. The action column stays aligned alongside each file's size:
+The archive viewer opens supported files in the same preview dialog used for
+room files, so members can read a PDF, flip through a comic, inspect an image,
+or launch a 3D model without extracting it first. Linked model assets are
+resolved from the archive and cached with the preview. The action column stays
+aligned alongside each file's size:
 
 ![A 3D-printing ZIP archive with aligned View and 3D View actions beside its files](images/hobbyfiles-archive-browser.png)
 
@@ -306,6 +310,6 @@ yarn prestart
 Contributor workflow and release checks live in [`dev/README.md`](./dev/README.md).
 The complete documentation index is [`docs/README.md`](./docs/README.md).
 
-Hobbyfiles is licensed under MIT. It began as a fork of
-[droppy](https://github.com/silverwind/droppy) and now includes substantial new
-community, reading, automation, storage, and federation systems.
+Hobbyfiles is licensed under MIT. It began as a fork of Kregfile, based on the
+Volafile file-sharing service, and now includes substantial new community,
+reading, automation, storage, and federation systems.
