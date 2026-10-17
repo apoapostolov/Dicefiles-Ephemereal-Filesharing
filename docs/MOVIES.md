@@ -113,6 +113,9 @@ are downloaded, with small protocol read-ahead. Piece hashes are verified.
 private torrents and v2-only torrents must use an external torrent app. Discovery
 uses supplied trackers plus the existing bounded public DHT client. Availability depends on reachable
 TCP peers; a tracker seeder count does not prove such a peer is reachable.
+Playback rotates through up to 48 validated contacts with four concurrent
+metadata requests and a 20-second deadline. Contacts are interleaved across
+trackers and DHT so one stale tracker cannot monopolize startup.
 
 Limits: two cluster-wide sessions, twelve connections per session, 8 MiB/s
 download ceiling per session, 8 GiB total torrent size, 4 GiB selected video/cache,
@@ -127,10 +130,34 @@ its capability kept in private Redis state; it is never exposed to the browser.
 Seeks reuse that owner regardless of which HTTP worker receives the range request.
 No sticky proxy routing is required.
 
-H.264/AAC MP4 and supported WebM codecs are the most portable. An MKV, AVI,
-transport stream, HEVC, DTS or other unsupported container/codec may require an
-external player or a converted upload. A streaming library cannot add an OS codec.
-Automatic server transcoding is not part of this implementation.
+### Browser-compatible conversion
+
+H.264/AAC MP4 and supported WebM files use direct range playback. Torrent MKV,
+AVI, MOV and transport-stream files use an HLS playlist with H.264 video and AAC
+stereo audio. A direct torrent file that fails preparation also retries through
+this conversion path. This covers HEVC and audio formats that the browser
+cannot decode itself. Uploaded videos still depend on native browser codecs.
+
+FFprobe reads the duration through the private range relay. FFmpeg converts
+six-second sections only as the player requests them, so seeking can jump to a
+later section without encoding everything before it. Output is capped at 720p,
+3 Mbit/s video and 128 kbit/s audio. Each section starts independently; the
+playlist exposes the full duration for seeking and watch progress.
+
+Conversion requires enabled native tools, FFmpeg with libx264/AAC, and FFprobe.
+The `ffmpeg` and `ffprobe` settings can name custom installed binaries. With
+the configured Firejail sandbox, a trusted helper provides an isolated loopback
+HTTP source backed by the owner's authenticated Unix socket. FFmpeg cannot
+contact torrent peers or external media URLs; input protocols and demuxers are
+restricted. The browser never receives the private socket capability.
+
+The existing two-session limit also bounds conversion: one native job per owner,
+at most eight queued jobs, two encoding threads, 120 seconds per job, 12 MiB per
+output section and 128 MiB of shared output cache per session. Videos over four
+hours or 8K dimensions are rejected. Ending a session kills its native process
+group. Docker deployments that disable native tools must enable an appropriate
+sandbox policy before using conversion. Preparation failures display recovery
+steps in the player instead of leaving an indefinite buffering message.
 
 ## Implementation references
 

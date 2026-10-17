@@ -61,8 +61,8 @@ function fixture(width = 1280, height = 720) {
     addEventListener(name, handler) {
       this.listeners[name] = handler;
     }
-    async load(source, start) {
-      this.source = source; this.video.currentTime = start || 0;
+    async load(source, start, mime) {
+      this.source = source; this.mime = mime; this.video.currentTime = start || 0;
     }
     async addTextTrackAsync() {
       return { id: 1 };
@@ -75,7 +75,7 @@ function fixture(width = 1280, height = 720) {
     return storage.size;
   }, key: i => [...storage.keys()][i], getItem: key => storage.get(key), setItem: jest.fn((key, value) => storage.set(key, value)), removeItem: key => storage.delete(key) };
   const source = fs.readFileSync(path.join(__dirname, "../../client/movie-player.js"), "utf8").replace(/^import .*;$/gm, "").replace("export class", "class").replace(/^export \{.*\};$/gm, "");
-  const context = { ...videoHelpers, shaka, Modal, dom, document, localStorage, innerWidth: width, innerHeight: height, getComputedStyle: () => ({ paddingLeft: "12", paddingRight: "12", paddingTop: "12", paddingBottom: "12", marginTop: "0", marginBottom: "0" }), requestAnimationFrame: jest.fn(() => 1), cancelAnimationFrame: jest.fn(), addEventListener: jest.fn(), removeEventListener: jest.fn(), dispatchEvent: jest.fn(), CustomEvent, setInterval, clearInterval, movieCall: jest.fn(), moviePath: () => "/media/file/synthetic/-1", movieReference: () => ({ kind: "file", key: "synthetic", index: -1 }), showMovieInfo: jest.fn() };
+  const context = { ...videoHelpers, shaka, Modal, dom, document, localStorage, innerWidth: width, innerHeight: height, getComputedStyle: () => ({ paddingLeft: "12", paddingRight: "12", paddingTop: "12", paddingBottom: "12", marginTop: "0", marginBottom: "0" }), requestAnimationFrame: jest.fn(() => 1), cancelAnimationFrame: jest.fn(), addEventListener: jest.fn(), removeEventListener: jest.fn(), dispatchEvent: jest.fn(), CustomEvent, setInterval, clearInterval, fetch: jest.fn(async () => new Response("#EXTM3U")), movieCall: jest.fn(), moviePath: () => "/media/file/synthetic/-1", movieReference: () => ({ kind: "file", key: "synthetic", index: -1 }), showMovieInfo: jest.fn() };
   const MoviePlayer = vm.compileFunction(`${source}\nreturn MoviePlayer;`, Object.keys(context))(...Object.values(context));
   return { MoviePlayer, localStorage, document, context };
 }
@@ -157,6 +157,29 @@ test("preparation failures offer a real retry before any playback failure messag
   expect(load).toHaveBeenCalledTimes(2);
   expect(player.video.paused).toBe(false);
   expect(player.loadFailed).toBe(false);
+  player.onhidden();
+});
+
+test("MKV torrents prepare a browser-compatible HLS source before loading Shaka", async () => {
+  const { MoviePlayer, context } = fixture();
+  const player = new MoviePlayer({ name: "Synthetic.mkv" }, { kind: "file", key: "synthetic", index: 0 }, { name: "Synthetic.mkv" });
+  await player.onshown();
+  expect(context.fetch).toHaveBeenCalledTimes(1);
+  expect(player.player.source).toBe("/media/file/synthetic/-1/hls.m3u8");
+  expect(player.player.mime).toBe("application/x-mpegurl");
+  expect(player.video.paused).toBe(true);
+  const {signal} = context.fetch.mock.calls[0][1];
+  player.onhidden(); expect(signal.aborted).toBe(true);
+});
+
+test("torrent preparation presents the server's recovery message and retries", async () => {
+  const { MoviePlayer, context } = fixture();
+  context.fetch.mockResolvedValueOnce(new Response(JSON.stringify({ error: "This video needs browser conversion, but native video tools are disabled. Ask the operator to enable them." }), { status: 503 }));
+  const player = new MoviePlayer({ name: "Synthetic.mkv" }, { kind: "file", key: "synthetic", index: 0 }, { name: "Synthetic.mkv" });
+  await player.onshown();
+  expect(player.loadFailed).toBe(true);
+  expect(player.feedback.textContent).toContain("Ask the operator to enable them");
+  await player.toggle(); expect(player.loadFailed).toBe(false); expect(player.video.paused).toBe(false);
   player.onhidden();
 });
 

@@ -289,6 +289,7 @@ module.exports = {
 
   // For asset generation, path to ffmpeg binary
   ffmpeg: "ffmpeg",
+  ffprobe: "ffprobe",
 
   // For further checking the file type, if exiftool fails
   filetool: "file",

@@ -124,4 +124,17 @@ describe("spawnBounded", () => {
       spawnBounded(["/nonexistent/hobbyfiles-tool"], { timeoutMs: 5000 }),
     ).rejects.toMatchObject({ code: "ENOENT" });
   });
+
+  test("cancellation terminates a helper and its subprocess instead of leaving output pipes open", async () => {
+    const { spawnBounded } = loadJail(false);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 500);
+    try {
+      const result = await spawnBounded([node, "-e", "require('node:child_process').spawn(process.execPath, ['-e', 'setTimeout(() => {}, 60000)'], { stdio: 'inherit' }); setTimeout(() => {}, 60000)"], { signal: controller.signal, processGroup: true, timeoutMs: 10000 });
+      expect(result.code).not.toBe(0); expect(result.timedOut).toBe(false);
+    }
+    finally {
+      clearTimeout(timer);
+    }
+  });
 });

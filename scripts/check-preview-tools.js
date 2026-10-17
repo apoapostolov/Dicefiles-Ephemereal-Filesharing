@@ -10,6 +10,7 @@ const commands = [
   ["gs", ["--version"], "PDF rendering delegate"],
   ["pdftoppm", ["-v"], "PDF thumbnail fallback"],
   ["ffmpeg", ["-version"], "video and audio previews"],
+  ["ffprobe", ["-version"], "video playback inspection"],
   ["7z", ["i"], "7z and CB7 archive support"],
   ["firejail", ["--version"], "external file-tool sandbox"],
   ["unrar", [], "RAR archive listing and extraction"],

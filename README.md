@@ -146,6 +146,10 @@ The player starts buffering as soon as you open a supported video. For longer
 videos, Hobbyfiles saves your place so you can resume later. Playback and
 subtitle controls are built in:
 
+MKV torrents and other less portable formats can play through on-demand HLS
+conversion when the server's native video tools are enabled. The player requests
+short sections as needed, including when you seek ahead.
+
 ![A matched movie torrent opened in the video player while its stream buffers](images/hobbyfiles-torrent-player-buffering.png)
 
 ![A long video ready to resume at 22:09 with playback and subtitle controls](images/hobbyfiles-video-player-ready.png)

@@ -6,7 +6,9 @@ Interactive video playback and subtitles use room-session authorization rather
 than automation credentials. `GET /api/v1/media/:kind/:key/:index/stream` serves
 validated torrent video byte ranges (`kind` is `file` or `link`, `index` is the
 original torrent file index). `GET .../subtitle/:id` returns an authorized WebVTT
-track. Both check source-room membership, passwords, expiry and hidden-file policy
+track. `GET .../hls.m3u8` prepares the browser-compatible VOD playlist;
+`GET .../segment/:number.ts` converts or reuses a requested six-second section.
+These routes check source-room membership, passwords, expiry and hidden-file policy
 on each request and use private/no-store caching. Movie catalogue mutations are
 room socket actions, restricted to the uploader, owner or moderator. Background
 matching can add high-confidence torrent results when enabled; manual choices

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Torrent video playback tries the full bounded peer pool when recovering
+  magnet metadata. MKV, AVI, MOV and transport-stream videos gain on-demand
+  browser-compatible HLS conversion with seeking, subtitles and watch progress;
+  preparation failures show an actionable recovery message.
 - PDF and comic readers now share a three-part zoom control with the current
   fitted-size ratio; both paginated comics and Webtoon pages can zoom and scroll.
 - Open supported files inside ZIP archives in the archive dialog, including

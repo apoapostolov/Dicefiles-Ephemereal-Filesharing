@@ -382,6 +382,8 @@
   // Only needed if the binaries are not on PATH.
   // "exiftool": "exiftool",
   // "ffmpeg": "ffmpeg",
+  // Video duration inspection for browser-compatible torrent playback.
+  // "ffprobe": "ffprobe",
   // "filetool": "file",
   // "pdftoppm": "pdftoppm",
 

@@ -86,10 +86,14 @@ Searches send the entered title to configured providers. Artwork loads from the
 provider's image host; trailer links open externally.
 
 `HOBBYFILES_TORRENT_PLAYBACK=true` independently enables on-demand public torrent
-payload playback. Unlike metadata discovery, pressing Play downloads selected
+payload playback. Unlike metadata discovery, opening the player downloads selected
 pieces. There are two cluster-wide slots, 4 GiB cache per session, 8 GiB torrent
-limit, four-hour session limit and 90-second idle cleanup. Native video decoding
-is browser-dependent; there is no automatic transcoding. See [movie support](./MOVIES.md).
+limit, four-hour session limit and 90-second idle cleanup. MKV, AVI, MOV and
+transport-stream videos use on-demand H.264/AAC HLS conversion; MP4/WebM files
+use direct playback with conversion as a preparation fallback. Conversion needs
+`HOBBYFILES_NATIVE_TOOLS=true`, FFmpeg with libx264/AAC, and FFprobe. The configured
+native-tool sandbox is retained. See [movie support](./MOVIES.md) for conversion
+limits and deployment requirements.
 
 ## Giphy
 

@@ -34,7 +34,7 @@ function fixture({ password = true, invited = true, hidden = false, playback = t
 
 test.each([{ password: false }, { invited: false }, { hidden: true }, { expired: true }])("video and subtitle endpoints enforce current room policy %#", async options => {
   const f = fixture(options);
-  for (const suffix of ["stream", "subtitle/en"]) {
+  for (const suffix of ["stream", "hls.m3u8", "segment/0.ts", "subtitle/en"]) {
     const response = await request(f.app).get(`/api/v1/media/file/video/0/${suffix}`);
     expect([403, 404]).toContain(response.status); expect(response.headers["cache-control"]).toBe("private, no-store");
   }
@@ -55,4 +55,17 @@ test("payload playback flag is independent of subtitle access and valid range pl
   expect(f.serveTorrent).not.toHaveBeenCalled();
   const enabled = fixture(); expect((await request(enabled.app).get("/api/v1/media/link/video/0/stream")).status).toBe(206);
   expect(enabled.serveTorrent).toHaveBeenCalledTimes(1);
+});
+
+test("compatible playlists and segments use the same authorized torrent owner", async () => {
+  const f = fixture();
+  expect((await request(f.app).get("/api/v1/media/file/video/0/hls.m3u8")).status).toBe(206);
+  expect(f.serveTorrent.mock.calls[0][4]).toBe("hls.m3u8");
+  expect((await request(f.app).get("/api/v1/media/file/video/0/segment/42.ts")).status).toBe(206);
+  expect(f.serveTorrent.mock.calls[1][4]).toBe("segment/42.ts");
+  expect((await request(f.app).get("/api/v1/media/file/video/0/segment/anything.ts")).status).toBe(503);
+  expect(f.serveTorrent).toHaveBeenCalledTimes(2);
+  const disabled = fixture({ playback: false });
+  expect((await request(disabled.app).get("/api/v1/media/file/video/0/hls.m3u8")).status).toBe(503);
+  expect((await request(disabled.app).get("/api/v1/media/file/video/0/segment/0.ts")).status).toBe(503);
 });

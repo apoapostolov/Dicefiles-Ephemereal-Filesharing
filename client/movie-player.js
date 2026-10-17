@@ -11,6 +11,7 @@ export class MoviePlayer extends Modal {
     super("watch", "Video player", { text: "Close", cancel: true });
     this.file = file; this.reference = reference; this.data = data; this.closed = false; this.player = null; this.interval = null;
     this.playbackAttempted = false; this.loadFailed = false; this.loading = null;
+    this.prepareAbort = null; this.forceCompatible = false;
     this.closeButton = this.buttons[0];
     this.closeButton.textContent = "×";
     this.closeButton.classList.add("movie-player-close");
@@ -159,6 +160,7 @@ export class MoviePlayer extends Modal {
   }
 
   async prepare() {
+    this.prepareAbort?.abort(); this.prepareAbort = new AbortController();
     this.loadFailed = false; this.playButton.disabled = true;
     this.feedback.textContent = this.reference.index >= 0 ? "Connecting and buffering video…" : "Buffering video…";
     try {
@@ -192,12 +194,26 @@ export class MoviePlayer extends Modal {
       if (this.closed) {
         return;
       }
-      this.player.configure({ streaming: { bufferingGoal: 30, rebufferingGoal: 2, bufferBehind: 20 }, manifest: { retryParameters: { maxAttempts: 2 } } });
+      const retryParameters = { maxAttempts: 2, timeout: 150000, stallTimeout: 120000, connectionTimeout: 60000 };
+      this.player.configure({ streaming: { bufferingGoal: 18, rebufferingGoal: 2, bufferBehind: 20, loadTimeout: this.reference.index >= 0 ? 150 : 30, retryParameters }, manifest: { retryParameters } });
       const saved = watchRecords(localStorage).find(record => record.key === this.key);
       const start = saved && !saved.completed ? saved.position : 0;
-      const source = this.reference.index >= 0 ? `${moviePath(this.reference)}/stream` : this.file.url;
       const name = this.data.name || this.file.name;
-      const mime = /\.webm$/i.test(name) ? "video/webm" : /\.m3u8$/i.test(name) ? "application/x-mpegurl" : /\.mpd$/i.test(name) ? "application/dash+xml" : /\.mkv$/i.test(name) ? "video/x-matroska" : /\.avi$/i.test(name) ? "video/x-msvideo" : /\.(ts|m2ts)$/i.test(name) ? "video/mp2t" : "video/mp4";
+      const compatible = this.reference.index >= 0 && (this.forceCompatible || /\.(mkv|avi|mov|ts|m2ts)$/i.test(name));
+      this.usingCompatible = compatible;
+      const source = this.reference.index >= 0 ? `${moviePath(this.reference)}/${compatible ? "hls.m3u8" : "stream"}` : this.file.url;
+      const mime = compatible || /\.m3u8$/i.test(name) ? "application/x-mpegurl" : /\.webm$/i.test(name) ? "video/webm" : /\.mpd$/i.test(name) ? "application/dash+xml" : /\.mkv$/i.test(name) ? "video/x-matroska" : /\.avi$/i.test(name) ? "video/x-msvideo" : /\.(ts|m2ts)$/i.test(name) ? "video/mp2t" : "video/mp4";
+      if (compatible) {
+        this.feedback.textContent = "Preparing video for your browser…";
+        const response = await fetch(source, { signal: this.prepareAbort.signal, cache: "no-store" });
+        if (!response.ok) {
+          const detail = await response.json().catch(() => ({}));
+          throw Object.assign(new Error("Video preparation failed"), { userMessage: typeof detail.error === "string" ? detail.error.slice(0, 500) : "The video could not be prepared. Wait a moment and retry." });
+        }
+        // Consume the small playlist; Shaka requests it again and reuses the
+        // owner's cached duration. Preparation errors stay readable to users.
+        await response.text();
+      }
       await this.player.load(source, start, mime);
       if (this.closed) {
         return;
@@ -228,6 +244,10 @@ export class MoviePlayer extends Modal {
       this.fit();
     }
     catch (error) {
+      if (!this.closed && this.reference.index >= 0 && this.usingCompatible === false && !this.forceCompatible) {
+        this.forceCompatible = true;
+        return await this.prepare();
+      }
       if (!this.closed) {
         this.playbackError(error);
       }
@@ -246,7 +266,7 @@ export class MoviePlayer extends Modal {
       // Codes only: provider URLs, room IDs and response bodies stay private.
       console.warn(`Video playback unavailable (code ${error.code}, category ${error.category || 0})`);
     }
-    this.feedback.textContent = !this.playbackAttempted ? "Video preparation did not finish. Press Play to retry, or download the video to watch locally." : this.reference.index >= 0 ? "Playback stopped. Peers may be unavailable or the format may be unsupported. Press Play to retry, or download the video to watch locally." : "Playback stopped. Press Play to retry, or download the video and open it in a compatible player.";
+    this.feedback.textContent = error?.userMessage || (!this.playbackAttempted ? "Video preparation did not finish. Press Play to retry, or download the video to watch locally." : this.reference.index >= 0 ? "Playback stopped. Peers may be unavailable or the format may be unsupported. Press Play to retry, or download the video to watch locally." : "Playback stopped. Press Play to retry, or download the video and open it in a compatible player.");
   }
 
   async toggle() {
@@ -319,6 +339,7 @@ export class MoviePlayer extends Modal {
   }
 
   onhidden() {
+    this.prepareAbort?.abort();
     this.flush(); this.closed = true; clearInterval(this.interval);
     if (this.fitFrame !== null) {
       cancelAnimationFrame(this.fitFrame);
