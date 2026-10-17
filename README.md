@@ -100,6 +100,12 @@ aligned alongside each file's size:
 
 ![A 3D-printing ZIP archive with aligned View and 3D View actions beside its files](images/hobbyfiles-archive-browser.png)
 
+Open STL, 3MF, OBJ, glTF/GLB, PLY, FBX, and USD models right in the browser.
+Orbit, pan, and zoom to inspect a print before downloading it. Models can open
+directly from a room or from inside a ZIP; the viewer resolves linked geometry,
+materials, buffers, and textures from the archive so the model comes through
+intact.
+
 ![An STL miniature rendered in the in-browser 3D model viewer](images/hobbyfiles-3d-model-viewer.png)
 
 ## Rooms Made for Communities
@@ -108,6 +114,15 @@ Room owners can control visibility, retention, requests, deep links, linked
 libraries, plugins, invitations, and access without leaving the room. Members
 can quickly switch to files added since their last visit or download All, New,
 or Since Last Visit through a resumable queue.
+
+Linked rooms let you pull useful files into the room where your group works.
+For example, a Pathfinder room can link to a consenting Foundry community room
+and filter for files with “PF2E” in the name. Matching files appear alongside
+your room’s own uploads, clearly labeled with their source; they stay hosted in
+the original room, so there’s no second upload to manage. The same idea works
+across separate Hobbyfiles servers: admins set up a trusted federation between
+the hosts, then authorize specific room links. Both hosts and the source room
+have to opt in, so a link shares only the rooms and files they approve.
 
 The optional public directory exposes only rooms that opt in. Profiles collect
 activity, contribution statistics, and achievement tracks for uploads,
