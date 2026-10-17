@@ -123,12 +123,13 @@ uploads, labeled with the Foundry room as their source. The files stay in their
 original room: people can find and use them from Pathfinder without uploading a
 second copy, and the source community keeps control of access.
 
-The same setup works when the communities are on different Hobbyfiles servers.
-Their admins establish a trusted federation between the servers, then link only
-the rooms they choose. The source server and room must allow the connection, and
-the destination still picks what to show with its filters. That way a Pathfinder
-room can surface just the relevant Foundry modules without opening up the other
-server’s rooms or copying its files.
+**Federated servers:** The same setup works when the communities are on
+different Hobbyfiles servers. Their admins establish a trusted federation
+between the servers, then link only the rooms they choose. The source server
+and room must allow the connection, and the destination still picks what to
+show with its filters. That way a Pathfinder room can surface just the relevant
+Foundry modules without opening up the other server’s rooms or copying its
+files.
 
 The optional public directory exposes only rooms that opt in. Profiles collect
 activity, contribution statistics, and achievement tracks for uploads,
